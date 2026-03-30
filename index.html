@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head><meta charset="UTF-8"><title>Cath Hub</title></head>
+<body>
+<!-- Cath Hub Dashboard — Built from Baker Hub template -->
+<!-- WordPress/Avada-proof styles: all rules use !important -->
+<style>
+  #cathHub, #cathHub * { margin: 0 !important; padding: 0 !important; box-sizing: border-box !important; line-height: 1.5 !important; }
+  #cathHub { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif !important; background: #f8fafc !important; color: #1e293b !important; display: flex !important; min-height: 700px !important; border-radius: 12px !important; overflow: hidden !important; border: 1px solid #e2e8f0 !important; position: relative !important; }
+  #cathHub a, #cathHub a:hover, #cathHub a:visited { text-decoration: none !important; }
+
+  /* ───── SIDEBAR ───── */
+  #cathHub .sidebar { width: 240px !important; background: #1e293b !important; color: white !important; padding: 24px 0 !important; flex-shrink: 0 !important; display: flex !important; flex-direction: column !important; }
+  #cathHub .sidebar h1 { font-size: 18px !important; font-weight: 700 !important; padding: 0 20px !important; margin-bottom: 28px !important; color: white !important; border: none !important; }
+  #cathHub .nav-item { display: flex !important; align-items: center !important; gap: 10px !important; padding: 11px 20px !important; font-size: 13px !important; cursor: pointer !important; transition: background 0.15s !important; border: none !important; background: none !important; color: white !important; width: 100% !important; text-align: left !important; border-radius: 0 !important; box-shadow: none !important; outline: none !important; text-transform: none !important; letter-spacing: 0 !important; }
+  #cathHub .nav-item:hover { background: rgba(59,130,246,0.15) !important; color: white !important; }
+  #cathHub .nav-item.active { background: rgba(59,130,246,0.2) !important; border-right: 3px solid #3b82f6 !important; color: white !important; }
+  #cathHub .nav-item .icon { font-size: 16px !important; width: 22px !important; text-align: center !important; }
+  #cathHub .sidebar-footer { margin-top: auto !important; padding: 14px 20px !important; font-size: 10px !important; color: rgba(255,255,255,0.35) !important; }
+
+  /* ───── MAIN CONTENT ───── */
+  #cathHub .main { flex: 1 !important; overflow-y: auto !important; padding: 28px 32px !important; max-height: 900px !important; background: #f8fafc !important; }
+  #cathHub .main h2 { font-size: 22px !important; font-weight: 700 !important; margin-bottom: 20px !important; color: #1e293b !important; border: none !important; padding: 0 !important; }
+
+  /* ───── KPI / SUMMARY CARDS (top row) ───── */
+  #cathHub .kpi-row { display: flex !important; gap: 16px !important; margin-bottom: 28px !important; flex-wrap: wrap !important; }
+  #cathHub .kpi-card { background: white !important; border: 1px solid #e2e8f0 !important; border-radius: 10px !important; padding: 20px !important; flex: 1 !important; min-width: 200px !important; }
+  #cathHub .kpi-card .kpi-label { font-size: 10px !important; color: #64748b !important; text-transform: uppercase !important; letter-spacing: 0.5px !important; margin-bottom: 3px !important; }
+  #cathHub .kpi-card .kpi-title { font-size: 14px !important; font-weight: 700 !important; margin-bottom: 10px !important; color: #1e293b !important; }
+  #cathHub .kpi-card .kpi-value { font-size: 28px !important; font-weight: 800 !important; margin-bottom: 4px !important; }
+  #cathHub .kpi-value.green { color: #16a34a !important; }
+  #cathHub .kpi-value.amber { color: #eab308 !important; }
+  #cathHub .kpi-value.red { color: #ef4444 !important; }
+  #cathHub .kpi-value.blue { color: #3b82f6 !important; }
+  #cathHub .kpi-card .kpi-detail { font-size: 11px !important; color: #94a3b8 !important; margin-bottom: 2px !important; }
+  #cathHub .kpi-card .kpi-detail span { color: #1e293b !important; font-weight: 600 !important; }
+
+  /* ───── PANELS (content grid) ───── */
+  #cathHub .content-grid { display: grid !important; grid-template-columns: 1fr 1fr 1fr !important; gap: 20px !important; margin-bottom: 20px !important; }
+  #cathHub .content-grid-2 { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 20px !important; margin-bottom: 20px !important; }
+  #cathHub .panel { background: white !important; border: 1px solid #e2e8f0 !important; border-radius: 10px !important; overflow: hidden !important; }
+  #cathHub .panel-header { padding: 14px 18px !important; border-bottom: 1px solid #e2e8f0 !important; font-weight: 600 !important; font-size: 14px !important; display: flex !important; justify-content: space-between !important; align-items: center !important; }
+  #cathHub .panel-subtitle { font-size: 11px !important; color: #94a3b8 !important; font-weight: 400 !important; }
+
+  /* ───── BADGES ───── */
+  #cathHub .badge { font-size: 10px !important; padding: 2px 8px !important; border-radius: 99px !important; font-weight: 600 !important; display: inline-block !important; }
+  #cathHub .badge.red { background: #fef2f2 !important; color: #ef4444 !important; }
+  #cathHub .badge.amber { background: #fefce8 !important; color: #ca8a04 !important; }
+  #cathHub .badge.green { background: #f0fdf4 !important; color: #16a34a !important; }
+  #cathHub .badge.blue { background: #eff6ff !important; color: #2563eb !important; }
+  #cathHub .badge.gray { background: #f1f5f9 !important; color: #64748b !important; }
+
+  /* ───── LIST ITEMS ───── */
+  #cathHub .list-item { padding: 12px 18px !important; border-bottom: 1px solid #f1f5f9 !important; display: flex !important; justify-content: space-between !important; align-items: center !important; }
+  #cathHub .list-item:last-child { border-bottom: none !important; }
+  #cathHub .list-item:hover { background: #f8fafc !important; }
+  #cathHub .list-item .left { flex: 1 !important; min-width: 0 !important; }
+  #cathHub .list-item .title { font-weight: 600 !important; font-size: 13px !important; margin-bottom: 2px !important; }
+  #cathHub .list-item .meta { font-size: 11px !important; color: #94a3b8 !important; }
+  #cathHub .list-item .right { text-align: right !important; flex-shrink: 0 !important; margin-left: 14px !important; }
+  #cathHub .empty-msg { padding: 20px !important; text-align: center !important; color: #94a3b8 !important; font-size: 13px !important; }
+
+  /* ───── PRIORITY DOTS ───── */
+  #cathHub .dot { width: 10px !important; height: 10px !important; border-radius: 50% !important; display: inline-block !important; }
+  #cathHub .dot.high { background: #ef4444 !important; }
+  #cathHub .dot.medium { background: #eab308 !important; }
+  #cathHub .dot.low { background: #94a3b8 !important; }
+
+  /* ───── HEALTH DOTS ───── */
+  #cathHub .health-dots { display: flex !important; gap: 4px !important; }
+  #cathHub .health-dot { width: 12px !important; height: 12px !important; border-radius: 50% !important; }
+  #cathHub .health-dot.green { background: #16a34a !important; }
+  #cathHub .health-dot.amber { background: #eab308 !important; }
+  #cathHub .health-dot.red { background: #ef4444 !important; }
+
+  /* ───── TODO CHECKBOX ───── */
+  #cathHub .todo-check { width: 18px !important; height: 18px !important; border: 2px solid #cbd5e1 !important; border-radius: 4px !important; cursor: pointer !important; display: flex !important; align-items: center !important; justify-content: center !important; flex-shrink: 0 !important; transition: all 0.15s !important; background: white !important; }
+  #cathHub .todo-check:hover { border-color: #94a3b8 !important; }
+  #cathHub .todo-check.done { background: #16a34a !important; border-color: #16a34a !important; }
+  #cathHub .todo-check.done::after { content: '\2713' !important; color: white !important; font-size: 11px !important; font-weight: 700 !important; }
+  #cathHub .todo-text { font-size: 13px !important; font-weight: 500 !important; flex: 1 !important; }
+  #cathHub .todo-text.completed { text-decoration: line-through !important; color: #94a3b8 !important; }
+  #cathHub .todo-text.overdue { color: #ef4444 !important; }
+  #cathHub .owner-tag { font-size: 10px !important; padding: 2px 8px !important; border-radius: 99px !important; background: #f1f5f9 !important; color: #64748b !important; font-weight: 600 !important; flex-shrink: 0 !important; }
+
+  /* ───── PERSON ROW ───── */
+  #cathHub .person-row { padding: 12px 18px !important; border-bottom: 1px solid #f1f5f9 !important; display: flex !important; justify-content: space-between !important; align-items: center !important; }
+  #cathHub .person-row:last-child { border-bottom: none !important; }
+  #cathHub .person-name { font-weight: 600 !important; font-size: 13px !important; }
+  #cathHub .person-detail { font-size: 11px !important; color: #94a3b8 !important; }
+  #cathHub .person-badge { font-size: 12px !important; font-weight: 600 !important; }
+  #cathHub .person-badge.strategic { color: #16a34a !important; }
+  #cathHub .person-badge.active { color: #ca8a04 !important; }
+
+  /* ───── INFO ROW ───── */
+  #cathHub .info-row { padding: 12px 18px !important; border-bottom: 1px solid #f1f5f9 !important; display: flex !important; justify-content: space-between !important; align-items: center !important; font-size: 13px !important; }
+  #cathHub .info-row:last-child { border-bottom: none !important; }
+  #cathHub .info-label { color: #64748b !important; }
+  #cathHub .info-value { font-weight: 700 !important; color: #1e293b !important; }
+
+  /* ───── QUICK LINKS ───── */
+  #cathHub .quick-links { display: flex !important; gap: 10px !important; flex-wrap: wrap !important; margin-top: 24px !important; }
+  #cathHub .quick-link { display: inline-flex !important; align-items: center !important; gap: 6px !important; padding: 8px 14px !important; background: white !important; border: 1px solid #e2e8f0 !important; border-radius: 8px !important; font-size: 12px !important; font-weight: 500 !important; color: #1e293b !important; text-decoration: none !important; cursor: pointer !important; transition: background 0.15s !important; }
+  #cathHub .quick-link:hover { background: #f1f5f9 !important; }
+  #cathHub .quick-link .ql-icon { font-size: 14px !important; }
+
+  /* ───── SCREENS ───── */
+  #cathHub .screen { display: none !important; }
+  #cathHub .screen.active { display: block !important; }
+
+  /* ───── RESPONSIVE ───── */
+  @media (max-width: 900px) {
+    #cathHub { flex-direction: column !important; }
+    #cathHub .sidebar { width: 100% !important; flex-direction: row !important; padding: 12px !important; align-items: center !important; flex-wrap: wrap !important; }
+    #cathHub .sidebar h1 { margin-bottom: 0 !important; margin-right: 16px !important; }
+    #cathHub .nav-item { width: auto !important; padding: 8px 14px !important; }
+    #cathHub .sidebar-footer { display: none !important; }
+    #cathHub .content-grid { grid-template-columns: 1fr !important; }
+  }
+</style>
+
+<div id="cathHub">
+  <div class="sidebar">
+    <h1>Cath Hub</h1>
+    <button class="nav-item active" onclick="chNav('home',this)"><span class="icon">&#x1F3E0;</span> Dashboard</button>
+    <button class="nav-item" onclick="chNav('issues',this)"><span class="icon">&#x26A0;</span> Issues</button>
+    <button class="nav-item" onclick="chNav('team',this)"><span class="icon">&#x1F465;</span> Team</button>
+    <div class="sidebar-footer">Cath Hub v1.0</div>
+  </div>
+  <div class="main">
+
+    <!-- ═══════════════════ DASHBOARD SCREEN ═══════════════════ -->
+    <div class="screen active" id="ch-home">
+      <h2>Dashboard</h2>
+
+      <!-- KPI Row -->
+      <div class="kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-label">Issues</div>
+          <div class="kpi-title">Open Items</div>
+          <div class="kpi-value red" id="ch-issue-count">3</div>
+          <div class="kpi-detail"><span>1 high priority</span></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">To-dos</div>
+          <div class="kpi-title">This Week</div>
+          <div class="kpi-value amber" id="ch-todo-count">4</div>
+          <div class="kpi-detail"><span>1 overdue</span></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Team</div>
+          <div class="kpi-title">Next L10 Meeting</div>
+          <div class="kpi-value blue">Mon 31 Mar</div>
+          <div class="kpi-detail"><span>IAS client health: mostly good</span></div>
+        </div>
+      </div>
+
+      <!-- Content Panels -->
+      <div class="content-grid">
+        <!-- ISSUES PANEL -->
+        <div class="panel">
+          <div class="panel-header">Issues <span class="badge red" id="ch-issues-badge">3 open</span></div>
+          <div id="ch-issues-list">
+            <div class="list-item">
+              <div class="left">
+                <div class="title">IAS billing lag</div>
+                <div class="meta">Finance &middot; Identify</div>
+              </div>
+              <div class="right"><span class="dot high"></span></div>
+            </div>
+            <div class="list-item">
+              <div class="left">
+                <div class="title">Session note template</div>
+                <div class="meta">Operations &middot; Discuss</div>
+              </div>
+              <div class="right"><span class="dot medium"></span></div>
+            </div>
+            <div class="list-item">
+              <div class="left">
+                <div class="title">ThriveHQ onboarding flow</div>
+                <div class="meta">Product &middot; Solve</div>
+              </div>
+              <div class="right"><span class="dot medium"></span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TO-DOS PANEL -->
+        <div class="panel">
+          <div class="panel-header">To-dos <span class="panel-subtitle">this week</span></div>
+          <div id="ch-todos-list">
+            <div class="list-item" style="gap:10px !important">
+              <div class="todo-check" onclick="chTodo(this)"></div>
+              <div class="todo-text">Send IAS monthly report</div>
+              <span class="owner-tag">Lou</span>
+            </div>
+            <div class="list-item" style="gap:10px !important">
+              <div class="todo-check" onclick="chTodo(this)"></div>
+              <div class="todo-text">Review Q2 rock progress</div>
+              <span class="owner-tag">Cath</span>
+            </div>
+            <div class="list-item" style="gap:10px !important">
+              <div class="todo-check" onclick="chTodo(this)"></div>
+              <div class="todo-text">Update member count in scorecard</div>
+              <span class="owner-tag">Lou</span>
+            </div>
+            <div class="list-item" style="gap:10px !important">
+              <div class="todo-check" onclick="chTodo(this)"></div>
+              <div class="todo-text overdue">Invoice follow-up &times;2 (overdue)</div>
+              <span class="owner-tag">Lou</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- PEOPLE PANEL -->
+        <div class="panel">
+          <div class="panel-header">People <span class="panel-subtitle">team pulse</span></div>
+          <div>
+            <div class="person-row">
+              <div class="person-name">Cath</div>
+              <span class="person-badge strategic">Strategic focus</span>
+            </div>
+            <div class="person-row">
+              <div>
+                <div class="person-name">Lou</div>
+                <div class="person-detail">IAS Outsourcing</div>
+              </div>
+              <span class="person-badge active">4 hrs/day &middot; Active</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Next L10 meeting</span>
+              <span class="info-value">Mon 31 Mar</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">IAS client health</span>
+              <div class="health-dots">
+                <span class="health-dot green"></span>
+                <span class="health-dot green"></span>
+                <span class="health-dot green"></span>
+                <span class="health-dot green"></span>
+                <span class="health-dot amber"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Links -->
+      <div class="quick-links">
+        <a class="quick-link" href="https://www.notion.so/f1b09071007682b2a32a81486bc3d134" target="_blank"><span class="ql-icon">📋</span> Coach4U Hub</a>
+        <a class="quick-link" href="https://www.notion.so/be73cea87d5a42f884795bb0ee77b00b" target="_blank"><span class="ql-icon">✅</span> Task List</a>
+        <a class="quick-link" href="https://outlook.office.com/mail/" target="_blank"><span class="ql-icon">📧</span> Outlook</a>
+        <a class="quick-link" href="https://www.coach4u.com.au/baker_hub/" target="_blank"><span class="ql-icon">🏠</span> Baker Hub</a>
+      </div>
+    </div>
+
+    <!-- ═══════════════════ ISSUES SCREEN ═══════════════════ -->
+    <div class="screen" id="ch-issues">
+      <h2>Issues List</h2>
+      <div class="panel">
+        <div class="panel-header">All Open Issues <span class="badge red">3 open</span></div>
+        <div>
+          <div class="list-item">
+            <div class="left">
+              <div class="title">IAS billing lag</div>
+              <div class="meta">Finance &middot; Identify &middot; Owner: Cath</div>
+            </div>
+            <div class="right"><span class="badge red">High</span></div>
+          </div>
+          <div class="list-item">
+            <div class="left">
+              <div class="title">Session note template</div>
+              <div class="meta">Operations &middot; Discuss &middot; Owner: Cath</div>
+            </div>
+            <div class="right"><span class="badge amber">Medium</span></div>
+          </div>
+          <div class="list-item">
+            <div class="left">
+              <div class="title">ThriveHQ onboarding flow</div>
+              <div class="meta">Product &middot; Solve &middot; Owner: Cath</div>
+            </div>
+            <div class="right"><span class="badge amber">Medium</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════ TEAM SCREEN ═══════════════════ -->
+    <div class="screen" id="ch-team">
+      <h2>Team</h2>
+      <div class="content-grid-2">
+        <div class="panel">
+          <div class="panel-header">Team Members</div>
+          <div class="person-row">
+            <div>
+              <div class="person-name">Cath</div>
+              <div class="person-detail">Director / Coach</div>
+            </div>
+            <span class="person-badge strategic">Strategic focus</span>
+          </div>
+          <div class="person-row">
+            <div>
+              <div class="person-name">Lou</div>
+              <div class="person-detail">IAS Outsourcing &middot; 4 hrs/day</div>
+            </div>
+            <span class="badge green">Active</span>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-header">Key Info</div>
+          <div class="info-row">
+            <span class="info-label">Next L10 meeting</span>
+            <span class="info-value">Mon 31 Mar</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">IAS client health</span>
+            <div class="health-dots">
+              <span class="health-dot green"></span>
+              <span class="health-dot green"></span>
+              <span class="health-dot green"></span>
+              <span class="health-dot green"></span>
+              <span class="health-dot amber"></span>
+            </div>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Lou — hours this week</span>
+            <span class="info-value">20 hrs</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  // Navigation
+  window.chNav = function(name, btn){
+    document.querySelectorAll('#cathHub .screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('#cathHub .nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('ch-' + name).classList.add('active');
+    btn.classList.add('active');
+  };
+
+  // Todo toggle
+  window.chTodo = function(el){
+    el.classList.toggle('done');
+    const text = el.nextElementSibling;
+    text.classList.toggle('completed');
+  };
+})();
+</script>
+</body>
+</html>
