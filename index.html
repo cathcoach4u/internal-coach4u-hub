@@ -7,37 +7,68 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<meta name="theme-color" content="#1e293b">
+<meta name="theme-color" content="#3b82f6">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Coach4U">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:#f8fafc;color:#1e293b;min-height:100vh;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#f0f6ff;color:#1e293b;min-height:100vh;display:flex;}
 
-/* ── NAV BAR ── */
-.topbar{background:#1e293b;color:#fff;padding:16px 24px;display:flex;align-items:center;gap:12px;}
-.topbar h1{font-size:20px;font-weight:700;}
-.topbar .back-btn{background:none;border:1px solid rgba(255,255,255,.3);color:#fff;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:13px;display:none;}
-.topbar .back-btn:hover{background:rgba(255,255,255,.1);}
+/* ── SIDEBAR ── */
+.sidebar{width:240px;background:#fff;border-right:1px solid #e2e8f0;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:50;}
+.sidebar-logo{padding:20px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #e2e8f0;}
+.sidebar-logo img{width:40px;height:40px;border-radius:8px;}
+.sidebar-logo span{font-size:18px;font-weight:700;color:#3b82f6;}
+.nav-section{padding:16px 12px 8px;font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;font-weight:600;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 16px;margin:2px 8px;font-size:14px;color:#475569;cursor:pointer;border-radius:8px;border:none;background:none;width:calc(100% - 16px);text-align:left;transition:all .15s;font-family:inherit;}
+.nav-item:hover{background:#eff6ff;color:#3b82f6;}
+.nav-item.active{background:#3b82f6;color:#fff;}
+.nav-item .icon{width:20px;text-align:center;font-size:16px;}
+.nav-group-btn{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;margin:2px 8px;font-size:14px;color:#475569;cursor:pointer;border-radius:8px;border:none;background:none;width:calc(100% - 16px);text-align:left;transition:all .15s;font-family:inherit;}
+.nav-group-btn:hover{background:#eff6ff;color:#3b82f6;}
+.nav-group-btn .arrow{font-size:10px;transition:transform .2s;}
+.nav-group-btn.open .arrow{transform:rotate(90deg);}
+.nav-group-items{display:none;padding-left:20px;}
+.nav-group-items.open{display:block;}
+.sidebar-footer{margin-top:auto;padding:16px;font-size:11px;color:#94a3b8;border-top:1px solid #e2e8f0;}
 
-/* ── HOME CARDS ── */
-.home{padding:40px 24px;max-width:800px;margin:0 auto;}
-.home h2{font-size:24px;margin-bottom:24px;text-align:center;}
-.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:20px;}
-.card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;}
-.card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.08);border-color:#3b82f6;}
-.card .card-icon{font-size:36px;margin-bottom:12px;}
-.card .card-label{font-size:15px;font-weight:600;}
+/* ── MAIN AREA ── */
+.main{margin-left:240px;flex:1;min-height:100vh;}
 
-/* ── SCREENS ── */
-.screen{display:none;padding:24px;max-width:1100px;margin:0 auto;}
+/* ── HEADER ── */
+.header{background:#fff;border-bottom:1px solid #e2e8f0;padding:16px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:40;}
+.header h2{font-size:20px;font-weight:700;color:#1e293b;}
+.header-right{display:flex;align-items:center;gap:12px;font-size:13px;color:#64748b;}
+
+/* ── CONTENT ── */
+.content{padding:24px 28px;}
+.screen{display:none;}
 .screen.active{display:block;}
+
+/* ── DASHBOARD ── */
+.dash-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-bottom:28px;}
+.dash-card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:20px;display:flex;align-items:center;gap:14px;}
+.dash-card .dc-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;}
+.dc-icon.blue{background:#eff6ff;color:#3b82f6;}
+.dc-icon.green{background:#f0fdf4;color:#16a34a;}
+.dc-icon.amber{background:#fefce8;color:#ca8a04;}
+.dash-card .dc-info h4{font-size:24px;font-weight:700;color:#1e293b;line-height:1.2;}
+.dash-card .dc-info p{font-size:12px;color:#94a3b8;}
+.dash-section{margin-bottom:24px;}
+.dash-section h3{font-size:16px;font-weight:600;margin-bottom:12px;color:#1e293b;}
+.recent-list{background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;}
+.recent-item{padding:12px 16px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;font-size:14px;}
+.recent-item:last-child{border-bottom:none;}
+.recent-item:hover{background:#f8fafc;}
+.recent-item .ri-name{font-weight:600;}
+.recent-item .ri-meta{font-size:12px;color:#94a3b8;}
 
 /* ── SEARCH BAR ── */
 .toolbar{display:flex;gap:12px;margin-bottom:20px;align-items:center;flex-wrap:wrap;}
-.search-input{padding:8px 14px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;width:280px;}
-.btn{padding:8px 16px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s;}
+.search-input{padding:8px 14px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;width:280px;background:#fff;}
+.search-input:focus{outline:none;border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.1);}
+.btn{padding:8px 16px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;}
 .btn-blue{background:#3b82f6;color:#fff;}.btn-blue:hover{background:#2563eb;}
 .btn-green{background:#16a34a;color:#fff;}.btn-green:hover{background:#15803d;}
 .btn-red{background:#ef4444;color:#fff;}.btn-red:hover{background:#dc2626;}
@@ -67,6 +98,7 @@ td .actions button{padding:4px 10px;font-size:12px;}
 .form-group{margin-bottom:14px;}
 .form-group label{display:block;font-size:13px;font-weight:600;color:#64748b;margin-bottom:4px;}
 .form-group input,.form-group select,.form-group textarea{width:100%;padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-family:inherit;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.1);}
 .form-group textarea{height:80px;resize:vertical;}
 .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;}
 
@@ -80,55 +112,107 @@ td .actions button{padding:4px 10px;font-size:12px;}
 .member-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
 .member-tag{background:#eff6ff;color:#2563eb;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:500;display:inline-flex;align-items:center;gap:4px;}
 .member-tag .remove{cursor:pointer;font-weight:700;}
+
+/* ── MOBILE ── */
+@media(max-width:768px){
+  .sidebar{display:none;}
+  .sidebar.mobile-open{display:flex;width:260px;z-index:60;}
+  .main{margin-left:0;}
+  .mobile-toggle{display:block!important;}
+  .mobile-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:55;}
+  .mobile-overlay.show{display:block;}
+}
 </style>
 </head>
 <body>
 
-<!-- TOP BAR -->
-<div class="topbar">
-  <button class="back-btn" id="backBtn" onclick="goHome()">&#8592; Back</button>
-  <h1 id="pageTitle">Coach4U CRM</h1>
-</div>
+<!-- SIDEBAR -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <img src="C4U.png" alt="Coach4U">
+    <span>Coach4U</span>
+  </div>
+  <div class="nav-section">Main</div>
+  <button class="nav-item active" onclick="navTo('dashboard',this)"><span class="icon">&#9776;</span> Dashboard</button>
+  <div class="nav-section">CRM</div>
+  <button class="nav-group-btn" onclick="toggleGroup(this)">
+    <span><span class="icon">&#128202;</span> Manage</span>
+    <span class="arrow">&#9654;</span>
+  </button>
+  <div class="nav-group-items">
+    <button class="nav-item" onclick="navTo('masterlist',this)"><span class="icon">&#128209;</span> Master List</button>
+    <button class="nav-item" onclick="navTo('clients',this)"><span class="icon">&#129309;</span> Clients</button>
+  </div>
+  <div class="sidebar-footer">Coach4U CRM v1.0</div>
+</nav>
 
-<!-- HOME -->
-<div class="screen active" id="screen-home">
-  <div class="home">
-    <h2>Welcome to Coach4U</h2>
-    <div class="card-grid">
-      <div class="card" onclick="openTab('masterlist')">
-        <div class="card-icon">&#128209;</div>
-        <div class="card-label">Master List</div>
-      </div>
-      <div class="card" onclick="openTab('clients')">
-        <div class="card-icon">&#129309;</div>
-        <div class="card-label">Clients</div>
-      </div>
+<!-- MOBILE OVERLAY -->
+<div class="mobile-overlay" id="mobileOverlay" onclick="closeMobile()"></div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="header">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button class="btn btn-gray" style="display:none;padding:6px 10px;" id="mobileToggle" onclick="openMobile()">&#9776;</button>
+      <h2 id="pageTitle">Dashboard</h2>
+    </div>
+    <div class="header-right">
+      <span id="headerDate"></span>
     </div>
   </div>
-</div>
+  <div class="content">
 
-<!-- MASTER LIST TAB -->
-<div class="screen" id="screen-masterlist">
-  <div class="toolbar">
-    <input class="search-input" id="mlSearch" placeholder="Search contacts..." oninput="filterMasterList()">
-    <button class="btn btn-blue" onclick="openContactModal()">+ Add Contact</button>
-  </div>
-  <table>
-    <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Type</th><th>Strengths</th><th>Actions</th></tr></thead>
-    <tbody id="mlBody"></tbody>
-  </table>
-</div>
+    <!-- DASHBOARD -->
+    <div class="screen active" id="screen-dashboard">
+      <div class="dash-cards">
+        <div class="dash-card">
+          <div class="dc-icon blue">&#128100;</div>
+          <div class="dc-info"><h4 id="dcContacts">5</h4><p>Total Contacts</p></div>
+        </div>
+        <div class="dash-card">
+          <div class="dc-icon green">&#129309;</div>
+          <div class="dc-info"><h4 id="dcClients">3</h4><p>Active Clients</p></div>
+        </div>
+        <div class="dash-card">
+          <div class="dc-icon amber">&#128200;</div>
+          <div class="dc-info"><h4 id="dcOnHold">1</h4><p>On Hold</p></div>
+        </div>
+      </div>
+      <div class="dash-section">
+        <h3>Recent Clients</h3>
+        <div class="recent-list" id="recentClients"></div>
+      </div>
+      <div class="dash-section">
+        <h3>Recent Contacts</h3>
+        <div class="recent-list" id="recentContacts"></div>
+      </div>
+    </div>
 
-<!-- CLIENTS TAB -->
-<div class="screen" id="screen-clients">
-  <div class="toolbar">
-    <input class="search-input" id="clSearch" placeholder="Search clients..." oninput="filterClients()">
-    <button class="btn btn-blue" onclick="openClientModal()">+ Add Client</button>
+    <!-- MASTER LIST -->
+    <div class="screen" id="screen-masterlist">
+      <div class="toolbar">
+        <input class="search-input" id="mlSearch" placeholder="Search contacts..." oninput="filterMasterList()">
+        <button class="btn btn-blue" onclick="openContactModal()">+ Add Contact</button>
+      </div>
+      <table>
+        <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Type</th><th>Strengths</th><th>Actions</th></tr></thead>
+        <tbody id="mlBody"></tbody>
+      </table>
+    </div>
+
+    <!-- CLIENTS -->
+    <div class="screen" id="screen-clients">
+      <div class="toolbar">
+        <input class="search-input" id="clSearch" placeholder="Search clients..." oninput="filterClients()">
+        <button class="btn btn-blue" onclick="openClientModal()">+ Add Client</button>
+      </div>
+      <table>
+        <thead><tr><th>Client Name</th><th>Role</th><th>Status</th><th>Practitioner</th><th>Members</th><th>Actions</th></tr></thead>
+        <tbody id="clBody"></tbody>
+      </table>
+    </div>
+
   </div>
-  <table>
-    <thead><tr><th>Client Name</th><th>Role</th><th>Status</th><th>Practitioner</th><th>Members</th><th>Actions</th></tr></thead>
-    <tbody id="clBody"></tbody>
-  </table>
 </div>
 
 <!-- CONTACT MODAL -->
@@ -203,22 +287,37 @@ let nextContactId = 6;
 let nextClientId = 4;
 let tempMembers = [];
 
+// ── DATE DISPLAY ──
+document.getElementById('headerDate').textContent = new Date().toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
 // ── NAVIGATION ──
-window.openTab = function(tab){
+window.navTo = function(tab,btn){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+tab).classList.add('active');
-  document.getElementById('backBtn').style.display='inline-block';
-  const titles = {masterlist:'Master List',clients:'Clients'};
-  document.getElementById('pageTitle').textContent = titles[tab]||'Coach4U CRM';
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  const titles={dashboard:'Dashboard',masterlist:'Master List',clients:'Clients'};
+  document.getElementById('pageTitle').textContent=titles[tab]||'Coach4U';
+  if(tab==='dashboard') renderDashboard();
   if(tab==='masterlist') renderMasterList();
   if(tab==='clients') renderClients();
+  closeMobile();
 };
 
-window.goHome = function(){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.getElementById('screen-home').classList.add('active');
-  document.getElementById('backBtn').style.display='none';
-  document.getElementById('pageTitle').textContent='Coach4U CRM';
+// ── SIDEBAR DROPDOWN ──
+window.toggleGroup = function(btn){
+  btn.classList.toggle('open');
+  btn.nextElementSibling.classList.toggle('open');
+};
+
+// ── MOBILE NAV ──
+window.openMobile = function(){
+  document.getElementById('sidebar').classList.add('mobile-open');
+  document.getElementById('mobileOverlay').classList.add('show');
+};
+window.closeMobile = function(){
+  document.getElementById('sidebar').classList.remove('mobile-open');
+  document.getElementById('mobileOverlay').classList.remove('show');
 };
 
 // ── TOAST ──
@@ -228,8 +327,21 @@ function toast(msg,type){
   setTimeout(()=>t.classList.remove('show'),2500);
 }
 
-// ── MODAL HELPERS ──
+// ── MODAL ──
 window.closeModal=function(id){document.getElementById(id).classList.remove('open');};
+
+// ── DASHBOARD ──
+function renderDashboard(){
+  document.getElementById('dcContacts').textContent=contacts.length;
+  document.getElementById('dcClients').textContent=clients.filter(c=>c.status==='Active').length;
+  document.getElementById('dcOnHold').textContent=clients.filter(c=>c.status==='On Hold').length;
+  document.getElementById('recentClients').innerHTML=clients.slice(0,5).map(c=>
+    `<div class="recent-item"><div><span class="ri-name">${c.relationship_name}</span></div><div><span class="badge badge-${c.status==='Active'?'green':c.status==='On Hold'?'amber':'gray'}">${c.status}</span> <span class="ri-meta">${c.practitioner}</span></div></div>`
+  ).join('');
+  document.getElementById('recentContacts').innerHTML=contacts.slice(0,5).map(c=>
+    `<div class="recent-item"><div><span class="ri-name">${c.first_name} ${c.last_name}</span> <span class="ri-meta">${c.email}</span></div><span class="badge badge-${c.contact_type==='Individual'?'blue':c.contact_type==='Organisation'?'green':'amber'}">${c.contact_type}</span></div>`
+  ).join('');
+}
 
 // ── MASTER LIST ──
 function renderMasterList(){
@@ -247,7 +359,6 @@ function renderMasterList(){
     </div></td>
   </tr>`).join('');
 }
-
 window.filterMasterList=function(){renderMasterList();};
 
 window.openContactModal=function(id){
@@ -287,6 +398,7 @@ window.saveContact=function(){
   }
   closeModal('contactModal');
   renderMasterList();
+  renderDashboard();
 };
 
 window.deleteContact=function(id){
@@ -294,6 +406,7 @@ window.deleteContact=function(id){
   contacts=contacts.filter(c=>c.id!==id);
   toast('Contact deleted','success');
   renderMasterList();
+  renderDashboard();
 };
 
 // ── CLIENTS ──
@@ -317,7 +430,6 @@ function renderClients(){
     </div></td>
   </tr>`).join('');
 }
-
 window.filterClients=function(){renderClients();};
 
 window.openClientModal=function(id){
@@ -382,6 +494,7 @@ window.saveClient=function(){
   }
   closeModal('clientModal');
   renderClients();
+  renderDashboard();
 };
 
 window.deleteClient=function(id){
@@ -389,7 +502,17 @@ window.deleteClient=function(id){
   clients=clients.filter(c=>c.id!==id);
   toast('Client deleted','success');
   renderClients();
+  renderDashboard();
 };
+
+// ── BOOT ──
+renderDashboard();
+
+// ── MOBILE CHECK ──
+if(window.innerWidth<=768) document.getElementById('mobileToggle').style.display='inline-block';
+window.addEventListener('resize',()=>{
+  document.getElementById('mobileToggle').style.display=window.innerWidth<=768?'inline-block':'none';
+});
 
 })();
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js');}
