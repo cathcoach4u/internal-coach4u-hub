@@ -1,354 +1,389 @@
 <!DOCTYPE html>
 <html lang="en-AU">
-<head><meta charset="UTF-8"><title>Cath Hub</title></head>
-<body>
-<!-- Cath Hub Dashboard — Built from Baker Hub template -->
-<!-- WordPress/Avada-proof styles: all rules use !important -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coach4U CRM</title>
 <style>
-  #cathHub, #cathHub * { margin: 0 !important; padding: 0 !important; box-sizing: border-box !important; line-height: 1.5 !important; }
-  #cathHub { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif !important; background: #f8fafc !important; color: #1e293b !important; display: flex !important; min-height: 700px !important; border-radius: 12px !important; overflow: hidden !important; border: 1px solid #e2e8f0 !important; position: relative !important; }
-  #cathHub a, #cathHub a:hover, #cathHub a:visited { text-decoration: none !important; }
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#f8fafc;color:#1e293b;min-height:100vh;}
 
-  /* ───── SIDEBAR ───── */
-  #cathHub .sidebar { width: 240px !important; background: #1e293b !important; color: white !important; padding: 24px 0 !important; flex-shrink: 0 !important; display: flex !important; flex-direction: column !important; }
-  #cathHub .sidebar h1 { font-size: 18px !important; font-weight: 700 !important; padding: 0 20px !important; margin-bottom: 28px !important; color: white !important; border: none !important; }
-  #cathHub .nav-item { display: flex !important; align-items: center !important; gap: 10px !important; padding: 11px 20px !important; font-size: 13px !important; cursor: pointer !important; transition: background 0.15s !important; border: none !important; background: none !important; color: white !important; width: 100% !important; text-align: left !important; border-radius: 0 !important; box-shadow: none !important; outline: none !important; text-transform: none !important; letter-spacing: 0 !important; }
-  #cathHub .nav-item:hover { background: rgba(59,130,246,0.15) !important; color: white !important; }
-  #cathHub .nav-item.active { background: rgba(59,130,246,0.2) !important; border-right: 3px solid #3b82f6 !important; color: white !important; }
-  #cathHub .nav-item .icon { font-size: 16px !important; width: 22px !important; text-align: center !important; }
-  #cathHub .sidebar-footer { margin-top: auto !important; padding: 14px 20px !important; font-size: 10px !important; color: rgba(255,255,255,0.35) !important; }
+/* ── NAV BAR ── */
+.topbar{background:#1e293b;color:#fff;padding:16px 24px;display:flex;align-items:center;gap:12px;}
+.topbar h1{font-size:20px;font-weight:700;}
+.topbar .back-btn{background:none;border:1px solid rgba(255,255,255,.3);color:#fff;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:13px;display:none;}
+.topbar .back-btn:hover{background:rgba(255,255,255,.1);}
 
-  /* ───── MAIN CONTENT ───── */
-  #cathHub .main { flex: 1 !important; overflow-y: auto !important; padding: 28px 32px !important; max-height: 900px !important; background: #f8fafc !important; }
-  #cathHub .main h2 { font-size: 22px !important; font-weight: 700 !important; margin-bottom: 20px !important; color: #1e293b !important; border: none !important; padding: 0 !important; }
+/* ── HOME CARDS ── */
+.home{padding:40px 24px;max-width:800px;margin:0 auto;}
+.home h2{font-size:24px;margin-bottom:24px;text-align:center;}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:20px;}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;}
+.card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.08);border-color:#3b82f6;}
+.card .card-icon{font-size:36px;margin-bottom:12px;}
+.card .card-label{font-size:15px;font-weight:600;}
 
-  /* ───── KPI / SUMMARY CARDS (top row) ───── */
-  #cathHub .kpi-row { display: flex !important; gap: 16px !important; margin-bottom: 28px !important; flex-wrap: wrap !important; }
-  #cathHub .kpi-card { background: white !important; border: 1px solid #e2e8f0 !important; border-radius: 10px !important; padding: 20px !important; flex: 1 !important; min-width: 200px !important; }
-  #cathHub .kpi-card .kpi-label { font-size: 10px !important; color: #64748b !important; text-transform: uppercase !important; letter-spacing: 0.5px !important; margin-bottom: 3px !important; }
-  #cathHub .kpi-card .kpi-title { font-size: 14px !important; font-weight: 700 !important; margin-bottom: 10px !important; color: #1e293b !important; }
-  #cathHub .kpi-card .kpi-value { font-size: 28px !important; font-weight: 800 !important; margin-bottom: 4px !important; }
-  #cathHub .kpi-value.green { color: #16a34a !important; }
-  #cathHub .kpi-value.amber { color: #eab308 !important; }
-  #cathHub .kpi-value.red { color: #ef4444 !important; }
-  #cathHub .kpi-value.blue { color: #3b82f6 !important; }
-  #cathHub .kpi-card .kpi-detail { font-size: 11px !important; color: #94a3b8 !important; margin-bottom: 2px !important; }
-  #cathHub .kpi-card .kpi-detail span { color: #1e293b !important; font-weight: 600 !important; }
+/* ── SCREENS ── */
+.screen{display:none;padding:24px;max-width:1100px;margin:0 auto;}
+.screen.active{display:block;}
 
-  /* ───── PANELS (content grid) ───── */
-  #cathHub .content-grid { display: grid !important; grid-template-columns: 1fr 1fr 1fr !important; gap: 20px !important; margin-bottom: 20px !important; }
-  #cathHub .content-grid-2 { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 20px !important; margin-bottom: 20px !important; }
-  #cathHub .panel { background: white !important; border: 1px solid #e2e8f0 !important; border-radius: 10px !important; overflow: hidden !important; }
-  #cathHub .panel-header { padding: 14px 18px !important; border-bottom: 1px solid #e2e8f0 !important; font-weight: 600 !important; font-size: 14px !important; display: flex !important; justify-content: space-between !important; align-items: center !important; }
-  #cathHub .panel-subtitle { font-size: 11px !important; color: #94a3b8 !important; font-weight: 400 !important; }
+/* ── SEARCH BAR ── */
+.toolbar{display:flex;gap:12px;margin-bottom:20px;align-items:center;flex-wrap:wrap;}
+.search-input{padding:8px 14px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;width:280px;}
+.btn{padding:8px 16px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s;}
+.btn-blue{background:#3b82f6;color:#fff;}.btn-blue:hover{background:#2563eb;}
+.btn-green{background:#16a34a;color:#fff;}.btn-green:hover{background:#15803d;}
+.btn-red{background:#ef4444;color:#fff;}.btn-red:hover{background:#dc2626;}
+.btn-gray{background:#f1f5f9;color:#1e293b;border:1px solid #e2e8f0;}.btn-gray:hover{background:#e2e8f0;}
 
-  /* ───── BADGES ───── */
-  #cathHub .badge { font-size: 10px !important; padding: 2px 8px !important; border-radius: 99px !important; font-weight: 600 !important; display: inline-block !important; }
-  #cathHub .badge.red { background: #fef2f2 !important; color: #ef4444 !important; }
-  #cathHub .badge.amber { background: #fefce8 !important; color: #ca8a04 !important; }
-  #cathHub .badge.green { background: #f0fdf4 !important; color: #16a34a !important; }
-  #cathHub .badge.blue { background: #eff6ff !important; color: #2563eb !important; }
-  #cathHub .badge.gray { background: #f1f5f9 !important; color: #64748b !important; }
+/* ── TABLE ── */
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;border:1px solid #e2e8f0;}
+th{background:#f8fafc;text-align:left;padding:12px 16px;font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #e2e8f0;}
+td{padding:12px 16px;font-size:14px;border-bottom:1px solid #f1f5f9;}
+tr:hover td{background:#f8fafc;}
+td .actions{display:flex;gap:6px;}
+td .actions button{padding:4px 10px;font-size:12px;}
 
-  /* ───── LIST ITEMS ───── */
-  #cathHub .list-item { padding: 12px 18px !important; border-bottom: 1px solid #f1f5f9 !important; display: flex !important; justify-content: space-between !important; align-items: center !important; }
-  #cathHub .list-item:last-child { border-bottom: none !important; }
-  #cathHub .list-item:hover { background: #f8fafc !important; }
-  #cathHub .list-item .left { flex: 1 !important; min-width: 0 !important; }
-  #cathHub .list-item .title { font-weight: 600 !important; font-size: 13px !important; margin-bottom: 2px !important; }
-  #cathHub .list-item .meta { font-size: 11px !important; color: #94a3b8 !important; }
-  #cathHub .list-item .right { text-align: right !important; flex-shrink: 0 !important; margin-left: 14px !important; }
-  #cathHub .empty-msg { padding: 20px !important; text-align: center !important; color: #94a3b8 !important; font-size: 13px !important; }
+/* ── BADGES ── */
+.badge{font-size:11px;padding:3px 10px;border-radius:99px;font-weight:600;display:inline-block;}
+.badge-green{background:#f0fdf4;color:#16a34a;}
+.badge-amber{background:#fefce8;color:#ca8a04;}
+.badge-red{background:#fef2f2;color:#ef4444;}
+.badge-blue{background:#eff6ff;color:#2563eb;}
+.badge-gray{background:#f1f5f9;color:#64748b;}
 
-  /* ───── PRIORITY DOTS ───── */
-  #cathHub .dot { width: 10px !important; height: 10px !important; border-radius: 50% !important; display: inline-block !important; }
-  #cathHub .dot.high { background: #ef4444 !important; }
-  #cathHub .dot.medium { background: #eab308 !important; }
-  #cathHub .dot.low { background: #94a3b8 !important; }
+/* ── MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:#fff;border-radius:10px;padding:28px;width:90%;max-width:500px;max-height:90vh;overflow-y:auto;}
+.modal h3{font-size:18px;margin-bottom:20px;}
+.form-group{margin-bottom:14px;}
+.form-group label{display:block;font-size:13px;font-weight:600;color:#64748b;margin-bottom:4px;}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-family:inherit;}
+.form-group textarea{height:80px;resize:vertical;}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;}
 
-  /* ───── HEALTH DOTS ───── */
-  #cathHub .health-dots { display: flex !important; gap: 4px !important; }
-  #cathHub .health-dot { width: 12px !important; height: 12px !important; border-radius: 50% !important; }
-  #cathHub .health-dot.green { background: #16a34a !important; }
-  #cathHub .health-dot.amber { background: #eab308 !important; }
-  #cathHub .health-dot.red { background: #ef4444 !important; }
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:8px;color:#fff;font-size:14px;font-weight:500;z-index:200;opacity:0;transition:opacity .3s;}
+.toast.show{opacity:1;}
+.toast.success{background:#16a34a;}
+.toast.error{background:#ef4444;}
 
-  /* ───── TODO CHECKBOX ───── */
-  #cathHub .todo-check { width: 18px !important; height: 18px !important; border: 2px solid #cbd5e1 !important; border-radius: 4px !important; cursor: pointer !important; display: flex !important; align-items: center !important; justify-content: center !important; flex-shrink: 0 !important; transition: all 0.15s !important; background: white !important; }
-  #cathHub .todo-check:hover { border-color: #94a3b8 !important; }
-  #cathHub .todo-check.done { background: #16a34a !important; border-color: #16a34a !important; }
-  #cathHub .todo-check.done::after { content: '\2713' !important; color: white !important; font-size: 11px !important; font-weight: 700 !important; }
-  #cathHub .todo-text { font-size: 13px !important; font-weight: 500 !important; flex: 1 !important; }
-  #cathHub .todo-text.completed { text-decoration: line-through !important; color: #94a3b8 !important; }
-  #cathHub .todo-text.overdue { color: #ef4444 !important; }
-  #cathHub .owner-tag { font-size: 10px !important; padding: 2px 8px !important; border-radius: 99px !important; background: #f1f5f9 !important; color: #64748b !important; font-weight: 600 !important; flex-shrink: 0 !important; }
-
-  /* ───── PERSON ROW ───── */
-  #cathHub .person-row { padding: 12px 18px !important; border-bottom: 1px solid #f1f5f9 !important; display: flex !important; justify-content: space-between !important; align-items: center !important; }
-  #cathHub .person-row:last-child { border-bottom: none !important; }
-  #cathHub .person-name { font-weight: 600 !important; font-size: 13px !important; }
-  #cathHub .person-detail { font-size: 11px !important; color: #94a3b8 !important; }
-  #cathHub .person-badge { font-size: 12px !important; font-weight: 600 !important; }
-  #cathHub .person-badge.strategic { color: #16a34a !important; }
-  #cathHub .person-badge.active { color: #ca8a04 !important; }
-
-  /* ───── INFO ROW ───── */
-  #cathHub .info-row { padding: 12px 18px !important; border-bottom: 1px solid #f1f5f9 !important; display: flex !important; justify-content: space-between !important; align-items: center !important; font-size: 13px !important; }
-  #cathHub .info-row:last-child { border-bottom: none !important; }
-  #cathHub .info-label { color: #64748b !important; }
-  #cathHub .info-value { font-weight: 700 !important; color: #1e293b !important; }
-
-  /* ───── QUICK LINKS ───── */
-  #cathHub .quick-links { display: flex !important; gap: 10px !important; flex-wrap: wrap !important; margin-top: 24px !important; }
-  #cathHub .quick-link { display: inline-flex !important; align-items: center !important; gap: 6px !important; padding: 8px 14px !important; background: white !important; border: 1px solid #e2e8f0 !important; border-radius: 8px !important; font-size: 12px !important; font-weight: 500 !important; color: #1e293b !important; text-decoration: none !important; cursor: pointer !important; transition: background 0.15s !important; }
-  #cathHub .quick-link:hover { background: #f1f5f9 !important; }
-  #cathHub .quick-link .ql-icon { font-size: 14px !important; }
-
-  /* ───── SCREENS ───── */
-  #cathHub .screen { display: none !important; }
-  #cathHub .screen.active { display: block !important; }
-
-  /* ───── RESPONSIVE ───── */
-  @media (max-width: 900px) {
-    #cathHub { flex-direction: column !important; }
-    #cathHub .sidebar { width: 100% !important; flex-direction: row !important; padding: 12px !important; align-items: center !important; flex-wrap: wrap !important; }
-    #cathHub .sidebar h1 { margin-bottom: 0 !important; margin-right: 16px !important; }
-    #cathHub .nav-item { width: auto !important; padding: 8px 14px !important; }
-    #cathHub .sidebar-footer { display: none !important; }
-    #cathHub .content-grid { grid-template-columns: 1fr !important; }
-  }
+/* ── LINKED MEMBERS ── */
+.member-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.member-tag{background:#eff6ff;color:#2563eb;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:500;display:inline-flex;align-items:center;gap:4px;}
+.member-tag .remove{cursor:pointer;font-weight:700;}
 </style>
+</head>
+<body>
 
-<div id="cathHub">
-  <div class="sidebar">
-    <h1>Cath Hub</h1>
-    <button class="nav-item active" onclick="chNav('home',this)"><span class="icon">&#x1F3E0;</span> Dashboard</button>
-    <button class="nav-item" onclick="chNav('issues',this)"><span class="icon">&#x26A0;</span> Issues</button>
-    <button class="nav-item" onclick="chNav('team',this)"><span class="icon">&#x1F465;</span> Team</button>
-    <div class="sidebar-footer">Cath Hub v1.0</div>
-  </div>
-  <div class="main">
+<!-- TOP BAR -->
+<div class="topbar">
+  <button class="back-btn" id="backBtn" onclick="goHome()">&#8592; Back</button>
+  <h1 id="pageTitle">Coach4U CRM</h1>
+</div>
 
-    <!-- ═══════════════════ DASHBOARD SCREEN ═══════════════════ -->
-    <div class="screen active" id="ch-home">
-      <h2>Dashboard</h2>
-
-      <!-- KPI Row -->
-      <div class="kpi-row">
-        <div class="kpi-card">
-          <div class="kpi-label">Issues</div>
-          <div class="kpi-title">Open Items</div>
-          <div class="kpi-value red" id="ch-issue-count">3</div>
-          <div class="kpi-detail"><span>1 high priority</span></div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-label">To-dos</div>
-          <div class="kpi-title">This Week</div>
-          <div class="kpi-value amber" id="ch-todo-count">4</div>
-          <div class="kpi-detail"><span>1 overdue</span></div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-label">Team</div>
-          <div class="kpi-title">Next L10 Meeting</div>
-          <div class="kpi-value blue">Mon 31 Mar</div>
-          <div class="kpi-detail"><span>IAS client health: mostly good</span></div>
-        </div>
+<!-- HOME -->
+<div class="screen active" id="screen-home">
+  <div class="home">
+    <h2>Welcome to Coach4U</h2>
+    <div class="card-grid">
+      <div class="card" onclick="openTab('masterlist')">
+        <div class="card-icon">&#128209;</div>
+        <div class="card-label">Master List</div>
       </div>
-
-      <!-- Content Panels -->
-      <div class="content-grid">
-        <!-- ISSUES PANEL -->
-        <div class="panel">
-          <div class="panel-header">Issues <span class="badge red" id="ch-issues-badge">3 open</span></div>
-          <div id="ch-issues-list">
-            <div class="list-item">
-              <div class="left">
-                <div class="title">IAS billing lag</div>
-                <div class="meta">Finance &middot; Identify</div>
-              </div>
-              <div class="right"><span class="dot high"></span></div>
-            </div>
-            <div class="list-item">
-              <div class="left">
-                <div class="title">Session note template</div>
-                <div class="meta">Operations &middot; Discuss</div>
-              </div>
-              <div class="right"><span class="dot medium"></span></div>
-            </div>
-            <div class="list-item">
-              <div class="left">
-                <div class="title">ThriveHQ onboarding flow</div>
-                <div class="meta">Product &middot; Solve</div>
-              </div>
-              <div class="right"><span class="dot medium"></span></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- TO-DOS PANEL -->
-        <div class="panel">
-          <div class="panel-header">To-dos <span class="panel-subtitle">this week</span></div>
-          <div id="ch-todos-list">
-            <div class="list-item" style="gap:10px !important">
-              <div class="todo-check" onclick="chTodo(this)"></div>
-              <div class="todo-text">Send IAS monthly report</div>
-              <span class="owner-tag">Lou</span>
-            </div>
-            <div class="list-item" style="gap:10px !important">
-              <div class="todo-check" onclick="chTodo(this)"></div>
-              <div class="todo-text">Review Q2 rock progress</div>
-              <span class="owner-tag">Cath</span>
-            </div>
-            <div class="list-item" style="gap:10px !important">
-              <div class="todo-check" onclick="chTodo(this)"></div>
-              <div class="todo-text">Update member count in scorecard</div>
-              <span class="owner-tag">Lou</span>
-            </div>
-            <div class="list-item" style="gap:10px !important">
-              <div class="todo-check" onclick="chTodo(this)"></div>
-              <div class="todo-text overdue">Invoice follow-up &times;2 (overdue)</div>
-              <span class="owner-tag">Lou</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- PEOPLE PANEL -->
-        <div class="panel">
-          <div class="panel-header">People <span class="panel-subtitle">team pulse</span></div>
-          <div>
-            <div class="person-row">
-              <div class="person-name">Cath</div>
-              <span class="person-badge strategic">Strategic focus</span>
-            </div>
-            <div class="person-row">
-              <div>
-                <div class="person-name">Lou</div>
-                <div class="person-detail">IAS Outsourcing</div>
-              </div>
-              <span class="person-badge active">4 hrs/day &middot; Active</span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">Next L10 meeting</span>
-              <span class="info-value">Mon 31 Mar</span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">IAS client health</span>
-              <div class="health-dots">
-                <span class="health-dot green"></span>
-                <span class="health-dot green"></span>
-                <span class="health-dot green"></span>
-                <span class="health-dot green"></span>
-                <span class="health-dot amber"></span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Quick Links -->
-      <div class="quick-links">
-        <a class="quick-link" href="https://www.notion.so/f1b09071007682b2a32a81486bc3d134" target="_blank"><span class="ql-icon">📋</span> Coach4U Hub</a>
-        <a class="quick-link" href="https://www.notion.so/be73cea87d5a42f884795bb0ee77b00b" target="_blank"><span class="ql-icon">✅</span> Task List</a>
-        <a class="quick-link" href="https://outlook.office.com/mail/" target="_blank"><span class="ql-icon">📧</span> Outlook</a>
-        <a class="quick-link" href="https://www.coach4u.com.au/baker_hub/" target="_blank"><span class="ql-icon">🏠</span> Baker Hub</a>
+      <div class="card" onclick="openTab('clients')">
+        <div class="card-icon">&#129309;</div>
+        <div class="card-label">Clients</div>
       </div>
     </div>
-
-    <!-- ═══════════════════ ISSUES SCREEN ═══════════════════ -->
-    <div class="screen" id="ch-issues">
-      <h2>Issues List</h2>
-      <div class="panel">
-        <div class="panel-header">All Open Issues <span class="badge red">3 open</span></div>
-        <div>
-          <div class="list-item">
-            <div class="left">
-              <div class="title">IAS billing lag</div>
-              <div class="meta">Finance &middot; Identify &middot; Owner: Cath</div>
-            </div>
-            <div class="right"><span class="badge red">High</span></div>
-          </div>
-          <div class="list-item">
-            <div class="left">
-              <div class="title">Session note template</div>
-              <div class="meta">Operations &middot; Discuss &middot; Owner: Cath</div>
-            </div>
-            <div class="right"><span class="badge amber">Medium</span></div>
-          </div>
-          <div class="list-item">
-            <div class="left">
-              <div class="title">ThriveHQ onboarding flow</div>
-              <div class="meta">Product &middot; Solve &middot; Owner: Cath</div>
-            </div>
-            <div class="right"><span class="badge amber">Medium</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ═══════════════════ TEAM SCREEN ═══════════════════ -->
-    <div class="screen" id="ch-team">
-      <h2>Team</h2>
-      <div class="content-grid-2">
-        <div class="panel">
-          <div class="panel-header">Team Members</div>
-          <div class="person-row">
-            <div>
-              <div class="person-name">Cath</div>
-              <div class="person-detail">Director / Coach</div>
-            </div>
-            <span class="person-badge strategic">Strategic focus</span>
-          </div>
-          <div class="person-row">
-            <div>
-              <div class="person-name">Lou</div>
-              <div class="person-detail">IAS Outsourcing &middot; 4 hrs/day</div>
-            </div>
-            <span class="badge green">Active</span>
-          </div>
-        </div>
-        <div class="panel">
-          <div class="panel-header">Key Info</div>
-          <div class="info-row">
-            <span class="info-label">Next L10 meeting</span>
-            <span class="info-value">Mon 31 Mar</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">IAS client health</span>
-            <div class="health-dots">
-              <span class="health-dot green"></span>
-              <span class="health-dot green"></span>
-              <span class="health-dot green"></span>
-              <span class="health-dot green"></span>
-              <span class="health-dot amber"></span>
-            </div>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Lou — hours this week</span>
-            <span class="info-value">20 hrs</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
   </div>
 </div>
 
+<!-- MASTER LIST TAB -->
+<div class="screen" id="screen-masterlist">
+  <div class="toolbar">
+    <input class="search-input" id="mlSearch" placeholder="Search contacts..." oninput="filterMasterList()">
+    <button class="btn btn-blue" onclick="openContactModal()">+ Add Contact</button>
+  </div>
+  <table>
+    <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Type</th><th>Strengths</th><th>Actions</th></tr></thead>
+    <tbody id="mlBody"></tbody>
+  </table>
+</div>
+
+<!-- CLIENTS TAB -->
+<div class="screen" id="screen-clients">
+  <div class="toolbar">
+    <input class="search-input" id="clSearch" placeholder="Search clients..." oninput="filterClients()">
+    <button class="btn btn-blue" onclick="openClientModal()">+ Add Client</button>
+  </div>
+  <table>
+    <thead><tr><th>Client Name</th><th>Role</th><th>Status</th><th>Practitioner</th><th>Members</th><th>Actions</th></tr></thead>
+    <tbody id="clBody"></tbody>
+  </table>
+</div>
+
+<!-- CONTACT MODAL -->
+<div class="modal-overlay" id="contactModal">
+  <div class="modal">
+    <h3 id="contactModalTitle">Add Contact</h3>
+    <input type="hidden" id="contactId">
+    <div class="form-group"><label>First Name</label><input id="cFirst"></div>
+    <div class="form-group"><label>Last Name</label><input id="cLast"></div>
+    <div class="form-group"><label>Email</label><input id="cEmail" type="email"></div>
+    <div class="form-group"><label>Phone</label><input id="cPhone"></div>
+    <div class="form-group"><label>Type</label>
+      <select id="cType"><option>Individual</option><option>Organisation</option><option>Referrer</option></select>
+    </div>
+    <div class="form-group"><label>Strengths (Top 5)</label><textarea id="cStrengths" placeholder="e.g. Achiever, Learner, Strategic..."></textarea></div>
+    <div class="form-group"><label>Notes</label><textarea id="cNotes"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-gray" onclick="closeModal('contactModal')">Cancel</button>
+      <button class="btn btn-green" onclick="saveContact()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- CLIENT MODAL -->
+<div class="modal-overlay" id="clientModal">
+  <div class="modal">
+    <h3 id="clientModalTitle">Add Client</h3>
+    <input type="hidden" id="clientId">
+    <div class="form-group"><label>Client / Relationship Name</label><input id="clName"></div>
+    <div class="form-group"><label>Role</label><input id="clRole" placeholder="e.g. Coaching Client, Workshop"></div>
+    <div class="form-group"><label>Status</label>
+      <select id="clStatus"><option>Active</option><option>On Hold</option><option>Completed</option></select>
+    </div>
+    <div class="form-group"><label>Practitioner</label>
+      <select id="clPractitioner"><option>Cath</option><option>Lou</option></select>
+    </div>
+    <div class="form-group"><label>Link Members from Master List</label>
+      <select id="clMemberSelect"><option value="">-- Select contact --</option></select>
+      <button class="btn btn-gray" style="margin-top:6px;" onclick="addMemberToClient()">+ Link</button>
+      <div class="member-list" id="clMembers"></div>
+    </div>
+    <div class="form-group"><label>Notes</label><textarea id="clNotes"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-gray" onclick="closeModal('clientModal')">Cancel</button>
+      <button class="btn btn-green" onclick="saveClient()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
 <script>
 (function(){
-  // Navigation
-  window.chNav = function(name, btn){
-    document.querySelectorAll('#cathHub .screen').forEach(s => s.classList.remove('active'));
-    document.querySelectorAll('#cathHub .nav-item').forEach(n => n.classList.remove('active'));
-    document.getElementById('ch-' + name).classList.add('active');
-    btn.classList.add('active');
-  };
 
-  // Todo toggle
-  window.chTodo = function(el){
-    el.classList.toggle('done');
-    const text = el.nextElementSibling;
-    text.classList.toggle('completed');
+// ── DUMMY DATA ──
+let contacts = [
+  {id:'1',first_name:'Sarah',last_name:'Mitchell',email:'sarah@example.com',phone:'0412 345 678',contact_type:'Individual',strengths:'Achiever, Learner, Strategic, Relator, Input',notes:''},
+  {id:'2',first_name:'James',last_name:'Chen',email:'james@techcorp.com',phone:'0423 456 789',contact_type:'Organisation',strengths:'Command, Competition, Activator, Self-Assurance, Significance',notes:''},
+  {id:'3',first_name:'Emma',last_name:'Williams',email:'emma@williams.au',phone:'0434 567 890',contact_type:'Individual',strengths:'Empathy, Developer, Harmony, Includer, Positivity',notes:''},
+  {id:'4',first_name:'Tom',last_name:'Baker',email:'tom@bakerco.com',phone:'0445 678 901',contact_type:'Referrer',strengths:'Analytical, Deliberative, Intellection, Context, Futuristic',notes:''},
+  {id:'5',first_name:'Priya',last_name:'Sharma',email:'priya@sharma.com',phone:'0456 789 012',contact_type:'Individual',strengths:'Communication, Woo, Maximizer, Arranger, Adaptability',notes:''},
+];
+
+let clients = [
+  {id:'1',relationship_name:'Mitchell Coaching',role:'1:1 Coaching',status:'Active',practitioner:'Cath',members:['1'],notes:''},
+  {id:'2',relationship_name:'TechCorp Leadership',role:'Team Workshop',status:'Active',practitioner:'Cath',members:['2','3'],notes:''},
+  {id:'3',relationship_name:'Baker Referral Partnership',role:'Referral Partner',status:'On Hold',practitioner:'Lou',members:['4'],notes:''},
+];
+
+let nextContactId = 6;
+let nextClientId = 4;
+let tempMembers = [];
+
+// ── NAVIGATION ──
+window.openTab = function(tab){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+tab).classList.add('active');
+  document.getElementById('backBtn').style.display='inline-block';
+  const titles = {masterlist:'Master List',clients:'Clients'};
+  document.getElementById('pageTitle').textContent = titles[tab]||'Coach4U CRM';
+  if(tab==='masterlist') renderMasterList();
+  if(tab==='clients') renderClients();
+};
+
+window.goHome = function(){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-home').classList.add('active');
+  document.getElementById('backBtn').style.display='none';
+  document.getElementById('pageTitle').textContent='Coach4U CRM';
+};
+
+// ── TOAST ──
+function toast(msg,type){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast '+type+' show';
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ── MODAL HELPERS ──
+window.closeModal=function(id){document.getElementById(id).classList.remove('open');};
+
+// ── MASTER LIST ──
+function renderMasterList(){
+  const q=document.getElementById('mlSearch').value.toLowerCase();
+  const filtered=contacts.filter(c=>(c.first_name+' '+c.last_name+' '+c.email+' '+c.contact_type+' '+c.strengths).toLowerCase().includes(q));
+  document.getElementById('mlBody').innerHTML=filtered.map(c=>`<tr>
+    <td><strong>${c.first_name} ${c.last_name}</strong></td>
+    <td>${c.email||''}</td>
+    <td>${c.phone||''}</td>
+    <td><span class="badge badge-${c.contact_type==='Individual'?'blue':c.contact_type==='Organisation'?'green':'amber'}">${c.contact_type}</span></td>
+    <td style="max-width:200px;font-size:12px;">${c.strengths||''}</td>
+    <td><div class="actions">
+      <button class="btn btn-gray" onclick="openContactModal('${c.id}')">Edit</button>
+      <button class="btn btn-red" onclick="deleteContact('${c.id}')">Del</button>
+    </div></td>
+  </tr>`).join('');
+}
+
+window.filterMasterList=function(){renderMasterList();};
+
+window.openContactModal=function(id){
+  const c=id?contacts.find(x=>x.id===id):null;
+  document.getElementById('contactModalTitle').textContent=c?'Edit Contact':'Add Contact';
+  document.getElementById('contactId').value=c?c.id:'';
+  document.getElementById('cFirst').value=c?c.first_name:'';
+  document.getElementById('cLast').value=c?c.last_name:'';
+  document.getElementById('cEmail').value=c?c.email:'';
+  document.getElementById('cPhone').value=c?c.phone:'';
+  document.getElementById('cType').value=c?c.contact_type:'Individual';
+  document.getElementById('cStrengths').value=c?c.strengths:'';
+  document.getElementById('cNotes').value=c?c.notes:'';
+  document.getElementById('contactModal').classList.add('open');
+};
+
+window.saveContact=function(){
+  const id=document.getElementById('contactId').value;
+  const data={
+    first_name:document.getElementById('cFirst').value.trim(),
+    last_name:document.getElementById('cLast').value.trim(),
+    email:document.getElementById('cEmail').value.trim(),
+    phone:document.getElementById('cPhone').value.trim(),
+    contact_type:document.getElementById('cType').value,
+    strengths:document.getElementById('cStrengths').value.trim(),
+    notes:document.getElementById('cNotes').value.trim()
   };
+  if(!data.first_name||!data.last_name){toast('First and last name required','error');return;}
+  if(id){
+    const c=contacts.find(x=>x.id===id);
+    Object.assign(c,data);
+    toast('Contact updated','success');
+  }else{
+    data.id=String(nextContactId++);
+    contacts.push(data);
+    toast('Contact added','success');
+  }
+  closeModal('contactModal');
+  renderMasterList();
+};
+
+window.deleteContact=function(id){
+  if(!confirm('Delete this contact?'))return;
+  contacts=contacts.filter(c=>c.id!==id);
+  toast('Contact deleted','success');
+  renderMasterList();
+};
+
+// ── CLIENTS ──
+function getContactName(id){
+  const c=contacts.find(x=>x.id===id);
+  return c?c.first_name+' '+c.last_name:'Unknown';
+}
+
+function renderClients(){
+  const q=document.getElementById('clSearch').value.toLowerCase();
+  const filtered=clients.filter(c=>(c.relationship_name+' '+c.role+' '+c.status+' '+c.practitioner).toLowerCase().includes(q));
+  document.getElementById('clBody').innerHTML=filtered.map(c=>`<tr>
+    <td><strong>${c.relationship_name}</strong></td>
+    <td>${c.role||''}</td>
+    <td><span class="badge badge-${c.status==='Active'?'green':c.status==='On Hold'?'amber':'gray'}">${c.status}</span></td>
+    <td>${c.practitioner}</td>
+    <td style="font-size:12px;">${(c.members||[]).map(mid=>getContactName(mid)).join(', ')||'—'}</td>
+    <td><div class="actions">
+      <button class="btn btn-gray" onclick="openClientModal('${c.id}')">Edit</button>
+      <button class="btn btn-red" onclick="deleteClient('${c.id}')">Del</button>
+    </div></td>
+  </tr>`).join('');
+}
+
+window.filterClients=function(){renderClients();};
+
+window.openClientModal=function(id){
+  const c=id?clients.find(x=>x.id===id):null;
+  document.getElementById('clientModalTitle').textContent=c?'Edit Client':'Add Client';
+  document.getElementById('clientId').value=c?c.id:'';
+  document.getElementById('clName').value=c?c.relationship_name:'';
+  document.getElementById('clRole').value=c?c.role:'';
+  document.getElementById('clStatus').value=c?c.status:'Active';
+  document.getElementById('clPractitioner').value=c?c.practitioner:'Cath';
+  document.getElementById('clNotes').value=c?c.notes:'';
+  tempMembers=c?[...(c.members||[])]:[];
+  renderMemberSelect();
+  renderTempMembers();
+  document.getElementById('clientModal').classList.add('open');
+};
+
+function renderMemberSelect(){
+  document.getElementById('clMemberSelect').innerHTML='<option value="">-- Select contact --</option>'+
+    contacts.map(c=>`<option value="${c.id}">${c.first_name} ${c.last_name}</option>`).join('');
+}
+
+function renderTempMembers(){
+  document.getElementById('clMembers').innerHTML=tempMembers.map(mid=>
+    `<span class="member-tag">${getContactName(mid)} <span class="remove" onclick="removeTempMember('${mid}')">&times;</span></span>`
+  ).join('');
+}
+
+window.addMemberToClient=function(){
+  const sel=document.getElementById('clMemberSelect');
+  const val=sel.value;
+  if(!val||tempMembers.includes(val))return;
+  tempMembers.push(val);
+  sel.value='';
+  renderTempMembers();
+};
+
+window.removeTempMember=function(mid){
+  tempMembers=tempMembers.filter(m=>m!==mid);
+  renderTempMembers();
+};
+
+window.saveClient=function(){
+  const id=document.getElementById('clientId').value;
+  const data={
+    relationship_name:document.getElementById('clName').value.trim(),
+    role:document.getElementById('clRole').value.trim(),
+    status:document.getElementById('clStatus').value,
+    practitioner:document.getElementById('clPractitioner').value,
+    notes:document.getElementById('clNotes').value.trim(),
+    members:[...tempMembers]
+  };
+  if(!data.relationship_name){toast('Client name required','error');return;}
+  if(id){
+    const c=clients.find(x=>x.id===id);
+    Object.assign(c,data);
+    toast('Client updated','success');
+  }else{
+    data.id=String(nextClientId++);
+    clients.push(data);
+    toast('Client added','success');
+  }
+  closeModal('clientModal');
+  renderClients();
+};
+
+window.deleteClient=function(id){
+  if(!confirm('Delete this client?'))return;
+  clients=clients.filter(c=>c.id!==id);
+  toast('Client deleted','success');
+  renderClients();
+};
+
 })();
 </script>
 </body>
