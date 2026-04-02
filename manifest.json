@@ -1,0 +1,22 @@
+{
+  "name": "Coach4U CRM",
+  "short_name": "Coach4U",
+  "start_url": "/internal-coach4u-hub/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#1e293b",
+  "icons": [
+    {
+      "src": "C4U.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "C4U.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
