@@ -66,7 +66,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#f0f6ff;color:#1e293
 
 /* ── SEARCH BAR ── */
 .toolbar{display:flex;gap:12px;margin-bottom:20px;align-items:center;flex-wrap:wrap;}
-.search-input{padding:8px 14px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;width:280px;background:#fff;}
+.search-input{padding:8px 14px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;width:280px;max-width:100%;background:#fff;}
 .search-input:focus{outline:none;border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.1);}
 .btn{padding:8px 16px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;}
 .btn-blue{background:#3b82f6;color:#fff;}.btn-blue:hover{background:#2563eb;}
@@ -214,10 +214,7 @@ td .actions button{padding:4px 10px;font-size:12px;}
         <input class="search-input" id="clSearch" placeholder="Search clients..." oninput="filterClients()">
         <button class="btn btn-blue" onclick="openClientModal()">+ Add Client</button>
       </div>
-      <table>
-        <thead><tr><th>Client Name</th><th>Role</th><th>Status</th><th>Practitioner</th><th>Members</th><th>Actions</th></tr></thead>
-        <tbody id="clBody"></tbody>
-      </table>
+      <div id="clCards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;"></div>
     </div>
 
     <!-- STRENGTHS HUB -->
@@ -240,10 +237,7 @@ td .actions button{padding:4px 10px;font-size:12px;}
         </select>
         <button class="btn btn-blue" onclick="openTaskModal()">+ Add Task</button>
       </div>
-      <table>
-        <thead><tr><th>Task</th><th>Owner</th><th>Priority</th><th>Status</th><th>Due Date</th><th>Actions</th></tr></thead>
-        <tbody id="tkBody"></tbody>
-      </table>
+      <div id="tkCards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;"></div>
     </div>
 
     <!-- REFERRAL HUB -->
@@ -252,10 +246,7 @@ td .actions button{padding:4px 10px;font-size:12px;}
         <input class="search-input" id="refSearch" placeholder="Search referrers..." oninput="filterReferrals()">
         <button class="btn btn-blue" onclick="openReferralModal()">+ Add Referrer</button>
       </div>
-      <table>
-        <thead><tr><th>Name</th><th>Organisation</th><th>Email</th><th>Phone</th><th>Notes</th><th>Actions</th></tr></thead>
-        <tbody id="refBody"></tbody>
-      </table>
+      <div id="refCards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;"></div>
     </div>
 
     <!-- IT PROJECTS -->
@@ -264,10 +255,7 @@ td .actions button{padding:4px 10px;font-size:12px;}
         <input class="search-input" id="itSearch" placeholder="Search projects..." oninput="filterITProjects()">
         <button class="btn btn-blue" onclick="openITModal()">+ Add Project</button>
       </div>
-      <table>
-        <thead><tr><th>Project</th><th>Status</th><th>Owner</th><th>Notes</th><th>Actions</th></tr></thead>
-        <tbody id="itBody"></tbody>
-      </table>
+      <div id="itCards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;"></div>
     </div>
 
   </div>
@@ -572,17 +560,23 @@ function getContactName(id){
 function renderClients(){
   const q=document.getElementById('clSearch').value.toLowerCase();
   const filtered=clients.filter(c=>(c.relationship_name+' '+c.role+' '+c.status+' '+c.practitioner).toLowerCase().includes(q));
-  document.getElementById('clBody').innerHTML=filtered.map(c=>`<tr>
-    <td><strong>${c.relationship_name}</strong></td>
-    <td>${c.role||''}</td>
-    <td><span class="badge badge-${c.status==='Active'?'green':c.status==='On Hold'?'amber':'gray'}">${c.status}</span></td>
-    <td>${c.practitioner}</td>
-    <td style="font-size:12px;">${(c.members||[]).map(mid=>getContactName(mid)).join(', ')||'—'}</td>
-    <td><div class="actions">
-      <button class="btn btn-gray" onclick="openClientModal('${c.id}')">Edit</button>
-      <button class="btn btn-red" onclick="deleteClient('${c.id}')">Del</button>
-    </div></td>
-  </tr>`).join('');
+  document.getElementById('clCards').innerHTML=filtered.map(c=>{
+    const members=(c.members||[]).map(mid=>getContactName(mid));
+    return `<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+        <div>
+          <div style="font-weight:700;font-size:16px;margin-bottom:4px;">${c.relationship_name}</div>
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+            <span class="badge badge-${c.status==='Active'?'green':c.status==='On Hold'?'amber':'gray'}">${c.status}</span>
+            ${c.role?'<span style="font-size:12px;color:#64748b;">'+c.role+'</span>':''}
+          </div>
+        </div>
+        <div class="actions"><button class="btn btn-gray" onclick="openClientModal('${c.id}')">Edit</button><button class="btn btn-red" onclick="deleteClient('${c.id}')">Del</button></div>
+      </div>
+      <div style="font-size:13px;color:#64748b;margin-bottom:8px;">Practitioner: <strong style="color:#1e293b;">${c.practitioner}</strong></div>
+      ${members.length?'<div style="font-size:12px;color:#64748b;margin-bottom:4px;">Members:</div><div style="display:flex;flex-wrap:wrap;gap:4px;">'+members.map(m=>'<span class="member-tag">'+m+'</span>').join('')+'</div>':'<div style="font-size:12px;color:#94a3b8;">No members linked</div>'}
+    </div>`;
+  }).join('')||'<div style="padding:20px;text-align:center;color:#94a3b8;">No clients found.</div>';
 }
 window.filterClients=function(){renderClients();};
 
@@ -689,18 +683,22 @@ function renderTasks(){
     if(fp&&t.priority!==fp)return false;
     return(t.title+' '+t.owner+' '+t.description).toLowerCase().includes(q);
   });
-  document.getElementById('tkBody').innerHTML=filtered.map(t=>`<tr>
-    <td><strong>${t.title}</strong>${t.description?'<div style="font-size:12px;color:#94a3b8;">'+t.description+'</div>':''}</td>
-    <td>${t.owner}</td>
-    <td><span class="badge badge-${t.priority==='High'?'red':t.priority==='Medium'?'amber':'gray'}">${t.priority}</span></td>
-    <td><span class="badge badge-${t.status==='Done'?'green':t.status==='In Progress'?'blue':'gray'}">${t.status}</span></td>
-    <td>${t.due_date||'—'}</td>
-    <td><div class="actions">
-      <button class="btn btn-gray" onclick="openTaskModal('${t.id}')">Edit</button>
-      ${t.status!=='Done'?'<button class="btn btn-green" onclick="completeTask(\''+t.id+'\')">Done</button>':''}
-      <button class="btn btn-red" onclick="deleteTask('${t.id}')">Del</button>
-    </div></td>
-  </tr>`).join('');
+  document.getElementById('tkCards').innerHTML=filtered.map(t=>{
+    const overdue=t.due_date&&t.status!=='Done'&&new Date(t.due_date)<new Date();
+    return `<div style="background:#fff;border:1px solid ${overdue?'#fca5a5':'#e2e8f0'};border-radius:10px;padding:20px;${overdue?'border-left:4px solid #ef4444;':''}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+        <div style="font-weight:700;font-size:15px;${t.status==='Done'?'text-decoration:line-through;color:#94a3b8;':''}">${t.title}</div>
+        <div class="actions"><button class="btn btn-gray" onclick="openTaskModal('${t.id}')">Edit</button>${t.status!=='Done'?'<button class="btn btn-green" onclick="completeTask(\''+t.id+'\')">Done</button>':''}<button class="btn btn-red" onclick="deleteTask('${t.id}')">Del</button></div>
+      </div>
+      ${t.description?'<div style="font-size:13px;color:#64748b;margin-bottom:8px;">'+t.description+'</div>':''}
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <span class="badge badge-${t.priority==='High'?'red':t.priority==='Medium'?'amber':'gray'}">${t.priority}</span>
+        <span class="badge badge-${t.status==='Done'?'green':t.status==='In Progress'?'blue':'gray'}">${t.status}</span>
+        <span style="font-size:12px;color:#64748b;">${t.owner}</span>
+        ${t.due_date?'<span style="font-size:12px;font-weight:600;color:'+(overdue?'#ef4444':'#1e293b')+';">Due: '+t.due_date+'</span>':''}
+      </div>
+    </div>`;
+  }).join('')||'<div style="padding:20px;text-align:center;color:#94a3b8;">No tasks found.</div>';
 }
 window.filterTasks=function(){renderTasks();};
 
@@ -740,17 +738,20 @@ window.deleteTask=function(id){
 function renderReferrals(){
   const q=document.getElementById('refSearch').value.toLowerCase();
   const filtered=referrals.filter(r=>(r.name+' '+r.organisation+' '+r.email).toLowerCase().includes(q));
-  document.getElementById('refBody').innerHTML=filtered.map(r=>`<tr>
-    <td><strong>${r.name}</strong></td>
-    <td>${r.organisation||''}</td>
-    <td>${r.email||''}</td>
-    <td>${r.phone||''}</td>
-    <td style="font-size:12px;max-width:200px;">${r.notes||''}</td>
-    <td><div class="actions">
-      <button class="btn btn-gray" onclick="openReferralModal('${r.id}')">Edit</button>
-      <button class="btn btn-red" onclick="deleteReferral('${r.id}')">Del</button>
-    </div></td>
-  </tr>`).join('');
+  document.getElementById('refCards').innerHTML=filtered.map(r=>`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:20px;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+      <div>
+        <div style="font-weight:700;font-size:16px;">${r.name}</div>
+        ${r.organisation?'<div style="font-size:13px;color:#64748b;">'+r.organisation+'</div>':''}
+      </div>
+      <div class="actions"><button class="btn btn-gray" onclick="openReferralModal('${r.id}')">Edit</button><button class="btn btn-red" onclick="deleteReferral('${r.id}')">Del</button></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:4px;">
+      ${r.email?'<div style="font-size:13px;"><a href="mailto:'+r.email+'" style="color:#3b82f6;text-decoration:none;">'+r.email+'</a></div>':''}
+      ${r.phone?'<div style="font-size:14px;font-weight:600;"><a href="tel:'+r.phone.replace(/\\s/g,'')+'" style="color:#1e293b;text-decoration:none;">'+r.phone+'</a></div>':''}
+      ${r.notes?'<div style="font-size:12px;color:#94a3b8;margin-top:4px;">'+r.notes+'</div>':''}
+    </div>
+  </div>`).join('')||'<div style="padding:20px;text-align:center;color:#94a3b8;">No referrers found.</div>';
 }
 window.filterReferrals=function(){renderReferrals();};
 
@@ -784,16 +785,19 @@ window.deleteReferral=function(id){
 function renderITProjects(){
   const q=document.getElementById('itSearch').value.toLowerCase();
   const filtered=itprojects.filter(p=>(p.name+' '+p.owner+' '+p.status).toLowerCase().includes(q));
-  document.getElementById('itBody').innerHTML=filtered.map(p=>`<tr>
-    <td><strong>${p.name}</strong></td>
-    <td><span class="badge badge-${p.status==='Completed'?'green':p.status==='In Progress'?'blue':p.status==='On Hold'?'amber':'gray'}">${p.status}</span></td>
-    <td>${p.owner}</td>
-    <td style="font-size:12px;max-width:200px;">${p.notes||''}</td>
-    <td><div class="actions">
-      <button class="btn btn-gray" onclick="openITModal('${p.id}')">Edit</button>
-      <button class="btn btn-red" onclick="deleteITProject('${p.id}')">Del</button>
-    </div></td>
-  </tr>`).join('');
+  document.getElementById('itCards').innerHTML=filtered.map(p=>`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:20px;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+      <div>
+        <div style="font-weight:700;font-size:16px;margin-bottom:4px;">${p.name}</div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <span class="badge badge-${p.status==='Completed'?'green':p.status==='In Progress'?'blue':p.status==='On Hold'?'amber':'gray'}">${p.status}</span>
+          <span style="font-size:12px;color:#64748b;">${p.owner}</span>
+        </div>
+      </div>
+      <div class="actions"><button class="btn btn-gray" onclick="openITModal('${p.id}')">Edit</button><button class="btn btn-red" onclick="deleteITProject('${p.id}')">Del</button></div>
+    </div>
+    ${p.notes?'<div style="font-size:13px;color:#94a3b8;">'+p.notes+'</div>':''}
+  </div>`).join('')||'<div style="padding:20px;text-align:center;color:#94a3b8;">No projects found.</div>';
 }
 window.filterITProjects=function(){renderITProjects();};
 
