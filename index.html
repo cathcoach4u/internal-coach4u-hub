@@ -372,48 +372,51 @@ td .actions button{padding:4px 10px;font-size:12px;}
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (function(){
 
-// ── DUMMY DATA ──
-let contacts = [
-  {id:'1',first_name:'Sarah',last_name:'Mitchell',email:'sarah@example.com',phone:'0412 345 678',contact_type:'Individual',strengths:'Achiever, Learner, Strategic, Relator, Input',notes:''},
-  {id:'2',first_name:'James',last_name:'Chen',email:'james@techcorp.com',phone:'0423 456 789',contact_type:'Organisation',strengths:'Command, Competition, Activator, Self-Assurance, Significance',notes:''},
-  {id:'3',first_name:'Emma',last_name:'Williams',email:'emma@williams.au',phone:'0434 567 890',contact_type:'Individual',strengths:'Empathy, Developer, Harmony, Includer, Positivity',notes:''},
-  {id:'4',first_name:'Tom',last_name:'Baker',email:'tom@bakerco.com',phone:'0445 678 901',contact_type:'Referrer',strengths:'Analytical, Deliberative, Intellection, Context, Futuristic',notes:''},
-  {id:'5',first_name:'Priya',last_name:'Sharma',email:'priya@sharma.com',phone:'0456 789 012',contact_type:'Individual',strengths:'Communication, Woo, Maximizer, Arranger, Adaptability',notes:''},
-];
+// ── SUPABASE ──
+const SUPABASE_URL = 'https://uoixetfvboevjxlkfyqy.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_m3qgSGvWF0n2TePf6vhqMw_9obUvJEJ';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let clients = [
-  {id:'1',relationship_name:'Mitchell Coaching',role:'1:1 Coaching',status:'Active',practitioner:'Cath',members:['1'],notes:''},
-  {id:'2',relationship_name:'TechCorp Leadership',role:'Team Workshop',status:'Active',practitioner:'Cath',members:['2','3'],notes:''},
-  {id:'3',relationship_name:'Baker Referral Partnership',role:'Referral Partner',status:'On Hold',practitioner:'Lou',members:['4'],notes:''},
-];
-
-let tasks = [
-  {id:'1',title:'Send monthly client reports',description:'',owner:'Lou',priority:'High',status:'To Do',due_date:'2026-04-05'},
-  {id:'2',title:'Review Q2 coaching goals',description:'',owner:'Cath',priority:'Medium',status:'In Progress',due_date:'2026-04-10'},
-  {id:'3',title:'Update CRM contact records',description:'Import from Dataverse',owner:'Cath',priority:'Low',status:'To Do',due_date:'2026-04-15'},
-  {id:'4',title:'Follow up with TechCorp on next session',description:'',owner:'Cath',priority:'High',status:'To Do',due_date:'2026-04-03'},
-];
-
-let referrals = [
-  {id:'1',name:'Tom Baker',organisation:'Baker & Co',email:'tom@bakerco.com',phone:'0445 678 901',notes:'Long-term referral partner'},
-  {id:'2',name:'Lisa Wong',organisation:'HR Solutions Group',email:'lisa@hrsolutions.com',phone:'0467 890 123',notes:'Met at networking event'},
-];
-
-let itprojects = [
-  {id:'1',name:'CRM Build (Supabase)',status:'In Progress',owner:'Cath',notes:'GitHub Pages + Supabase backend'},
-  {id:'2',name:'Coach4U Website Refresh',status:'Planning',owner:'Cath',notes:'Avada theme updates'},
-  {id:'3',name:'Client Portal MVP',status:'On Hold',owner:'Lou',notes:'Waiting on CRM completion'},
-];
-
-let nextContactId = 6;
-let nextClientId = 4;
-let nextTaskId = 5;
-let nextRefId = 3;
-let nextITId = 4;
+// ── DATA ──
+let contacts = [];
+let clients = [];
+let tasks = [];
+let referrals = [];
+let itprojects = [];
 let tempMembers = [];
+
+// ── LOAD FROM SUPABASE ──
+async function loadContacts(){
+  const {data,error} = await supabase.from('contacts').select('*').order('first_name');
+  if(data) contacts = data;
+  if(error) console.error('Load contacts error:', error);
+}
+async function loadClients(){
+  const {data,error} = await supabase.from('clients').select('*').order('relationship_name');
+  if(data){
+    // Load members for each client
+    for(let c of data){
+      const {data:members} = await supabase.from('client_members').select('contact_id').eq('client_id', c.id);
+      c.members = members ? members.map(m=>m.contact_id) : [];
+    }
+    clients = data;
+  }
+  if(error) console.error('Load clients error:', error);
+}
+async function loadTasks(){
+  const {data,error} = await supabase.from('tasks').select('*').order('created_at',{ascending:false});
+  if(data) tasks = data;
+  if(error) console.error('Load tasks error:', error);
+}
+
+async function loadAll(){
+  await Promise.all([loadContacts(), loadClients(), loadTasks()]);
+  renderDashboard();
+}
 
 // ── DATE DISPLAY ──
 document.getElementById('headerDate').textContent = new Date().toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
@@ -426,11 +429,11 @@ window.navTo = function(tab,btn){
   if(btn)btn.classList.add('active');
   const titles={dashboard:'Dashboard',masterlist:'Master List',clients:'Clients',strengths:'Strengths Hub',tasks:'Task Management',referrals:'Referral Hub',itprojects:'IT Projects'};
   document.getElementById('pageTitle').textContent=titles[tab]||'Coach4U';
-  if(tab==='dashboard') renderDashboard();
-  if(tab==='masterlist') renderMasterList();
-  if(tab==='clients') renderClients();
-  if(tab==='strengths') renderStrengths();
-  if(tab==='tasks') renderTasks();
+  if(tab==='dashboard'){loadAll();}
+  if(tab==='masterlist'){loadContacts().then(()=>renderMasterList());}
+  if(tab==='clients'){Promise.all([loadContacts(),loadClients()]).then(()=>renderClients());}
+  if(tab==='strengths'){loadContacts().then(()=>renderStrengths());}
+  if(tab==='tasks'){loadTasks().then(()=>renderTasks());}
   if(tab==='referrals') renderReferrals();
   if(tab==='itprojects') renderITProjects();
   closeMobile();
@@ -517,7 +520,7 @@ window.openContactModal=function(id){
   document.getElementById('contactModal').classList.add('open');
 };
 
-window.saveContact=function(){
+window.saveContact=async function(){
   const id=document.getElementById('contactId').value;
   const data={
     first_name:document.getElementById('cFirst').value.trim(),
@@ -530,23 +533,26 @@ window.saveContact=function(){
   };
   if(!data.first_name||!data.last_name){toast('First and last name required','error');return;}
   if(id){
-    const c=contacts.find(x=>x.id===id);
-    Object.assign(c,data);
+    const {error}=await supabase.from('contacts').update(data).eq('id',id);
+    if(error){toast('Error: '+error.message,'error');return;}
     toast('Contact updated','success');
   }else{
-    data.id=String(nextContactId++);
-    contacts.push(data);
+    const {error}=await supabase.from('contacts').insert(data);
+    if(error){toast('Error: '+error.message,'error');return;}
     toast('Contact added','success');
   }
   closeModal('contactModal');
+  await loadContacts();
   renderMasterList();
   renderDashboard();
 };
 
-window.deleteContact=function(id){
+window.deleteContact=async function(id){
   if(!confirm('Delete this contact?'))return;
-  contacts=contacts.filter(c=>c.id!==id);
+  const {error}=await supabase.from('contacts').delete().eq('id',id);
+  if(error){toast('Error: '+error.message,'error');return;}
   toast('Contact deleted','success');
+  await loadContacts();
   renderMasterList();
   renderDashboard();
 };
@@ -620,35 +626,44 @@ window.removeTempMember=function(mid){
   renderTempMembers();
 };
 
-window.saveClient=function(){
+window.saveClient=async function(){
   const id=document.getElementById('clientId').value;
   const data={
     relationship_name:document.getElementById('clName').value.trim(),
     role:document.getElementById('clRole').value.trim(),
     status:document.getElementById('clStatus').value,
     practitioner:document.getElementById('clPractitioner').value,
-    notes:document.getElementById('clNotes').value.trim(),
-    members:[...tempMembers]
+    notes:document.getElementById('clNotes').value.trim()
   };
   if(!data.relationship_name){toast('Client name required','error');return;}
+  let clientId=id;
   if(id){
-    const c=clients.find(x=>x.id===id);
-    Object.assign(c,data);
+    const {error}=await supabase.from('clients').update(data).eq('id',id);
+    if(error){toast('Error: '+error.message,'error');return;}
     toast('Client updated','success');
   }else{
-    data.id=String(nextClientId++);
-    clients.push(data);
+    const {data:inserted,error}=await supabase.from('clients').insert(data).select();
+    if(error){toast('Error: '+error.message,'error');return;}
+    clientId=inserted[0].id;
     toast('Client added','success');
   }
+  // Sync members
+  await supabase.from('client_members').delete().eq('client_id',clientId);
+  if(tempMembers.length){
+    await supabase.from('client_members').insert(tempMembers.map(cid=>({client_id:clientId,contact_id:cid})));
+  }
   closeModal('clientModal');
+  await loadClients();
   renderClients();
   renderDashboard();
 };
 
-window.deleteClient=function(id){
+window.deleteClient=async function(id){
   if(!confirm('Delete this client?'))return;
-  clients=clients.filter(c=>c.id!==id);
+  const {error}=await supabase.from('clients').delete().eq('id',id);
+  if(error){toast('Error: '+error.message,'error');return;}
   toast('Client deleted','success');
+  await loadClients();
   renderClients();
   renderDashboard();
 };
@@ -715,23 +730,33 @@ window.openTaskModal=function(id){
   document.getElementById('taskModal').classList.add('open');
 };
 
-window.saveTask=function(){
+window.saveTask=async function(){
   const id=document.getElementById('taskId').value;
-  const data={title:document.getElementById('tkTitle').value.trim(),description:document.getElementById('tkDesc').value.trim(),owner:document.getElementById('tkOwner').value,priority:document.getElementById('tkPriority').value,status:document.getElementById('tkStatus').value,due_date:document.getElementById('tkDue').value};
+  const data={title:document.getElementById('tkTitle').value.trim(),description:document.getElementById('tkDesc').value.trim(),owner:document.getElementById('tkOwner').value,priority:document.getElementById('tkPriority').value,status:document.getElementById('tkStatus').value,due_date:document.getElementById('tkDue').value||null};
   if(!data.title){toast('Task title required','error');return;}
-  if(id){Object.assign(tasks.find(x=>x.id===id),data);toast('Task updated','success');}
-  else{data.id=String(nextTaskId++);tasks.push(data);toast('Task added','success');}
-  closeModal('taskModal');renderTasks();
+  if(id){
+    const {error}=await supabase.from('tasks').update(data).eq('id',id);
+    if(error){toast('Error: '+error.message,'error');return;}
+    toast('Task updated','success');
+  }else{
+    const {error}=await supabase.from('tasks').insert(data);
+    if(error){toast('Error: '+error.message,'error');return;}
+    toast('Task added','success');
+  }
+  closeModal('taskModal');await loadTasks();renderTasks();
 };
 
-window.completeTask=function(id){
-  const t=tasks.find(x=>x.id===id);
-  if(t){t.status='Done';toast('Task completed','success');renderTasks();}
+window.completeTask=async function(id){
+  const {error}=await supabase.from('tasks').update({status:'Done'}).eq('id',id);
+  if(error){toast('Error: '+error.message,'error');return;}
+  toast('Task completed','success');await loadTasks();renderTasks();
 };
 
-window.deleteTask=function(id){
+window.deleteTask=async function(id){
   if(!confirm('Delete this task?'))return;
-  tasks=tasks.filter(t=>t.id!==id);toast('Task deleted','success');renderTasks();
+  const {error}=await supabase.from('tasks').delete().eq('id',id);
+  if(error){toast('Error: '+error.message,'error');return;}
+  toast('Task deleted','success');await loadTasks();renderTasks();
 };
 
 // ── REFERRALS ──
@@ -827,7 +852,7 @@ window.deleteITProject=function(id){
 };
 
 // ── BOOT ──
-renderDashboard();
+loadAll();
 
 // ── MOBILE CHECK ──
 if(window.innerWidth<=768) document.getElementById('mobileToggle').style.display='inline-block';
