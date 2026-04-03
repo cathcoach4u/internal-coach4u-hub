@@ -870,6 +870,15 @@ function renderOpsDash(){
 const refDashState={};
 window.toggleRefDash=function(id){refDashState[id]=refDashState[id]===false?true:false;renderReferrals();};
 
+window.linkClientToReferrer=async function(referrerId,clientId){
+  if(!clientId) return;
+  const {error}=await supabase.from('clients').update({referred_by:referrerId}).eq('id',clientId);
+  if(error){toast('Error linking client: '+error.message,'error');return;}
+  await loadClients();
+  renderReferrals();
+  toast('Client linked','success');
+};
+
 // ── PROSPECTS DASHBOARD ──
 let prospects=[];
 async function loadProspects(){
@@ -1639,13 +1648,9 @@ async function loadReferrers(){
 
 function renderReferrals(){
   // Stats bar
-  const totalLinked=(referrals||[]).reduce((sum,r)=>(r.members||[]).length+sum,0);
   const referredCount=referrals.reduce((sum,r)=>sum+clients.filter(c=>c.referred_by===r.id).length,0);
-  const activeCount=referrals.filter(r=>r.status==='Active').length;
   document.getElementById('refDashStats').innerHTML=`<div class="dash-cards">
     <div class="dash-card"><div class="dc-icon blue">&#128101;</div><div class="dc-info"><h4>${referrals.length}</h4><p>Total Referrers</p></div></div>
-    <div class="dash-card"><div class="dc-icon green">&#9989;</div><div class="dc-info"><h4>${activeCount}</h4><p>Active</p></div></div>
-    <div class="dash-card"><div class="dc-icon amber">&#128100;</div><div class="dc-info"><h4>${totalLinked}</h4><p>Linked Contacts</p></div></div>
     <div class="dash-card"><div class="dc-icon green">&#127793;</div><div class="dc-info"><h4>${referredCount}</h4><p>Clients Referred</p></div></div>
   </div>`;
 
@@ -1666,7 +1671,6 @@ function renderReferrals(){
       const referredCli=clients.filter(c=>c.referred_by===r.id);
       const collapsed=refDashState[r.id]!==false;
       const arrow=collapsed?'&#9654;':'&#9660;';
-      const contactCount=memberContacts.length;
       const clientCount=referredCli.length;
 
       html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
@@ -1675,7 +1679,6 @@ function renderReferrals(){
             <span style="font-size:11px;color:#94a3b8;">${arrow}</span>
             <span style="font-weight:700;font-size:15px;color:#1e3a5f;">${r.name}</span>
             <span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:500;${r.status==='Active'?'background:#dcfce7;color:#15803d;':'background:#f1f5f9;color:#64748b;'}">${r.status||'Active'}</span>
-            ${contactCount?'<span style="font-size:11px;color:#64748b;">'+contactCount+' contact'+(contactCount!==1?'s':'')+'</span>':''}
             ${clientCount?'<span style="font-size:11px;background:#dbeafe;color:#2563eb;padding:2px 8px;border-radius:99px;font-weight:600;">'+clientCount+' client'+(clientCount!==1?'s':'')+' referred</span>':''}
           </div>
           <div style="display:flex;gap:8px;align-items:center;">
@@ -1684,25 +1687,29 @@ function renderReferrals(){
           </div>
         </div>
         ${collapsed?'':`<div style="padding:14px 20px;">
-          ${memberContacts.length?`<div style="margin-bottom:${referredCli.length?'12':'0'}px;">
+          ${memberContacts.length?`<div style="margin-bottom:12px;">
             <div style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Contacts</div>
             <div style="display:flex;flex-direction:column;gap:6px;">
-              ${memberContacts.map(c=>`<div onclick="openContactModal('${c.id}')" style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border:1px solid #f1f5f9;border-radius:8px;cursor:pointer;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
+              ${memberContacts.map(c=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border:1px solid #f1f5f9;border-radius:8px;">
                 <span style="font-weight:600;font-size:13px;color:#1e293b;">${c.first_name} ${c.last_name}</span>
                 <div style="display:flex;gap:12px;align-items:center;font-size:12px;color:#64748b;">
-                  ${c.phone?'<a href="tel:'+c.phone.replace(/\\s/g,'')+'" onclick="event.stopPropagation()" style="color:#1e293b;text-decoration:none;font-weight:600;">'+c.phone+'</a>':''}
-                  ${c.email?'<a href="mailto:'+c.email+'" onclick="event.stopPropagation()" style="color:#3b82f6;text-decoration:none;">'+c.email+'</a>':''}
+                  ${c.phone?'<a href="tel:'+c.phone.replace(/\\s/g,'')+'" style="color:#1e293b;text-decoration:none;font-weight:600;">'+c.phone+'</a>':''}
+                  ${c.email?'<a href="mailto:'+c.email+'" style="color:#3b82f6;text-decoration:none;">'+c.email+'</a>':''}
                 </div>
               </div>`).join('')}
             </div>
-          </div>`:'<div style="font-size:12px;color:#94a3b8;margin-bottom:8px;">No contacts linked yet</div>'}
-          ${referredCli.length?`<div>
-            <div style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Clients Referred</div>
-            <div style="display:flex;flex-wrap:wrap;gap:4px;">
-              ${referredCli.map(cl=>'<span onclick="openClientModal(\''+cl.id+'\')" style="font-size:12px;padding:3px 10px;border-radius:99px;background:#dcfce7;color:#15803d;font-weight:500;cursor:pointer;" onmouseover="this.style.background=\'#bbf7d0\'" onmouseout="this.style.background=\'#dcfce7\'">'+cl.relationship_name+'</span>').join('')}
-            </div>
           </div>`:''}
-          ${r.notes?'<div style="font-size:12px;color:#64748b;margin-top:8px;padding-top:8px;border-top:1px solid #f1f5f9;">'+r.notes+'</div>':''}
+          <div style="margin-bottom:${r.notes?'8':'0'}px;">
+            <div style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Clients Referred</div>
+            ${referredCli.length?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
+              ${referredCli.map(cl=>'<span onclick="openClientModal(\''+cl.id+'\')" style="font-size:12px;padding:3px 10px;border-radius:99px;background:#dcfce7;color:#15803d;font-weight:500;cursor:pointer;" onmouseover="this.style.background=\'#bbf7d0\'" onmouseout="this.style.background=\'#dcfce7\'">'+cl.relationship_name+'</span>').join('')}
+            </div>`:'<div style="font-size:12px;color:#94a3b8;margin-bottom:8px;">No clients linked yet</div>'}
+            <select onchange="linkClientToReferrer('${r.id}',this.value);this.value='';" style="font-size:12px;padding:4px 8px;border:1px solid #e2e8f0;border-radius:6px;color:#64748b;background:#fff;">
+              <option value="">+ Link a client...</option>
+              ${clients.filter(cl=>cl.referred_by!==r.id).map(cl=>'<option value="'+cl.id+'">'+cl.relationship_name+'</option>').join('')}
+            </select>
+          </div>
+          ${r.notes?'<div style="font-size:12px;color:#64748b;padding-top:8px;border-top:1px solid #f1f5f9;">'+r.notes+'</div>':''}
         </div>`}
       </div>`;
     });
