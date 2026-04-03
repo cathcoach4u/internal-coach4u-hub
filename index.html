@@ -17,7 +17,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#f0f6ff;color:#1e293
 
 /* ── SIDEBAR ── */
 .sidebar{width:240px;background:#fff;border-right:1px solid #e2e8f0;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:50;}
-.sidebar-logo{padding:20px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #e2e8f0;}
+.sidebar-logo{padding:20px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #e2e8f0;background:linear-gradient(135deg,#eff6ff 0%,#dbeafe 100%);}
 .sidebar-logo img{width:40px;height:40px;border-radius:8px;}
 .sidebar-logo span{font-size:18px;font-weight:700;color:#3b82f6;}
 .nav-section{padding:16px 12px 8px;font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;font-weight:600;}
@@ -189,14 +189,9 @@ td .actions button{padding:4px 10px;font-size:12px;}
           <div class="dc-info"><h4 id="dcOnHold">1</h4><p>On Hold</p></div>
         </div>
       </div>
-      <div class="dash-section">
-        <h3>Recent Clients</h3>
-        <div class="recent-list" id="recentClients"></div>
-      </div>
-      <div class="dash-section">
-        <h3>Recent Contacts</h3>
-        <div class="recent-list" id="recentContacts"></div>
-      </div>
+      <div id="recentClients"></div>
+      <div id="recentContacts"></div>
+      <div id="upcomingTasks"></div>
     </div>
 
     <!-- MASTER LIST -->
@@ -214,7 +209,7 @@ td .actions button{padding:4px 10px;font-size:12px;}
         <input class="search-input" id="clSearch" placeholder="Search clients..." oninput="filterClients()">
         <button class="btn btn-blue" onclick="openClientModal()">+ Add Client</button>
       </div>
-      <div id="clCards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;"></div>
+      <div id="clCards"></div>
     </div>
 
     <!-- STRENGTHS HUB -->
@@ -222,7 +217,7 @@ td .actions button{padding:4px 10px;font-size:12px;}
       <div class="toolbar">
         <input class="search-input" id="shSearch" placeholder="Search by name or strength..." oninput="filterStrengths()">
       </div>
-      <div id="shCards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;"></div>
+      <div id="shCards"></div>
     </div>
 
     <!-- TASK MANAGEMENT -->
@@ -237,7 +232,7 @@ td .actions button{padding:4px 10px;font-size:12px;}
         </select>
         <button class="btn btn-blue" onclick="openTaskModal()">+ Add Task</button>
       </div>
-      <div id="tkCards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;"></div>
+      <div id="tkCards"></div>
     </div>
 
     <!-- REFERRAL HUB -->
@@ -246,7 +241,7 @@ td .actions button{padding:4px 10px;font-size:12px;}
         <input class="search-input" id="refSearch" placeholder="Search referrers..." oninput="filterReferrals()">
         <button class="btn btn-blue" onclick="openReferralModal()">+ Add Referrer</button>
       </div>
-      <div id="refCards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;"></div>
+      <div id="refCards"></div>
     </div>
 
     <!-- IT PROJECTS -->
@@ -255,7 +250,7 @@ td .actions button{padding:4px 10px;font-size:12px;}
         <input class="search-input" id="itSearch" placeholder="Search projects..." oninput="filterITProjects()">
         <button class="btn btn-blue" onclick="openITModal()">+ Add Project</button>
       </div>
-      <div id="itCards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;"></div>
+      <div id="itCards"></div>
     </div>
 
   </div>
@@ -471,37 +466,107 @@ function toast(msg,type){
 window.closeModal=function(id){document.getElementById(id).classList.remove('open');};
 
 // ── DASHBOARD ──
+const dashGroupState={recentClients:false,recentContacts:false,upcomingTasks:false};
+function toggleDashGroup(g){dashGroupState[g]=!dashGroupState[g];renderDashboard();}
+window.toggleDashGroup=toggleDashGroup;
+
 function renderDashboard(){
   document.getElementById('dcContacts').textContent=contacts.length;
   document.getElementById('dcClients').textContent=clients.filter(c=>c.status==='Active').length;
   document.getElementById('dcOnHold').textContent=clients.filter(c=>c.status==='On Hold').length;
-  document.getElementById('recentClients').innerHTML=clients.slice(0,5).map(c=>
-    `<div class="recent-item"><div><span class="ri-name">${c.relationship_name}</span></div><div><span class="badge badge-${c.status==='Active'?'green':c.status==='On Hold'?'amber':'gray'}">${c.status}</span> <span class="ri-meta">${c.practitioner}</span></div></div>`
-  ).join('');
-  document.getElementById('recentContacts').innerHTML=contacts.slice(0,5).map(c=>
-    `<div class="recent-item"><div><span class="ri-name">${c.first_name} ${c.last_name}</span> <span class="ri-meta">${c.email}</span></div><span class="badge badge-${c.contact_type==='Individual'?'blue':c.contact_type==='Organisation'?'green':'amber'}">${c.contact_type}</span></div>`
-  ).join('');
+
+  const recentClientsHtml=clients.slice(0,5).map(c=>{
+    const borderColor=c.status==='Active'?'#16a34a':c.status==='On Hold'?'#eab308':'#94a3b8';
+    return `<div style="background:#fff;border:1px solid #e2e8f0;border-left:3px solid ${borderColor};border-radius:8px;padding:12px 14px;display:flex;align-items:center;gap:12px;">
+      <div style="flex:1;min-width:0;">
+        <span style="font-weight:600;font-size:14px;color:#1e293b;">${c.relationship_name}</span>
+        <span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:500;margin-left:8px;${c.status==='Active'?'background:#dcfce7;color:#15803d;':c.status==='On Hold'?'background:#fef9c3;color:#a16207;':'background:#f1f5f9;color:#64748b;'}">${c.status}</span>
+      </div>
+      <span style="font-size:12px;color:#64748b;">${c.practitioner}</span>
+    </div>`;
+  }).join('');
+
+  const recentContactsHtml=contacts.slice(0,5).map(c=>`<div style="background:#fff;border:1px solid #e2e8f0;border-left:3px solid #3b82f6;border-radius:8px;padding:12px 14px;display:flex;align-items:center;gap:12px;">
+    <div style="flex:1;min-width:0;">
+      <span style="font-weight:600;font-size:14px;color:#1e293b;">${c.first_name} ${c.last_name}</span>
+      ${c.email?'<span style="font-size:12px;color:#64748b;margin-left:8px;">'+c.email+'</span>':''}
+    </div>
+    <span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:500;${c.contact_type==='Individual'?'background:#eff6ff;color:#2563eb;':c.contact_type==='Organisation'?'background:#dcfce7;color:#15803d;':'background:#fef9c3;color:#a16207;'}">${c.contact_type}</span>
+  </div>`).join('');
+
+  const upcomingHtml=tasks.filter(t=>t.status!=='Done'&&t.due_date).sort((a,b)=>a.due_date.localeCompare(b.due_date)).slice(0,5).map(t=>{
+    const overdue=new Date(t.due_date)<new Date();
+    return `<div style="background:#fff;border:1px solid #e2e8f0;border-left:3px solid ${overdue?'#ef4444':t.priority==='High'?'#eab308':'#94a3b8'};border-radius:8px;padding:12px 14px;display:flex;align-items:center;gap:12px;">
+      <div style="flex:1;min-width:0;">
+        <span style="font-weight:600;font-size:14px;color:#1e293b;">${t.title}</span>
+        <span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:500;margin-left:8px;${t.priority==='High'?'background:#fef2f2;color:#dc2626;':t.priority==='Medium'?'background:#fef9c3;color:#a16207;':'background:#f1f5f9;color:#64748b;'}">${t.priority}</span>
+      </div>
+      <span style="font-size:12px;font-weight:600;color:${overdue?'#ef4444':'#1e293b'};">${t.due_date}</span>
+    </div>`;
+  }).join('')||'<div style="padding:12px;font-size:13px;color:#94a3b8;text-align:center;">No upcoming tasks</div>';
+
+  function dashSection(key,label,count,content){
+    const collapsed=dashGroupState[key]||false;
+    const arrow=collapsed?'&#9654;':'&#9660;';
+    return `<div style="margin-bottom:16px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;overflow:hidden;">
+      <div onclick="toggleDashGroup('${key}')" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;user-select:none;background:#f8fafc;border-bottom:${collapsed?'none':'1px solid #e2e8f0'};">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:12px;color:#94a3b8;">${arrow}</span>
+          <span style="font-weight:700;font-size:14px;color:#1e293b;">${label}</span>
+          <span style="background:#f1f5f9;color:#64748b;font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;">${count}</span>
+        </div>
+      </div>
+      ${collapsed?'':`<div style="display:flex;flex-direction:column;gap:8px;padding:12px;">${content}</div>`}
+    </div>`;
+  }
+
+  document.getElementById('recentClients').innerHTML=dashSection('recentClients','Recent Clients',clients.length,recentClientsHtml);
+  document.getElementById('recentContacts').innerHTML=dashSection('recentContacts','Recent Contacts',contacts.length,recentContactsHtml);
+  document.getElementById('upcomingTasks').innerHTML=dashSection('upcomingTasks','Upcoming Tasks',tasks.filter(t=>t.status!=='Done'&&t.due_date).length,upcomingHtml);
 }
 
 // ── MASTER LIST ──
+const mlGroupState={};
+function toggleMlGroup(g){mlGroupState[g]=!mlGroupState[g];renderMasterList();}
+window.toggleMlGroup=toggleMlGroup;
+
 function renderMasterList(){
   const q=document.getElementById('mlSearch').value.toLowerCase();
   const filtered=contacts.filter(c=>(c.first_name+' '+c.last_name+' '+c.email+' '+c.contact_type+' '+c.strengths).toLowerCase().includes(q));
-  document.getElementById('mlCards').innerHTML='<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;">'+filtered.map(c=>{
-    const hasStr=c.strength_1;
-    return `<div style="display:flex;align-items:center;padding:10px 16px;border-bottom:1px solid #f1f5f9;gap:12px;cursor:pointer;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
-      <div style="flex:1;min-width:0;">
-        <span style="font-weight:600;font-size:14px;">${c.first_name} ${c.last_name}</span>
-        ${c.email?' <a href="mailto:'+c.email+'" style="color:#3b82f6;font-size:12px;text-decoration:none;" onclick="event.stopPropagation()">'+c.email+'</a>':''}
+  // Group by first letter
+  const grouped={};
+  filtered.forEach(c=>{const letter=(c.first_name||'?')[0].toUpperCase();if(!grouped[letter])grouped[letter]=[];grouped[letter].push(c);});
+  const letters=Object.keys(grouped).sort();
+  let html='';
+  letters.forEach(letter=>{
+    const collapsed=mlGroupState[letter]||false;
+    const arrow=collapsed?'&#9654;':'&#9660;';
+    html+=`<div style="margin-bottom:12px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;overflow:hidden;">
+      <div onclick="toggleMlGroup('${letter}')" style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;cursor:pointer;user-select:none;background:#f8fafc;border-bottom:${collapsed?'none':'1px solid #e2e8f0'};">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:12px;color:#94a3b8;">${arrow}</span>
+          <span style="font-weight:700;font-size:14px;color:#1e293b;">${letter}</span>
+          <span style="background:#f1f5f9;color:#64748b;font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;">${grouped[letter].length}</span>
+        </div>
       </div>
-      <div style="flex-shrink:0;display:flex;align-items:center;gap:10px;">
-        ${c.phone?'<a href="tel:'+c.phone.replace(/\\s/g,'')+'" style="color:#1e293b;font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap;" onclick="event.stopPropagation()">'+c.phone+'</a>':''}
-        ${hasStr?'<span style="width:8px;height:8px;border-radius:50%;background:#3b82f6;flex-shrink:0;" title="Has strengths"></span>':''}
-        <button class="btn btn-gray" style="padding:3px 8px;font-size:11px;" onclick="event.stopPropagation();openContactModal(\'${c.id}\')">Edit</button>
-        <button class="btn btn-red" style="padding:3px 8px;font-size:11px;" onclick="event.stopPropagation();deleteContact(\'${c.id}\')">Del</button>
-      </div>
+      ${collapsed?'':`<div style="display:flex;flex-direction:column;gap:0;">${grouped[letter].map(c=>{
+        const hasStr=c.strength_1;
+        return `<div style="display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid #f1f5f9;gap:12px;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
+          <div style="flex:1;min-width:0;">
+            <span style="font-weight:600;font-size:14px;color:#1e293b;">${c.first_name} ${c.last_name}</span>
+            ${c.email?' <a href="mailto:'+c.email+'" style="color:#3b82f6;font-size:12px;text-decoration:none;" onclick="event.stopPropagation()">'+c.email+'</a>':''}
+          </div>
+          <div style="flex-shrink:0;display:flex;align-items:center;gap:8px;">
+            ${c.phone?'<a href="tel:'+c.phone.replace(/\\s/g,'')+'" style="color:#1e293b;font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap;" onclick="event.stopPropagation()">'+c.phone+'</a>':''}
+            ${hasStr?'<span style="width:8px;height:8px;border-radius:50%;background:#3b82f6;flex-shrink:0;" title="Has strengths"></span>':''}
+            <button style="background:none;border:1px solid #e2e8f0;border-radius:6px;padding:4px 10px;font-size:11px;color:#475569;cursor:pointer;" onclick="event.stopPropagation();openContactModal('${c.id}')">Edit</button>
+            <button style="background:none;border:1px solid #fecaca;border-radius:6px;padding:4px 10px;font-size:11px;color:#dc2626;cursor:pointer;" onclick="event.stopPropagation();deleteContact('${c.id}')">Del</button>
+          </div>
+        </div>`;
+      }).join('')}</div>`}
     </div>`;
-  }).join('')+'</div>'||'<div style="padding:20px;text-align:center;color:#94a3b8;">No contacts found.</div>';
+  });
+  document.getElementById('mlCards').innerHTML=html||'<div style="padding:20px;text-align:center;color:#94a3b8;">No contacts found.</div>';
 }
 window.filterMasterList=function(){renderMasterList();};
 
@@ -722,25 +787,55 @@ function renderStrengths(){
     const searchStr=(c.first_name+' '+c.last_name+' '+(c.strengths||'')).toLowerCase();
     return hasStr&&searchStr.includes(q);
   });
-  document.getElementById('shCards').innerHTML=filtered.map(c=>{
+  let html=`<div style="border:1px solid #e2e8f0;border-radius:10px;background:#fff;overflow:hidden;">
+    <div style="padding:12px 16px;background:#f8fafc;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:10px;">
+      <span style="font-weight:700;font-size:14px;color:#1e293b;">Strengths Profiles</span>
+      <span style="background:#f1f5f9;color:#64748b;font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;">${filtered.length}</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;padding:12px;">`;
+  html+=filtered.map(c=>{
     const strengths=[];
     for(let i=1;i<=10;i++){if(c['strength_'+i])strengths.push({rank:i,name:c['strength_'+i]});}
-    return `<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:20px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-        <strong style="font-size:16px;">${c.first_name} ${c.last_name}</strong>
-        <span class="badge badge-${c.contact_type==='Individual'?'blue':c.contact_type==='Organisation'?'green':'amber'}">${c.contact_type}</span>
+    return `<div style="background:#fff;border:1px solid #e2e8f0;border-left:3px solid #3b82f6;border-radius:8px;padding:14px 16px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+        <span style="font-weight:600;font-size:14px;color:#1e293b;">${c.first_name} ${c.last_name}</span>
+        <span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:500;${c.contact_type==='Individual'?'background:#eff6ff;color:#2563eb;':c.contact_type==='Organisation'?'background:#dcfce7;color:#15803d;':'background:#fef9c3;color:#a16207;'}">${c.contact_type}</span>
+        ${c.email?'<span style="font-size:12px;color:#64748b;">'+c.email+'</span>':''}
       </div>
-      <div style="font-size:12px;color:#64748b;margin-bottom:10px;">${c.email||''}</div>
-      ${c.sharepoint_link?'<div style="margin-bottom:10px;"><a href="'+c.sharepoint_link+'" target="_blank" style="font-size:12px;color:#3b82f6;text-decoration:none;">View Strengths Report</a></div>':''}
-      <div style="display:flex;flex-wrap:wrap;gap:6px;">${strengths.map(s=>
-        `<span style="background:${s.rank<=1?'#1d4ed8':s.rank<=3?'#3b82f6':s.rank<=5?'#60a5fa':'#93c5fd'};color:#fff;padding:4px 12px;border-radius:99px;font-size:12px;font-weight:600;">#${s.rank} ${s.name}</span>`
+      <div style="display:flex;flex-wrap:wrap;gap:5px;">${strengths.map(s=>
+        `<span style="background:${s.rank<=1?'#1d4ed8':s.rank<=3?'#3b82f6':s.rank<=5?'#60a5fa':'#93c5fd'};color:#fff;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600;">#${s.rank} ${s.name}</span>`
       ).join('')}</div>
     </div>`;
-  }).join('')||'<div style="padding:20px;text-align:center;color:#94a3b8;">No contacts with strengths found.</div>';
+  }).join('');
+  html+='</div></div>';
+  document.getElementById('shCards').innerHTML=filtered.length?html:'<div style="padding:20px;text-align:center;color:#94a3b8;">No contacts with strengths found.</div>';
 }
 window.filterStrengths=function(){renderStrengths();};
 
 // ── TASKS ──
+const tkGroupState={};
+function toggleTkGroup(g){tkGroupState[g]=!tkGroupState[g];renderTasks();}
+window.toggleTkGroup=toggleTkGroup;
+
+function renderTaskCard(t){
+  const overdue=t.due_date&&t.status!=='Done'&&new Date(t.due_date)<new Date();
+  const borderColor=overdue?'#ef4444':t.priority==='High'?'#eab308':t.priority==='Medium'?'#3b82f6':'#94a3b8';
+  return `<div style="background:#fff;border:1px solid #e2e8f0;border-left:3px solid ${borderColor};border-radius:8px;padding:14px 16px;display:flex;gap:12px;align-items:center;">
+    <div style="flex:1;min-width:0;">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span style="font-weight:600;font-size:14px;color:#1e293b;${t.status==='Done'?'text-decoration:line-through;color:#94a3b8;':''}">${t.title}</span>
+        <span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:500;${t.priority==='High'?'background:#fef2f2;color:#dc2626;':t.priority==='Medium'?'background:#fef9c3;color:#a16207;':'background:#f1f5f9;color:#64748b;'}">${t.priority}</span>
+      </div>
+      <div style="font-size:12px;color:#64748b;margin-top:4px;">${t.owner}${t.due_date?' &middot; Due: <strong style="color:'+(overdue?'#ef4444':'#1e293b')+';">'+t.due_date+'</strong>':''}${t.description?' &middot; '+t.description:''}</div>
+    </div>
+    <div style="display:flex;gap:6px;flex-shrink:0;">
+      <button style="background:none;border:1px solid #e2e8f0;border-radius:6px;padding:6px 12px;font-size:12px;color:#475569;cursor:pointer;" onclick="openTaskModal('${t.id}')">Edit</button>
+      ${t.status!=='Done'?'<button style="background:none;border:1px solid #bbf7d0;border-radius:6px;padding:6px 12px;font-size:12px;color:#16a34a;cursor:pointer;" onclick="completeTask(\''+t.id+'\')">Done</button>':''}
+      <button style="background:none;border:1px solid #fecaca;border-radius:6px;padding:6px 12px;font-size:12px;color:#dc2626;cursor:pointer;" onclick="deleteTask('${t.id}')">Del</button>
+    </div>
+  </div>`;
+}
+
 function renderTasks(){
   const q=document.getElementById('tkSearch').value.toLowerCase();
   const fs=document.getElementById('tkFilterStatus').value;
@@ -750,22 +845,26 @@ function renderTasks(){
     if(fp&&t.priority!==fp)return false;
     return(t.title+' '+t.owner+' '+t.description).toLowerCase().includes(q);
   });
-  document.getElementById('tkCards').innerHTML=filtered.map(t=>{
-    const overdue=t.due_date&&t.status!=='Done'&&new Date(t.due_date)<new Date();
-    return `<div style="background:#fff;border:1px solid ${overdue?'#fca5a5':'#e2e8f0'};border-radius:10px;padding:20px;${overdue?'border-left:4px solid #ef4444;':''}">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
-        <div style="font-weight:700;font-size:15px;${t.status==='Done'?'text-decoration:line-through;color:#94a3b8;':''}">${t.title}</div>
-        <div class="actions"><button class="btn btn-gray" onclick="openTaskModal('${t.id}')">Edit</button>${t.status!=='Done'?'<button class="btn btn-green" onclick="completeTask(\''+t.id+'\')">Done</button>':''}<button class="btn btn-red" onclick="deleteTask('${t.id}')">Del</button></div>
+  const statusOrder=['To Do','In Progress','Done'];
+  const grouped={};
+  filtered.forEach(t=>{const s=t.status||'To Do';if(!grouped[s])grouped[s]=[];grouped[s].push(t);});
+  let html='';
+  statusOrder.forEach(s=>{
+    if(!grouped[s]||!grouped[s].length)return;
+    const collapsed=tkGroupState[s]||false;
+    const arrow=collapsed?'&#9654;':'&#9660;';
+    html+=`<div style="margin-bottom:12px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;overflow:hidden;">
+      <div onclick="toggleTkGroup('${s}')" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;user-select:none;background:#f8fafc;border-bottom:${collapsed?'none':'1px solid #e2e8f0'};">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:12px;color:#94a3b8;">${arrow}</span>
+          <span style="font-weight:700;font-size:14px;color:#1e293b;">${s}</span>
+          <span style="background:#f1f5f9;color:#64748b;font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;">${grouped[s].length}</span>
+        </div>
       </div>
-      ${t.description?'<div style="font-size:13px;color:#64748b;margin-bottom:8px;">'+t.description+'</div>':''}
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-        <span class="badge badge-${t.priority==='High'?'red':t.priority==='Medium'?'amber':'gray'}">${t.priority}</span>
-        <span class="badge badge-${t.status==='Done'?'green':t.status==='In Progress'?'blue':'gray'}">${t.status}</span>
-        <span style="font-size:12px;color:#64748b;">${t.owner}</span>
-        ${t.due_date?'<span style="font-size:12px;font-weight:600;color:'+(overdue?'#ef4444':'#1e293b')+';">Due: '+t.due_date+'</span>':''}
-      </div>
+      ${collapsed?'':`<div style="display:flex;flex-direction:column;gap:8px;padding:12px;">${grouped[s].map(t=>renderTaskCard(t)).join('')}</div>`}
     </div>`;
-  }).join('')||'<div style="padding:20px;text-align:center;color:#94a3b8;">No tasks found.</div>';
+  });
+  document.getElementById('tkCards').innerHTML=html||'<div style="padding:20px;text-align:center;color:#94a3b8;">No tasks found.</div>';
 }
 window.filterTasks=function(){renderTasks();};
 
@@ -815,20 +914,32 @@ window.deleteTask=async function(id){
 function renderReferrals(){
   const q=document.getElementById('refSearch').value.toLowerCase();
   const filtered=referrals.filter(r=>(r.name+' '+r.organisation+' '+r.email).toLowerCase().includes(q));
-  document.getElementById('refCards').innerHTML=filtered.map(r=>`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:20px;">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
-      <div>
-        <div style="font-weight:700;font-size:16px;">${r.name}</div>
-        ${r.organisation?'<div style="font-size:13px;color:#64748b;">'+r.organisation+'</div>':''}
+  let html=`<div style="border:1px solid #e2e8f0;border-radius:10px;background:#fff;overflow:hidden;">
+    <div style="padding:12px 16px;background:#f8fafc;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:10px;">
+      <span style="font-weight:700;font-size:14px;color:#1e293b;">Referrers</span>
+      <span style="background:#f1f5f9;color:#64748b;font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;">${filtered.length}</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;padding:12px;">`;
+  html+=filtered.map(r=>`<div style="background:#fff;border:1px solid #e2e8f0;border-left:3px solid #3b82f6;border-radius:8px;padding:14px 16px;display:flex;gap:12px;align-items:center;">
+    <div style="flex:1;min-width:0;">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span style="font-weight:600;font-size:14px;color:#1e293b;">${r.name}</span>
+        ${r.organisation?'<span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:500;background:#eff6ff;color:#2563eb;">'+r.organisation+'</span>':''}
       </div>
-      <div class="actions"><button class="btn btn-gray" onclick="openReferralModal('${r.id}')">Edit</button><button class="btn btn-red" onclick="deleteReferral('${r.id}')">Del</button></div>
+      <div style="font-size:12px;color:#64748b;margin-top:4px;">
+        ${r.email?'<a href="mailto:'+r.email+'" style="color:#3b82f6;text-decoration:none;">'+r.email+'</a>':''}
+        ${r.email&&r.phone?' &middot; ':''}
+        ${r.phone?'<a href="tel:'+r.phone.replace(/\\s/g,'')+'" style="color:#1e293b;text-decoration:none;font-weight:600;">'+r.phone+'</a>':''}
+        ${r.notes?' &middot; '+r.notes:''}
+      </div>
     </div>
-    <div style="display:flex;flex-direction:column;gap:4px;">
-      ${r.email?'<div style="font-size:13px;"><a href="mailto:'+r.email+'" style="color:#3b82f6;text-decoration:none;">'+r.email+'</a></div>':''}
-      ${r.phone?'<div style="font-size:14px;font-weight:600;"><a href="tel:'+r.phone.replace(/\\s/g,'')+'" style="color:#1e293b;text-decoration:none;">'+r.phone+'</a></div>':''}
-      ${r.notes?'<div style="font-size:12px;color:#94a3b8;margin-top:4px;">'+r.notes+'</div>':''}
+    <div style="display:flex;gap:6px;flex-shrink:0;">
+      <button style="background:none;border:1px solid #e2e8f0;border-radius:6px;padding:6px 12px;font-size:12px;color:#475569;cursor:pointer;" onclick="openReferralModal('${r.id}')">Edit</button>
+      <button style="background:none;border:1px solid #fecaca;border-radius:6px;padding:6px 12px;font-size:12px;color:#dc2626;cursor:pointer;" onclick="deleteReferral('${r.id}')">Del</button>
     </div>
-  </div>`).join('')||'<div style="padding:20px;text-align:center;color:#94a3b8;">No referrers found.</div>';
+  </div>`).join('');
+  html+='</div></div>';
+  document.getElementById('refCards').innerHTML=filtered.length?html:'<div style="padding:20px;text-align:center;color:#94a3b8;">No referrers found.</div>';
 }
 window.filterReferrals=function(){renderReferrals();};
 
@@ -859,22 +970,48 @@ window.deleteReferral=function(id){
 };
 
 // ── IT PROJECTS ──
+const itGroupState={};
+function toggleItGroup(g){itGroupState[g]=!itGroupState[g];renderITProjects();}
+window.toggleItGroup=toggleItGroup;
+
 function renderITProjects(){
   const q=document.getElementById('itSearch').value.toLowerCase();
   const filtered=itprojects.filter(p=>(p.name+' '+p.owner+' '+p.status).toLowerCase().includes(q));
-  document.getElementById('itCards').innerHTML=filtered.map(p=>`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:20px;">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
-      <div>
-        <div style="font-weight:700;font-size:16px;margin-bottom:4px;">${p.name}</div>
-        <div style="display:flex;gap:6px;align-items:center;">
-          <span class="badge badge-${p.status==='Completed'?'green':p.status==='In Progress'?'blue':p.status==='On Hold'?'amber':'gray'}">${p.status}</span>
-          <span style="font-size:12px;color:#64748b;">${p.owner}</span>
+  const statusOrder=['In Progress','Planning','On Hold','Completed'];
+  const grouped={};
+  filtered.forEach(p=>{const s=p.status||'Planning';if(!grouped[s])grouped[s]=[];grouped[s].push(p);});
+  let html='';
+  statusOrder.forEach(s=>{
+    if(!grouped[s]||!grouped[s].length)return;
+    const collapsed=itGroupState[s]||false;
+    const arrow=collapsed?'&#9654;':'&#9660;';
+    html+=`<div style="margin-bottom:12px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;overflow:hidden;">
+      <div onclick="toggleItGroup('${s}')" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;user-select:none;background:#f8fafc;border-bottom:${collapsed?'none':'1px solid #e2e8f0'};">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:12px;color:#94a3b8;">${arrow}</span>
+          <span style="font-weight:700;font-size:14px;color:#1e293b;">${s}</span>
+          <span style="background:#f1f5f9;color:#64748b;font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;">${grouped[s].length}</span>
         </div>
       </div>
-      <div class="actions"><button class="btn btn-gray" onclick="openITModal('${p.id}')">Edit</button><button class="btn btn-red" onclick="deleteITProject('${p.id}')">Del</button></div>
-    </div>
-    ${p.notes?'<div style="font-size:13px;color:#94a3b8;">'+p.notes+'</div>':''}
-  </div>`).join('')||'<div style="padding:20px;text-align:center;color:#94a3b8;">No projects found.</div>';
+      ${collapsed?'':`<div style="display:flex;flex-direction:column;gap:8px;padding:12px;">${grouped[s].map(p=>{
+        const borderColor=p.status==='Completed'?'#16a34a':p.status==='In Progress'?'#3b82f6':p.status==='On Hold'?'#eab308':'#94a3b8';
+        return `<div style="background:#fff;border:1px solid #e2e8f0;border-left:3px solid ${borderColor};border-radius:8px;padding:14px 16px;display:flex;gap:12px;align-items:center;">
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <span style="font-weight:600;font-size:14px;color:#1e293b;">${p.name}</span>
+              <span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:500;${p.status==='Completed'?'background:#dcfce7;color:#15803d;':p.status==='In Progress'?'background:#eff6ff;color:#2563eb;':p.status==='On Hold'?'background:#fef9c3;color:#a16207;':'background:#f1f5f9;color:#64748b;'}">${p.status}</span>
+            </div>
+            <div style="font-size:12px;color:#64748b;margin-top:4px;">${p.owner}${p.notes?' &middot; '+p.notes:''}</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button style="background:none;border:1px solid #e2e8f0;border-radius:6px;padding:6px 12px;font-size:12px;color:#475569;cursor:pointer;" onclick="openITModal('${p.id}')">Edit</button>
+            <button style="background:none;border:1px solid #fecaca;border-radius:6px;padding:6px 12px;font-size:12px;color:#dc2626;cursor:pointer;" onclick="deleteITProject('${p.id}')">Del</button>
+          </div>
+        </div>`;
+      }).join('')}</div>`}
+    </div>`;
+  });
+  document.getElementById('itCards').innerHTML=html||'<div style="padding:20px;text-align:center;color:#94a3b8;">No projects found.</div>';
 }
 window.filterITProjects=function(){renderITProjects();};
 
