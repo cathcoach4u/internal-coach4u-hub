@@ -162,15 +162,15 @@ td .actions button{padding:4px 10px;font-size:12px;}
     <!-- DASHBOARD -->
     <div class="screen active" id="screen-dashboard">
       <div class="dash-cards">
-        <div class="dash-card">
+        <div class="dash-card" onclick="switchArea('crm')" style="cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
           <div class="dc-icon blue">&#128100;</div>
           <div class="dc-info"><h4 id="dcContacts">0</h4><p>Total Contacts</p></div>
         </div>
-        <div class="dash-card">
+        <div class="dash-card" onclick="navTo('clients')" style="cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
           <div class="dc-icon green">&#129309;</div>
           <div class="dc-info"><h4 id="dcClients">0</h4><p>Active Clients</p></div>
         </div>
-        <div class="dash-card">
+        <div class="dash-card" onclick="navTo('prospects')" style="cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
           <div class="dc-icon amber">&#127793;</div>
           <div class="dc-info"><h4 id="dcProspects">0</h4><p>Prospects</p></div>
         </div>
