@@ -837,7 +837,7 @@ function renderStrengths(){
     const top5=[],bottom5=[];
     for(let i=1;i<=10;i++){if(c['strength_'+i]){const s={rank:i,name:c['strength_'+i]};if(i<=5)top5.push(s);else bottom5.push(s);}}
     return `<div style="background:#fff;border:1px solid #e2e8f0;border-left:3px solid #3b82f6;border-radius:8px;padding:12px 16px;display:flex;align-items:center;gap:16px;">
-      <div style="min-width:140px;flex-shrink:0;">
+      <div style="width:220px;flex-shrink:0;">
         <div style="font-weight:600;font-size:14px;color:#1e293b;">${c.first_name} ${c.last_name}</div>
         ${c.email?'<div style="font-size:11px;color:#94a3b8;margin-top:2px;">'+c.email+'</div>':''}
       </div>
