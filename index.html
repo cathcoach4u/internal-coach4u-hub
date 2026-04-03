@@ -1047,7 +1047,7 @@ function renderCliDash(){
 
 // ── MASTER LIST ──
 const mlGroupState={};
-function toggleMlGroup(g){mlGroupState[g]=!mlGroupState[g];renderMasterList();}
+function toggleMlGroup(g){mlGroupState[g]=mlGroupState[g]===false?true:false;renderMasterList();}
 window.toggleMlGroup=toggleMlGroup;
 
 function renderMasterList(){
@@ -1059,7 +1059,7 @@ function renderMasterList(){
   const letters=Object.keys(grouped).sort();
   let html='';
   letters.forEach(letter=>{
-    const collapsed=mlGroupState[letter]||false;
+    const collapsed=mlGroupState[letter]!==false;
     const arrow=collapsed?'&#9654;':'&#9660;';
     html+=`<div style="margin-bottom:12px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;overflow:hidden;">
       <div onclick="toggleMlGroup('${letter}')" style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;cursor:pointer;user-select:none;background:#f8fafc;border-bottom:${collapsed?'none':'1px solid #e2e8f0'};">
