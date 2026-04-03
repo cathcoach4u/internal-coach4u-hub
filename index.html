@@ -150,6 +150,9 @@ td .actions button{padding:4px 10px;font-size:12px;}
   <div class="area-tabs" id="areaTabs">
     <button class="area-tab active" onclick="switchArea('home')"><span class="tab-icon">&#9776;</span>Home</button>
     <button class="area-tab" onclick="switchArea('crm')"><span class="tab-icon">&#128202;</span>CRM</button>
+    <button class="area-tab" onclick="switchArea('referrers')"><span class="tab-icon">&#128200;</span>Referrers</button>
+    <button class="area-tab" onclick="switchArea('prospects')"><span class="tab-icon">&#127793;</span>Prospects</button>
+    <button class="area-tab" onclick="switchArea('clients')"><span class="tab-icon">&#129309;</span>Clients</button>
     <button class="area-tab" onclick="switchArea('thrivehq')"><span class="tab-icon">&#128170;</span>ThriveHQ</button>
     <button class="area-tab" onclick="switchArea('strengths')"><span class="tab-icon">&#127919;</span>Strengths</button>
     <button class="area-tab" onclick="switchArea('operations')"><span class="tab-icon">&#128736;</span>Operations</button>
@@ -189,6 +192,39 @@ td .actions button{padding:4px 10px;font-size:12px;}
         <button class="btn btn-blue" onclick="openContactModal()">+ Add Contact</button>
       </div>
       <div id="mlCards"></div>
+    </div>
+
+    <!-- REFERRERS DASHBOARD -->
+    <div class="screen" id="screen-refdash">
+      <div id="refDashContent"></div>
+    </div>
+
+    <!-- REFERRAL HUB -->
+    <div class="screen" id="screen-referrals">
+      <div class="toolbar">
+        <input class="search-input" id="refSearch" placeholder="Search referrers..." oninput="filterReferrals()">
+        <button class="btn btn-blue" onclick="openReferralModal()">+ Add Referrer</button>
+      </div>
+      <div id="refCards"></div>
+    </div>
+
+    <!-- PROSPECTS DASHBOARD -->
+    <div class="screen" id="screen-prospdash">
+      <div id="prospDashContent"></div>
+    </div>
+
+    <!-- PROSPECTS LIST -->
+    <div class="screen" id="screen-prospects">
+      <div class="toolbar">
+        <input class="search-input" id="prospSearch" placeholder="Search prospects..." oninput="filterProspects()">
+        <button class="btn btn-blue" onclick="openProspectModal()">+ Add Prospect</button>
+      </div>
+      <div id="prospCards"></div>
+    </div>
+
+    <!-- CLIENTS DASHBOARD -->
+    <div class="screen" id="screen-clidash">
+      <div id="cliDashContent"></div>
     </div>
 
     <!-- CLIENTS -->
@@ -255,15 +291,6 @@ td .actions button{padding:4px 10px;font-size:12px;}
       <div id="tkCards"></div>
     </div>
 
-    <!-- REFERRAL HUB -->
-    <div class="screen" id="screen-referrals">
-      <div class="toolbar">
-        <input class="search-input" id="refSearch" placeholder="Search referrers..." oninput="filterReferrals()">
-        <button class="btn btn-blue" onclick="openReferralModal()">+ Add Referrer</button>
-      </div>
-      <div id="refCards"></div>
-    </div>
-
     <!-- IT PROJECTS -->
     <div class="screen" id="screen-itprojects">
       <div class="toolbar">
@@ -273,6 +300,27 @@ td .actions button{padding:4px 10px;font-size:12px;}
       <div id="itCards"></div>
     </div>
 
+  </div>
+</div>
+
+<!-- PROSPECT MODAL -->
+<div class="modal-overlay" id="prospModal">
+  <div class="modal">
+    <h3 id="prospModalTitle">New Prospect</h3>
+    <input type="hidden" id="prospId">
+    <div class="form-group"><label>Name</label><input id="prospName"></div>
+    <div class="form-group"><label>Email</label><input id="prospEmail" type="email"></div>
+    <div class="form-group"><label>Phone</label><input id="prospPhone"></div>
+    <div class="form-group"><label>Status</label>
+      <select id="prospStatus"><option>New</option><option>Hot</option><option>Warm</option><option>Cold</option><option>Converted</option><option>Lost</option></select>
+    </div>
+    <div class="form-group"><label>Source / Referrer</label><input id="prospSource"></div>
+    <div class="form-group"><label>Notes</label><textarea id="prospNotes"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-gray" onclick="closeModal('prospModal')">Cancel</button>
+      <button class="btn btn-red" onclick="deleteProspect(document.getElementById('prospId').value)" id="prospDelBtn" style="display:none;">Delete</button>
+      <button class="btn btn-blue" onclick="saveProspect()">Save</button>
+    </div>
   </div>
 </div>
 
@@ -449,7 +497,7 @@ async function loadTasks(){
 }
 
 async function loadAll(){
-  await Promise.all([loadContacts(), loadClients(), loadTasks()]);
+  await Promise.all([loadContacts(), loadClients(), loadTasks(), loadProspects()]);
   renderSidebarNav('home');
   renderDashboard();
 }
@@ -461,7 +509,7 @@ document.getElementById('headerDate').textContent = new Date().toLocaleDateStrin
 window.navTo = function(tab,btn){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+tab).classList.add('active');
-  const titles={dashboard:'Dashboard',crmdash:'CRM',thqdash:'ThriveHQ',strdash:'Strengths',opsdash:'Operations',masterlist:'Master List',clients:'Clients',thrivehq:'Members',strengths:'Strengths Hub',thqcalls:'Coaching Calls',tasks:'Task Management',referrals:'Referral Hub',itprojects:'IT Projects'};
+  const titles={dashboard:'Dashboard',crmdash:'CRM',refdash:'Referrers',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ',strdash:'Strengths',opsdash:'Operations',masterlist:'Master List',clients:'Client List',referrals:'Referral Hub',prospects:'Prospect List',thrivehq:'Members',strengths:'Strengths Hub',thqcalls:'Coaching Calls',tasks:'Task Management',itprojects:'IT Projects'};
   document.getElementById('pageTitle').textContent=titles[tab]||'Coach4U';
   // Sync area tab
   const area=pageToArea[tab]||'home';
@@ -480,11 +528,16 @@ window.navTo = function(tab,btn){
   else document.querySelectorAll('.nav-item').forEach(n=>{if(n.dataset.page===tab) n.classList.add('active');});
   if(tab==='dashboard') renderDashboard();
   if(tab==='crmdash') renderCrmDash();
+  if(tab==='refdash') renderRefDash();
+  if(tab==='prospdash') renderProspDash();
+  if(tab==='clidash') renderCliDash();
   if(tab==='thqdash') renderThqDash();
   if(tab==='strdash') renderStrDash();
   if(tab==='opsdash') renderOpsDash();
   if(tab==='masterlist') renderMasterList();
   if(tab==='clients') renderClients();
+  if(tab==='prospects') renderProspects();
+  if(tab==='referrals') renderReferrals();
   if(tab==='thrivehq') renderThriveHQ();
   if(tab==='strengths') renderStrengths();
   if(tab==='thqcalls') renderCoachingCalls();
@@ -511,7 +564,10 @@ window.goToClient=function(clientId){
 // ── AREA TABS & SIDEBAR ──
 const areaConfig={
   home:{label:'Home',pages:[{id:'dashboard',icon:'&#9776;',label:'Dashboard'}]},
-  crm:{label:'CRM',pages:[{id:'crmdash',icon:'&#128202;',label:'Dashboard'},{id:'masterlist',icon:'&#128209;',label:'Master List'},{id:'clients',icon:'&#129309;',label:'Clients'},{id:'referrals',icon:'&#128200;',label:'Referral Hub'}]},
+  crm:{label:'CRM',pages:[{id:'crmdash',icon:'&#128202;',label:'Dashboard'},{id:'masterlist',icon:'&#128209;',label:'Master List'}]},
+  referrers:{label:'Referrers',pages:[{id:'refdash',icon:'&#128200;',label:'Dashboard'},{id:'referrals',icon:'&#128101;',label:'Referral Hub'}]},
+  prospects:{label:'Prospects',pages:[{id:'prospdash',icon:'&#127793;',label:'Dashboard'},{id:'prospects',icon:'&#128203;',label:'Prospect List'}]},
+  clients:{label:'Clients',pages:[{id:'clidash',icon:'&#129309;',label:'Dashboard'},{id:'clients',icon:'&#128101;',label:'Client List'}]},
   thrivehq:{label:'ThriveHQ',pages:[{id:'thqdash',icon:'&#128170;',label:'Dashboard'},{id:'thrivehq',icon:'&#128101;',label:'Members'},{id:'thqcalls',icon:'&#128222;',label:'Coaching Calls'}]},
   strengths:{label:'Strengths',pages:[{id:'strdash',icon:'&#127919;',label:'Dashboard'},{id:'strengths',icon:'&#128161;',label:'Strengths Hub'}]},
   operations:{label:'Operations',pages:[{id:'opsdash',icon:'&#128736;',label:'Dashboard'},{id:'tasks',icon:'&#9989;',label:'Task Management'},{id:'itprojects',icon:'&#9881;',label:'IT Projects'}]}
@@ -859,6 +915,203 @@ function renderOpsDash(){
   </div>`;
 
   document.getElementById('opsDashContent').innerHTML=html;
+}
+
+// ── REFERRERS DASHBOARD ──
+function renderRefDash(){
+  // Count referrals by source from contacts
+  const referrerMap={};
+  contacts.forEach(c=>{
+    const ref=c.referral_source||c.referrer;
+    if(ref){
+      if(!referrerMap[ref]) referrerMap[ref]=[];
+      referrerMap[ref].push(c);
+    }
+  });
+  const referrerCount=Object.keys(referrerMap).length;
+  const referredContacts=Object.values(referrerMap).reduce((sum,arr)=>sum+arr.length,0);
+
+  let html=`<div class="dash-cards">
+    <div class="dash-card"><div class="dc-icon blue">&#128101;</div><div class="dc-info"><h4>${referrerCount}</h4><p>Referral Sources</p></div></div>
+    <div class="dash-card"><div class="dc-icon green">&#128100;</div><div class="dc-info"><h4>${referredContacts}</h4><p>Referred Contacts</p></div></div>
+  </div>`;
+
+  if(referrerCount){
+    const sorted=Object.entries(referrerMap).sort((a,b)=>b[1].length-a[1].length);
+    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;">
+      <div style="font-family:'Quicksand','Inter',sans-serif;font-size:16px;font-weight:700;color:#1e3a5f;margin-bottom:14px;">Top Referral Sources</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        ${sorted.map(([src,arr])=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border:1px solid #f1f5f9;border-radius:8px;">
+          <span style="font-weight:600;font-size:13px;color:#1e293b;">${src}</span>
+          <span style="background:#dbeafe;color:#2563eb;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:600;">${arr.length} referral${arr.length!==1?'s':''}</span>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  } else {
+    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:30px;text-align:center;color:#94a3b8;">No referral data yet. Add referral sources via the Referral Hub.</div>`;
+  }
+
+  document.getElementById('refDashContent').innerHTML=html;
+}
+
+// ── PROSPECTS DASHBOARD ──
+let prospects=[];
+async function loadProspects(){
+  const {data,error}=await supabase.from('prospects').select('*').order('created_at',{ascending:false});
+  if(data) prospects=data;
+  if(error&&error.code!=='42P01') console.error('Load prospects error:',error);
+}
+
+function renderProspDash(){
+  const total=prospects.length;
+  const hot=prospects.filter(p=>p.status==='Hot').length;
+  const warm=prospects.filter(p=>p.status==='Warm').length;
+  const cold=prospects.filter(p=>p.status==='Cold').length;
+  const converted=prospects.filter(p=>p.status==='Converted').length;
+
+  let html=`<div class="dash-cards">
+    <div class="dash-card"><div class="dc-icon blue">&#127793;</div><div class="dc-info"><h4>${total}</h4><p>Total Prospects</p></div></div>
+    <div class="dash-card"><div class="dc-icon" style="background:#fef2f2;color:#dc2626;">&#128293;</div><div class="dc-info"><h4>${hot}</h4><p>Hot</p></div></div>
+    <div class="dash-card"><div class="dc-icon amber">&#9728;</div><div class="dc-info"><h4>${warm}</h4><p>Warm</p></div></div>
+    <div class="dash-card"><div class="dc-icon" style="background:#f1f5f9;color:#64748b;">&#10052;</div><div class="dc-info"><h4>${cold}</h4><p>Cold</p></div></div>
+  </div>`;
+
+  if(prospects.length){
+    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;">
+      <div style="font-family:'Quicksand','Inter',sans-serif;font-size:16px;font-weight:700;color:#1e3a5f;margin-bottom:14px;">Recent Prospects</div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        ${prospects.slice(0,10).map(p=>{
+          const statusCol=p.status==='Hot'?'background:#fef2f2;color:#dc2626;':p.status==='Warm'?'background:#fef3c7;color:#d97706;':p.status==='Converted'?'background:#dcfce7;color:#15803d;':'background:#f1f5f9;color:#64748b;';
+          return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border:1px solid #f1f5f9;border-radius:8px;">
+            <div><span style="font-weight:600;font-size:13px;color:#1e293b;">${p.name||'—'}</span>${p.email?'<span style="font-size:12px;color:#94a3b8;margin-left:8px;">'+p.email+'</span>':''}</div>
+            <span style="padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600;${statusCol}">${p.status||'New'}</span>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  } else {
+    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:30px;text-align:center;color:#94a3b8;">No prospects yet. Add your first prospect from the Prospect List.</div>`;
+  }
+
+  document.getElementById('prospDashContent').innerHTML=html;
+}
+
+// ── PROSPECTS LIST ──
+function renderProspects(){
+  const q=(document.getElementById('prospSearch').value||'').toLowerCase();
+  let filtered=prospects;
+  if(q) filtered=prospects.filter(p=>(p.name+' '+(p.email||'')+' '+(p.phone||'')+' '+(p.notes||'')+' '+(p.status||'')).toLowerCase().includes(q));
+
+  let html='';
+  if(!filtered.length){
+    html='<div style="padding:20px;text-align:center;color:#94a3b8;">No prospects found. Click "+ Add Prospect" to get started.</div>';
+  } else {
+    html=`<div style="display:flex;flex-direction:column;gap:8px;">`;
+    filtered.forEach(p=>{
+      const statusCol=p.status==='Hot'?'#dc2626':p.status==='Warm'?'#d97706':p.status==='Converted'?'#15803d':'#64748b';
+      const statusBg=p.status==='Hot'?'#fef2f2':p.status==='Warm'?'#fef3c7':p.status==='Converted'?'#dcfce7':'#f1f5f9';
+      html+=`<div onclick="openProspectModal('${p.id}')" style="background:#fff;border:1px solid #e2e8f0;border-left:3px solid ${statusCol};border-radius:8px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
+        <div>
+          <div style="font-weight:600;font-size:14px;color:#1e293b;">${p.name||'—'}</div>
+          <div style="font-size:12px;color:#94a3b8;margin-top:2px;">${[p.email,p.phone].filter(Boolean).join(' · ')||'No contact info'}</div>
+          ${p.notes?'<div style="font-size:12px;color:#64748b;margin-top:4px;">'+p.notes+'</div>':''}
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="background:${statusBg};color:${statusCol};padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600;">${p.status||'New'}</span>
+          ${p.source?'<span style="font-size:11px;color:#94a3b8;">via '+p.source+'</span>':''}
+        </div>
+      </div>`;
+    });
+    html+='</div>';
+  }
+  document.getElementById('prospCards').innerHTML=html;
+}
+window.filterProspects=function(){renderProspects();};
+
+// ── PROSPECT MODAL ──
+window.openProspectModal=function(id){
+  const p=id?prospects.find(x=>x.id===id):null;
+  document.getElementById('prospModalTitle').textContent=p?'Edit Prospect':'New Prospect';
+  document.getElementById('prospId').value=p?p.id:'';
+  document.getElementById('prospName').value=p?p.name||'':'';
+  document.getElementById('prospEmail').value=p?p.email||'':'';
+  document.getElementById('prospPhone').value=p?p.phone||'':'';
+  document.getElementById('prospStatus').value=p?p.status||'New':'New';
+  document.getElementById('prospSource').value=p?p.source||'':'';
+  document.getElementById('prospNotes').value=p?p.notes||'':'';
+  document.getElementById('prospDelBtn').style.display=p?'inline-block':'none';
+  document.getElementById('prospModal').classList.add('open');
+};
+window.saveProspect=async function(){
+  const id=document.getElementById('prospId').value;
+  const obj={
+    name:document.getElementById('prospName').value,
+    email:document.getElementById('prospEmail').value,
+    phone:document.getElementById('prospPhone').value,
+    status:document.getElementById('prospStatus').value,
+    source:document.getElementById('prospSource').value,
+    notes:document.getElementById('prospNotes').value
+  };
+  if(id){
+    await supabase.from('prospects').update(obj).eq('id',id);
+  } else {
+    await supabase.from('prospects').insert(obj);
+  }
+  closeModal('prospModal');
+  await loadProspects();
+  renderProspects();
+  toast('Prospect saved','success');
+};
+window.deleteProspect=async function(id){
+  if(!confirm('Delete this prospect?')) return;
+  await supabase.from('prospects').delete().eq('id',id);
+  closeModal('prospModal');
+  await loadProspects();
+  renderProspects();
+  toast('Prospect deleted','success');
+};
+
+// ── CLIENTS DASHBOARD ──
+function renderCliDash(){
+  const active=clients.filter(c=>c.status==='Active');
+  const onHold=clients.filter(c=>c.status==='On Hold');
+  const completed=clients.filter(c=>c.status==='Completed');
+  const couples=active.filter(c=>c.role==='Couple').length;
+  const individuals=active.filter(c=>c.role==='Individual').length;
+  const business=active.filter(c=>c.role==='Business').length;
+  const community=active.filter(c=>c.role==='Organisation').length;
+
+  let html=`<div class="dash-cards">
+    <div class="dash-card"><div class="dc-icon green">&#129309;</div><div class="dc-info"><h4>${active.length}</h4><p>Active Clients</p></div></div>
+    <div class="dash-card"><div class="dc-icon amber">&#9208;</div><div class="dc-info"><h4>${onHold.length}</h4><p>On Hold</p></div></div>
+    <div class="dash-card"><div class="dc-icon" style="background:#f1f5f9;color:#64748b;">&#10004;</div><div class="dc-info"><h4>${completed.length}</h4><p>Completed</p></div></div>
+  </div>`;
+
+  html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:20px;">
+    <div style="font-family:'Quicksand','Inter',sans-serif;font-size:16px;font-weight:700;color:#1e3a5f;margin-bottom:14px;">Active Breakdown</div>
+    <div style="display:flex;gap:24px;flex-wrap:wrap;">
+      <div style="text-align:center;"><div style="font-size:28px;font-weight:700;color:#1e3a5f;">${couples}</div><div style="font-size:12px;color:#64748b;">Couples</div></div>
+      <div style="text-align:center;"><div style="font-size:28px;font-weight:700;color:#1e3a5f;">${individuals}</div><div style="font-size:12px;color:#64748b;">Individuals</div></div>
+      <div style="text-align:center;"><div style="font-size:28px;font-weight:700;color:#1e3a5f;">${business}</div><div style="font-size:12px;color:#64748b;">Business</div></div>
+      <div style="text-align:center;"><div style="font-size:28px;font-weight:700;color:#1e3a5f;">${community}</div><div style="font-size:12px;color:#64748b;">Community</div></div>
+    </div>
+  </div>`;
+
+  // Recent active clients
+  html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;">
+    <div style="font-family:'Quicksand','Inter',sans-serif;font-size:16px;font-weight:700;color:#1e3a5f;margin-bottom:14px;">Active Clients</div>
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      ${active.map(c=>{
+        const borderColor=c.status==='Active'?'#16a34a':'#94a3b8';
+        return `<div onclick="openClientModal('${c.id}')" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border:1px solid #f1f5f9;border-left:3px solid ${borderColor};border-radius:8px;cursor:pointer;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
+          <span style="font-weight:600;font-size:13px;color:#1e293b;">${c.relationship_name}</span>
+          <span style="font-size:11px;color:#94a3b8;">${c.role||'—'}</span>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+
+  document.getElementById('cliDashContent').innerHTML=html;
 }
 
 // ── MASTER LIST ──
