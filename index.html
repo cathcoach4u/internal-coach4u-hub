@@ -438,6 +438,8 @@ td .actions button{padding:4px 10px;font-size:12px;}
     <div class="form-group"><label>CliftonStrengths Top 10</label>
       <div id="cStrengthsGrid" style="display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center;"></div>
     </div>
+    <div class="form-group"><label>ThriveHQ Membership Start</label><input id="cMemberStart" type="date" onchange="autoRenewalDate()"></div>
+    <div class="form-group"><label>ThriveHQ Renewal Date</label><input id="cRenewal" type="date"></div>
     <div class="form-group"><label>Referrer</label><input id="cReferrer" placeholder="Who referred this contact?"></div>
     <div class="form-group"><label>Notes</label><textarea id="cNotes"></textarea></div>
     <div class="modal-actions">
@@ -1111,6 +1113,8 @@ window.openContactModal=function(id){
   document.getElementById('cEmail').value=c?c.email:'';
   document.getElementById('cPhone').value=c?c.phone:'';
   document.getElementById('cType').value=c?c.contact_type:'Individual';
+  document.getElementById('cMemberStart').value=c?c.membership_start_date||'':'';
+  document.getElementById('cRenewal').value=c?c.renewal_date||'':'';
   document.getElementById('cReferrer').value=c?c.referrer||'':'';
   document.getElementById('cNotes').value=c?c.notes:'';
   // Build 10 strength dropdowns
@@ -1139,6 +1143,8 @@ window.saveContact=async function(){
     email:document.getElementById('cEmail').value.trim(),
     phone:document.getElementById('cPhone').value.trim(),
     contact_type:document.getElementById('cType').value,
+    membership_start_date:document.getElementById('cMemberStart').value||null,
+    renewal_date:document.getElementById('cRenewal').value||null,
     referrer:document.getElementById('cReferrer').value.trim()||null,
     notes:document.getElementById('cNotes').value.trim()
   };
@@ -1162,6 +1168,15 @@ window.saveContact=async function(){
   await loadContacts();
   renderMasterList();
   renderDashboard();
+};
+
+window.autoRenewalDate=function(){
+  const start=document.getElementById('cMemberStart').value;
+  if(start){
+    const d=new Date(start);
+    d.setMonth(d.getMonth()+6);
+    document.getElementById('cRenewal').value=d.toISOString().split('T')[0];
+  }
 };
 
 window.deleteContact=async function(id){
