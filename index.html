@@ -177,6 +177,11 @@ td .actions button{padding:4px 10px;font-size:12px;}
       <div id="upcomingTasks"></div>
     </div>
 
+    <!-- CRM DASHBOARD -->
+    <div class="screen" id="screen-crmdash">
+      <div id="crmDashContent"></div>
+    </div>
+
     <!-- MASTER LIST -->
     <div class="screen" id="screen-masterlist">
       <div class="toolbar">
@@ -195,12 +200,22 @@ td .actions button{padding:4px 10px;font-size:12px;}
       <div id="clCards"></div>
     </div>
 
+    <!-- STRENGTHS DASHBOARD -->
+    <div class="screen" id="screen-strdash">
+      <div id="strDashContent"></div>
+    </div>
+
     <!-- STRENGTHS HUB -->
     <div class="screen" id="screen-strengths">
       <div class="toolbar">
         <input class="search-input" id="shSearch" placeholder="Search by name or strength..." oninput="filterStrengths()">
       </div>
       <div id="shCards"></div>
+    </div>
+
+    <!-- THRIVEHQ DASHBOARD -->
+    <div class="screen" id="screen-thqdash">
+      <div id="thqDashContent"></div>
     </div>
 
     <!-- THRIVEHQ MEMBERS -->
@@ -218,6 +233,11 @@ td .actions button{padding:4px 10px;font-size:12px;}
       </div>
       <div id="thqCallSummary"></div>
       <div id="thqCallContent"></div>
+    </div>
+
+    <!-- OPERATIONS DASHBOARD -->
+    <div class="screen" id="screen-opsdash">
+      <div id="opsDashContent"></div>
     </div>
 
     <!-- TASK MANAGEMENT -->
@@ -441,7 +461,7 @@ document.getElementById('headerDate').textContent = new Date().toLocaleDateStrin
 window.navTo = function(tab,btn){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+tab).classList.add('active');
-  const titles={dashboard:'Dashboard',masterlist:'Master List',clients:'Clients',thrivehq:'Members',strengths:'Strengths Hub',thqcalls:'Coaching Calls',tasks:'Task Management',referrals:'Referral Hub',itprojects:'IT Projects'};
+  const titles={dashboard:'Dashboard',crmdash:'CRM',thqdash:'ThriveHQ',strdash:'Strengths',opsdash:'Operations',masterlist:'Master List',clients:'Clients',thrivehq:'Members',strengths:'Strengths Hub',thqcalls:'Coaching Calls',tasks:'Task Management',referrals:'Referral Hub',itprojects:'IT Projects'};
   document.getElementById('pageTitle').textContent=titles[tab]||'Coach4U';
   // Sync area tab
   const area=pageToArea[tab]||'home';
@@ -459,6 +479,10 @@ window.navTo = function(tab,btn){
   if(btn) btn.classList.add('active');
   else document.querySelectorAll('.nav-item').forEach(n=>{if(n.dataset.page===tab) n.classList.add('active');});
   if(tab==='dashboard') renderDashboard();
+  if(tab==='crmdash') renderCrmDash();
+  if(tab==='thqdash') renderThqDash();
+  if(tab==='strdash') renderStrDash();
+  if(tab==='opsdash') renderOpsDash();
   if(tab==='masterlist') renderMasterList();
   if(tab==='clients') renderClients();
   if(tab==='thrivehq') renderThriveHQ();
@@ -487,10 +511,10 @@ window.goToClient=function(clientId){
 // ── AREA TABS & SIDEBAR ──
 const areaConfig={
   home:{label:'Home',pages:[{id:'dashboard',icon:'&#9776;',label:'Dashboard'}]},
-  crm:{label:'CRM',pages:[{id:'masterlist',icon:'&#128209;',label:'Master List'},{id:'clients',icon:'&#129309;',label:'Clients'},{id:'referrals',icon:'&#128200;',label:'Referral Hub'}]},
-  thrivehq:{label:'ThriveHQ',pages:[{id:'thrivehq',icon:'&#128101;',label:'Members'},{id:'thqcalls',icon:'&#128222;',label:'Coaching Calls'}]},
-  strengths:{label:'Strengths',pages:[{id:'strengths',icon:'&#128161;',label:'Strengths Hub'}]},
-  operations:{label:'Operations',pages:[{id:'tasks',icon:'&#9989;',label:'Task Management'},{id:'itprojects',icon:'&#9881;',label:'IT Projects'}]}
+  crm:{label:'CRM',pages:[{id:'crmdash',icon:'&#128202;',label:'Dashboard'},{id:'masterlist',icon:'&#128209;',label:'Master List'},{id:'clients',icon:'&#129309;',label:'Clients'},{id:'referrals',icon:'&#128200;',label:'Referral Hub'}]},
+  thrivehq:{label:'ThriveHQ',pages:[{id:'thqdash',icon:'&#128170;',label:'Dashboard'},{id:'thrivehq',icon:'&#128101;',label:'Members'},{id:'thqcalls',icon:'&#128222;',label:'Coaching Calls'}]},
+  strengths:{label:'Strengths',pages:[{id:'strdash',icon:'&#127919;',label:'Dashboard'},{id:'strengths',icon:'&#128161;',label:'Strengths Hub'}]},
+  operations:{label:'Operations',pages:[{id:'opsdash',icon:'&#128736;',label:'Dashboard'},{id:'tasks',icon:'&#9989;',label:'Task Management'},{id:'itprojects',icon:'&#9881;',label:'IT Projects'}]}
 };
 let currentArea='home';
 
@@ -600,6 +624,241 @@ function renderDashboard(){
   document.getElementById('recentClients').innerHTML=dashSection('recentClients','Recent Clients',clients.length,recentClientsHtml);
   document.getElementById('recentContacts').innerHTML=dashSection('recentContacts','Recent Contacts',contacts.length,recentContactsHtml);
   document.getElementById('upcomingTasks').innerHTML=dashSection('upcomingTasks','Upcoming Tasks',tasks.filter(t=>t.status!=='Done'&&t.due_date).length,upcomingHtml);
+}
+
+// ── CRM DASHBOARD ──
+function renderCrmDash(){
+  const totalContacts=contacts.length;
+  const activeClients=clients.filter(c=>c.status==='Active').length;
+  const onHold=clients.filter(c=>c.status==='On Hold').length;
+  const completed=clients.filter(c=>c.status==='Completed').length;
+  const couples=clients.filter(c=>c.role==='Couple'&&c.status==='Active').length;
+  const individuals=clients.filter(c=>c.role==='Individual'&&c.status==='Active').length;
+  const business=clients.filter(c=>c.role==='Business'&&c.status==='Active').length;
+  const community=clients.filter(c=>c.role==='Organisation'&&c.status==='Active').length;
+
+  // Recent contacts (last 5 added)
+  const recent=contacts.slice(0,5);
+
+  let html=`<div class="dash-cards">
+    <div class="dash-card"><div class="dc-icon blue">&#128100;</div><div class="dc-info"><h4>${totalContacts}</h4><p>Total Contacts</p></div></div>
+    <div class="dash-card"><div class="dc-icon green">&#129309;</div><div class="dc-info"><h4>${activeClients}</h4><p>Active Clients</p></div></div>
+    <div class="dash-card"><div class="dc-icon amber">&#9208;</div><div class="dc-info"><h4>${onHold}</h4><p>On Hold</p></div></div>
+    <div class="dash-card"><div class="dc-icon" style="background:#f1f5f9;color:#64748b;">&#10004;</div><div class="dc-info"><h4>${completed}</h4><p>Completed</p></div></div>
+  </div>`;
+
+  // Client breakdown
+  html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:20px;">
+    <div style="font-family:'Quicksand','Inter',sans-serif;font-size:16px;font-weight:700;color:#1e3a5f;margin-bottom:14px;">Active Client Breakdown</div>
+    <div style="display:flex;gap:20px;flex-wrap:wrap;">
+      <div style="text-align:center;"><div style="font-size:28px;font-weight:700;color:#1e3a5f;">${couples}</div><div style="font-size:12px;color:#64748b;">Couples</div></div>
+      <div style="text-align:center;"><div style="font-size:28px;font-weight:700;color:#1e3a5f;">${individuals}</div><div style="font-size:12px;color:#64748b;">Individuals</div></div>
+      <div style="text-align:center;"><div style="font-size:28px;font-weight:700;color:#1e3a5f;">${business}</div><div style="font-size:12px;color:#64748b;">Business</div></div>
+      <div style="text-align:center;"><div style="font-size:28px;font-weight:700;color:#1e3a5f;">${community}</div><div style="font-size:12px;color:#64748b;">Community</div></div>
+    </div>
+  </div>`;
+
+  // Recent contacts
+  html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;">
+    <div style="font-family:'Quicksand','Inter',sans-serif;font-size:16px;font-weight:700;color:#1e3a5f;margin-bottom:14px;">Recent Contacts</div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      ${recent.map(c=>`<div onclick="openContactModal('${c.id}')" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border:1px solid #f1f5f9;border-radius:8px;cursor:pointer;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
+        <div><span style="font-weight:600;font-size:14px;color:#1e293b;">${c.first_name} ${c.last_name}</span>${c.email?'<span style="font-size:12px;color:#94a3b8;margin-left:8px;">'+c.email+'</span>':''}</div>
+        <span style="font-size:12px;color:#94a3b8;">${c.category||'—'}</span>
+      </div>`).join('')}
+    </div>
+  </div>`;
+
+  document.getElementById('crmDashContent').innerHTML=html;
+}
+
+// ── THRIVEHQ DASHBOARD ──
+function renderThqDash(){
+  const members=getThqMembers('');
+  const total=members.length;
+  const withStrengths=members.filter(m=>m.contact.strength_1).length;
+  const withoutStrengths=total-withStrengths;
+  const now=new Date();
+  const overdue=members.filter(m=>m.contact.renewal_date&&new Date(m.contact.renewal_date)<now);
+  const dueSoon=members.filter(m=>{const r=m.contact.renewal_date?new Date(m.contact.renewal_date):null;return r&&r>=now&&(r-now)/(1000*60*60*24)<=30;});
+  const upToDate=members.filter(m=>{const r=m.contact.renewal_date?new Date(m.contact.renewal_date):null;return r&&r>=now&&(r-now)/(1000*60*60*24)>30;});
+
+  let html=`<div class="dash-cards">
+    <div class="dash-card"><div class="dc-icon blue">&#128101;</div><div class="dc-info"><h4>${total}</h4><p>Total Members</p></div></div>
+    <div class="dash-card"><div class="dc-icon green">&#127919;</div><div class="dc-info"><h4>${withStrengths}</h4><p>Strengths Complete</p></div></div>
+    <div class="dash-card"><div class="dc-icon amber">&#9888;</div><div class="dc-info"><h4>${withoutStrengths}</h4><p>Awaiting Strengths</p></div></div>
+    <div class="dash-card"><div class="dc-icon" style="background:#fef2f2;color:#dc2626;">&#128344;</div><div class="dc-info"><h4>${overdue.length}</h4><p>Renewals Overdue</p></div></div>
+  </div>`;
+
+  // Renewal status
+  if(overdue.length){
+    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #dc2626;border-radius:12px;padding:16px 20px;margin-bottom:16px;">
+      <div style="font-weight:700;font-size:14px;color:#dc2626;margin-bottom:8px;">Overdue Renewals</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;">
+        ${overdue.map(m=>`<span onclick="openContactModal('${m.contact.id}')" style="background:#fef2f2;color:#dc2626;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">${m.contact.first_name} ${m.contact.last_name} — ${m.contact.renewal_date}</span>`).join('')}
+      </div>
+    </div>`;
+  }
+  if(dueSoon.length){
+    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #d97706;border-radius:12px;padding:16px 20px;margin-bottom:16px;">
+      <div style="font-weight:700;font-size:14px;color:#d97706;margin-bottom:8px;">Due Within 30 Days</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;">
+        ${dueSoon.map(m=>`<span onclick="openContactModal('${m.contact.id}')" style="background:#fef3c7;color:#92400e;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">${m.contact.first_name} ${m.contact.last_name} — ${m.contact.renewal_date}</span>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  // Member list quick view
+  html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;">
+    <div style="font-family:'Quicksand','Inter',sans-serif;font-size:16px;font-weight:700;color:#1e3a5f;margin-bottom:14px;">All Members</div>
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      ${members.map(m=>{
+        const c=m.contact;
+        const hasStr=!!c.strength_1;
+        const renew=c.renewal_date?new Date(c.renewal_date):null;
+        const isOverdue=renew&&renew<now;
+        const isDueSoon=renew&&!isOverdue&&(renew-now)/(1000*60*60*24)<=30;
+        return `<div onclick="openContactModal('${c.id}')" style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border:1px solid #f1f5f9;border-radius:8px;cursor:pointer;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
+          <span style="font-weight:600;font-size:13px;color:#1e293b;">${c.first_name} ${c.last_name}</span>
+          <div style="display:flex;gap:6px;align-items:center;">
+            ${hasStr?'<span style="background:#dcfce7;color:#15803d;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;">Strengths</span>':'<span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;">No Strengths</span>'}
+            ${isOverdue?'<span style="background:#fef2f2;color:#dc2626;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;">Overdue</span>':isDueSoon?'<span style="background:#fef3c7;color:#d97706;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;">Due Soon</span>':renew?'<span style="background:#dcfce7;color:#15803d;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;">'+c.renewal_date+'</span>':''}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+
+  document.getElementById('thqDashContent').innerHTML=html;
+}
+
+// ── STRENGTHS DASHBOARD ──
+function renderStrDash(){
+  const withStr=contacts.filter(c=>c.strength_1);
+  const withoutStr=contacts.filter(c=>!c.strength_1);
+
+  // Domain counts across all contacts
+  const domainCount={Executing:0,Influencing:0,Relationship:0,Strategic:0};
+  const strengthFreq={};
+  withStr.forEach(c=>{
+    for(let i=1;i<=10;i++){
+      const s=c['strength_'+i];
+      if(s){
+        strengthFreq[s]=(strengthFreq[s]||0)+1;
+        const d=getDomain(s);
+        if(d) domainCount[d]++;
+      }
+    }
+  });
+
+  const totalDom=Object.values(domainCount).reduce((a,b)=>a+b,0)||1;
+  const topStrengths=Object.entries(strengthFreq).sort((a,b)=>b[1]-a[1]).slice(0,10);
+
+  let html=`<div class="dash-cards">
+    <div class="dash-card"><div class="dc-icon green">&#127919;</div><div class="dc-info"><h4>${withStr.length}</h4><p>Profiles Complete</p></div></div>
+    <div class="dash-card"><div class="dc-icon amber">&#9888;</div><div class="dc-info"><h4>${withoutStr.length}</h4><p>No Strengths Yet</p></div></div>
+  </div>`;
+
+  // Domain balance across all contacts
+  html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:20px;">
+    <div style="font-family:'Quicksand','Inter',sans-serif;font-size:16px;font-weight:700;color:#1e3a5f;margin-bottom:14px;">Overall Domain Balance</div>
+    <div style="display:flex;border-radius:6px;overflow:hidden;height:32px;margin-bottom:12px;">
+      ${Object.entries(domainCount).map(([d,c])=>c?'<div style="background:'+domainColors[d]+';width:'+(c/totalDom*100).toFixed(1)+'%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;">'+d+' '+c+'</div>':'').join('')}
+    </div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;">
+      ${Object.entries(domainCount).map(([d,c])=>`<div style="display:flex;align-items:center;gap:6px;"><div style="width:12px;height:12px;border-radius:2px;background:${domainColors[d]};"></div><span style="font-size:12px;color:#64748b;">${d}: ${c} (${(c/totalDom*100).toFixed(0)}%)</span></div>`).join('')}
+    </div>
+  </div>`;
+
+  // Top 10 most common strengths
+  html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:20px;">
+    <div style="font-family:'Quicksand','Inter',sans-serif;font-size:16px;font-weight:700;color:#1e3a5f;margin-bottom:14px;">Most Common Strengths</div>
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      ${topStrengths.map(([name,count])=>{
+        const pct=(count/withStr.length*100).toFixed(0);
+        return `<div style="display:flex;align-items:center;gap:10px;">
+          <span style="background:${csColor(name)};color:#fff;padding:3px 10px;border-radius:2px;font-size:11px;font-weight:700;width:140px;text-align:center;">${name}</span>
+          <div style="flex:1;background:#f1f5f9;border-radius:4px;height:18px;overflow:hidden;">
+            <div style="background:${csColor(name)};height:100%;width:${pct}%;border-radius:4px;"></div>
+          </div>
+          <span style="font-size:12px;color:#64748b;font-weight:600;width:60px;text-align:right;">${count} (${pct}%)</span>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+
+  // Contacts without strengths
+  if(withoutStr.length){
+    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #eab308;border-radius:12px;padding:16px 20px;">
+      <div style="font-weight:700;font-size:14px;color:#92400e;margin-bottom:8px;">Awaiting Strengths (${withoutStr.length})</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">
+        ${withoutStr.map(c=>`<span onclick="openContactModal('${c.id}')" style="background:#fef3c7;color:#92400e;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;">${c.first_name} ${c.last_name}</span>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  document.getElementById('strDashContent').innerHTML=html;
+}
+
+// ── OPERATIONS DASHBOARD ──
+function renderOpsDash(){
+  const now=new Date();
+  const openTasks=tasks.filter(t=>t.status!=='Done');
+  const doneTasks=tasks.filter(t=>t.status==='Done');
+  const overdueTasks=openTasks.filter(t=>t.due_date&&new Date(t.due_date)<now);
+  const highPriority=openTasks.filter(t=>t.priority==='High');
+
+  let html=`<div class="dash-cards">
+    <div class="dash-card"><div class="dc-icon blue">&#128203;</div><div class="dc-info"><h4>${openTasks.length}</h4><p>Open Tasks</p></div></div>
+    <div class="dash-card"><div class="dc-icon green">&#10004;</div><div class="dc-info"><h4>${doneTasks.length}</h4><p>Completed</p></div></div>
+    <div class="dash-card"><div class="dc-icon" style="background:#fef2f2;color:#dc2626;">&#128680;</div><div class="dc-info"><h4>${overdueTasks.length}</h4><p>Overdue</p></div></div>
+    <div class="dash-card"><div class="dc-icon amber">&#9889;</div><div class="dc-info"><h4>${highPriority.length}</h4><p>High Priority</p></div></div>
+  </div>`;
+
+  // Overdue tasks
+  if(overdueTasks.length){
+    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #dc2626;border-radius:12px;padding:16px 20px;margin-bottom:16px;">
+      <div style="font-weight:700;font-size:14px;color:#dc2626;margin-bottom:8px;">Overdue Tasks</div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        ${overdueTasks.map(t=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border:1px solid #fef2f2;border-radius:6px;background:#fff;">
+          <span style="font-weight:600;font-size:13px;color:#1e293b;">${t.title}</span>
+          <span style="font-size:11px;color:#dc2626;font-weight:600;">${t.due_date}</span>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  // High priority tasks
+  if(highPriority.length){
+    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #d97706;border-radius:12px;padding:16px 20px;margin-bottom:16px;">
+      <div style="font-weight:700;font-size:14px;color:#d97706;margin-bottom:8px;">High Priority</div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        ${highPriority.map(t=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border:1px solid #fef3c7;border-radius:6px;background:#fff;">
+          <span style="font-weight:600;font-size:13px;color:#1e293b;">${t.title}</span>
+          <span style="font-size:11px;color:#64748b;">${t.status} ${t.due_date?'— '+t.due_date:''}</span>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  // Open tasks summary
+  html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;">
+    <div style="font-family:'Quicksand','Inter',sans-serif;font-size:16px;font-weight:700;color:#1e3a5f;margin-bottom:14px;">All Open Tasks</div>
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      ${openTasks.length?openTasks.map(t=>{
+        const priorityCol=t.priority==='High'?'#dc2626':t.priority==='Medium'?'#d97706':'#64748b';
+        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border:1px solid #f1f5f9;border-radius:8px;">
+          <span style="font-weight:600;font-size:13px;color:#1e293b;">${t.title}</span>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <span style="font-size:10px;padding:2px 8px;border-radius:99px;font-weight:600;color:#fff;background:${priorityCol};">${t.priority||'—'}</span>
+            <span style="font-size:11px;color:#64748b;">${t.status}</span>
+          </div>
+        </div>`;
+      }).join(''):'<div style="text-align:center;color:#94a3b8;padding:12px;">No open tasks</div>'}
+    </div>
+  </div>`;
+
+  document.getElementById('opsDashContent').innerHTML=html;
 }
 
 // ── MASTER LIST ──
