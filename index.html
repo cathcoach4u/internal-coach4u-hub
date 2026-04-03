@@ -414,14 +414,15 @@ async function loadContacts(){
   if(error) console.error('Load contacts error:', error);
 }
 async function loadClients(){
-  const {data,error} = await supabase.from('clients').select('*').order('relationship_name');
+  const [{data,error},{data:allMembers}] = await Promise.all([
+    supabase.from('clients').select('*').order('relationship_name'),
+    supabase.from('client_members').select('client_id,contact_id')
+  ]);
   if(data){
-    // Load members for each client
-    for(let c of data){
-      const {data:members} = await supabase.from('client_members').select('contact_id').eq('client_id', c.id);
-      c.members = members ? members.map(m=>m.contact_id) : [];
-    }
-    clients = data;
+    const memberMap={};
+    (allMembers||[]).forEach(m=>{if(!memberMap[m.client_id])memberMap[m.client_id]=[];memberMap[m.client_id].push(m.contact_id);});
+    data.forEach(c=>{c.members=memberMap[c.id]||[];});
+    clients=data;
   }
   if(error) console.error('Load clients error:', error);
 }
