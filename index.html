@@ -448,12 +448,12 @@ window.navTo = function(tab,btn){
   if(btn)btn.classList.add('active');
   const titles={dashboard:'Dashboard',masterlist:'Master List',clients:'Clients',thrivehq:'ThriveHQ',strengths:'Strengths Hub',tasks:'Task Management',referrals:'Referral Hub',itprojects:'IT Projects'};
   document.getElementById('pageTitle').textContent=titles[tab]||'Coach4U';
-  if(tab==='dashboard'){loadAll();}
-  if(tab==='masterlist'){loadContacts().then(()=>renderMasterList());}
-  if(tab==='clients'){Promise.all([loadContacts(),loadClients()]).then(()=>renderClients());}
-  if(tab==='thrivehq'){Promise.all([loadContacts(),loadClients()]).then(()=>renderThriveHQ());}
-  if(tab==='strengths'){loadContacts().then(()=>renderStrengths());}
-  if(tab==='tasks'){loadTasks().then(()=>renderTasks());}
+  if(tab==='dashboard') renderDashboard();
+  if(tab==='masterlist') renderMasterList();
+  if(tab==='clients') renderClients();
+  if(tab==='thrivehq') renderThriveHQ();
+  if(tab==='strengths') renderStrengths();
+  if(tab==='tasks') renderTasks();
   if(tab==='referrals') renderReferrals();
   if(tab==='itprojects') renderITProjects();
   closeMobile();
