@@ -111,13 +111,12 @@ td .actions button{padding:8px 14px;font-size:12px;}
 /* ── MOBILE ── */
 @media(max-width:768px){
   .sidebar{display:none;}
-  .sidebar.mobile-open{display:flex;width:260px;z-index:60;}
+  .sidebar.mobile-open{display:flex;width:280px;z-index:60;}
   .main{margin-left:0;}
   .mobile-toggle{display:block!important;}
   .mobile-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:55;}
   .mobile-overlay.show{display:block;}
-  .area-tabs{padding:0 12px;overflow-x:auto;}
-  .area-tab{padding:10px 14px;font-size:12px;}
+  .area-tabs{display:none;}
   .content{padding:14px 16px;}
   .header{padding:12px 16px;}
   .modal{padding:18px;}
@@ -660,10 +659,40 @@ const areaConfig={
 let currentArea='home';
 
 function renderSidebarNav(area){
-  const pages=areaConfig[area]?.pages||[];
-  const html=pages.map(p=>`<button class="nav-item${p.id===getCurrentPage()?' active':''}" data-page="${p.id}" onclick="navTo('${p.id}',this)"><span class="icon">${p.icon}</span> ${p.label}</button>`).join('');
+  const isMobile=window.innerWidth<=768;
+  let html='';
+  if(isMobile){
+    // Show all areas with sub-pages in sidebar on mobile
+    Object.entries(areaConfig).forEach(([key,cfg])=>{
+      const isActive=key===area;
+      html+=`<div style="margin:${isActive?'4px 0':'2px 0'};">
+        <button onclick="mobileAreaSwitch('${key}')" style="display:flex;align-items:center;gap:10px;padding:10px 16px;margin:0 10px;font-size:13px;font-weight:${isActive?'700':'600'};color:${isActive?'#fff':'rgba(255,255,255,.6)'};background:${isActive?'rgba(59,130,246,.15)':'none'};border:none;border-radius:8px;width:calc(100% - 20px);text-align:left;cursor:pointer;font-family:inherit;">${cfg.label}</button>`;
+      if(isActive){
+        cfg.pages.forEach(p=>{
+          const pageActive=p.id===getCurrentPage();
+          html+=`<button class="nav-item${pageActive?' active':''}" data-page="${p.id}" onclick="navTo('${p.id}',this);closeMobile();" style="padding-left:36px;"><span class="icon">${p.icon}</span> ${p.label}</button>`;
+        });
+      }
+      html+=`</div>`;
+    });
+  } else {
+    const pages=areaConfig[area]?.pages||[];
+    html=pages.map(p=>`<button class="nav-item${p.id===getCurrentPage()?' active':''}" data-page="${p.id}" onclick="navTo('${p.id}',this)"><span class="icon">${p.icon}</span> ${p.label}</button>`).join('');
+  }
   document.getElementById('sidebarNav').innerHTML=html;
 }
+
+window.mobileAreaSwitch=function(area){
+  currentArea=area;
+  document.querySelectorAll('.area-tab').forEach(t=>t.classList.remove('active'));
+  const tabs=document.querySelectorAll('.area-tab');
+  const areaKeys=Object.keys(areaConfig);
+  const idx=areaKeys.indexOf(area);
+  if(idx>=0&&tabs[idx]) tabs[idx].classList.add('active');
+  const firstPage=areaConfig[area].pages[0];
+  if(firstPage) navTo(firstPage.id);
+  renderSidebarNav(area);
+};
 
 function getCurrentPage(){
   const active=document.querySelector('.screen.active');
@@ -689,6 +718,7 @@ window.switchArea=function(area){
 
 // ── MOBILE NAV ──
 window.openMobile = function(){
+  renderSidebarNav(currentArea);
   document.getElementById('sidebar').classList.add('mobile-open');
   document.getElementById('mobileOverlay').classList.add('show');
 };
