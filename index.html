@@ -692,7 +692,7 @@ function renderClientCard(c){
         <span style="font-weight:600;font-size:14px;color:#1e293b;">${c.relationship_name}</span>
         <span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:500;${c.status==='Active'?'background:#dcfce7;color:#15803d;':c.status==='On Hold'?'background:#fef9c3;color:#a16207;':'background:#f1f5f9;color:#64748b;'}">${c.status}</span>
       </div>
-      <div style="font-size:12px;color:#64748b;margin-top:4px;">${members.length?'Members: '+members.join(', '):''}</div>
+      ${members.length>1?'<div style="font-size:12px;color:#64748b;margin-top:4px;">'+members.join(', ')+'</div>':''}
     </div>
     <div style="display:flex;gap:6px;flex-shrink:0;">
       <button style="background:none;border:1px solid #fecaca;border-radius:6px;padding:6px 12px;font-size:12px;color:#dc2626;cursor:pointer;" onclick="event.stopPropagation();deleteClient('${c.id}')">Del</button>
