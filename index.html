@@ -551,17 +551,21 @@ function renderMasterList(){
       </div>
       ${collapsed?'':`<div style="display:flex;flex-direction:column;gap:0;">${grouped[letter].map(c=>{
         const hasStr=c.strength_1;
-        return `<div style="display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid #f1f5f9;gap:12px;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
-          <div style="flex:1;min-width:0;">
-            <span style="font-weight:600;font-size:14px;color:#1e293b;">${c.first_name} ${c.last_name}</span>
-            ${c.email?' <a href="mailto:'+c.email+'" style="color:#3b82f6;font-size:12px;text-decoration:none;" onclick="event.stopPropagation()">'+c.email+'</a>':''}
+        const linkedClients=clients.filter(cl=>(cl.members||[]).includes(c.id));
+        return `<div style="padding:10px 14px;border-bottom:1px solid #f1f5f9;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="flex:1;min-width:0;">
+              <span style="font-weight:600;font-size:14px;color:#1e293b;">${c.first_name} ${c.last_name}</span>
+              ${c.email?' <a href="mailto:'+c.email+'" style="color:#3b82f6;font-size:12px;text-decoration:none;" onclick="event.stopPropagation()">'+c.email+'</a>':''}
+            </div>
+            <div style="flex-shrink:0;display:flex;align-items:center;gap:8px;">
+              ${c.phone?'<a href="tel:'+c.phone.replace(/\\s/g,'')+'" style="color:#1e293b;font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap;" onclick="event.stopPropagation()">'+c.phone+'</a>':''}
+              ${hasStr?'<span style="width:8px;height:8px;border-radius:50%;background:#3b82f6;flex-shrink:0;" title="Has strengths"></span>':''}
+              <button style="background:none;border:1px solid #e2e8f0;border-radius:6px;padding:4px 10px;font-size:11px;color:#475569;cursor:pointer;" onclick="event.stopPropagation();openContactModal('${c.id}')">Edit</button>
+              <button style="background:none;border:1px solid #fecaca;border-radius:6px;padding:4px 10px;font-size:11px;color:#dc2626;cursor:pointer;" onclick="event.stopPropagation();deleteContact('${c.id}')">Del</button>
+            </div>
           </div>
-          <div style="flex-shrink:0;display:flex;align-items:center;gap:8px;">
-            ${c.phone?'<a href="tel:'+c.phone.replace(/\\s/g,'')+'" style="color:#1e293b;font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap;" onclick="event.stopPropagation()">'+c.phone+'</a>':''}
-            ${hasStr?'<span style="width:8px;height:8px;border-radius:50%;background:#3b82f6;flex-shrink:0;" title="Has strengths"></span>':''}
-            <button style="background:none;border:1px solid #e2e8f0;border-radius:6px;padding:4px 10px;font-size:11px;color:#475569;cursor:pointer;" onclick="event.stopPropagation();openContactModal('${c.id}')">Edit</button>
-            <button style="background:none;border:1px solid #fecaca;border-radius:6px;padding:4px 10px;font-size:11px;color:#dc2626;cursor:pointer;" onclick="event.stopPropagation();deleteContact('${c.id}')">Del</button>
-          </div>
+          ${linkedClients.length?'<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;padding-left:2px;">'+linkedClients.map(cl=>'<span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:500;background:#dcfce7;color:#15803d;">'+cl.relationship_name+' ('+cl.role+')</span>').join('')+'</div>':''}
         </div>`;
       }).join('')}</div>`}
     </div>`;
