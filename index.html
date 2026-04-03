@@ -333,7 +333,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     <div class="form-group"><label>Source / Referrer</label><input id="prospSource"></div>
     <div class="form-group"><label>Notes</label><textarea id="prospNotes"></textarea></div>
     <div class="modal-actions">
-      <button class="btn btn-gray" onclick="closeModal('prospModal')">Exit</button>
+      <button class="btn btn-gray" onclick="closeModal('prospModal')">Cancel</button>
       <button class="btn btn-red" onclick="deleteProspect(document.getElementById('prospId').value)" id="prospDelBtn" style="display:none;">Delete</button>
       <button class="btn btn-blue" onclick="saveProspect()">Save</button>
     </div>
@@ -358,7 +358,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="form-group"><label>Due Date</label><input id="tkDue" type="date"></div>
     <div class="modal-actions">
-      <button class="btn btn-gray" onclick="closeModal('taskModal')">Exit</button>
+      <button class="btn btn-gray" onclick="closeModal('taskModal')">Cancel</button>
       <button class="btn btn-green" onclick="saveTask()">Save</button>
     </div>
   </div>
@@ -382,7 +382,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
       <div id="refMemberList" class="member-list"></div>
     </div>
     <div class="modal-actions">
-      <button class="btn btn-gray" onclick="closeModal('referralModal')">Exit</button>
+      <button class="btn btn-gray" onclick="closeModal('referralModal')">Cancel</button>
       <button class="btn btn-red" id="refDelBtn" onclick="deleteReferral(document.getElementById('refId').value)" style="display:none;">Delete</button>
       <button class="btn btn-green" onclick="saveReferral()">Save</button>
     </div>
@@ -405,7 +405,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="form-group"><label>Notes</label><textarea id="refPayNotes"></textarea></div>
     <div class="modal-actions">
-      <button class="btn btn-gray" onclick="closeModal('refPayModal')">Exit</button>
+      <button class="btn btn-gray" onclick="closeModal('refPayModal')">Cancel</button>
       <button class="btn btn-red" id="refPayDelBtn" onclick="deleteRefPayment(document.getElementById('refPayId').value)" style="display:none;">Delete</button>
       <button class="btn btn-green" onclick="saveRefPayment()">Save</button>
     </div>
@@ -425,7 +425,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     <div class="form-group"><label>Date Renewed</label><input id="renewalDate" type="date"></div>
     <div class="form-group"><label>Notes</label><textarea id="renewalNotes"></textarea></div>
     <div class="modal-actions">
-      <button class="btn btn-gray" onclick="closeModal('renewalModal')">Exit</button>
+      <button class="btn btn-gray" onclick="closeModal('renewalModal')">Cancel</button>
       <button class="btn btn-red" id="renewalDelBtn" onclick="deleteRenewal(document.getElementById('renewalId').value)" style="display:none;">Delete</button>
       <button class="btn btn-green" onclick="saveRenewal()">Save</button>
     </div>
@@ -446,7 +446,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="form-group"><label>Notes</label><textarea id="itNotes"></textarea></div>
     <div class="modal-actions">
-      <button class="btn btn-gray" onclick="closeModal('itModal')">Exit</button>
+      <button class="btn btn-gray" onclick="closeModal('itModal')">Cancel</button>
       <button class="btn btn-green" onclick="saveITProject()">Save</button>
     </div>
   </div>
@@ -476,7 +476,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     <div class="form-group"><label>Referrer</label><input id="cReferrer" placeholder="Who referred this contact?"></div>
     <div class="form-group"><label>Notes</label><textarea id="cNotes"></textarea></div>
     <div class="modal-actions">
-      <button class="btn btn-gray" onclick="closeModal('contactModal')">Exit</button>
+      <button class="btn btn-gray" onclick="closeModal('contactModal')">Cancel</button>
       <button class="btn btn-green" onclick="saveContact()">Save</button>
     </div>
   </div>
@@ -507,7 +507,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     <div class="form-group"><label>File Notes (SharePoint)</label><input id="clFileNotes" placeholder="https://netorgft4053847.sharepoint.com/..."></div>
     <div class="form-group"><label>Notes</label><textarea id="clNotes"></textarea></div>
     <div class="modal-actions">
-      <button class="btn btn-gray" onclick="closeModal('clientModal')">Exit</button>
+      <button class="btn btn-gray" onclick="closeModal('clientModal')">Cancel</button>
       <button class="btn btn-green" onclick="saveClient()">Save</button>
     </div>
   </div>
@@ -736,6 +736,13 @@ function toast(msg,type){
 
 // ── MODAL ──
 window.closeModal=function(id){document.getElementById(id).classList.remove('open');};
+
+// Close any open modal on Escape key
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'){
+    document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'));
+  }
+});
 
 // ── DASHBOARD ──
 const dashGroupState={recentClients:false,recentContacts:false,upcomingTasks:false};
