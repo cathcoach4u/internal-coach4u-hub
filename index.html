@@ -500,6 +500,7 @@ td .actions button{padding:4px 10px;font-size:12px;}
       <select id="clReferredBy"><option value="">-- None --</option></select>
     </div>
     <div class="form-group"><label>Xero Invoice Link</label><input id="clXeroLink" placeholder="https://go.xero.com/..."></div>
+    <div class="form-group"><label>File Notes (SharePoint)</label><input id="clFileNotes" placeholder="https://netorgft4053847.sharepoint.com/..."></div>
     <div class="form-group"><label>Notes</label><textarea id="clNotes"></textarea></div>
     <div class="modal-actions">
       <button class="btn btn-gray" onclick="closeModal('clientModal')">Exit</button>
@@ -1295,6 +1296,7 @@ function renderClientCard(c){
       ${members.length>1?'<div style="font-size:12px;color:#64748b;margin-top:4px;">'+members.join(', ')+'</div>':''}
     </div>
     <div style="display:flex;gap:6px;flex-shrink:0;">
+      ${c.file_notes_link?'<a href="'+c.file_notes_link+'" target="_blank" onclick="event.stopPropagation()" style="background:none;border:1px solid #bfdbfe;border-radius:6px;padding:6px 12px;font-size:12px;color:#2563eb;cursor:pointer;text-decoration:none;font-weight:500;">File Notes</a>':''}
       <button style="background:none;border:1px solid #fecaca;border-radius:6px;padding:6px 12px;font-size:12px;color:#dc2626;cursor:pointer;" onclick="event.stopPropagation();deleteClient('${c.id}')">Del</button>
     </div>
   </div>`;
@@ -1371,6 +1373,7 @@ window.openClientModal=function(id){
   document.getElementById('clStatus').value=c?c.status:'Active';
   document.getElementById('clPractitioner').value=c?c.practitioner:'Cath';
   document.getElementById('clXeroLink').value=c?c.xero_link||'':'';
+  document.getElementById('clFileNotes').value=c?c.file_notes_link||'':'';
   document.getElementById('clNotes').value=c?c.notes:'';
   tempMembers=c?[...(c.members||[])]:[];
   // Populate Referred By dropdown
@@ -1414,6 +1417,7 @@ window.saveClient=async function(){
     status:document.getElementById('clStatus').value,
     practitioner:document.getElementById('clPractitioner').value,
     xero_link:document.getElementById('clXeroLink').value.trim()||null,
+    file_notes_link:document.getElementById('clFileNotes').value.trim()||null,
     notes:document.getElementById('clNotes').value.trim(),
     referred_by:document.getElementById('clReferredBy').value||null
   };
