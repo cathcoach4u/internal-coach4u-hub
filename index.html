@@ -917,32 +917,30 @@ function renderCallSummary(members){
   const sorted=Object.entries(strengthCount).sort((a,b)=>b[1].count-a[1].count);
   const totalStrengths=sorted.reduce((sum,s)=>sum+s[1].count,0);
 
-  let html=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:16px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-      <div style="font-family:'Quicksand','Inter',sans-serif;font-size:18px;font-weight:700;color:#1e3a5f;">On This Call — ${selected.length} member${selected.length!==1?'s':''}</div>
-      <button onclick="thqSelected.clear();renderThriveHQ();" style="background:none;border:1px solid #e2e8f0;border-radius:6px;padding:4px 10px;font-size:11px;color:#64748b;cursor:pointer;">Clear All</button>
-    </div>`;
-
   // Domain breakdown bar
   const totalDom=Object.values(domainCount).reduce((a,b)=>a+b,0)||1;
-  html+=`<div style="margin-bottom:16px;">
-    <div style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Domain Balance</div>
-    <div style="display:flex;border-radius:6px;overflow:hidden;height:28px;">
-      ${Object.entries(domainCount).map(([d,c])=>c?`<div style="background:${domainColors[d]};width:${(c/totalDom*100).toFixed(1)}%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;">${d} ${c}</div>`:'').join('')}
+
+  // Only show shared strengths (count > 1)
+  const shared=sorted.filter(([,info])=>info.count>1);
+
+  let html=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;margin-bottom:14px;display:flex;flex-wrap:wrap;align-items:center;gap:14px;">
+    <div style="font-family:'Quicksand','Inter',sans-serif;font-size:15px;font-weight:700;color:#1e3a5f;white-space:nowrap;">${selected.length} on call</div>
+    <div style="display:flex;border-radius:4px;overflow:hidden;height:22px;flex:1;min-width:200px;">
+      ${Object.entries(domainCount).map(([d,c])=>c?'<div style="background:'+domainColors[d]+';width:'+(c/totalDom*100).toFixed(1)+'%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;">'+d+' '+c+'</div>':'').join('')}
     </div>
+    <button onclick="thqSelected.clear();renderThriveHQ();" style="background:none;border:1px solid #e2e8f0;border-radius:6px;padding:3px 8px;font-size:10px;color:#64748b;cursor:pointer;">Clear</button>
   </div>`;
 
-  // Strengths frequency — show shared strengths prominently
-  html+=`<div style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Strengths in the Room</div>
-    <div style="display:flex;flex-wrap:wrap;gap:6px;">`;
-  sorted.forEach(([name,info])=>{
-    const shared=info.count>1;
-    html+=`<div style="background:${csColor(name)};color:#fff;padding:5px 10px;border-radius:3px;font-size:11px;font-weight:700;position:relative;${shared?'box-shadow:0 0 0 2px #fff,0 0 0 4px '+csColor(name)+';':''}">
-      ${name}${shared?' <span style="background:rgba(255,255,255,.3);border-radius:99px;padding:0 5px;font-size:10px;">×${info.count}</span>':''}
-      <div style="font-size:9px;font-weight:500;opacity:.85;margin-top:1px;">${info.members.join(', ')}</div>
-    </div>`;
-  });
-  html+=`</div></div>`;
+  // Shared strengths row (only if there are shared ones)
+  if(shared.length){
+    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:12px 18px;margin-bottom:14px;">
+      <div style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Shared Strengths</div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;">`;
+    shared.forEach(([name,info])=>{
+      html+=`<span style="background:${csColor(name)};color:#fff;padding:3px 8px;border-radius:2px;font-size:11px;font-weight:700;">${name} <span style="opacity:.7;">×${info.count}</span></span>`;
+    });
+    html+=`</div></div>`;
+  }
 
   summaryEl.innerHTML=html;
 }
