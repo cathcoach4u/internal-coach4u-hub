@@ -142,8 +142,14 @@ td .actions button{padding:4px 10px;font-size:12px;}
   </button>
   <div class="nav-group-items open">
     <button class="nav-item" onclick="navTo('thrivehq',this)"><span class="icon">&#128101;</span> Members</button>
-    <button class="nav-item" onclick="navTo('strengths',this)"><span class="icon">&#127919;</span> Strengths Hub</button>
     <button class="nav-item" onclick="navTo('thqcalls',this)"><span class="icon">&#128222;</span> Coaching Calls</button>
+  </div>
+  <button class="nav-group-btn open" style="margin-top:8px;" onclick="toggleGroup(this)">
+    <span><span class="icon">&#127919;</span> Strengths</span>
+    <span class="arrow">&#9654;</span>
+  </button>
+  <div class="nav-group-items open">
+    <button class="nav-item" onclick="navTo('strengths',this)"><span class="icon">&#128161;</span> Strengths Hub</button>
   </div>
   <button class="nav-group-btn open" style="margin-top:8px;" onclick="toggleGroup(this)">
     <span><span class="icon">&#128736;</span> Operations</span>
