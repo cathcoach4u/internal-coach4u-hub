@@ -1037,19 +1037,6 @@ function renderCliDash(){
     </div>
   </div>`;
 
-  // Recent active clients
-  html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;">
-    <div style="font-family:'Quicksand','Inter',sans-serif;font-size:16px;font-weight:700;color:#1e3a5f;margin-bottom:14px;">Active Clients</div>
-    <div style="display:flex;flex-direction:column;gap:6px;">
-      ${active.map(c=>{
-        const borderColor=c.status==='Active'?'#16a34a':'#94a3b8';
-        return `<div onclick="openClientModal('${c.id}')" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border:1px solid #f1f5f9;border-left:3px solid ${borderColor};border-radius:8px;cursor:pointer;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
-          <span style="font-weight:600;font-size:13px;color:#1e293b;">${c.relationship_name}</span>
-          <span style="font-size:11px;color:#94a3b8;">${c.role||'—'}</span>
-        </div>`;
-      }).join('')}
-    </div>
-  </div>`;
 
   document.getElementById('cliDashContent').innerHTML=html;
 }
