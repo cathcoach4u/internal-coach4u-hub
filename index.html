@@ -833,9 +833,10 @@ window.toggleThqGroup=toggleThqGroup;
 
 function renderThriveHQ(){
   const q=document.getElementById('thqSearch').value.toLowerCase();
-  // Get all contacts that are linked to at least one client
+  // Only show members from Community (Organisation) or client named ThriveHQ
+  const thqClients=clients.filter(cl=>cl.role==='Organisation'||cl.relationship_name.toLowerCase().includes('thrivehq'));
   const memberMap={};
-  clients.forEach(cl=>{
+  thqClients.forEach(cl=>{
     (cl.members||[]).forEach(mid=>{
       if(!memberMap[mid])memberMap[mid]={contact:null,clients:[]};
       memberMap[mid].clients.push(cl);
@@ -858,8 +859,8 @@ function renderThriveHQ(){
   // Summary stats
   const totalMembers=members.length;
   const withStrengths=members.filter(m=>m.contact.strength_1).length;
-  const totalClients=clients.length;
-  const activeClients=clients.filter(c=>c.status==='Active').length;
+  const totalClients=thqClients.length;
+  const activeClients=thqClients.filter(c=>c.status==='Active').length;
 
   let html=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:20px;">
     <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px;text-align:center;border-top:3px solid #3b82f6;">
@@ -892,8 +893,8 @@ function renderThriveHQ(){
     });
   });
 
-  const roleOrder=['Couple','Individual','Business','Organisation'];
-  const roleLabels={'Couple':'Couples','Individual':'Individuals','Business':'Business','Organisation':'Community','Other':'Other'};
+  const roleOrder=['Organisation'];
+  const roleLabels={'Organisation':'Community','Other':'Other'};
 
   roleOrder.forEach(role=>{
     if(!byRole[role]||!byRole[role].length)return;
