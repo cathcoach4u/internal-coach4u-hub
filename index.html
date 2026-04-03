@@ -923,12 +923,48 @@ function renderCallSummary(members){
   // Only show shared strengths (count > 1)
   const shared=sorted.filter(([,info])=>info.count>1);
 
-  let html=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;margin-bottom:14px;display:flex;flex-wrap:wrap;align-items:center;gap:14px;">
-    <div style="font-family:'Quicksand','Inter',sans-serif;font-size:15px;font-weight:700;color:#1e3a5f;white-space:nowrap;">${selected.length} on call</div>
-    <div style="display:flex;border-radius:4px;overflow:hidden;height:22px;flex:1;min-width:200px;">
-      ${Object.entries(domainCount).map(([d,c])=>c?'<div style="background:'+domainColors[d]+';width:'+(c/totalDom*100).toFixed(1)+'%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;">'+d+' '+c+'</div>':'').join('')}
+  // Generate coaching insight based on domain balance
+  const domSorted=Object.entries(domainCount).filter(([,c])=>c>0).sort((a,b)=>b[1]-a[1]);
+  const topDom=domSorted[0]?domSorted[0][0]:null;
+  const secondDom=domSorted[1]?domSorted[1][0]:null;
+  const domDescriptions={
+    Executing:'getting things done and taking action',
+    Influencing:'persuading, speaking up and taking charge',
+    Relationship:'connecting, building trust and supporting each other',
+    Strategic:'thinking, analysing and absorbing information'
+  };
+  const domTone={
+    Executing:'action-oriented — they want clear next steps and tangible outcomes',
+    Influencing:'energetic and vocal — they want to be heard and make an impact',
+    Relationship:'people-first — they want connection, safety and to feel valued',
+    Strategic:'curious and reflective — they want ideas, context and time to think'
+  };
+  const domTips={
+    Executing:'Give them tasks, accountability and progress markers.',
+    Influencing:'Create space for them to share, lead discussions and champion ideas.',
+    Relationship:'Build in check-ins, pair work and acknowledgment.',
+    Strategic:'Pose thought-provoking questions and allow processing time.'
+  };
+  let insight='';
+  if(topDom){
+    const tied=domSorted.length>1&&domSorted[0][1]===domSorted[1][1];
+    if(tied){
+      insight=`<strong>Balanced energy</strong> between <strong>${topDom}</strong> (${domDescriptions[topDom]}) and <strong>${secondDom}</strong> (${domDescriptions[secondDom]}). This group can both think and do — lean into that versatility.`;
+    } else {
+      insight=`This group leads with <strong>${topDom}</strong> — ${domTone[topDom]}. ${domTips[topDom]}`;
+      if(secondDom) insight+=` Secondary energy: <strong>${secondDom}</strong> (${domDescriptions[secondDom]}).`;
+    }
+  }
+
+  let html=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;margin-bottom:14px;">
+    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-bottom:${insight?'10':'0'}px;">
+      <div style="font-family:'Quicksand','Inter',sans-serif;font-size:15px;font-weight:700;color:#1e3a5f;white-space:nowrap;">${selected.length} on call</div>
+      <div style="display:flex;border-radius:4px;overflow:hidden;height:22px;flex:1;min-width:200px;">
+        ${Object.entries(domainCount).map(([d,c])=>c?'<div style="background:'+domainColors[d]+';width:'+(c/totalDom*100).toFixed(1)+'%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;">'+d+' '+c+'</div>':'').join('')}
+      </div>
+      <button onclick="thqSelected.clear();renderThriveHQ();" style="background:none;border:1px solid #e2e8f0;border-radius:6px;padding:3px 8px;font-size:10px;color:#64748b;cursor:pointer;">Clear</button>
     </div>
-    <button onclick="thqSelected.clear();renderThriveHQ();" style="background:none;border:1px solid #e2e8f0;border-radius:6px;padding:3px 8px;font-size:10px;color:#64748b;cursor:pointer;">Clear</button>
+    ${insight?'<div style="font-size:13px;color:#475569;line-height:1.5;">'+insight+'</div>':''}
   </div>`;
 
   // Shared strengths row (only if there are shared ones)
