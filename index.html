@@ -175,6 +175,11 @@ td .actions button{padding:4px 10px;font-size:12px;}
           <div class="dc-info"><h4 id="dcProspects">0</h4><p>Prospects</p></div>
         </div>
       </div>
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 18px;margin-top:14px;display:flex;align-items:center;gap:10px;">
+        <span style="font-size:18px;">&#128194;</span>
+        <a href="https://netorgft4053847.sharepoint.com/:f:/s/Clients/IgCvrdCt_QJ3Q4duGfiHWxWmATOFwyLG_YdMRsorhU_jsuI?e=FiDtiW" target="_blank" style="font-weight:600;color:#3b82f6;text-decoration:none;font-size:14px;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">ThriveHQ Folders, Files &amp; Recordings</a>
+        <span style="font-size:11px;color:#94a3b8;">SharePoint</span>
+      </div>
     </div>
 
     <!-- CRM DASHBOARD -->
@@ -1168,11 +1173,13 @@ function getContactName(id){
 function renderClientCard(c){
   const members=(c.members||[]).map(mid=>getContactName(mid));
   const borderColor=c.status==='Active'?'#16a34a':c.status==='On Hold'?'#eab308':'#94a3b8';
+  const ref=c.referred_by?referrals.find(r=>r.id===c.referred_by):null;
   return `<div onclick="openClientModal('${c.id}')" style="background:#fff;border:1px solid #e2e8f0;border-left:3px solid ${borderColor};border-radius:8px;padding:14px 16px;display:flex;gap:12px;align-items:center;cursor:pointer;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
     <div style="flex:1;min-width:0;">
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
         <span style="font-weight:600;font-size:14px;color:#1e293b;">${c.relationship_name}</span>
         <span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:500;${c.status==='Active'?'background:#dcfce7;color:#15803d;':c.status==='On Hold'?'background:#fef9c3;color:#a16207;':'background:#f1f5f9;color:#64748b;'}">${c.status}</span>
+        ${ref?'<span style="font-size:11px;padding:2px 8px;border-radius:99px;background:#dbeafe;color:#2563eb;font-weight:500;">Referred by '+ref.name+'</span>':''}
       </div>
       ${members.length>1?'<div style="font-size:12px;color:#64748b;margin-top:4px;">'+members.join(', ')+'</div>':''}
     </div>
