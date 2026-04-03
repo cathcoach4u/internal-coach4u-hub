@@ -917,78 +917,42 @@ function renderThriveHQ(){
     });
   });
 
-  const roleOrder=['Organisation'];
-  const roleLabels={'Organisation':'Community','Other':'Other'};
-
-  roleOrder.forEach(role=>{
-    if(!byRole[role]||!byRole[role].length)return;
-    const collapsed=thqGroupState[role]||false;
-    const arrow=collapsed?'&#9654;':'&#9660;';
-    html+=`<div style="margin-bottom:12px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;overflow:hidden;">
-      <div onclick="toggleThqGroup('${role}')" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;user-select:none;background:#f8fafc;border-bottom:${collapsed?'none':'1px solid #e2e8f0'};">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <span style="font-size:12px;color:#94a3b8;">${arrow}</span>
-          <span style="font-weight:700;font-size:14px;color:#1e293b;">${roleLabels[role]||role}</span>
-          <span style="background:#f1f5f9;color:#64748b;font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;">${byRole[role].length}</span>
-        </div>
+  // Flat grid — coaching call view, everyone visible at once
+  function renderMemberCard(m){
+    const c=m.contact;
+    const top5=[],bottom5=[];
+    for(let i=1;i<=10;i++){if(c['strength_'+i]){const s={rank:i,name:c['strength_'+i]};if(i<=5)top5.push(s);else bottom5.push(s);}}
+    const renewalDate=c.renewal_date?new Date(c.renewal_date):null;
+    const isOverdue=renewalDate&&renewalDate<new Date();
+    const isDueSoon=renewalDate&&!isOverdue&&(renewalDate-new Date())/(1000*60*60*24)<=30;
+    const borderColor=isOverdue?'#ef4444':isDueSoon?'#eab308':'#3b82f6';
+    return `<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:0;overflow:hidden;display:flex;flex-direction:column;">
+      <div style="background:linear-gradient(135deg,#1e3a5f,#2d5a8e);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-weight:700;font-size:15px;color:#fff;">${c.first_name} ${c.last_name}</span>
+        <button onclick="openContactModal('${c.id}')" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:6px;padding:4px 12px;font-size:11px;color:#fff;cursor:pointer;font-weight:600;">View</button>
       </div>
-      ${collapsed?'':`<div style="display:flex;flex-direction:column;gap:8px;padding:12px;">${byRole[role].map(m=>{
-        const c=m.contact;
-        const strengths=[];
-        for(let i=1;i<=10;i++){if(c['strength_'+i])strengths.push({rank:i,name:c['strength_'+i]});}
-        const renewalDate=c.renewal_date?new Date(c.renewal_date):null;
-        const isOverdue=renewalDate&&renewalDate<new Date();
-        const isDueSoon=renewalDate&&!isOverdue&&(renewalDate-new Date())/(1000*60*60*24)<=30;
-        return `<div style="background:#fff;border:1px solid #e2e8f0;border-left:3px solid ${isOverdue?'#ef4444':isDueSoon?'#eab308':'#3b82f6'};border-radius:8px;padding:14px 16px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-            <span style="font-weight:600;font-size:14px;color:#1e293b;">${c.first_name} ${c.last_name}</span>
-            <button onclick="openContactModal('${c.id}')" style="background:none;border:1px solid #e2e8f0;border-radius:6px;padding:4px 12px;font-size:11px;color:#3b82f6;cursor:pointer;font-weight:600;">View</button>
-          </div>
-          <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-bottom:${strengths.length?'8':'0'}px;">
-            ${c.membership_start_date?'<span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:500;background:#dbeafe;color:#2563eb;">Started: '+c.membership_start_date+'</span>':''}
-            ${c.renewal_date?'<span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:600;background:'+(isOverdue?'#fef2f2;color:#dc2626;':isDueSoon?'#fef3c7;color:#d97706;':'#f1f5f9;color:#64748b;')+'">Renewal: '+c.renewal_date+(isOverdue?' OVERDUE':isDueSoon?' DUE SOON':'')+'</span>':''}
-          </div>
-          ${strengths.length?'<div style="display:flex;flex-wrap:wrap;gap:4px;">'+strengths.map(s=>csPill(s.rank,s.name)).join('')+'</div>':'<div style="font-size:11px;color:#94a3b8;">No strengths profile</div>'}
-        </div>`;
-      }).join('')}</div>`}
-    </div>`;
-    delete byRole[role];
-  });
-
-  // Any remaining roles
-  Object.keys(byRole).forEach(role=>{
-    if(!byRole[role].length)return;
-    const collapsed=thqGroupState[role]||false;
-    const arrow=collapsed?'&#9654;':'&#9660;';
-    html+=`<div style="margin-bottom:12px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;overflow:hidden;">
-      <div onclick="toggleThqGroup('${role}')" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;user-select:none;background:#f8fafc;border-bottom:${collapsed?'none':'1px solid #e2e8f0'};">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <span style="font-size:12px;color:#94a3b8;">${arrow}</span>
-          <span style="font-weight:700;font-size:14px;color:#1e293b;">${roleLabels[role]||role}</span>
-          <span style="background:#f1f5f9;color:#64748b;font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;">${byRole[role].length}</span>
-        </div>
+      <div style="padding:14px 16px;flex:1;display:flex;flex-direction:column;gap:10px;">
+        ${top5.length?`<div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#94a3b8;font-weight:600;margin-bottom:6px;">Top 5</div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px;">${top5.map(s=>`<span style="background:${csColor(s.name)};color:#fff;padding:4px 12px;border-radius:99px;font-size:12px;font-weight:700;">${s.name}</span>`).join('')}</div>
+        </div>`:''}
+        ${bottom5.length?`<div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#94a3b8;font-weight:600;margin-bottom:6px;">6–10</div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;">${bottom5.map(s=>`<span style="background:${csColor(s.name)}22;color:${csColor(s.name)};border:1px solid ${csColor(s.name)}44;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600;">${s.name}</span>`).join('')}</div>
+        </div>`:''}
+        ${!top5.length&&!bottom5.length?'<div style="font-size:12px;color:#94a3b8;text-align:center;padding:12px 0;">No strengths profile</div>':''}
       </div>
-      ${collapsed?'':`<div style="display:flex;flex-direction:column;gap:8px;padding:12px;">${byRole[role].map(m=>{
-        const c=m.contact;
-        const strengths=[];
-        for(let i=1;i<=10;i++){if(c['strength_'+i])strengths.push({rank:i,name:c['strength_'+i]});}
-        const renewalDate=c.renewal_date?new Date(c.renewal_date):null;
-        const isOverdue=renewalDate&&renewalDate<new Date();
-        const isDueSoon=renewalDate&&!isOverdue&&(renewalDate-new Date())/(1000*60*60*24)<=30;
-        return `<div style="background:#fff;border:1px solid #e2e8f0;border-left:3px solid ${isOverdue?'#ef4444':isDueSoon?'#eab308':'#3b82f6'};border-radius:8px;padding:14px 16px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-            <span style="font-weight:600;font-size:14px;color:#1e293b;">${c.first_name} ${c.last_name}</span>
-            <button onclick="openContactModal('${c.id}')" style="background:none;border:1px solid #e2e8f0;border-radius:6px;padding:4px 12px;font-size:11px;color:#3b82f6;cursor:pointer;font-weight:600;">View</button>
-          </div>
-          <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-bottom:${strengths.length?'8':'0'}px;">
-            ${c.membership_start_date?'<span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:500;background:#dbeafe;color:#2563eb;">Started: '+c.membership_start_date+'</span>':''}
-            ${c.renewal_date?'<span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:600;background:'+(isOverdue?'#fef2f2;color:#dc2626;':isDueSoon?'#fef3c7;color:#d97706;':'#f1f5f9;color:#64748b;')+'">Renewal: '+c.renewal_date+(isOverdue?' OVERDUE':isDueSoon?' DUE SOON':'')+'</span>':''}
-          </div>
-          ${strengths.length?'<div style="display:flex;flex-wrap:wrap;gap:4px;">'+strengths.map(s=>csPill(s.rank,s.name)).join('')+'</div>':'<div style="font-size:11px;color:#94a3b8;">No strengths profile</div>'}
-        </div>`;
-      }).join('')}</div>`}
+      <div style="padding:10px 16px;border-top:1px solid #f1f5f9;background:#f8fafc;display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+        ${c.renewal_date?'<span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:600;background:'+(isOverdue?'#fef2f2;color:#dc2626;':isDueSoon?'#fef3c7;color:#d97706;':'#dcfce7;color:#15803d;')+'">Renewal: '+c.renewal_date+(isOverdue?' OVERDUE':isDueSoon?' DUE SOON':'')+'</span>':'<span style="font-size:11px;color:#94a3b8;">No renewal date</span>'}
+        ${c.membership_start_date?'<span style="font-size:10px;color:#94a3b8;">Started '+c.membership_start_date+'</span>':''}
+      </div>
     </div>`;
-  });
+  }
+
+  // Render all members in a grid
+  html+=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;">`;
+  members.forEach(m=>{html+=renderMemberCard(m);});
+  html+=`</div>`;
 
   if(!members.length) html+='<div style="padding:20px;text-align:center;color:#94a3b8;">No linked members found. Link contacts to clients on the Clients page.</div>';
 
