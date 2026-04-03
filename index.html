@@ -453,7 +453,7 @@ td .actions button{padding:4px 10px;font-size:12px;}
     <h3 id="clientModalTitle">Add Client</h3>
     <input type="hidden" id="clientId">
     <div class="form-group"><label>Client / Relationship Name</label><input id="clName"></div>
-    <div class="form-group"><label>Role</label><input id="clRole" placeholder="e.g. Coaching Client, Workshop"></div>
+    <div class="form-group"><label>Role</label><select id="clRole"><option>Individual</option><option>Couple</option><option>Business</option><option>Organisation</option></select></div>
     <div class="form-group"><label>Status</label>
       <select id="clStatus"><option>Active</option><option>On Hold</option><option>Completed</option></select>
     </div>
@@ -1232,7 +1232,7 @@ window.openClientModal=function(id){
   document.getElementById('clientModalTitle').textContent=c?'Edit Client':'Add Client';
   document.getElementById('clientId').value=c?c.id:'';
   document.getElementById('clName').value=c?c.relationship_name:'';
-  document.getElementById('clRole').value=c?c.role:'';
+  document.getElementById('clRole').value=c?c.role:'Individual';
   document.getElementById('clStatus').value=c?c.status:'Active';
   document.getElementById('clPractitioner').value=c?c.practitioner:'Cath';
   document.getElementById('clNotes').value=c?c.notes:'';
