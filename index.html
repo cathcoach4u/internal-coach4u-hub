@@ -1709,10 +1709,18 @@ function renderThqRenewals(){
     </tr>`;
     if(renewalCount){
       html+=`<tr style="border-bottom:1px solid #f1f5f9;"><td colspan="6" style="padding:0 14px 10px 30px;">
-        <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
-          <span style="font-size:11px;color:#64748b;font-weight:600;">Renewal history:</span>
-          ${memberRenewals.map(r=>`<span style="font-size:11px;padding:2px 8px;background:#eff6ff;color:#3b82f6;border-radius:99px;font-weight:500;">${r.renewed_date||r.period_start||'—'}</span>`).join('')}
-        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:11px;background:#f8fafc;border-radius:8px;overflow:hidden;">
+          <thead><tr style="border-bottom:1px solid #e2e8f0;">
+            <th style="text-align:left;padding:4px 10px;color:#64748b;font-weight:600;">Renewed On</th>
+            <th style="text-align:left;padding:4px 10px;color:#64748b;font-weight:600;">Period</th>
+            <th style="text-align:right;padding:4px 10px;color:#64748b;font-weight:600;">Amount</th>
+          </tr></thead>
+          <tbody>${memberRenewals.map(r=>`<tr onclick="openRenewalModal('${r.id}')" style="cursor:pointer;border-bottom:1px solid #e2e8f0;" onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='transparent'">
+            <td style="padding:4px 10px;color:#1e293b;font-weight:500;">${r.renewed_date||'—'}</td>
+            <td style="padding:4px 10px;color:#475569;">${r.period_start||'?'} → ${r.period_end||'?'}</td>
+            <td style="padding:4px 10px;text-align:right;color:#1e293b;font-weight:500;">${r.amount?'$'+parseFloat(r.amount).toFixed(2):'—'}</td>
+          </tr>`).join('')}</tbody>
+        </table>
       </td></tr>`;
     }
   });
