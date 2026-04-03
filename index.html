@@ -678,7 +678,7 @@ function renderClientCard(c){
   </div>`;
 }
 
-const clientGroupState={};
+const clientGroupState={Couple:true,Individual:true,Business:true,Organisation:true};
 function toggleClientGroup(g){clientGroupState[g]=!clientGroupState[g];renderClients();}
 window.toggleClientGroup=toggleClientGroup;
 
