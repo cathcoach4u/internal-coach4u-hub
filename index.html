@@ -334,7 +334,9 @@ td .actions button{padding:4px 10px;font-size:12px;}
     <div class="form-group"><label>Type</label>
       <select id="cType"><option>Individual</option><option>Organisation</option><option>Referrer</option></select>
     </div>
-    <div class="form-group"><label>Strengths (Top 5)</label><textarea id="cStrengths" placeholder="e.g. Achiever, Learner, Strategic..."></textarea></div>
+    <div class="form-group"><label>CliftonStrengths Top 10</label>
+      <div id="cStrengthsGrid" style="display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center;"></div>
+    </div>
     <div class="form-group"><label>Notes</label><textarea id="cNotes"></textarea></div>
     <div class="modal-actions">
       <button class="btn btn-gray" onclick="closeModal('contactModal')">Cancel</button>
@@ -380,6 +382,9 @@ td .actions button{padding:4px 10px;font-size:12px;}
 const SUPABASE_URL = 'https://uoixetfvboevjxlkfyqy.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_m3qgSGvWF0n2TePf6vhqMw_9obUvJEJ';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ── CLIFTONSTRENGTHS 34 THEMES ──
+const CS34 = ['','Achiever','Activator','Adaptability','Analytical','Arranger','Belief','Command','Communication','Competition','Connectedness','Consistency','Context','Deliberative','Developer','Discipline','Empathy','Focus','Futuristic','Harmony','Ideation','Includer','Individualization','Input','Intellection','Learner','Maximizer','Positivity','Relator','Responsibility','Restorative','Self-Assurance','Significance','Strategic','Woo'];
 
 // ── DATA ──
 let contacts = [];
@@ -484,7 +489,8 @@ function renderMasterList(){
   const filtered=contacts.filter(c=>(c.first_name+' '+c.last_name+' '+c.email+' '+c.contact_type+' '+c.strengths).toLowerCase().includes(q));
   document.getElementById('mlCards').innerHTML=filtered.map(c=>{
     const initials=(c.first_name[0]||'')+(c.last_name[0]||'');
-    const strengths=(c.strengths||'').split(',').map(s=>s.trim()).filter(Boolean);
+    const strengths=[];
+    for(let i=1;i<=10;i++){if(c['strength_'+i])strengths.push({rank:i,name:c['strength_'+i]});}
     return `<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:20px;">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
         <div style="display:flex;align-items:center;gap:12px;">
@@ -500,7 +506,7 @@ function renderMasterList(){
         ${c.email?'<div style="font-size:13px;"><a href="mailto:'+c.email+'" style="color:#3b82f6;text-decoration:none;">'+c.email+'</a></div>':''}
         ${c.phone?'<div style="font-size:14px;font-weight:600;"><a href="tel:'+c.phone.replace(/\\s/g,'')+'" style="color:#1e293b;text-decoration:none;letter-spacing:.3px;">'+c.phone+'</a></div>':''}
       </div>
-      ${strengths.length?'<div style="display:flex;flex-wrap:wrap;gap:4px;">'+strengths.map((s,i)=>'<span style="background:'+(i===0?'#3b82f6':i<3?'#60a5fa':'#93c5fd')+';color:#fff;padding:2px 10px;border-radius:99px;font-size:11px;font-weight:600;">'+s+'</span>').join('')+'</div>':''}
+      ${strengths.length?'<div style="display:flex;flex-wrap:wrap;gap:4px;">'+strengths.map(s=>'<span style="background:'+(s.rank<=1?'#1d4ed8':s.rank<=3?'#3b82f6':s.rank<=5?'#60a5fa':'#93c5fd')+';color:#fff;padding:2px 10px;border-radius:99px;font-size:11px;font-weight:600;">#'+s.rank+' '+s.name+'</span>').join('')+'</div>':''}
     </div>`;
   }).join('')||'<div style="padding:20px;text-align:center;color:#94a3b8;">No contacts found.</div>';
 }
@@ -515,22 +521,41 @@ window.openContactModal=function(id){
   document.getElementById('cEmail').value=c?c.email:'';
   document.getElementById('cPhone').value=c?c.phone:'';
   document.getElementById('cType').value=c?c.contact_type:'Individual';
-  document.getElementById('cStrengths').value=c?c.strengths:'';
   document.getElementById('cNotes').value=c?c.notes:'';
+  // Build 10 strength dropdowns
+  const grid=document.getElementById('cStrengthsGrid');
+  grid.innerHTML='';
+  for(let i=1;i<=10;i++){
+    const label=document.createElement('span');
+    label.style.cssText='font-size:13px;font-weight:700;color:'+(i<=5?'#3b82f6':'#93c5fd')+';';
+    label.textContent='#'+i;
+    const sel=document.createElement('select');
+    sel.id='cStr'+i;
+    sel.style.cssText='padding:6px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;';
+    sel.innerHTML=CS34.map(s=>'<option value="'+s+'"'+(c&&c['strength_'+i]===s?' selected':'')+'>'+( s||'-- Select --')+'</option>').join('');
+    grid.appendChild(label);
+    grid.appendChild(sel);
+  }
   document.getElementById('contactModal').classList.add('open');
 };
 
 window.saveContact=async function(){
   const id=document.getElementById('contactId').value;
+  const strengths=[];
   const data={
     first_name:document.getElementById('cFirst').value.trim(),
     last_name:document.getElementById('cLast').value.trim(),
     email:document.getElementById('cEmail').value.trim(),
     phone:document.getElementById('cPhone').value.trim(),
     contact_type:document.getElementById('cType').value,
-    strengths:document.getElementById('cStrengths').value.trim(),
     notes:document.getElementById('cNotes').value.trim()
   };
+  for(let i=1;i<=10;i++){
+    const v=document.getElementById('cStr'+i).value;
+    data['strength_'+i]=v||null;
+    if(v) strengths.push(v);
+  }
+  data.strengths=strengths.join(', ')||null;
   if(!data.first_name||!data.last_name){toast('First and last name required','error');return;}
   if(id){
     const {error}=await supabase.from('contacts').update(data).eq('id',id);
@@ -671,17 +696,23 @@ window.deleteClient=async function(id){
 // ── STRENGTHS HUB ──
 function renderStrengths(){
   const q=document.getElementById('shSearch').value.toLowerCase();
-  const filtered=contacts.filter(c=>c.strengths&&(c.first_name+' '+c.last_name+' '+c.strengths).toLowerCase().includes(q));
+  const filtered=contacts.filter(c=>{
+    const hasStr=c.strength_1;
+    const searchStr=(c.first_name+' '+c.last_name+' '+(c.strengths||'')).toLowerCase();
+    return hasStr&&searchStr.includes(q);
+  });
   document.getElementById('shCards').innerHTML=filtered.map(c=>{
-    const strengths=(c.strengths||'').split(',').map(s=>s.trim()).filter(Boolean);
+    const strengths=[];
+    for(let i=1;i<=10;i++){if(c['strength_'+i])strengths.push({rank:i,name:c['strength_'+i]});}
     return `<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:20px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
         <strong style="font-size:16px;">${c.first_name} ${c.last_name}</strong>
         <span class="badge badge-${c.contact_type==='Individual'?'blue':c.contact_type==='Organisation'?'green':'amber'}">${c.contact_type}</span>
       </div>
       <div style="font-size:12px;color:#64748b;margin-bottom:10px;">${c.email||''}</div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px;">${strengths.map((s,i)=>
-        `<span style="background:${i===0?'#3b82f6':i<3?'#60a5fa':'#93c5fd'};color:#fff;padding:4px 12px;border-radius:99px;font-size:12px;font-weight:600;">${s}</span>`
+      ${c.sharepoint_link?'<div style="margin-bottom:10px;"><a href="'+c.sharepoint_link+'" target="_blank" style="font-size:12px;color:#3b82f6;text-decoration:none;">View Strengths Report</a></div>':''}
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">${strengths.map(s=>
+        `<span style="background:${s.rank<=1?'#1d4ed8':s.rank<=3?'#3b82f6':s.rank<=5?'#60a5fa':'#93c5fd'};color:#fff;padding:4px 12px;border-radius:99px;font-size:12px;font-weight:600;">#${s.rank} ${s.name}</span>`
       ).join('')}</div>
     </div>`;
   }).join('')||'<div style="padding:20px;text-align:center;color:#94a3b8;">No contacts with strengths found.</div>';
