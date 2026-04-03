@@ -397,7 +397,7 @@ const CS_DOMAINS={
   Analytical:'#00945B',Context:'#00945B',Futuristic:'#00945B',Ideation:'#00945B',Input:'#00945B',Intellection:'#00945B',Learner:'#00945B',Strategic:'#00945B'
 };
 function csColor(name){return CS_DOMAINS[name]||'#64748b';}
-function csPill(rank,name){return `<span style="background:${csColor(name)};color:#fff;padding:3px 10px;border-radius:4px;font-size:11px;font-weight:600;">#${rank} ${name}</span>`;}
+function csPill(rank,name){return `<span style="background:${csColor(name)};color:#fff;padding:3px 10px;border-radius:2px;font-size:11px;font-weight:600;">#${rank} ${name}</span>`;}
 
 // ── DATA ──
 let contacts = [];
@@ -933,11 +933,11 @@ function renderThriveHQ(){
       <div style="padding:10px 12px;flex:1;display:flex;flex-direction:column;gap:6px;">
         ${top5.length?`<div>
           <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#94a3b8;font-weight:600;margin-bottom:4px;">Top 5</div>
-          <div style="display:flex;flex-wrap:wrap;gap:3px;">${top5.map(s=>`<span style="background:${csColor(s.name)};color:#fff;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;">${s.name}</span>`).join('')}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:3px;">${top5.map(s=>`<span style="background:${csColor(s.name)};color:#fff;padding:3px 8px;border-radius:2px;font-size:10px;font-weight:700;">${s.name}</span>`).join('')}</div>
         </div>`:''}
         ${bottom5.length?`<div>
           <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#94a3b8;font-weight:600;margin-bottom:4px;">6–10</div>
-          <div style="display:flex;flex-wrap:wrap;gap:3px;">${bottom5.map(s=>`<span style="background:${csColor(s.name)}15;color:${csColor(s.name)};border:1px solid ${csColor(s.name)}33;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;">${s.name}</span>`).join('')}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:3px;">${bottom5.map(s=>`<span style="background:${csColor(s.name)};color:#fff;padding:3px 8px;border-radius:2px;font-size:10px;font-weight:700;">${s.name}</span>`).join('')}</div>
         </div>`:''}
         ${!top5.length&&!bottom5.length?'<div style="font-size:11px;color:#94a3b8;text-align:center;padding:8px 0;">No strengths profile</div>':''}
       </div>
