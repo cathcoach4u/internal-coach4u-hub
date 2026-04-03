@@ -562,7 +562,7 @@ window.goToClient=function(clientId){
 // ── AREA TABS & SIDEBAR ──
 const areaConfig={
   home:{label:'Home',pages:[{id:'dashboard',icon:'&#9776;',label:'Dashboard'}]},
-  crm:{label:'CRM',pages:[{id:'crmdash',icon:'&#128202;',label:'Dashboard'},{id:'masterlist',icon:'&#128209;',label:'Master List'}]},
+  crm:{label:'CRM',pages:[{id:'masterlist',icon:'&#128209;',label:'Master List'}]},
   referrers:{label:'Referrers',pages:[{id:'refdash',icon:'&#128200;',label:'Dashboard'},{id:'referrals',icon:'&#128101;',label:'Referral Hub'}]},
   prospects:{label:'Prospects',pages:[{id:'prospdash',icon:'&#127793;',label:'Dashboard'},{id:'prospects',icon:'&#128203;',label:'Prospect List'}]},
   clients:{label:'Clients',pages:[{id:'clidash',icon:'&#129309;',label:'Dashboard'},{id:'clients',icon:'&#128101;',label:'Client List'}]},
@@ -632,50 +632,7 @@ function renderDashboard(){
 }
 
 // ── CRM DASHBOARD ──
-function renderCrmDash(){
-  const totalContacts=contacts.length;
-  const activeClients=clients.filter(c=>c.status==='Active').length;
-  const onHold=clients.filter(c=>c.status==='On Hold').length;
-  const completed=clients.filter(c=>c.status==='Completed').length;
-  const couples=clients.filter(c=>c.role==='Couple'&&c.status==='Active').length;
-  const individuals=clients.filter(c=>c.role==='Individual'&&c.status==='Active').length;
-  const business=clients.filter(c=>c.role==='Business'&&c.status==='Active').length;
-  const community=clients.filter(c=>c.role==='Organisation'&&c.status==='Active').length;
-
-  // Recent contacts (last 5 added)
-  const recent=contacts.slice(0,5);
-
-  let html=`<div class="dash-cards">
-    <div class="dash-card"><div class="dc-icon blue">&#128100;</div><div class="dc-info"><h4>${totalContacts}</h4><p>Total Contacts</p></div></div>
-    <div class="dash-card"><div class="dc-icon green">&#129309;</div><div class="dc-info"><h4>${activeClients}</h4><p>Active Clients</p></div></div>
-    <div class="dash-card"><div class="dc-icon amber">&#9208;</div><div class="dc-info"><h4>${onHold}</h4><p>On Hold</p></div></div>
-    <div class="dash-card"><div class="dc-icon" style="background:#f1f5f9;color:#64748b;">&#10004;</div><div class="dc-info"><h4>${completed}</h4><p>Completed</p></div></div>
-  </div>`;
-
-  // Client breakdown
-  html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:20px;">
-    <div style="font-family:'Quicksand','Inter',sans-serif;font-size:16px;font-weight:700;color:#1e3a5f;margin-bottom:14px;">Active Client Breakdown</div>
-    <div style="display:flex;gap:20px;flex-wrap:wrap;">
-      <div style="text-align:center;"><div style="font-size:28px;font-weight:700;color:#1e3a5f;">${couples}</div><div style="font-size:12px;color:#64748b;">Couples</div></div>
-      <div style="text-align:center;"><div style="font-size:28px;font-weight:700;color:#1e3a5f;">${individuals}</div><div style="font-size:12px;color:#64748b;">Individuals</div></div>
-      <div style="text-align:center;"><div style="font-size:28px;font-weight:700;color:#1e3a5f;">${business}</div><div style="font-size:12px;color:#64748b;">Business</div></div>
-      <div style="text-align:center;"><div style="font-size:28px;font-weight:700;color:#1e3a5f;">${community}</div><div style="font-size:12px;color:#64748b;">Community</div></div>
-    </div>
-  </div>`;
-
-  // Recent contacts
-  html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;">
-    <div style="font-family:'Quicksand','Inter',sans-serif;font-size:16px;font-weight:700;color:#1e3a5f;margin-bottom:14px;">Recent Contacts</div>
-    <div style="display:flex;flex-direction:column;gap:8px;">
-      ${recent.map(c=>`<div onclick="openContactModal('${c.id}')" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border:1px solid #f1f5f9;border-radius:8px;cursor:pointer;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
-        <div><span style="font-weight:600;font-size:14px;color:#1e293b;">${c.first_name} ${c.last_name}</span>${c.email?'<span style="font-size:12px;color:#94a3b8;margin-left:8px;">'+c.email+'</span>':''}</div>
-        <span style="font-size:12px;color:#94a3b8;">${c.category||'—'}</span>
-      </div>`).join('')}
-    </div>
-  </div>`;
-
-  document.getElementById('crmDashContent').innerHTML=html;
-}
+function renderCrmDash(){ renderMasterList(); }
 
 // ── THRIVEHQ DASHBOARD ──
 function renderThqDash(){
