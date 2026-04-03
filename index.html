@@ -135,8 +135,15 @@ td .actions button{padding:4px 10px;font-size:12px;}
   <div class="nav-group-items open">
     <button class="nav-item" onclick="navTo('masterlist',this)"><span class="icon">&#128209;</span> Master List</button>
     <button class="nav-item" onclick="navTo('clients',this)"><span class="icon">&#129309;</span> Clients</button>
-    <button class="nav-item" onclick="navTo('thrivehq',this)"><span class="icon">&#128170;</span> ThriveHQ</button>
+  </div>
+  <button class="nav-group-btn open" style="margin-top:8px;" onclick="toggleGroup(this)">
+    <span><span class="icon">&#128170;</span> ThriveHQ</span>
+    <span class="arrow">&#9654;</span>
+  </button>
+  <div class="nav-group-items open">
+    <button class="nav-item" onclick="navTo('thrivehq',this)"><span class="icon">&#128101;</span> Members</button>
     <button class="nav-item" onclick="navTo('strengths',this)"><span class="icon">&#127919;</span> Strengths Hub</button>
+    <button class="nav-item" onclick="navTo('thqcalls',this)"><span class="icon">&#128222;</span> Coaching Calls</button>
   </div>
   <button class="nav-group-btn open" style="margin-top:8px;" onclick="toggleGroup(this)">
     <span><span class="icon">&#128736;</span> Operations</span>
@@ -213,14 +220,21 @@ td .actions button{padding:4px 10px;font-size:12px;}
       <div id="shCards"></div>
     </div>
 
-    <!-- THRIVEHQ -->
+    <!-- THRIVEHQ MEMBERS -->
     <div class="screen" id="screen-thrivehq">
       <div class="toolbar">
         <input class="search-input" id="thqSearch" placeholder="Search members..." oninput="filterThriveHQ()">
-        <button id="thqCallBtn" onclick="toggleCallMode()" style="background:#1e3a5f;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">Start Call</button>
       </div>
-      <div id="thqCallSummary" style="display:none;"></div>
       <div id="thqContent"></div>
+    </div>
+
+    <!-- THRIVEHQ COACHING CALLS -->
+    <div class="screen" id="screen-thqcalls">
+      <div class="toolbar">
+        <input class="search-input" id="thqCallSearch" placeholder="Search members..." oninput="renderCoachingCalls()">
+      </div>
+      <div id="thqCallSummary"></div>
+      <div id="thqCallContent"></div>
     </div>
 
     <!-- TASK MANAGEMENT -->
@@ -445,13 +459,14 @@ window.navTo = function(tab,btn){
   document.getElementById('screen-'+tab).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   if(btn)btn.classList.add('active');
-  const titles={dashboard:'Dashboard',masterlist:'Master List',clients:'Clients',thrivehq:'ThriveHQ',strengths:'Strengths Hub',tasks:'Task Management',referrals:'Referral Hub',itprojects:'IT Projects'};
+  const titles={dashboard:'Dashboard',masterlist:'Master List',clients:'Clients',thrivehq:'Members',strengths:'Strengths Hub',thqcalls:'Coaching Calls',tasks:'Task Management',referrals:'Referral Hub',itprojects:'IT Projects'};
   document.getElementById('pageTitle').textContent=titles[tab]||'Coach4U';
   if(tab==='dashboard') renderDashboard();
   if(tab==='masterlist') renderMasterList();
   if(tab==='clients') renderClients();
   if(tab==='thrivehq') renderThriveHQ();
   if(tab==='strengths') renderStrengths();
+  if(tab==='thqcalls') renderCoachingCalls();
   if(tab==='tasks') renderTasks();
   if(tab==='referrals') renderReferrals();
   if(tab==='itprojects') renderITProjects();
@@ -854,136 +869,12 @@ function renderStrengths(){
 }
 window.filterStrengths=function(){renderStrengths();};
 
-// ── THRIVEHQ ──
+// ── THRIVEHQ MEMBERS ──
 const thqGroupState={};
-let thqCallMode=false;
-const thqSelected=new Set();
 function toggleThqGroup(g){thqGroupState[g]=!thqGroupState[g];renderThriveHQ();}
 window.toggleThqGroup=toggleThqGroup;
 
-window.toggleCallMode=function(){
-  thqCallMode=!thqCallMode;
-  if(!thqCallMode) thqSelected.clear();
-  document.getElementById('thqCallBtn').textContent=thqCallMode?'End Call':'Start Call';
-  document.getElementById('thqCallBtn').style.background=thqCallMode?'#dc2626':'#1e3a5f';
-  renderThriveHQ();
-};
-
-window.toggleCallMember=function(contactId){
-  if(thqSelected.has(contactId)) thqSelected.delete(contactId);
-  else thqSelected.add(contactId);
-  renderThriveHQ();
-};
-
-function renderCallSummary(members){
-  const selected=members.filter(m=>thqSelected.has(m.contact.id));
-  const summaryEl=document.getElementById('thqCallSummary');
-  if(!thqCallMode||selected.length===0){summaryEl.style.display='none';return;}
-  summaryEl.style.display='block';
-
-  // Collect all strengths from selected members
-  const strengthCount={};
-  const domainCount={Executing:0,Influencing:0,Relationship:0,Strategic:0};
-  const domainColors={Executing:'#7B2D8E',Influencing:'#E97200',Relationship:'#0070CD',Strategic:'#00945B'};
-  const executingThemes=['Achiever','Arranger','Belief','Consistency','Deliberative','Discipline','Focus','Responsibility','Restorative'];
-  const influencingThemes=['Activator','Command','Communication','Competition','Maximizer','Self-Assurance','Significance','Woo'];
-  const relationshipThemes=['Adaptability','Connectedness','Developer','Empathy','Harmony','Includer','Individualization','Positivity','Relator'];
-  const strategicThemes=['Analytical','Context','Futuristic','Ideation','Input','Intellection','Learner','Strategic'];
-
-  function getDomain(name){
-    if(executingThemes.includes(name)) return 'Executing';
-    if(influencingThemes.includes(name)) return 'Influencing';
-    if(relationshipThemes.includes(name)) return 'Relationship';
-    if(strategicThemes.includes(name)) return 'Strategic';
-    return null;
-  }
-
-  selected.forEach(m=>{
-    const c=m.contact;
-    for(let i=1;i<=10;i++){
-      const s=c['strength_'+i];
-      if(s){
-        if(!strengthCount[s]) strengthCount[s]={count:0,members:[],ranks:[]};
-        strengthCount[s].count++;
-        strengthCount[s].members.push(c.first_name);
-        strengthCount[s].ranks.push(i);
-        const d=getDomain(s);
-        if(d) domainCount[d]++;
-      }
-    }
-  });
-
-  // Sort strengths by frequency
-  const sorted=Object.entries(strengthCount).sort((a,b)=>b[1].count-a[1].count);
-  const totalStrengths=sorted.reduce((sum,s)=>sum+s[1].count,0);
-
-  // Domain breakdown bar
-  const totalDom=Object.values(domainCount).reduce((a,b)=>a+b,0)||1;
-
-  // Only show shared strengths (count > 1)
-  const shared=sorted.filter(([,info])=>info.count>1);
-
-  // Generate coaching insight based on domain balance
-  const domSorted=Object.entries(domainCount).filter(([,c])=>c>0).sort((a,b)=>b[1]-a[1]);
-  const topDom=domSorted[0]?domSorted[0][0]:null;
-  const secondDom=domSorted[1]?domSorted[1][0]:null;
-  const domDescriptions={
-    Executing:'getting things done and taking action',
-    Influencing:'persuading, speaking up and taking charge',
-    Relationship:'connecting, building trust and supporting each other',
-    Strategic:'thinking, analysing and absorbing information'
-  };
-  const domTone={
-    Executing:'action-oriented — they want clear next steps and tangible outcomes',
-    Influencing:'energetic and vocal — they want to be heard and make an impact',
-    Relationship:'people-first — they want connection, safety and to feel valued',
-    Strategic:'curious and reflective — they want ideas, context and time to think'
-  };
-  const domTips={
-    Executing:'Give them tasks, accountability and progress markers.',
-    Influencing:'Create space for them to share, lead discussions and champion ideas.',
-    Relationship:'Build in check-ins, pair work and acknowledgment.',
-    Strategic:'Pose thought-provoking questions and allow processing time.'
-  };
-  let insight='';
-  if(topDom){
-    const tied=domSorted.length>1&&domSorted[0][1]===domSorted[1][1];
-    if(tied){
-      insight=`<strong>Balanced energy</strong> between <strong>${topDom}</strong> (${domDescriptions[topDom]}) and <strong>${secondDom}</strong> (${domDescriptions[secondDom]}). This group can both think and do — lean into that versatility.`;
-    } else {
-      insight=`This group leads with <strong>${topDom}</strong> — ${domTone[topDom]}. ${domTips[topDom]}`;
-      if(secondDom) insight+=` Secondary energy: <strong>${secondDom}</strong> (${domDescriptions[secondDom]}).`;
-    }
-  }
-
-  let html=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;margin-bottom:14px;">
-    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-bottom:${insight?'10':'0'}px;">
-      <div style="font-family:'Quicksand','Inter',sans-serif;font-size:15px;font-weight:700;color:#1e3a5f;white-space:nowrap;">${selected.length} on call</div>
-      <div style="display:flex;border-radius:4px;overflow:hidden;height:22px;flex:1;min-width:200px;">
-        ${Object.entries(domainCount).map(([d,c])=>c?'<div style="background:'+domainColors[d]+';width:'+(c/totalDom*100).toFixed(1)+'%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;">'+d+' '+c+'</div>':'').join('')}
-      </div>
-      <button onclick="thqSelected.clear();renderThriveHQ();" style="background:none;border:1px solid #e2e8f0;border-radius:6px;padding:3px 8px;font-size:10px;color:#64748b;cursor:pointer;">Clear</button>
-    </div>
-    ${insight?'<div style="font-size:13px;color:#475569;line-height:1.5;">'+insight+'</div>':''}
-  </div>`;
-
-  // Shared strengths row (only if there are shared ones)
-  if(shared.length){
-    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:12px 18px;margin-bottom:14px;">
-      <div style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Shared Strengths</div>
-      <div style="display:flex;flex-wrap:wrap;gap:4px;">`;
-    shared.forEach(([name,info])=>{
-      html+=`<span style="background:${csColor(name)};color:#fff;padding:3px 8px;border-radius:2px;font-size:11px;font-weight:700;">${name} <span style="opacity:.7;">×${info.count}</span></span>`;
-    });
-    html+=`</div></div>`;
-  }
-
-  summaryEl.innerHTML=html;
-}
-
-function renderThriveHQ(){
-  const q=document.getElementById('thqSearch').value.toLowerCase();
-  // Only show members from Community (Organisation) or client named ThriveHQ
+function getThqMembers(q){
   const thqClients=clients.filter(cl=>cl.role==='Organisation'||cl.relationship_name.toLowerCase().includes('thrivehq'));
   const memberMap={};
   thqClients.forEach(cl=>{
@@ -992,108 +883,186 @@ function renderThriveHQ(){
       memberMap[mid].clients.push(cl);
     });
   });
-  // Attach contact data
-  Object.keys(memberMap).forEach(mid=>{
-    memberMap[mid].contact=contacts.find(c=>c.id===mid);
-  });
-  // Filter
+  Object.keys(memberMap).forEach(mid=>{memberMap[mid].contact=contacts.find(c=>c.id===mid);});
   let members=Object.values(memberMap).filter(m=>m.contact);
   if(q){
     members=members.filter(m=>{
       const c=m.contact;
-      const searchStr=(c.first_name+' '+c.last_name+' '+(c.email||'')+' '+(c.strengths||'')+' '+m.clients.map(cl=>cl.relationship_name).join(' ')).toLowerCase();
-      return searchStr.includes(q);
+      return (c.first_name+' '+c.last_name+' '+(c.email||'')+' '+(c.strengths||'')).toLowerCase().includes(q);
     });
   }
+  return members;
+}
 
-  // Summary stats (only show when not in call mode)
-  if(!thqCallMode){
-    const totalMembers=members.length;
-    const overdueCount=members.filter(m=>m.contact.renewal_date&&new Date(m.contact.renewal_date)<new Date()).length;
-    const awaitingProfile=members.filter(m=>!m.contact.strength_1).length;
+function renderThriveHQ(){
+  const q=document.getElementById('thqSearch').value.toLowerCase();
+  const members=getThqMembers(q);
 
-    let html=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:20px;">
-      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px;text-align:center;border-top:3px solid #16a34a;">
-        <div style="font-size:30px;font-weight:700;color:#1e293b;">${totalMembers}</div>
-        <div style="font-size:12px;color:#64748b;font-weight:500;">Active Members</div>
+  const totalMembers=members.length;
+  const overdueCount=members.filter(m=>m.contact.renewal_date&&new Date(m.contact.renewal_date)<new Date()).length;
+  const awaitingProfile=members.filter(m=>!m.contact.strength_1).length;
+
+  let html=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:20px;">
+    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px;text-align:center;border-top:3px solid #16a34a;">
+      <div style="font-size:30px;font-weight:700;color:#1e293b;">${totalMembers}</div>
+      <div style="font-size:12px;color:#64748b;font-weight:500;">Active Members</div>
+    </div>
+    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px;text-align:center;border-top:3px solid #ef4444;">
+      <div style="font-size:30px;font-weight:700;color:${overdueCount?'#dc2626':'#1e293b'};">${overdueCount}</div>
+      <div style="font-size:12px;color:#64748b;font-weight:500;">Renewals Overdue</div>
+    </div>
+    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px;text-align:center;border-top:3px solid #eab308;">
+      <div style="font-size:30px;font-weight:700;color:#1e293b;">${awaitingProfile}</div>
+      <div style="font-size:12px;color:#64748b;font-weight:500;">Awaiting Strengths</div>
+    </div>
+  </div>`;
+
+  function renderMemberCard(m){
+    const c=m.contact;
+    const top5=[],bottom5=[];
+    for(let i=1;i<=10;i++){if(c['strength_'+i]){const s={rank:i,name:c['strength_'+i]};if(i<=5)top5.push(s);else bottom5.push(s);}}
+    const renewalDate=c.renewal_date?new Date(c.renewal_date):null;
+    const isOverdue=renewalDate&&renewalDate<new Date();
+    const isDueSoon=renewalDate&&!isOverdue&&(renewalDate-new Date())/(1000*60*60*24)<=30;
+    return `<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;display:flex;flex-direction:column;">
+      <div style="background:linear-gradient(135deg,#1e3a5f,#2d5a8e);padding:10px 12px;display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-weight:700;font-size:13px;color:#fff;">${c.first_name} ${c.last_name}</span>
+        <button onclick="openContactModal('${c.id}')" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:5px;padding:3px 8px;font-size:10px;color:#fff;cursor:pointer;font-weight:600;">View</button>
       </div>
-      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px;text-align:center;border-top:3px solid #ef4444;">
-        <div style="font-size:30px;font-weight:700;color:${overdueCount?'#dc2626':'#1e293b'};">${overdueCount}</div>
-        <div style="font-size:12px;color:#64748b;font-weight:500;">Renewals Overdue</div>
+      <div style="padding:10px 12px;flex:1;display:flex;flex-direction:column;gap:6px;">
+        ${top5.length?`<div>
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#94a3b8;font-weight:600;margin-bottom:4px;">Top 5</div>
+          <div style="display:flex;flex-wrap:wrap;gap:3px;">${top5.map(s=>`<span style="background:${csColor(s.name)};color:#fff;padding:3px 8px;border-radius:2px;font-size:10px;font-weight:700;">${s.name}</span>`).join('')}</div>
+        </div>`:''}
+        ${bottom5.length?`<div>
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#94a3b8;font-weight:600;margin-bottom:4px;">6–10</div>
+          <div style="display:flex;flex-wrap:wrap;gap:3px;">${bottom5.map(s=>`<span style="background:${csColor(s.name)};color:#fff;padding:3px 8px;border-radius:2px;font-size:10px;font-weight:700;">${s.name}</span>`).join('')}</div>
+        </div>`:''}
+        ${!top5.length&&!bottom5.length?'<div style="font-size:11px;color:#94a3b8;text-align:center;padding:8px 0;">No strengths profile</div>':''}
       </div>
-      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px;text-align:center;border-top:3px solid #eab308;">
-        <div style="font-size:30px;font-weight:700;color:#1e293b;">${awaitingProfile}</div>
-        <div style="font-size:12px;color:#64748b;font-weight:500;">Awaiting Strengths</div>
+      <div style="padding:8px 12px;border-top:1px solid #f1f5f9;background:#f8fafc;display:flex;gap:4px;align-items:center;flex-wrap:wrap;">
+        ${c.renewal_date?'<span style="font-size:10px;padding:2px 6px;border-radius:99px;font-weight:600;background:'+(isOverdue?'#fef2f2;color:#dc2626;':isDueSoon?'#fef3c7;color:#d97706;':'#dcfce7;color:#15803d;')+'">'+c.renewal_date+(isOverdue?' OVERDUE':isDueSoon?' DUE SOON':'')+'</span>':'<span style="font-size:10px;color:#94a3b8;">No renewal</span>'}
       </div>
     </div>`;
-
-    // Flat grid — default view
-    function renderMemberCard(m){
-      const c=m.contact;
-      const top5=[],bottom5=[];
-      for(let i=1;i<=10;i++){if(c['strength_'+i]){const s={rank:i,name:c['strength_'+i]};if(i<=5)top5.push(s);else bottom5.push(s);}}
-      const renewalDate=c.renewal_date?new Date(c.renewal_date):null;
-      const isOverdue=renewalDate&&renewalDate<new Date();
-      const isDueSoon=renewalDate&&!isOverdue&&(renewalDate-new Date())/(1000*60*60*24)<=30;
-      return `<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;display:flex;flex-direction:column;">
-        <div style="background:linear-gradient(135deg,#1e3a5f,#2d5a8e);padding:10px 12px;display:flex;align-items:center;justify-content:space-between;">
-          <span style="font-weight:700;font-size:13px;color:#fff;">${c.first_name} ${c.last_name}</span>
-          <button onclick="openContactModal('${c.id}')" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:5px;padding:3px 8px;font-size:10px;color:#fff;cursor:pointer;font-weight:600;">View</button>
-        </div>
-        <div style="padding:10px 12px;flex:1;display:flex;flex-direction:column;gap:6px;">
-          ${top5.length?`<div>
-            <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#94a3b8;font-weight:600;margin-bottom:4px;">Top 5</div>
-            <div style="display:flex;flex-wrap:wrap;gap:3px;">${top5.map(s=>`<span style="background:${csColor(s.name)};color:#fff;padding:3px 8px;border-radius:2px;font-size:10px;font-weight:700;">${s.name}</span>`).join('')}</div>
-          </div>`:''}
-          ${bottom5.length?`<div>
-            <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#94a3b8;font-weight:600;margin-bottom:4px;">6–10</div>
-            <div style="display:flex;flex-wrap:wrap;gap:3px;">${bottom5.map(s=>`<span style="background:${csColor(s.name)};color:#fff;padding:3px 8px;border-radius:2px;font-size:10px;font-weight:700;">${s.name}</span>`).join('')}</div>
-          </div>`:''}
-          ${!top5.length&&!bottom5.length?'<div style="font-size:11px;color:#94a3b8;text-align:center;padding:8px 0;">No strengths profile</div>':''}
-        </div>
-        <div style="padding:8px 12px;border-top:1px solid #f1f5f9;background:#f8fafc;display:flex;gap:4px;align-items:center;flex-wrap:wrap;">
-          ${c.renewal_date?'<span style="font-size:10px;padding:2px 6px;border-radius:99px;font-weight:600;background:'+(isOverdue?'#fef2f2;color:#dc2626;':isDueSoon?'#fef3c7;color:#d97706;':'#dcfce7;color:#15803d;')+'">'+c.renewal_date+(isOverdue?' OVERDUE':isDueSoon?' DUE SOON':'')+'</span>':'<span style="font-size:10px;color:#94a3b8;">No renewal</span>'}
-        </div>
-      </div>`;
-    }
-
-    html+=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;">`;
-    members.forEach(m=>{html+=renderMemberCard(m);});
-    html+=`</div>`;
-
-    if(!members.length) html+='<div style="padding:20px;text-align:center;color:#94a3b8;">No linked members found. Link contacts to clients on the Clients page.</div>';
-    document.getElementById('thqContent').innerHTML=html;
-    document.getElementById('thqCallSummary').style.display='none';
-
-  } else {
-    // CALL MODE — checkboxes to select members, strengths summary
-    let html=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;">`;
-    members.forEach(m=>{
-      const c=m.contact;
-      const sel=thqSelected.has(c.id);
-      const allStr=[];
-      for(let i=1;i<=10;i++){if(c['strength_'+i]) allStr.push(c['strength_'+i]);}
-      html+=`<div onclick="toggleCallMember('${c.id}')" style="background:${sel?'#f0f7ff':'#fff'};border:2px solid ${sel?'#1e3a5f':'#e2e8f0'};border-radius:10px;padding:12px;cursor:pointer;transition:all .15s;${sel?'box-shadow:0 0 0 1px #1e3a5f;':''}" onmouseover="this.style.borderColor='#1e3a5f'" onmouseout="this.style.borderColor='${sel?'#1e3a5f':'#e2e8f0'}'">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-          <div style="width:22px;height:22px;border-radius:4px;border:2px solid ${sel?'#1e3a5f':'#cbd5e1'};background:${sel?'#1e3a5f':'#fff'};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-            ${sel?'<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}
-          </div>
-          <span style="font-weight:700;font-size:13px;color:#1e293b;">${c.first_name} ${c.last_name}</span>
-        </div>
-        <div style="display:flex;flex-wrap:wrap;gap:3px;">
-          ${allStr.map(s=>`<span style="background:${csColor(s)};color:#fff;padding:2px 7px;border-radius:2px;font-size:9px;font-weight:700;">${s}</span>`).join('')}
-          ${!allStr.length?'<span style="font-size:10px;color:#94a3b8;">No strengths</span>':''}
-        </div>
-      </div>`;
-    });
-    html+=`</div>`;
-
-    if(!members.length) html='<div style="padding:20px;text-align:center;color:#94a3b8;">No linked members found.</div>';
-    document.getElementById('thqContent').innerHTML=html;
-    renderCallSummary(members);
   }
+
+  html+=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;">`;
+  members.forEach(m=>{html+=renderMemberCard(m);});
+  html+=`</div>`;
+
+  if(!members.length) html+='<div style="padding:20px;text-align:center;color:#94a3b8;">No linked members found. Link contacts to clients on the Clients page.</div>';
+  document.getElementById('thqContent').innerHTML=html;
 }
 window.filterThriveHQ=function(){renderThriveHQ();};
+
+// ── THRIVEHQ COACHING CALLS ──
+const thqSelected=new Set();
+
+window.toggleCallMember=function(contactId){
+  if(thqSelected.has(contactId)) thqSelected.delete(contactId);
+  else thqSelected.add(contactId);
+  renderCoachingCalls();
+};
+
+const domainColors={Executing:'#7B2D8E',Influencing:'#E97200',Relationship:'#0070CD',Strategic:'#00945B'};
+const executingThemes=['Achiever','Arranger','Belief','Consistency','Deliberative','Discipline','Focus','Responsibility','Restorative'];
+const influencingThemes=['Activator','Command','Communication','Competition','Maximizer','Self-Assurance','Significance','Woo'];
+const relationshipThemes=['Adaptability','Connectedness','Developer','Empathy','Harmony','Includer','Individualization','Positivity','Relator'];
+const strategicThemes=['Analytical','Context','Futuristic','Ideation','Input','Intellection','Learner','Strategic'];
+function getDomain(name){
+  if(executingThemes.includes(name)) return 'Executing';
+  if(influencingThemes.includes(name)) return 'Influencing';
+  if(relationshipThemes.includes(name)) return 'Relationship';
+  if(strategicThemes.includes(name)) return 'Strategic';
+  return null;
+}
+const domDescriptions={Executing:'getting things done and taking action',Influencing:'persuading, speaking up and taking charge',Relationship:'connecting, building trust and supporting each other',Strategic:'thinking, analysing and absorbing information'};
+const domTone={Executing:'action-oriented — they want clear next steps and tangible outcomes',Influencing:'energetic and vocal — they want to be heard and make an impact',Relationship:'people-first — they want connection, safety and to feel valued',Strategic:'curious and reflective — they want ideas, context and time to think'};
+const domTips={Executing:'Give them tasks, accountability and progress markers.',Influencing:'Create space for them to share, lead discussions and champion ideas.',Relationship:'Build in check-ins, pair work and acknowledgment.',Strategic:'Pose thought-provoking questions and allow processing time.'};
+
+function renderCoachingCalls(){
+  const q=(document.getElementById('thqCallSearch').value||'').toLowerCase();
+  const members=getThqMembers(q);
+  const selected=members.filter(m=>thqSelected.has(m.contact.id));
+
+  // Build summary
+  const summaryEl=document.getElementById('thqCallSummary');
+  if(selected.length>0){
+    const strengthCount={};
+    const domainCount={Executing:0,Influencing:0,Relationship:0,Strategic:0};
+    selected.forEach(m=>{
+      const c=m.contact;
+      for(let i=1;i<=10;i++){
+        const s=c['strength_'+i];
+        if(s){
+          if(!strengthCount[s]) strengthCount[s]={count:0,members:[]};
+          strengthCount[s].count++;
+          strengthCount[s].members.push(c.first_name);
+          const d=getDomain(s);
+          if(d) domainCount[d]++;
+        }
+      }
+    });
+    const sorted=Object.entries(strengthCount).sort((a,b)=>b[1].count-a[1].count);
+    const totalDom=Object.values(domainCount).reduce((a,b)=>a+b,0)||1;
+    const shared=sorted.filter(([,info])=>info.count>1);
+
+    const domSorted=Object.entries(domainCount).filter(([,c])=>c>0).sort((a,b)=>b[1]-a[1]);
+    const topDom=domSorted[0]?domSorted[0][0]:null;
+    const secondDom=domSorted[1]?domSorted[1][0]:null;
+    let insight='';
+    if(topDom){
+      const tied=domSorted.length>1&&domSorted[0][1]===domSorted[1][1];
+      if(tied){
+        insight=`<strong>Balanced energy</strong> between <strong>${topDom}</strong> (${domDescriptions[topDom]}) and <strong>${secondDom}</strong> (${domDescriptions[secondDom]}). This group can both think and do — lean into that versatility.`;
+      } else {
+        insight=`This group leads with <strong>${topDom}</strong> — ${domTone[topDom]}. ${domTips[topDom]}`;
+        if(secondDom) insight+=` Secondary energy: <strong>${secondDom}</strong> (${domDescriptions[secondDom]}).`;
+      }
+    }
+
+    let shtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;margin-bottom:14px;">
+      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-bottom:${insight||shared.length?'10':'0'}px;">
+        <div style="font-family:'Quicksand','Inter',sans-serif;font-size:15px;font-weight:700;color:#1e3a5f;white-space:nowrap;">${selected.length} on call</div>
+        <div style="display:flex;border-radius:4px;overflow:hidden;height:22px;flex:1;min-width:200px;">
+          ${Object.entries(domainCount).map(([d,c])=>c?'<div style="background:'+domainColors[d]+';width:'+(c/totalDom*100).toFixed(1)+'%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;">'+d+' '+c+'</div>':'').join('')}
+        </div>
+        <button onclick="thqSelected.clear();renderCoachingCalls();" style="background:none;border:1px solid #e2e8f0;border-radius:6px;padding:3px 8px;font-size:10px;color:#64748b;cursor:pointer;">Clear</button>
+      </div>
+      ${insight?'<div style="font-size:13px;color:#475569;line-height:1.5;margin-bottom:'+(shared.length?'10':'0')+'px;">'+insight+'</div>':''}
+      ${shared.length?'<div style="display:flex;flex-wrap:wrap;gap:4px;"><span style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-right:4px;line-height:24px;">Shared:</span>'+shared.map(([name,info])=>`<span style="background:${csColor(name)};color:#fff;padding:3px 8px;border-radius:2px;font-size:11px;font-weight:700;">${name} <span style="opacity:.7;">×${info.count}</span></span>`).join('')+'</div>':''}
+    </div>`;
+    summaryEl.innerHTML=shtml;
+  } else {
+    summaryEl.innerHTML=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:14px;text-align:center;">
+      <div style="font-size:14px;color:#64748b;">Select members below to see the group's strengths and coaching insights</div>
+    </div>`;
+  }
+
+  // Member cards with checkboxes
+  let html=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;">`;
+  members.forEach(m=>{
+    const c=m.contact;
+    const sel=thqSelected.has(c.id);
+    const allStr=[];
+    for(let i=1;i<=10;i++){if(c['strength_'+i]) allStr.push(c['strength_'+i]);}
+    html+=`<div onclick="toggleCallMember('${c.id}')" style="background:${sel?'#f0f7ff':'#fff'};border:2px solid ${sel?'#1e3a5f':'#e2e8f0'};border-radius:10px;padding:12px;cursor:pointer;transition:all .15s;${sel?'box-shadow:0 0 0 1px #1e3a5f;':''}" onmouseover="this.style.borderColor='#1e3a5f'" onmouseout="this.style.borderColor='${sel?'#1e3a5f':'#e2e8f0'}'">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <div style="width:22px;height:22px;border-radius:4px;border:2px solid ${sel?'#1e3a5f':'#cbd5e1'};background:${sel?'#1e3a5f':'#fff'};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          ${sel?'<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}
+        </div>
+        <span style="font-weight:700;font-size:13px;color:#1e293b;">${c.first_name} ${c.last_name}</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:3px;">
+        ${allStr.map(s=>`<span style="background:${csColor(s)};color:#fff;padding:2px 7px;border-radius:2px;font-size:9px;font-weight:700;">${s}</span>`).join('')}
+        ${!allStr.length?'<span style="font-size:10px;color:#94a3b8;">No strengths</span>':''}
+      </div>
+    </div>`;
+  });
+  html+=`</div>`;
+  if(!members.length) html='<div style="padding:20px;text-align:center;color:#94a3b8;">No linked members found.</div>';
+  document.getElementById('thqCallContent').innerHTML=html;
+}
 
 // ── TASKS ──
 const tkGroupState={};
