@@ -238,6 +238,11 @@ td .actions button{padding:4px 10px;font-size:12px;}
       <div id="clCards"></div>
     </div>
 
+    <!-- CLIENT INVOICES -->
+    <div class="screen" id="screen-clinvoices">
+      <div id="invoiceContent"></div>
+    </div>
+
     <!-- STRENGTHS DASHBOARD -->
     <div class="screen" id="screen-strdash">
       <div id="strDashContent"></div>
@@ -463,6 +468,7 @@ td .actions button{padding:4px 10px;font-size:12px;}
     <div class="form-group"><label>Referred By</label>
       <select id="clReferredBy"><option value="">-- None --</option></select>
     </div>
+    <div class="form-group"><label>Xero Invoice Link</label><input id="clXeroLink" placeholder="https://go.xero.com/..."></div>
     <div class="form-group"><label>Notes</label><textarea id="clNotes"></textarea></div>
     <div class="modal-actions">
       <button class="btn btn-gray" onclick="closeModal('clientModal')">Cancel</button>
@@ -546,7 +552,7 @@ document.getElementById('headerDate').textContent = new Date().toLocaleDateStrin
 window.navTo = function(tab,btn){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+tab).classList.add('active');
-  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ',strdash:'Strengths',opsdash:'Operations',masterlist:'Master List',clients:'Client List',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Strengths Hub',thqcalls:'Coaching Calls',tasks:'Task Management',itprojects:'IT Projects'};
+  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ',strdash:'Strengths',opsdash:'Operations',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Strengths Hub',thqcalls:'Coaching Calls',tasks:'Task Management',itprojects:'IT Projects'};
   document.getElementById('pageTitle').textContent=titles[tab]||'Coach4U';
   // Sync area tab
   const area=pageToArea[tab]||'home';
@@ -572,6 +578,7 @@ window.navTo = function(tab,btn){
   if(tab==='opsdash') renderOpsDash();
   if(tab==='masterlist') renderMasterList();
   if(tab==='clients') renderClients();
+  if(tab==='clinvoices') renderInvoices();
   if(tab==='prospects') renderProspects();
   if(tab==='referrals') renderReferrals();
   if(tab==='thrivehq') renderThriveHQ();
@@ -603,7 +610,7 @@ const areaConfig={
   crm:{label:'CRM',pages:[{id:'masterlist',icon:'&#128209;',label:'Master List'}]},
   referrers:{label:'Referrers',pages:[{id:'referrals',icon:'&#128101;',label:'Referral Hub'},{id:'refpayments',icon:'&#128176;',label:'Payments'}]},
   prospects:{label:'Prospects',pages:[{id:'prospdash',icon:'&#127793;',label:'Dashboard'},{id:'prospects',icon:'&#128203;',label:'Prospect List'}]},
-  clients:{label:'Clients',pages:[{id:'clidash',icon:'&#129309;',label:'Dashboard'},{id:'clients',icon:'&#128101;',label:'Client List'}]},
+  clients:{label:'Clients',pages:[{id:'clidash',icon:'&#129309;',label:'Dashboard'},{id:'clients',icon:'&#128101;',label:'Client List'},{id:'clinvoices',icon:'&#128206;',label:'Invoices'}]},
   thrivehq:{label:'ThriveHQ',pages:[{id:'thqdash',icon:'&#128170;',label:'Dashboard'},{id:'thrivehq',icon:'&#128101;',label:'Members'},{id:'thqcalls',icon:'&#128222;',label:'Coaching Calls'}]},
   strengths:{label:'Strengths',pages:[{id:'strdash',icon:'&#127919;',label:'Dashboard'},{id:'strengths',icon:'&#128161;',label:'Strengths Hub'}]},
   operations:{label:'Operations',pages:[{id:'opsdash',icon:'&#128736;',label:'Dashboard'},{id:'tasks',icon:'&#9989;',label:'Task Management'},{id:'itprojects',icon:'&#9881;',label:'IT Projects'}]}
@@ -1222,6 +1229,31 @@ function renderClients(){
 }
 window.filterClients=function(){renderClients();};
 
+function renderInvoices(){
+  const active=clients.filter(c=>c.status==='Active').sort((a,b)=>a.relationship_name.localeCompare(b.relationship_name));
+  const other=clients.filter(c=>c.status!=='Active').sort((a,b)=>a.relationship_name.localeCompare(b.relationship_name));
+  const all=[...active,...other];
+  let html=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead><tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;">
+        <th style="text-align:left;padding:12px 16px;font-weight:600;color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Client</th>
+        <th style="text-align:left;padding:12px 16px;font-weight:600;color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Status</th>
+        <th style="text-align:left;padding:12px 16px;font-weight:600;color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Xero Invoice</th>
+      </tr></thead>
+      <tbody>`;
+  all.forEach(c=>{
+    const statusColors={Active:'background:#dcfce7;color:#15803d;','On Hold':'background:#fef9c3;color:#a16207;',Completed:'background:#f1f5f9;color:#64748b;'};
+    html+=`<tr style="border-bottom:1px solid #f1f5f9;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
+      <td style="padding:10px 16px;font-weight:600;color:#1e293b;">${c.relationship_name}</td>
+      <td style="padding:10px 16px;"><span style="font-size:11px;padding:2px 10px;border-radius:99px;font-weight:500;${statusColors[c.status]||'background:#f1f5f9;color:#64748b;'}">${c.status}</span></td>
+      <td style="padding:10px 16px;">${c.xero_link?'<a href="'+c.xero_link+'" target="_blank" style="color:#3b82f6;text-decoration:none;font-weight:600;font-size:12px;" onmouseover="this.style.textDecoration=\'underline\'" onmouseout="this.style.textDecoration=\'none\'">Open in Xero</a>':'<span style="color:#94a3b8;font-size:12px;">—</span>'}</td>
+    </tr>`;
+  });
+  html+=`</tbody></table></div>`;
+  if(!all.length) html='<div style="padding:30px;text-align:center;color:#94a3b8;">No clients found.</div>';
+  document.getElementById('invoiceContent').innerHTML=html;
+}
+
 window.openClientModal=function(id){
   const c=id?clients.find(x=>x.id===id):null;
   document.getElementById('clientModalTitle').textContent=c?'Edit Client':'Add Client';
@@ -1230,6 +1262,7 @@ window.openClientModal=function(id){
   document.getElementById('clRole').value=c?c.role:'Individual';
   document.getElementById('clStatus').value=c?c.status:'Active';
   document.getElementById('clPractitioner').value=c?c.practitioner:'Cath';
+  document.getElementById('clXeroLink').value=c?c.xero_link||'':'';
   document.getElementById('clNotes').value=c?c.notes:'';
   tempMembers=c?[...(c.members||[])]:[];
   // Populate Referred By dropdown
@@ -1272,6 +1305,7 @@ window.saveClient=async function(){
     role:document.getElementById('clRole').value.trim(),
     status:document.getElementById('clStatus').value,
     practitioner:document.getElementById('clPractitioner').value,
+    xero_link:document.getElementById('clXeroLink').value.trim()||null,
     notes:document.getElementById('clNotes').value.trim(),
     referred_by:document.getElementById('clReferredBy').value||null
   };
