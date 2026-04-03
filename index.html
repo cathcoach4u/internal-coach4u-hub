@@ -925,32 +925,30 @@ function renderThriveHQ(){
     const renewalDate=c.renewal_date?new Date(c.renewal_date):null;
     const isOverdue=renewalDate&&renewalDate<new Date();
     const isDueSoon=renewalDate&&!isOverdue&&(renewalDate-new Date())/(1000*60*60*24)<=30;
-    const borderColor=isOverdue?'#ef4444':isDueSoon?'#eab308':'#3b82f6';
-    return `<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:0;overflow:hidden;display:flex;flex-direction:column;">
-      <div style="background:linear-gradient(135deg,#1e3a5f,#2d5a8e);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;">
-        <span style="font-weight:700;font-size:15px;color:#fff;">${c.first_name} ${c.last_name}</span>
-        <button onclick="openContactModal('${c.id}')" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:6px;padding:4px 12px;font-size:11px;color:#fff;cursor:pointer;font-weight:600;">View</button>
+    return `<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;display:flex;flex-direction:column;">
+      <div style="background:linear-gradient(135deg,#1e3a5f,#2d5a8e);padding:10px 12px;display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-weight:700;font-size:13px;color:#fff;">${c.first_name} ${c.last_name}</span>
+        <button onclick="openContactModal('${c.id}')" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:5px;padding:3px 8px;font-size:10px;color:#fff;cursor:pointer;font-weight:600;">View</button>
       </div>
-      <div style="padding:14px 16px;flex:1;display:flex;flex-direction:column;gap:10px;">
+      <div style="padding:10px 12px;flex:1;display:flex;flex-direction:column;gap:6px;">
         ${top5.length?`<div>
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#94a3b8;font-weight:600;margin-bottom:6px;">Top 5</div>
-          <div style="display:flex;flex-wrap:wrap;gap:5px;">${top5.map(s=>`<span style="background:${csColor(s.name)};color:#fff;padding:4px 12px;border-radius:99px;font-size:12px;font-weight:700;">${s.name}</span>`).join('')}</div>
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#94a3b8;font-weight:600;margin-bottom:4px;">Top 5</div>
+          <div style="display:flex;flex-wrap:wrap;gap:3px;">${top5.map(s=>`<span style="background:${csColor(s.name)};color:#fff;padding:3px 8px;border-radius:99px;font-size:10px;font-weight:700;">${s.name}</span>`).join('')}</div>
         </div>`:''}
         ${bottom5.length?`<div>
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#94a3b8;font-weight:600;margin-bottom:6px;">6–10</div>
-          <div style="display:flex;flex-wrap:wrap;gap:4px;">${bottom5.map(s=>`<span style="background:${csColor(s.name)}22;color:${csColor(s.name)};border:1px solid ${csColor(s.name)}44;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600;">${s.name}</span>`).join('')}</div>
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#94a3b8;font-weight:600;margin-bottom:4px;">6–10</div>
+          <div style="display:flex;flex-wrap:wrap;gap:3px;">${bottom5.map(s=>`<span style="background:${csColor(s.name)}22;color:${csColor(s.name)};border:1px solid ${csColor(s.name)}44;padding:2px 7px;border-radius:99px;font-size:10px;font-weight:600;">${s.name}</span>`).join('')}</div>
         </div>`:''}
-        ${!top5.length&&!bottom5.length?'<div style="font-size:12px;color:#94a3b8;text-align:center;padding:12px 0;">No strengths profile</div>':''}
+        ${!top5.length&&!bottom5.length?'<div style="font-size:11px;color:#94a3b8;text-align:center;padding:8px 0;">No strengths profile</div>':''}
       </div>
-      <div style="padding:10px 16px;border-top:1px solid #f1f5f9;background:#f8fafc;display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-        ${c.renewal_date?'<span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:600;background:'+(isOverdue?'#fef2f2;color:#dc2626;':isDueSoon?'#fef3c7;color:#d97706;':'#dcfce7;color:#15803d;')+'">Renewal: '+c.renewal_date+(isOverdue?' OVERDUE':isDueSoon?' DUE SOON':'')+'</span>':'<span style="font-size:11px;color:#94a3b8;">No renewal date</span>'}
-        ${c.membership_start_date?'<span style="font-size:10px;color:#94a3b8;">Started '+c.membership_start_date+'</span>':''}
+      <div style="padding:8px 12px;border-top:1px solid #f1f5f9;background:#f8fafc;display:flex;gap:4px;align-items:center;flex-wrap:wrap;">
+        ${c.renewal_date?'<span style="font-size:10px;padding:2px 6px;border-radius:99px;font-weight:600;background:'+(isOverdue?'#fef2f2;color:#dc2626;':isDueSoon?'#fef3c7;color:#d97706;':'#dcfce7;color:#15803d;')+'">'+c.renewal_date+(isOverdue?' OVERDUE':isDueSoon?' DUE SOON':'')+'</span>':'<span style="font-size:10px;color:#94a3b8;">No renewal</span>'}
       </div>
     </div>`;
   }
 
   // Render all members in a grid
-  html+=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;">`;
+  html+=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;">`;
   members.forEach(m=>{html+=renderMemberCard(m);});
   html+=`</div>`;
 
