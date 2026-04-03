@@ -908,6 +908,10 @@ function renderThriveHQ(){
       <div style="font-size:28px;font-weight:700;color:#1e293b;">${totalMembers-withStrengths}</div>
       <div style="font-size:12px;color:#64748b;">Awaiting Profile</div>
     </div>
+    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px;text-align:center;border-top:3px solid #ef4444;">
+      <div style="font-size:28px;font-weight:700;color:#1e293b;">${members.filter(m=>m.contact.renewal_date&&new Date(m.contact.renewal_date)<new Date()).length}</div>
+      <div style="font-size:12px;color:#64748b;">Renewals Overdue</div>
+    </div>
   </div>`;
 
   // Group members by their client relationship type
@@ -942,15 +946,19 @@ function renderThriveHQ(){
         const strengths=[];
         for(let i=1;i<=10;i++){if(c['strength_'+i])strengths.push({rank:i,name:c['strength_'+i]});}
         const rels=m.clients.map(cl=>cl.relationship_name);
-        return `<div style="background:#fff;border:1px solid #e2e8f0;border-left:3px solid #3b82f6;border-radius:8px;padding:14px 16px;">
+        const renewalDate=c.renewal_date?new Date(c.renewal_date):null;
+        const isOverdue=renewalDate&&renewalDate<new Date();
+        const isDueSoon=renewalDate&&!isOverdue&&(renewalDate-new Date())/(1000*60*60*24)<=30;
+        return `<div style="background:#fff;border:1px solid #e2e8f0;border-left:3px solid ${isOverdue?'#ef4444':isDueSoon?'#eab308':'#3b82f6'};border-radius:8px;padding:14px 16px;">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
             <span style="font-weight:600;font-size:14px;color:#1e293b;">${c.first_name} ${c.last_name}</span>
             ${c.email?'<span style="font-size:12px;color:#64748b;">'+c.email+'</span>':''}
             ${c.phone?'<a href="tel:'+c.phone.replace(/\\s/g,'')+'" style="font-size:12px;color:#1e293b;text-decoration:none;font-weight:600;">'+c.phone+'</a>':''}
           </div>
-          <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:${strengths.length?'8':'0'}px;">
+          <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-bottom:8px;">
             ${rels.map(r=>'<span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:500;background:#dcfce7;color:#15803d;">'+r+'</span>').join('')}
-            ${c.contact_type?'<span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:500;background:#eff6ff;color:#2563eb;">'+c.contact_type+'</span>':''}
+            ${c.membership_start_date?'<span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:500;background:#dbeafe;color:#2563eb;">Started: '+c.membership_start_date+'</span>':''}
+            ${c.renewal_date?'<span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:600;background:'+(isOverdue?'#fef2f2;color:#dc2626;':isDueSoon?'#fef3c7;color:#d97706;':'#f1f5f9;color:#64748b;')+'">Renewal: '+c.renewal_date+(isOverdue?' OVERDUE':isDueSoon?' DUE SOON':'')+'</span>':''}
           </div>
           ${strengths.length?'<div style="display:flex;flex-wrap:wrap;gap:4px;">'+strengths.map(s=>csPill(s.rank,s.name)).join('')+'</div>':'<div style="font-size:11px;color:#94a3b8;">No strengths profile</div>'}
         </div>`;
@@ -977,13 +985,18 @@ function renderThriveHQ(){
         const strengths=[];
         for(let i=1;i<=10;i++){if(c['strength_'+i])strengths.push({rank:i,name:c['strength_'+i]});}
         const rels=m.clients.map(cl=>cl.relationship_name);
-        return `<div style="background:#fff;border:1px solid #e2e8f0;border-left:3px solid #3b82f6;border-radius:8px;padding:14px 16px;">
+        const renewalDate=c.renewal_date?new Date(c.renewal_date):null;
+        const isOverdue=renewalDate&&renewalDate<new Date();
+        const isDueSoon=renewalDate&&!isOverdue&&(renewalDate-new Date())/(1000*60*60*24)<=30;
+        return `<div style="background:#fff;border:1px solid #e2e8f0;border-left:3px solid ${isOverdue?'#ef4444':isDueSoon?'#eab308':'#3b82f6'};border-radius:8px;padding:14px 16px;">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
             <span style="font-weight:600;font-size:14px;color:#1e293b;">${c.first_name} ${c.last_name}</span>
             ${c.email?'<span style="font-size:12px;color:#64748b;">'+c.email+'</span>':''}
           </div>
-          <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:${strengths.length?'8':'0'}px;">
+          <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-bottom:8px;">
             ${rels.map(r=>'<span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:500;background:#dcfce7;color:#15803d;">'+r+'</span>').join('')}
+            ${c.membership_start_date?'<span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:500;background:#dbeafe;color:#2563eb;">Started: '+c.membership_start_date+'</span>':''}
+            ${c.renewal_date?'<span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:600;background:'+(isOverdue?'#fef2f2;color:#dc2626;':isDueSoon?'#fef3c7;color:#d97706;':'#f1f5f9;color:#64748b;')+'">Renewal: '+c.renewal_date+(isOverdue?' OVERDUE':isDueSoon?' DUE SOON':'')+'</span>':''}
           </div>
           ${strengths.length?'<div style="display:flex;flex-wrap:wrap;gap:4px;">'+strengths.map(s=>csPill(s.rank,s.name)).join('')+'</div>':'<div style="font-size:11px;color:#94a3b8;">No strengths profile</div>'}
         </div>`;
