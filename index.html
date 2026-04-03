@@ -463,6 +463,10 @@ td .actions button{padding:4px 10px;font-size:12px;}
     <div class="form-group"><label>CliftonStrengths Top 10</label>
       <div id="cStrengthsGrid" style="display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center;"></div>
     </div>
+    <div class="form-group" id="cReportsSection" style="display:none;">
+      <label>Strengths Reports</label>
+      <div id="cReportsArea" style="display:flex;flex-direction:column;gap:8px;"></div>
+    </div>
     <div class="form-group"><label>ThriveHQ Membership Start</label><input id="cMemberStart" type="date" onchange="autoRenewalDate()"></div>
     <div class="form-group"><label>ThriveHQ Renewal Date</label><input id="cRenewal" type="date"></div>
     <div class="form-group"><label>Referrer</label><input id="cReferrer" placeholder="Who referred this contact?"></div>
@@ -567,7 +571,7 @@ async function loadTasks(){
 }
 
 async function loadAll(){
-  await Promise.all([loadContacts(), loadClients(), loadTasks(), loadProspects(), loadReferrers(), loadRefPayments(), loadRenewals()]);
+  await Promise.all([loadContacts(), loadClients(), loadTasks(), loadProspects(), loadReferrers(), loadRefPayments(), loadRenewals(), loadContactReports()]);
   renderSidebarNav('home');
   renderDashboard();
 }
@@ -1142,6 +1146,14 @@ window.openContactModal=function(id){
     grid.appendChild(label);
     grid.appendChild(sel);
   }
+  // Reports section - only show for existing contacts
+  const reportsSection=document.getElementById('cReportsSection');
+  if(c){
+    reportsSection.style.display='block';
+    renderContactReports(c.id);
+  } else {
+    reportsSection.style.display='none';
+  }
   document.getElementById('contactModal').classList.add('open');
 };
 
@@ -1188,6 +1200,69 @@ window.autoRenewalDate=function(){
     d.setMonth(d.getMonth()+6);
     document.getElementById('cRenewal').value=d.toISOString().split('T')[0];
   }
+};
+
+// ── CONTACT REPORTS (PDF uploads) ──
+let contactReports=[];
+async function loadContactReports(){
+  const {data,error}=await supabase.from('contact_reports').select('*');
+  if(data) contactReports=data;
+  if(error&&error.code!=='42P01') console.error('Load reports error:',error);
+}
+
+const reportTypes=[
+  {key:'gallup',label:'Full Gallup Report'},
+  {key:'personal_insights',label:'Personal Insights Report'},
+  {key:'bring_need',label:'Bring Need Report'}
+];
+
+function renderContactReports(contactId){
+  const area=document.getElementById('cReportsArea');
+  const existing=contactReports.filter(r=>r.contact_id===contactId);
+  area.innerHTML=reportTypes.map(rt=>{
+    const report=existing.find(r=>r.report_type===rt.key);
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border:1px solid #f1f5f9;border-radius:8px;background:#f8fafc;">
+      <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">
+        <span style="font-size:14px;">&#128196;</span>
+        <span style="font-size:12px;font-weight:600;color:#1e293b;">${rt.label}</span>
+        ${report?'<a href="'+report.url+'" target="_blank" style="font-size:11px;color:#3b82f6;text-decoration:none;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" onmouseover="this.style.textDecoration=\'underline\'" onmouseout="this.style.textDecoration=\'none\'">'+report.filename+'</a>':''}
+      </div>
+      <div style="flex-shrink:0;">
+        <label style="background:${report?'#f1f5f9':'#1e3a5f'};color:${report?'#64748b':'#fff'};border:none;border-radius:6px;padding:4px 10px;font-size:10px;font-weight:600;cursor:pointer;">
+          ${report?'Replace':'Upload'}
+          <input type="file" accept=".pdf" style="display:none;" onchange="uploadReport('${contactId}','${rt.key}',this.files[0],this)">
+        </label>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.uploadReport=async function(contactId,reportType,file,input){
+  if(!file) return;
+  if(!file.name.toLowerCase().endsWith('.pdf')){toast('Please select a PDF file','error');return;}
+  const label=input.parentElement;
+  const origText=label.childNodes[0].textContent;
+  label.childNodes[0].textContent='Uploading...';
+  label.style.background='#fef3c7';label.style.color='#92400e';
+
+  const path=contactId+'/'+reportType+'_'+Date.now()+'.pdf';
+  const {data:uploadData,error:uploadErr}=await supabase.storage.from('client-reports').upload(path,file,{upsert:true});
+  if(uploadErr){
+    toast('Upload error: '+uploadErr.message,'error');
+    label.childNodes[0].textContent=origText;label.style.background='';label.style.color='';
+    return;
+  }
+  const {data:urlData}=supabase.storage.from('client-reports').getPublicUrl(path);
+  const url=urlData.publicUrl;
+
+  // Delete existing report of same type
+  await supabase.from('contact_reports').delete().eq('contact_id',contactId).eq('report_type',reportType);
+  // Insert new
+  const {error:dbErr}=await supabase.from('contact_reports').insert({contact_id:contactId,report_type:reportType,filename:file.name,url:url});
+  if(dbErr){toast('Error saving report: '+dbErr.message,'error');return;}
+  await loadContactReports();
+  renderContactReports(contactId);
+  toast('Report uploaded','success');
 };
 
 window.deleteContact=async function(id){
@@ -1625,8 +1700,8 @@ function renderThqRenewals(){
 
     html+=`<tr style="border-bottom:1px solid #f1f5f9;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
       <td style="padding:10px 14px;font-weight:600;color:#1e293b;">${c.first_name} ${c.last_name}</td>
-      <td style="padding:10px 14px;color:#475569;">${c.membership_start_date||'—'}</td>
-      <td style="padding:10px 14px;color:#475569;">${c.renewal_date||'—'}</td>
+      <td style="padding:6px 10px;"><input type="date" value="${c.membership_start_date||''}" onchange="updateMemberDate('${c.id}','membership_start_date',this.value)" style="border:1px solid #e2e8f0;border-radius:6px;padding:4px 8px;font-size:12px;font-family:inherit;color:#475569;"></td>
+      <td style="padding:6px 10px;"><input type="date" value="${c.renewal_date||''}" onchange="updateMemberDate('${c.id}','renewal_date',this.value)" style="border:1px solid #e2e8f0;border-radius:6px;padding:4px 8px;font-size:12px;font-family:inherit;color:#475569;"></td>
       <td style="padding:10px 14px;text-align:center;"><span style="font-size:11px;padding:2px 10px;border-radius:99px;font-weight:500;${statusStyle}">${statusText}</span></td>
       <td style="padding:10px 14px;text-align:center;">${renewalCount?'<span onclick="showRenewalHistory(\''+c.id+'\')" style="color:#3b82f6;font-weight:600;cursor:pointer;text-decoration:underline;">'+renewalCount+'</span>':'0'}</td>
       <td style="padding:10px 14px;text-align:center;"><button onclick="openRenewMember('${c.id}')" style="background:#1e3a5f;color:#fff;border:none;border-radius:6px;padding:4px 12px;font-size:11px;font-weight:600;cursor:pointer;">Renew</button></td>
@@ -1674,6 +1749,17 @@ window.showRenewalHistory=function(contactId){
     msg+='\n';
   });
   alert(msg||'No renewal history.');
+};
+
+window.updateMemberDate=async function(contactId,field,value){
+  const data={};
+  data[field]=value||null;
+  const {error}=await supabase.from('contacts').update(data).eq('id',contactId);
+  if(error){toast('Error: '+error.message,'error');return;}
+  await loadContacts();
+  renderThqRenewals();
+  renderThqDash();
+  toast('Date updated','success');
 };
 
 // Add Renew button to member cards
