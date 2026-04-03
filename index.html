@@ -390,6 +390,20 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // ── CLIFTONSTRENGTHS 34 THEMES ──
 const CS34 = ['','Achiever','Activator','Adaptability','Analytical','Arranger','Belief','Command','Communication','Competition','Connectedness','Consistency','Context','Deliberative','Developer','Discipline','Empathy','Focus','Futuristic','Harmony','Ideation','Includer','Individualization','Input','Intellection','Learner','Maximizer','Positivity','Relator','Responsibility','Restorative','Self-Assurance','Significance','Strategic','Woo'];
 
+// Gallup CliftonStrengths domain colors
+const CS_DOMAINS={
+  // Executing — purple
+  Achiever:'#7B2D8E',Arranger:'#7B2D8E',Belief:'#7B2D8E',Consistency:'#7B2D8E',Deliberative:'#7B2D8E',Discipline:'#7B2D8E',Focus:'#7B2D8E',Responsibility:'#7B2D8E',Restorative:'#7B2D8E',
+  // Influencing — orange
+  Activator:'#E97200',Command:'#E97200',Communication:'#E97200',Competition:'#E97200',Maximizer:'#E97200',['Self-Assurance']:'#E97200',Significance:'#E97200',Woo:'#E97200',
+  // Relationship Building — blue
+  Adaptability:'#0070CD',Connectedness:'#0070CD',Developer:'#0070CD',Empathy:'#0070CD',Harmony:'#0070CD',Includer:'#0070CD',Individualization:'#0070CD',Positivity:'#0070CD',Relator:'#0070CD',
+  // Strategic Thinking — green
+  Analytical:'#00945B',Context:'#00945B',Futuristic:'#00945B',Ideation:'#00945B',Input:'#00945B',Intellection:'#00945B',Learner:'#00945B',Strategic:'#00945B'
+};
+function csColor(name){return CS_DOMAINS[name]||'#64748b';}
+function csPill(rank,name){return `<span style="background:${csColor(name)};color:#fff;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600;">#${rank} ${name}</span>`;}
+
 // ── DATA ──
 let contacts = [];
 let clients = [];
@@ -837,7 +851,7 @@ function renderStrengths(){
         ${c.email?'<span style="font-size:12px;color:#64748b;">'+c.email+'</span>':''}
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:5px;">${strengths.map(s=>
-        `<span style="background:${s.rank<=1?'#1d4ed8':s.rank<=3?'#3b82f6':s.rank<=5?'#60a5fa':'#93c5fd'};color:#fff;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600;">#${s.rank} ${s.name}</span>`
+        csPill(s.rank,s.name)
       ).join('')}</div>
     </div>`;
   }).join('');
@@ -943,7 +957,7 @@ function renderThriveHQ(){
             ${rels.map(r=>'<span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:500;background:#dcfce7;color:#15803d;">'+r+'</span>').join('')}
             ${c.contact_type?'<span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:500;background:#eff6ff;color:#2563eb;">'+c.contact_type+'</span>':''}
           </div>
-          ${strengths.length?'<div style="display:flex;flex-wrap:wrap;gap:4px;">'+strengths.map(s=>'<span style="background:'+(s.rank<=1?'#1d4ed8':s.rank<=3?'#3b82f6':'#60a5fa')+';color:#fff;padding:2px 10px;border-radius:99px;font-size:11px;font-weight:600;">#'+s.rank+' '+s.name+'</span>').join('')+'</div>':'<div style="font-size:11px;color:#94a3b8;">No strengths profile</div>'}
+          ${strengths.length?'<div style="display:flex;flex-wrap:wrap;gap:4px;">'+strengths.map(s=>csPill(s.rank,s.name)).join('')+'</div>':'<div style="font-size:11px;color:#94a3b8;">No strengths profile</div>'}
         </div>`;
       }).join('')}</div>`}
     </div>`;
@@ -976,7 +990,7 @@ function renderThriveHQ(){
           <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:${strengths.length?'8':'0'}px;">
             ${rels.map(r=>'<span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:500;background:#dcfce7;color:#15803d;">'+r+'</span>').join('')}
           </div>
-          ${strengths.length?'<div style="display:flex;flex-wrap:wrap;gap:4px;">'+strengths.map(s=>'<span style="background:'+(s.rank<=1?'#1d4ed8':s.rank<=3?'#3b82f6':'#60a5fa')+';color:#fff;padding:2px 10px;border-radius:99px;font-size:11px;font-weight:600;">#'+s.rank+' '+s.name+'</span>').join('')+'</div>':'<div style="font-size:11px;color:#94a3b8;">No strengths profile</div>'}
+          ${strengths.length?'<div style="display:flex;flex-wrap:wrap;gap:4px;">'+strengths.map(s=>csPill(s.rank,s.name)).join('')+'</div>':'<div style="font-size:11px;color:#94a3b8;">No strengths profile</div>'}
         </div>`;
       }).join('')}</div>`}
     </div>`;
