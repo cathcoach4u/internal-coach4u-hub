@@ -397,6 +397,7 @@ td .actions button{padding:4px 10px;font-size:12px;}
     <div class="form-group"><label>CliftonStrengths Top 10</label>
       <div id="cStrengthsGrid" style="display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center;"></div>
     </div>
+    <div class="form-group"><label>Referrer</label><input id="cReferrer" placeholder="Who referred this contact?"></div>
     <div class="form-group"><label>Notes</label><textarea id="cNotes"></textarea></div>
     <div class="modal-actions">
       <button class="btn btn-gray" onclick="closeModal('contactModal')">Cancel</button>
@@ -1119,6 +1120,7 @@ window.openContactModal=function(id){
   document.getElementById('cEmail').value=c?c.email:'';
   document.getElementById('cPhone').value=c?c.phone:'';
   document.getElementById('cType').value=c?c.contact_type:'Individual';
+  document.getElementById('cReferrer').value=c?c.referrer||'':'';
   document.getElementById('cNotes').value=c?c.notes:'';
   // Build 10 strength dropdowns
   const grid=document.getElementById('cStrengthsGrid');
@@ -1146,6 +1148,7 @@ window.saveContact=async function(){
     email:document.getElementById('cEmail').value.trim(),
     phone:document.getElementById('cPhone').value.trim(),
     contact_type:document.getElementById('cType').value,
+    referrer:document.getElementById('cReferrer').value.trim()||null,
     notes:document.getElementById('cNotes').value.trim()
   };
   for(let i=1;i<=10;i++){
