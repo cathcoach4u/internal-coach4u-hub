@@ -191,18 +191,23 @@ td .actions button{padding:4px 10px;font-size:12px;}
       <div id="mlCards"></div>
     </div>
 
-    <!-- REFERRERS DASHBOARD -->
-    <div class="screen" id="screen-refdash">
-      <div id="refDashContent"></div>
-    </div>
-
-    <!-- REFERRAL HUB -->
+    <!-- REFERRAL HUB (merged dashboard + list) -->
     <div class="screen" id="screen-referrals">
+      <div id="refDashStats"></div>
       <div class="toolbar">
         <input class="search-input" id="refSearch" placeholder="Search referrers..." oninput="filterReferrals()">
         <button class="btn btn-blue" onclick="openReferralModal()">+ Add Referrer</button>
       </div>
       <div id="refCards"></div>
+    </div>
+
+    <!-- REFERRER PAYMENTS -->
+    <div class="screen" id="screen-refpayments">
+      <div class="toolbar">
+        <input class="search-input" id="refPaySearch" placeholder="Search payments..." oninput="renderRefPayments()">
+        <button class="btn btn-blue" onclick="openRefPaymentModal()">+ Add Payment</button>
+      </div>
+      <div id="refPayContent"></div>
     </div>
 
     <!-- PROSPECTS DASHBOARD -->
@@ -261,6 +266,11 @@ td .actions button{padding:4px 10px;font-size:12px;}
 
     <!-- THRIVEHQ COACHING CALLS -->
     <div class="screen" id="screen-thqcalls">
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 18px;margin-bottom:12px;display:flex;align-items:center;gap:10px;">
+        <span style="font-size:18px;">&#128194;</span>
+        <a href="https://netorgft4053847.sharepoint.com/:f:/s/Clients/IgCvrdCt_QJ3Q4duGfiHWxWmATOFwyLG_YdMRsorhU_jsuI?e=FiDtiW" target="_blank" style="font-weight:600;color:#3b82f6;text-decoration:none;font-size:14px;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">ThriveHQ Folders, Files &amp; Recordings</a>
+        <span style="font-size:11px;color:#94a3b8;">SharePoint</span>
+      </div>
       <div class="toolbar">
         <input class="search-input" id="thqCallSearch" placeholder="Search members..." oninput="renderCoachingCalls()">
       </div>
@@ -366,6 +376,29 @@ td .actions button{padding:4px 10px;font-size:12px;}
       <button class="btn btn-gray" onclick="closeModal('referralModal')">Cancel</button>
       <button class="btn btn-red" id="refDelBtn" onclick="deleteReferral(document.getElementById('refId').value)" style="display:none;">Delete</button>
       <button class="btn btn-green" onclick="saveReferral()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- REFERRER PAYMENT MODAL -->
+<div class="modal-overlay" id="refPayModal">
+  <div class="modal">
+    <h3 id="refPayModalTitle">Add Payment</h3>
+    <input type="hidden" id="refPayId">
+    <div class="form-group"><label>Referrer</label>
+      <select id="refPayReferrer"><option value="">-- Select referrer --</option></select>
+    </div>
+    <div class="form-group"><label>Amount ($)</label><input id="refPayAmount" type="number" step="0.01" placeholder="0.00"></div>
+    <div class="form-group"><label>Payment Date</label><input id="refPayDate" type="date"></div>
+    <div class="form-group"><label>Period (e.g. Apr 2026)</label><input id="refPayPeriod" placeholder="Apr 2026"></div>
+    <div class="form-group"><label>Status</label>
+      <select id="refPayStatus"><option>Paid</option><option>Pending</option><option>Overdue</option></select>
+    </div>
+    <div class="form-group"><label>Notes</label><textarea id="refPayNotes"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-gray" onclick="closeModal('refPayModal')">Cancel</button>
+      <button class="btn btn-red" id="refPayDelBtn" onclick="deleteRefPayment(document.getElementById('refPayId').value)" style="display:none;">Delete</button>
+      <button class="btn btn-green" onclick="saveRefPayment()">Save</button>
     </div>
   </div>
 </div>
@@ -506,7 +539,7 @@ async function loadTasks(){
 }
 
 async function loadAll(){
-  await Promise.all([loadContacts(), loadClients(), loadTasks(), loadProspects(), loadReferrers()]);
+  await Promise.all([loadContacts(), loadClients(), loadTasks(), loadProspects(), loadReferrers(), loadRefPayments()]);
   renderSidebarNav('home');
   renderDashboard();
 }
@@ -518,7 +551,7 @@ document.getElementById('headerDate').textContent = new Date().toLocaleDateStrin
 window.navTo = function(tab,btn){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+tab).classList.add('active');
-  const titles={dashboard:'Dashboard',crmdash:'CRM',refdash:'Referrers',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ',strdash:'Strengths',opsdash:'Operations',masterlist:'Master List',clients:'Client List',referrals:'Referral Hub',prospects:'Prospect List',thrivehq:'Members',strengths:'Strengths Hub',thqcalls:'Coaching Calls',tasks:'Task Management',itprojects:'IT Projects'};
+  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ',strdash:'Strengths',opsdash:'Operations',masterlist:'Master List',clients:'Client List',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Strengths Hub',thqcalls:'Coaching Calls',tasks:'Task Management',itprojects:'IT Projects'};
   document.getElementById('pageTitle').textContent=titles[tab]||'Coach4U';
   // Sync area tab
   const area=pageToArea[tab]||'home';
@@ -537,7 +570,6 @@ window.navTo = function(tab,btn){
   else document.querySelectorAll('.nav-item').forEach(n=>{if(n.dataset.page===tab) n.classList.add('active');});
   if(tab==='dashboard') renderDashboard();
   if(tab==='crmdash') renderCrmDash();
-  if(tab==='refdash') renderRefDash();
   if(tab==='prospdash') renderProspDash();
   if(tab==='clidash') renderCliDash();
   if(tab==='thqdash') renderThqDash();
@@ -551,7 +583,7 @@ window.navTo = function(tab,btn){
   if(tab==='strengths') renderStrengths();
   if(tab==='thqcalls') renderCoachingCalls();
   if(tab==='tasks') renderTasks();
-  if(tab==='referrals') renderReferrals();
+  if(tab==='refpayments') renderRefPayments();
   if(tab==='itprojects') renderITProjects();
   closeMobile();
 };
@@ -574,7 +606,7 @@ window.goToClient=function(clientId){
 const areaConfig={
   home:{label:'Home',pages:[{id:'dashboard',icon:'&#9776;',label:'Dashboard'}]},
   crm:{label:'CRM',pages:[{id:'masterlist',icon:'&#128209;',label:'Master List'}]},
-  referrers:{label:'Referrers',pages:[{id:'refdash',icon:'&#128200;',label:'Dashboard'},{id:'referrals',icon:'&#128101;',label:'Referral Hub'}]},
+  referrers:{label:'Referrers',pages:[{id:'referrals',icon:'&#128101;',label:'Referral Hub'},{id:'refpayments',icon:'&#128176;',label:'Payments'}]},
   prospects:{label:'Prospects',pages:[{id:'prospdash',icon:'&#127793;',label:'Dashboard'},{id:'prospects',icon:'&#128203;',label:'Prospect List'}]},
   clients:{label:'Clients',pages:[{id:'clidash',icon:'&#129309;',label:'Dashboard'},{id:'clients',icon:'&#128101;',label:'Client List'}]},
   thrivehq:{label:'ThriveHQ',pages:[{id:'thqdash',icon:'&#128170;',label:'Dashboard'},{id:'thrivehq',icon:'&#128101;',label:'Members'},{id:'thqcalls',icon:'&#128222;',label:'Coaching Calls'}]},
@@ -835,73 +867,8 @@ function renderOpsDash(){
 }
 
 // ── REFERRERS DASHBOARD ──
-function renderRefDash(){
-  const totalLinked=(referrals||[]).reduce((sum,r)=>(r.members||[]).length+sum,0);
-  const referredCount=referrals.reduce((sum,r)=>{
-    return sum+clients.filter(c=>c.referred_by===r.id).length;
-  },0);
-
-  let html=`<div class="dash-cards">
-    <div class="dash-card"><div class="dc-icon blue">&#128101;</div><div class="dc-info"><h4>${referrals.length}</h4><p>Total Referrers</p></div></div>
-    <div class="dash-card"><div class="dc-icon green">&#128100;</div><div class="dc-info"><h4>${totalLinked}</h4><p>Linked Contacts</p></div></div>
-    <div class="dash-card"><div class="dc-icon amber">&#127793;</div><div class="dc-info"><h4>${referredCount}</h4><p>Clients Referred</p></div></div>
-  </div>`;
-
-  html+=`<div style="display:flex;flex-direction:column;gap:10px;">`;
-  if(referrals.length){
-    referrals.forEach(r=>{
-      const memberContacts=(r.members||[]).map(mid=>contacts.find(c=>c.id===mid)).filter(Boolean);
-      const referredCli=clients.filter(c=>c.referred_by===r.id);
-      const collapsed=refDashState[r.id]!==false;
-      const arrow=collapsed?'&#9654;':'&#9660;';
-      const contactCount=memberContacts.length;
-      const clientCount=referredCli.length;
-
-      html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
-        <div onclick="toggleRefDash('${r.id}')" style="padding:12px 20px;background:#f8fafc;border-bottom:${collapsed?'none':'1px solid #e2e8f0'};display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;" onmouseover="this.style.background='#f0f4f8'" onmouseout="this.style.background='#f8fafc'">
-          <div style="display:flex;align-items:center;gap:10px;">
-            <span style="font-size:11px;color:#94a3b8;">${arrow}</span>
-            <span style="font-weight:700;font-size:15px;color:#1e3a5f;">${r.name}</span>
-            <span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:500;${r.status==='Active'?'background:#dcfce7;color:#15803d;':'background:#f1f5f9;color:#64748b;'}">${r.status}</span>
-            ${contactCount?'<span style="font-size:11px;color:#64748b;">'+contactCount+' contact'+(contactCount!==1?'s':'')+'</span>':''}
-            ${clientCount?'<span style="font-size:11px;background:#dbeafe;color:#2563eb;padding:2px 8px;border-radius:99px;font-weight:600;">'+clientCount+' client'+(clientCount!==1?'s':'')+' referred</span>':''}
-          </div>
-          <div style="display:flex;gap:8px;align-items:center;">
-            ${r.meeting_link?'<a href="'+r.meeting_link+'" target="_blank" onclick="event.stopPropagation()" style="font-size:11px;color:#3b82f6;text-decoration:none;font-weight:600;">Meeting Link</a>':''}
-            <span onclick="event.stopPropagation();openReferralModal('${r.id}')" style="font-size:11px;color:#94a3b8;cursor:pointer;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">Edit</span>
-          </div>
-        </div>
-        ${collapsed?'':`<div style="padding:14px 20px;">
-          ${memberContacts.length?`<div style="margin-bottom:${referredCli.length?'12':'0'}px;">
-            <div style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Contacts</div>
-            <div style="display:flex;flex-direction:column;gap:6px;">
-              ${memberContacts.map(c=>`<div onclick="openContactModal('${c.id}')" style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border:1px solid #f1f5f9;border-radius:8px;cursor:pointer;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
-                <span style="font-weight:600;font-size:13px;color:#1e293b;">${c.first_name} ${c.last_name}</span>
-                <div style="display:flex;gap:12px;align-items:center;font-size:12px;color:#64748b;">
-                  ${c.phone?'<a href="tel:'+c.phone.replace(/\\s/g,'')+'" onclick="event.stopPropagation()" style="color:#1e293b;text-decoration:none;font-weight:600;">'+c.phone+'</a>':''}
-                  ${c.email?'<a href="mailto:'+c.email+'" onclick="event.stopPropagation()" style="color:#3b82f6;text-decoration:none;">'+c.email+'</a>':''}
-                </div>
-              </div>`).join('')}
-            </div>
-          </div>`:'<div style="font-size:12px;color:#94a3b8;margin-bottom:8px;">No contacts linked yet</div>'}
-          ${referredCli.length?`<div>
-            <div style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Clients Referred</div>
-            <div style="display:flex;flex-wrap:wrap;gap:4px;">
-              ${referredCli.map(cl=>'<span onclick="openClientModal(\''+cl.id+'\')" style="font-size:12px;padding:3px 10px;border-radius:99px;background:#dcfce7;color:#15803d;font-weight:500;cursor:pointer;" onmouseover="this.style.background=\'#bbf7d0\'" onmouseout="this.style.background=\'#dcfce7\'">'+cl.relationship_name+'</span>').join('')}
-            </div>
-          </div>`:''}
-        </div>`}
-      </div>`;
-    });
-  } else {
-    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:30px;text-align:center;color:#94a3b8;">No referrers yet. Add your first referrer from the Referral Hub.</div>`;
-  }
-  html+='</div>';
-
-  document.getElementById('refDashContent').innerHTML=html;
-}
 const refDashState={};
-window.toggleRefDash=function(id){refDashState[id]=refDashState[id]===false?true:false;renderRefDash();};
+window.toggleRefDash=function(id){refDashState[id]=refDashState[id]===false?true:false;renderReferrals();};
 
 // ── PROSPECTS DASHBOARD ──
 let prospects=[];
@@ -1671,7 +1638,19 @@ async function loadReferrers(){
 }
 
 function renderReferrals(){
-  const q=document.getElementById('refSearch').value.toLowerCase();
+  // Stats bar
+  const totalLinked=(referrals||[]).reduce((sum,r)=>(r.members||[]).length+sum,0);
+  const referredCount=referrals.reduce((sum,r)=>sum+clients.filter(c=>c.referred_by===r.id).length,0);
+  const activeCount=referrals.filter(r=>r.status==='Active').length;
+  document.getElementById('refDashStats').innerHTML=`<div class="dash-cards">
+    <div class="dash-card"><div class="dc-icon blue">&#128101;</div><div class="dc-info"><h4>${referrals.length}</h4><p>Total Referrers</p></div></div>
+    <div class="dash-card"><div class="dc-icon green">&#9989;</div><div class="dc-info"><h4>${activeCount}</h4><p>Active</p></div></div>
+    <div class="dash-card"><div class="dc-icon amber">&#128100;</div><div class="dc-info"><h4>${totalLinked}</h4><p>Linked Contacts</p></div></div>
+    <div class="dash-card"><div class="dc-icon green">&#127793;</div><div class="dc-info"><h4>${referredCount}</h4><p>Clients Referred</p></div></div>
+  </div>`;
+
+  // Filtered collapsible list
+  const q=(document.getElementById('refSearch').value||'').toLowerCase();
   const filtered=referrals.filter(r=>{
     const memberNames=(r.members||[]).map(mid=>getContactName(mid)).join(' ');
     return (r.name+' '+(r.notes||'')+' '+memberNames).toLowerCase().includes(q);
@@ -1683,23 +1662,48 @@ function renderReferrals(){
   } else {
     html=`<div style="display:flex;flex-direction:column;gap:10px;">`;
     filtered.forEach(r=>{
-      const memberNames=(r.members||[]).map(mid=>{
-        const c=contacts.find(x=>x.id===mid);
-        return c?`<span onclick="event.stopPropagation();openContactModal('${c.id}')" style="font-size:12px;padding:2px 8px;border-radius:99px;background:#dbeafe;color:#2563eb;cursor:pointer;font-weight:500;">${c.first_name} ${c.last_name}${c.phone?' · '+c.phone:''}${c.email?' · '+c.email:''}</span>`:'';
-      }).filter(Boolean);
-      const referredCli=clients.filter(cl=>cl.referred_by===r.id);
+      const memberContacts=(r.members||[]).map(mid=>contacts.find(c=>c.id===mid)).filter(Boolean);
+      const referredCli=clients.filter(c=>c.referred_by===r.id);
+      const collapsed=refDashState[r.id]!==false;
+      const arrow=collapsed?'&#9654;':'&#9660;';
+      const contactCount=memberContacts.length;
+      const clientCount=referredCli.length;
 
-      html+=`<div onclick="openReferralModal('${r.id}')" style="background:#fff;border:1px solid #e2e8f0;border-left:3px solid #3b82f6;border-radius:8px;padding:16px;cursor:pointer;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-          <div style="display:flex;align-items:center;gap:8px;">
-            <span style="font-weight:700;font-size:15px;color:#1e293b;">${r.name}</span>
+      html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
+        <div onclick="toggleRefDash('${r.id}')" style="padding:12px 20px;background:#f8fafc;border-bottom:${collapsed?'none':'1px solid #e2e8f0'};display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;" onmouseover="this.style.background='#f0f4f8'" onmouseout="this.style.background='#f8fafc'">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:11px;color:#94a3b8;">${arrow}</span>
+            <span style="font-weight:700;font-size:15px;color:#1e3a5f;">${r.name}</span>
             <span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:500;${r.status==='Active'?'background:#dcfce7;color:#15803d;':'background:#f1f5f9;color:#64748b;'}">${r.status||'Active'}</span>
+            ${contactCount?'<span style="font-size:11px;color:#64748b;">'+contactCount+' contact'+(contactCount!==1?'s':'')+'</span>':''}
+            ${clientCount?'<span style="font-size:11px;background:#dbeafe;color:#2563eb;padding:2px 8px;border-radius:99px;font-weight:600;">'+clientCount+' client'+(clientCount!==1?'s':'')+' referred</span>':''}
           </div>
-          ${r.meeting_link?'<a href="'+r.meeting_link+'" target="_blank" onclick="event.stopPropagation()" style="font-size:11px;color:#3b82f6;text-decoration:none;font-weight:600;">Meeting Link</a>':''}
+          <div style="display:flex;gap:8px;align-items:center;">
+            ${r.meeting_link?'<a href="'+r.meeting_link+'" target="_blank" onclick="event.stopPropagation()" style="font-size:11px;color:#3b82f6;text-decoration:none;font-weight:600;">Meeting Link</a>':''}
+            <span onclick="event.stopPropagation();openReferralModal('${r.id}')" style="font-size:11px;color:#94a3b8;cursor:pointer;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">Edit</span>
+          </div>
         </div>
-        ${memberNames.length?'<div style="margin-bottom:6px;"><span style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;">Contacts:</span> <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">'+memberNames.join('')+'</div></div>':''}
-        ${referredCli.length?'<div><span style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;">Clients Referred:</span> <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">'+referredCli.map(cl=>'<span onclick="event.stopPropagation();openClientModal(\''+cl.id+'\')" style="font-size:12px;padding:2px 8px;border-radius:99px;background:#dcfce7;color:#15803d;font-weight:500;cursor:pointer;" onmouseover="this.style.background=\'#bbf7d0\'" onmouseout="this.style.background=\'#dcfce7\'">'+cl.relationship_name+'</span>').join('')+'</div></div>':''}
-        ${r.notes?'<div style="font-size:12px;color:#64748b;margin-top:6px;">'+r.notes+'</div>':''}
+        ${collapsed?'':`<div style="padding:14px 20px;">
+          ${memberContacts.length?`<div style="margin-bottom:${referredCli.length?'12':'0'}px;">
+            <div style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Contacts</div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              ${memberContacts.map(c=>`<div onclick="openContactModal('${c.id}')" style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border:1px solid #f1f5f9;border-radius:8px;cursor:pointer;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
+                <span style="font-weight:600;font-size:13px;color:#1e293b;">${c.first_name} ${c.last_name}</span>
+                <div style="display:flex;gap:12px;align-items:center;font-size:12px;color:#64748b;">
+                  ${c.phone?'<a href="tel:'+c.phone.replace(/\\s/g,'')+'" onclick="event.stopPropagation()" style="color:#1e293b;text-decoration:none;font-weight:600;">'+c.phone+'</a>':''}
+                  ${c.email?'<a href="mailto:'+c.email+'" onclick="event.stopPropagation()" style="color:#3b82f6;text-decoration:none;">'+c.email+'</a>':''}
+                </div>
+              </div>`).join('')}
+            </div>
+          </div>`:'<div style="font-size:12px;color:#94a3b8;margin-bottom:8px;">No contacts linked yet</div>'}
+          ${referredCli.length?`<div>
+            <div style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Clients Referred</div>
+            <div style="display:flex;flex-wrap:wrap;gap:4px;">
+              ${referredCli.map(cl=>'<span onclick="openClientModal(\''+cl.id+'\')" style="font-size:12px;padding:3px 10px;border-radius:99px;background:#dcfce7;color:#15803d;font-weight:500;cursor:pointer;" onmouseover="this.style.background=\'#bbf7d0\'" onmouseout="this.style.background=\'#dcfce7\'">'+cl.relationship_name+'</span>').join('')}
+            </div>
+          </div>`:''}
+          ${r.notes?'<div style="font-size:12px;color:#64748b;margin-top:8px;padding-top:8px;border-top:1px solid #f1f5f9;">'+r.notes+'</div>':''}
+        </div>`}
       </div>`;
     });
     html+='</div>';
@@ -1753,15 +1757,19 @@ window.saveReferral=async function(){
   if(!data.name){toast('Referrer name required','error');return;}
   let refId=id;
   if(id){
-    await supabase.from('referrers').update(data).eq('id',id);
+    const {error}=await supabase.from('referrers').update(data).eq('id',id);
+    if(error){toast('Error saving: '+error.message,'error');return;}
   } else {
-    const {data:inserted}=await supabase.from('referrers').insert(data).select();
+    const {data:inserted,error}=await supabase.from('referrers').insert(data).select();
+    if(error){toast('Error saving: '+error.message,'error');return;}
     if(inserted&&inserted[0]) refId=inserted[0].id;
   }
   // Sync members
-  await supabase.from('referrer_members').delete().eq('referrer_id',refId);
+  const {error:delErr}=await supabase.from('referrer_members').delete().eq('referrer_id',refId);
+  if(delErr){toast('Error syncing members: '+delErr.message,'error');return;}
   if(tempRefMembers.length){
-    await supabase.from('referrer_members').insert(tempRefMembers.map(cid=>({referrer_id:refId,contact_id:cid})));
+    const {error:insErr}=await supabase.from('referrer_members').insert(tempRefMembers.map(cid=>({referrer_id:refId,contact_id:cid})));
+    if(insErr){toast('Error linking members: '+insErr.message,'error');return;}
   }
   closeModal('referralModal');
   await loadReferrers();
@@ -1776,6 +1784,111 @@ window.deleteReferral=async function(id){
   await loadReferrers();
   renderReferrals();
   toast('Referrer deleted','success');
+};
+
+// ── REFERRER PAYMENTS ──
+let refPayments=[];
+async function loadRefPayments(){
+  const {data,error}=await supabase.from('referrer_payments').select('*').order('payment_date',{ascending:false});
+  if(data) refPayments=data;
+  if(error&&error.code!=='42P01') console.error('Load referrer payments error:',error);
+}
+
+function renderRefPayments(){
+  const q=(document.getElementById('refPaySearch').value||'').toLowerCase();
+  const filtered=refPayments.filter(p=>{
+    const refName=(referrals.find(r=>r.id===p.referrer_id)||{}).name||'';
+    return (refName+' '+(p.period||'')+' '+(p.status||'')+' '+(p.notes||'')).toLowerCase().includes(q);
+  });
+
+  // Summary stats
+  const totalPaid=refPayments.filter(p=>p.status==='Paid').reduce((s,p)=>s+(parseFloat(p.amount)||0),0);
+  const totalPending=refPayments.filter(p=>p.status==='Pending').reduce((s,p)=>s+(parseFloat(p.amount)||0),0);
+  const overdueCount=refPayments.filter(p=>p.status==='Overdue').length;
+
+  let html=`<div class="dash-cards" style="margin-bottom:14px;">
+    <div class="dash-card"><div class="dc-icon green">&#128176;</div><div class="dc-info"><h4>$${totalPaid.toFixed(2)}</h4><p>Total Paid</p></div></div>
+    <div class="dash-card"><div class="dc-icon amber">&#9203;</div><div class="dc-info"><h4>$${totalPending.toFixed(2)}</h4><p>Pending</p></div></div>
+    <div class="dash-card"><div class="dc-icon red">&#9888;</div><div class="dc-info"><h4>${overdueCount}</h4><p>Overdue</p></div></div>
+  </div>`;
+
+  if(!filtered.length){
+    html+='<div style="padding:30px;text-align:center;color:#94a3b8;background:#fff;border:1px solid #e2e8f0;border-radius:12px;">No payments recorded yet.</div>';
+  } else {
+    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead><tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;">
+          <th style="text-align:left;padding:10px 14px;font-weight:600;color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Referrer</th>
+          <th style="text-align:left;padding:10px 14px;font-weight:600;color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Period</th>
+          <th style="text-align:right;padding:10px 14px;font-weight:600;color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Amount</th>
+          <th style="text-align:left;padding:10px 14px;font-weight:600;color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Date</th>
+          <th style="text-align:center;padding:10px 14px;font-weight:600;color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Status</th>
+        </tr></thead>
+        <tbody>`;
+    filtered.forEach(p=>{
+      const ref=referrals.find(r=>r.id===p.referrer_id);
+      const statusColors={Paid:'background:#dcfce7;color:#15803d;',Pending:'background:#fef3c7;color:#92400e;',Overdue:'background:#fee2e2;color:#dc2626;'};
+      html+=`<tr onclick="openRefPaymentModal('${p.id}')" style="border-bottom:1px solid #f1f5f9;cursor:pointer;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
+        <td style="padding:10px 14px;font-weight:600;color:#1e293b;">${ref?ref.name:'Unknown'}</td>
+        <td style="padding:10px 14px;color:#475569;">${p.period||'-'}</td>
+        <td style="padding:10px 14px;text-align:right;font-weight:600;color:#1e293b;">$${(parseFloat(p.amount)||0).toFixed(2)}</td>
+        <td style="padding:10px 14px;color:#475569;">${p.payment_date?new Date(p.payment_date).toLocaleDateString('en-AU'):'—'}</td>
+        <td style="padding:10px 14px;text-align:center;"><span style="font-size:11px;padding:2px 10px;border-radius:99px;font-weight:500;${statusColors[p.status]||''}">${p.status||'Pending'}</span></td>
+      </tr>`;
+    });
+    html+=`</tbody></table></div>`;
+  }
+  document.getElementById('refPayContent').innerHTML=html;
+}
+
+window.openRefPaymentModal=function(id){
+  const p=id?refPayments.find(x=>x.id===id):null;
+  document.getElementById('refPayModalTitle').textContent=p?'Edit Payment':'Add Payment';
+  document.getElementById('refPayId').value=p?p.id:'';
+  document.getElementById('refPayAmount').value=p?p.amount:'';
+  document.getElementById('refPayDate').value=p?p.payment_date||'':'';
+  document.getElementById('refPayPeriod').value=p?p.period||'':'';
+  document.getElementById('refPayStatus').value=p?p.status||'Pending':'Pending';
+  document.getElementById('refPayNotes').value=p?p.notes||'':'';
+  document.getElementById('refPayDelBtn').style.display=p?'inline-block':'none';
+  // Populate referrer dropdown
+  const sel=document.getElementById('refPayReferrer');
+  sel.innerHTML='<option value="">-- Select referrer --</option>'+referrals.map(r=>'<option value="'+r.id+'"'+(p&&p.referrer_id===r.id?' selected':'')+'>'+r.name+'</option>').join('');
+  document.getElementById('refPayModal').classList.add('open');
+};
+
+window.saveRefPayment=async function(){
+  const id=document.getElementById('refPayId').value;
+  const data={
+    referrer_id:document.getElementById('refPayReferrer').value||null,
+    amount:parseFloat(document.getElementById('refPayAmount').value)||0,
+    payment_date:document.getElementById('refPayDate').value||null,
+    period:document.getElementById('refPayPeriod').value.trim()||null,
+    status:document.getElementById('refPayStatus').value,
+    notes:document.getElementById('refPayNotes').value.trim()||null
+  };
+  if(!data.referrer_id){toast('Please select a referrer','error');return;}
+  if(id){
+    const {error}=await supabase.from('referrer_payments').update(data).eq('id',id);
+    if(error){toast('Error: '+error.message,'error');return;}
+  } else {
+    const {error}=await supabase.from('referrer_payments').insert(data).select();
+    if(error){toast('Error: '+error.message,'error');return;}
+  }
+  closeModal('refPayModal');
+  await loadRefPayments();
+  renderRefPayments();
+  toast('Payment saved','success');
+};
+
+window.deleteRefPayment=async function(id){
+  if(!id||!confirm('Delete this payment?')) return;
+  const {error}=await supabase.from('referrer_payments').delete().eq('id',id);
+  if(error){toast('Error: '+error.message,'error');return;}
+  closeModal('refPayModal');
+  await loadRefPayments();
+  renderRefPayments();
+  toast('Payment deleted','success');
 };
 
 // ── IT PROJECTS ──
