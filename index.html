@@ -529,6 +529,22 @@ td .actions button{padding:8px 14px;font-size:12px;}
 <!-- LOADER -->
 <div id="appLoader" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.9);display:flex;align-items:center;justify-content:center;z-index:9999;"><div style="text-align:center;"><div style="width:40px;height:40px;border:4px solid #e2e8f0;border-top-color:#1e3a5f;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 12px;"></div><div style="color:#1e3a5f;font-weight:600;">Loading...</div></div></div>
 
+<!-- AI CHAT WIDGET -->
+<button id="aiChatBtn" onclick="toggleAiChat()" style="position:fixed;bottom:20px;right:20px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#1e3a5f,#3b82f6);color:#fff;border:none;cursor:pointer;box-shadow:0 4px 16px rgba(30,58,95,.4);z-index:90;font-size:22px;display:flex;align-items:center;justify-content:center;transition:transform .15s;">&#129302;</button>
+<div id="aiChatPanel" style="display:none;position:fixed;bottom:86px;right:20px;width:380px;max-width:calc(100vw - 40px);height:500px;max-height:calc(100vh - 120px);background:#fff;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.15);z-index:90;display:none;flex-direction:column;overflow:hidden;">
+  <div style="background:linear-gradient(135deg,#1e3a5f,#234b78);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;">
+    <span style="color:#fff;font-weight:700;font-size:14px;">&#129302; Coach4U Assistant</span>
+    <button onclick="toggleAiChat()" style="background:none;border:none;color:rgba(255,255,255,.7);cursor:pointer;font-size:18px;">&times;</button>
+  </div>
+  <div id="aiChatMessages" style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;">
+    <div style="background:#f0f6ff;border-radius:12px;padding:10px 14px;font-size:13px;color:#1e3a5f;max-width:85%;align-self:flex-start;">Hi! I can look up contacts, add prospects, update records, and more. Try: <em>"look up Michael"</em> or <em>"add prospect Jane Doe, 0412345678"</em></div>
+  </div>
+  <div style="padding:10px 14px;border-top:1px solid #e2e8f0;display:flex;gap:8px;">
+    <input id="aiChatInput" placeholder="Ask me anything..." style="flex:1;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;font-size:13px;font-family:inherit;outline:none;" onkeydown="if(event.key==='Enter')sendAiChat()">
+    <button onclick="sendAiChat()" style="background:#1e3a5f;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;">Send</button>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (function(){
@@ -2442,6 +2458,197 @@ if(window.innerWidth<=768) document.getElementById('mobileToggle').style.display
 window.addEventListener('resize',()=>{
   document.getElementById('mobileToggle').style.display=window.innerWidth<=768?'inline-block':'none';
 });
+
+// ── AI CHAT ASSISTANT ──
+const ANTHROPIC_KEY = ''; // ADD YOUR ANTHROPIC API KEY HERE
+
+window.toggleAiChat=function(){
+  const panel=document.getElementById('aiChatPanel');
+  const isOpen=panel.style.display==='flex';
+  panel.style.display=isOpen?'none':'flex';
+  if(!isOpen) document.getElementById('aiChatInput').focus();
+};
+
+const aiChatHistory=[];
+
+function getDbSchema(){
+  return `You are Coach4U CRM assistant. You have access to a Supabase database.
+
+TABLES:
+- contacts: id, first_name, last_name, email, phone, type (Individual/ThriveHQ Member/Prospect), strengths (text[] top 10 CliftonStrengths), membership_start_date, renewal_date, referrer, notes
+- clients: id, relationship_name, role (Individual/Couple/Business/Organisation), status (Active/On Hold/Completed), practitioner, notes, referred_by (referrer id), xero_link, file_notes_link
+- client_members: id, client_id, contact_id, role
+- prospects: id, name, email, phone, role, status (New/Hot/Warm/Cold/Converted/Lost), source, notes, contact_id (linked contact)
+- referrers: id, name, meeting_link, status, notes
+- referrer_members: id, referrer_id, contact_id
+- tasks: id, title, description, owner, priority, status, due_date
+- membership_renewals: id, contact_id, renewed_date, period_start, period_end, amount, notes
+- referrer_payments: id, referrer_id, amount, payment_date, period, status, notes
+
+CURRENT DATA COUNTS: ${contacts.length} contacts, ${clients.length} clients, ${prospects.length} prospects, ${referrals.length} referrers
+
+When the user asks you to look up, add, or update data, respond with a JSON action block wrapped in \`\`\`action tags.
+
+ACTION FORMAT:
+\`\`\`action
+{"type":"query","table":"contacts","filter":{"first_name":"ilike.*Michael*"},"select":"id,first_name,last_name,email,phone,type"}
+\`\`\`
+
+\`\`\`action
+{"type":"insert","table":"prospects","data":{"name":"John Smith","phone":"0412345678","status":"New","role":"Individual"}}
+\`\`\`
+
+\`\`\`action
+{"type":"update","table":"contacts","filter":{"id":"eq.some-uuid"},"data":{"phone":"0400111222"}}
+\`\`\`
+
+RULES:
+- For lookups, use ilike with wildcards for flexible matching: {"first_name":"ilike.*john*"}
+- Always explain what you found or did in plain language AFTER the action block
+- If unsure, ask for clarification rather than guessing
+- For adding contacts, always include first_name and last_name as separate fields
+- When adding a prospect, suggest linking to an existing contact if one matches
+- Be concise and friendly`;
+}
+
+window.sendAiChat=async function(){
+  const input=document.getElementById('aiChatInput');
+  const msg=input.value.trim();
+  if(!msg) return;
+  input.value='';
+
+  if(!ANTHROPIC_KEY){
+    appendAiMsg('bot','Please add your Anthropic API key to the app. Edit index.html and find ANTHROPIC_KEY near the bottom of the file.');
+    return;
+  }
+
+  appendAiMsg('user',msg);
+  aiChatHistory.push({role:'user',content:msg});
+
+  const thinkingEl=appendAiMsg('bot','Thinking...');
+
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':ANTHROPIC_KEY,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({
+        model:'claude-haiku-4-5-20251001',
+        max_tokens:1024,
+        system:getDbSchema(),
+        messages:aiChatHistory.slice(-10)
+      })
+    });
+
+    if(!resp.ok){
+      const err=await resp.text();
+      thinkingEl.textContent='Error: '+resp.status+' - Check your API key';
+      return;
+    }
+
+    const data=await resp.json();
+    const reply=data.content[0].text;
+    aiChatHistory.push({role:'assistant',content:reply});
+
+    // Extract and execute actions
+    const actionMatch=reply.match(/```action\s*([\s\S]*?)```/);
+    let resultText=reply.replace(/```action[\s\S]*?```/g,'').trim();
+
+    if(actionMatch){
+      try{
+        const action=JSON.parse(actionMatch[1].trim());
+        const result=await executeAiAction(action);
+        if(result){
+          resultText+='\n\n'+result;
+        }
+      }catch(e){
+        resultText+='\n\n(Action failed: '+e.message+')';
+      }
+    }
+
+    thinkingEl.innerHTML=formatAiMsg(resultText);
+  }catch(e){
+    thinkingEl.textContent='Error: '+e.message;
+  }
+};
+
+async function executeAiAction(action){
+  if(action.type==='query'){
+    let query=supabase.from(action.table).select(action.select||'*');
+    if(action.filter){
+      Object.entries(action.filter).forEach(([key,val])=>{
+        if(typeof val==='string'&&val.includes('.')){
+          const [op,...rest]=val.split('.');
+          query=query.filter(key,op,rest.join('.'));
+        } else {
+          query=query.eq(key,val);
+        }
+      });
+    }
+    const {data,error}=await query.limit(action.limit||10);
+    if(error) return 'Query error: '+error.message;
+    if(!data||!data.length) return 'No results found.';
+    // Format results as readable text
+    return '**Found '+data.length+' result(s):**\n'+data.map(r=>{
+      const fields=Object.entries(r).filter(([k,v])=>v&&k!=='id'&&k!=='created_at'&&k!=='updated_at').map(([k,v])=>k.replace(/_/g,' ')+': '+v);
+      return '- '+fields.join(', ');
+    }).join('\n');
+  }
+  if(action.type==='insert'){
+    const {data,error}=await supabase.from(action.table).insert(action.data).select();
+    if(error) return 'Insert error: '+error.message;
+    // Reload relevant data
+    await reloadAfterAction(action.table);
+    return 'Record added successfully!';
+  }
+  if(action.type==='update'){
+    let query=supabase.from(action.table).update(action.data);
+    if(action.filter){
+      Object.entries(action.filter).forEach(([key,val])=>{
+        if(typeof val==='string'&&val.startsWith('eq.')){
+          query=query.eq(key,val.replace('eq.',''));
+        }
+      });
+    }
+    const {error}=await query;
+    if(error) return 'Update error: '+error.message;
+    await reloadAfterAction(action.table);
+    return 'Record updated successfully!';
+  }
+  return '';
+}
+
+async function reloadAfterAction(table){
+  if(table==='contacts'){await loadContacts();renderMasterList();}
+  if(table==='clients'){await loadClients();}
+  if(table==='prospects'){await loadProspects();renderProspects();}
+  if(table==='referrers'){await loadReferrers();}
+  if(table==='tasks'){await loadTasks();}
+}
+
+function appendAiMsg(role,text){
+  const container=document.getElementById('aiChatMessages');
+  const div=document.createElement('div');
+  div.style.cssText=role==='user'
+    ?'background:#1e3a5f;color:#fff;border-radius:12px;padding:10px 14px;font-size:13px;max-width:85%;align-self:flex-end;'
+    :'background:#f0f6ff;color:#1e293b;border-radius:12px;padding:10px 14px;font-size:13px;max-width:85%;align-self:flex-start;line-height:1.5;';
+  if(role==='user') div.textContent=text;
+  else div.innerHTML=formatAiMsg(text);
+  container.appendChild(div);
+  container.scrollTop=container.scrollHeight;
+  return div;
+}
+
+function formatAiMsg(text){
+  return text
+    .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\n/g,'<br>')
+    .replace(/`([^`]+)`/g,'<code style="background:#e2e8f0;padding:1px 4px;border-radius:3px;font-size:12px;">$1</code>');
+}
 
 })();
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js');}
