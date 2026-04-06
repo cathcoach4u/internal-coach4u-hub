@@ -179,6 +179,9 @@ td .actions button{padding:8px 14px;font-size:12px;}
           <div class="dc-info"><h4 id="dcProspects">0</h4><p>Prospects</p></div>
         </div>
       </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:16px;">
+        <a href="https://linktr.ee/coach4u.com.au" target="_blank" style="display:flex;align-items:center;gap:8px;padding:10px 16px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;text-decoration:none;color:#1e3a5f;font-weight:600;font-size:13px;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">&#127279; Coach4U Linktree</a>
+      </div>
     </div>
 
     <!-- CRM DASHBOARD -->
@@ -324,9 +327,15 @@ td .actions button{padding:8px 14px;font-size:12px;}
   <div class="modal">
     <h3 id="prospModalTitle">New Prospect</h3>
     <input type="hidden" id="prospId">
+    <div class="form-group"><label>Link to Master List</label>
+      <select id="prospContact"><option value="">-- Select contact --</option></select>
+    </div>
     <div class="form-group"><label>Name</label><input id="prospName"></div>
     <div class="form-group"><label>Email</label><input id="prospEmail" type="email"></div>
     <div class="form-group"><label>Phone</label><input id="prospPhone"></div>
+    <div class="form-group"><label>Role</label>
+      <select id="prospRole"><option>Individual</option><option>Couple</option><option>Business</option><option>Organisation</option></select>
+    </div>
     <div class="form-group"><label>Status</label>
       <select id="prospStatus"><option>New</option><option>Hot</option><option>Warm</option><option>Cold</option><option>Converted</option><option>Lost</option></select>
     </div>
@@ -335,6 +344,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     <div class="modal-actions">
       <button class="btn btn-gray" onclick="closeModal('prospModal')">Cancel</button>
       <button class="btn btn-red" onclick="deleteProspect(document.getElementById('prospId').value)" id="prospDelBtn" style="display:none;">Delete</button>
+      <button class="btn btn-green" onclick="convertProspectToClient()" id="prospConvertBtn" style="display:none;">Convert to Client</button>
       <button class="btn btn-blue" onclick="saveProspect()">Save</button>
     </div>
   </div>
@@ -1031,7 +1041,11 @@ function renderProspects(){
       const statusBg=p.status==='Hot'?'#fef2f2':p.status==='Warm'?'#fef3c7':p.status==='Converted'?'#dcfce7':'#f1f5f9';
       html+=`<div onclick="openProspectModal('${p.id}')" style="background:#fff;border:1px solid #e2e8f0;border-left:3px solid ${statusCol};border-radius:8px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
         <div>
-          <div style="font-weight:600;font-size:14px;color:#1e293b;">${p.name||'—'}</div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <span style="font-weight:600;font-size:14px;color:#1e293b;">${p.name||'—'}</span>
+            ${p.role&&p.role!=='Individual'?'<span style="font-size:11px;padding:2px 8px;border-radius:99px;background:#f0fdf4;color:#15803d;font-weight:500;">'+p.role+'</span>':''}
+            ${p.contact_id?'<span style="font-size:11px;padding:2px 8px;border-radius:99px;background:#dbeafe;color:#2563eb;font-weight:500;">Linked</span>':''}
+          </div>
           <div style="font-size:12px;color:#94a3b8;margin-top:2px;">${[p.email,p.phone].filter(Boolean).join(' · ')||'No contact info'}</div>
           ${p.notes?'<div style="font-size:12px;color:#64748b;margin-top:4px;">'+p.notes+'</div>':''}
         </div>
@@ -1055,10 +1069,25 @@ window.openProspectModal=function(id){
   document.getElementById('prospName').value=p?p.name||'':'';
   document.getElementById('prospEmail').value=p?p.email||'':'';
   document.getElementById('prospPhone').value=p?p.phone||'':'';
+  document.getElementById('prospRole').value=p?p.role||'Individual':'Individual';
   document.getElementById('prospStatus').value=p?p.status||'New':'New';
   document.getElementById('prospSource').value=p?p.source||'':'';
   document.getElementById('prospNotes').value=p?p.notes||'':'';
   document.getElementById('prospDelBtn').style.display=p?'inline-block':'none';
+  document.getElementById('prospConvertBtn').style.display=(p&&p.status!=='Converted')?'inline-block':'none';
+  // Populate contact dropdown
+  const cSel=document.getElementById('prospContact');
+  cSel.innerHTML='<option value="">-- Select contact --</option>'+contacts.map(c=>`<option value="${c.id}">${c.first_name} ${c.last_name}</option>`).join('');
+  cSel.value=p?p.contact_id||'':'';
+  // Auto-fill from contact when selected
+  cSel.onchange=function(){
+    const c=contacts.find(x=>x.id===this.value);
+    if(c){
+      document.getElementById('prospName').value=(c.first_name+' '+c.last_name).trim();
+      document.getElementById('prospEmail').value=c.email||'';
+      document.getElementById('prospPhone').value=c.phone||'';
+    }
+  };
   document.getElementById('prospModal').classList.add('open');
 };
 window.saveProspect=async function(){
@@ -1067,14 +1096,18 @@ window.saveProspect=async function(){
     name:document.getElementById('prospName').value,
     email:document.getElementById('prospEmail').value,
     phone:document.getElementById('prospPhone').value,
+    role:document.getElementById('prospRole').value,
     status:document.getElementById('prospStatus').value,
     source:document.getElementById('prospSource').value,
-    notes:document.getElementById('prospNotes').value
+    notes:document.getElementById('prospNotes').value,
+    contact_id:document.getElementById('prospContact').value||null
   };
   if(id){
-    await supabase.from('prospects').update(obj).eq('id',id);
+    const {error}=await supabase.from('prospects').update(obj).eq('id',id);
+    if(error){toast('Error: '+error.message,'error');return;}
   } else {
-    await supabase.from('prospects').insert(obj);
+    const {error}=await supabase.from('prospects').insert(obj);
+    if(error){toast('Error: '+error.message,'error');return;}
   }
   closeModal('prospModal');
   await loadProspects();
@@ -1088,6 +1121,32 @@ window.deleteProspect=async function(id){
   await loadProspects();
   renderProspects();
   toast('Prospect deleted','success');
+};
+window.convertProspectToClient=async function(){
+  const id=document.getElementById('prospId').value;
+  const p=prospects.find(x=>x.id===id);
+  if(!p){toast('No prospect selected','error');return;}
+  if(!confirm('Convert "'+p.name+'" to a client?')) return;
+  // Create client
+  const clientData={
+    relationship_name:p.name,
+    role:document.getElementById('prospRole').value||'Individual',
+    status:'Active',
+    practitioner:'Cath Baker',
+    notes:p.notes||''
+  };
+  const {data:inserted,error}=await supabase.from('clients').insert(clientData).select();
+  if(error){toast('Error creating client: '+error.message,'error');return;}
+  // Link contact as member if prospect had a contact_id
+  if(p.contact_id&&inserted&&inserted[0]){
+    await supabase.from('client_members').insert({client_id:inserted[0].id,contact_id:p.contact_id});
+  }
+  // Update prospect status to Converted
+  await supabase.from('prospects').update({status:'Converted'}).eq('id',id);
+  closeModal('prospModal');
+  await Promise.all([loadProspects(),loadClients()]);
+  renderProspects();
+  toast(p.name+' converted to client!','success');
 };
 
 // ── CLIENTS DASHBOARD ──
