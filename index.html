@@ -2485,7 +2485,17 @@ const aiTools=[
   {name:'add_task',description:'Add a new task. ALWAYS use this tool to create tasks.',input_schema:{type:'object',properties:{title:{type:'string'},description:{type:'string'},priority:{type:'string',enum:['High','Medium','Low']},status:{type:'string',enum:['To Do','In Progress','Done']},due_date:{type:'string',description:'YYYY-MM-DD format'}},required:['title']}},
   {name:'update_contact',description:'Update an existing contact. First use search_contacts to find the contact ID, then use this tool.',input_schema:{type:'object',properties:{id:{type:'string',description:'Contact UUID'},email:{type:'string'},phone:{type:'string'},contact_type:{type:'string'},notes:{type:'string'},first_name:{type:'string'},last_name:{type:'string'}},required:['id']}},
   {name:'update_prospect',description:'Update an existing prospect. First use search_prospects to find the prospect ID.',input_schema:{type:'object',properties:{id:{type:'string',description:'Prospect UUID'},name:{type:'string'},status:{type:'string'},role:{type:'string'},notes:{type:'string'},email:{type:'string'},phone:{type:'string'}},required:['id']}},
-  {name:'get_stats',description:'Get current CRM statistics: contact count, client count, prospect count, task count.',input_schema:{type:'object',properties:{}}}
+  {name:'get_stats',description:'Get current CRM statistics: contact count, client count, prospect count, task count.',input_schema:{type:'object',properties:{}}},
+  {name:'update_client',description:'Update an existing client. First use search_clients to find the client ID.',input_schema:{type:'object',properties:{id:{type:'string',description:'Client UUID'},relationship_name:{type:'string'},role:{type:'string',enum:['Individual','Couple','Business','Organisation']},status:{type:'string',enum:['Active','Inactive','Onboarding','Past']},practitioner:{type:'string'},notes:{type:'string'},file_notes_link:{type:'string',description:'SharePoint URL for file notes'},xero_link:{type:'string',description:'Xero accounting link'}},required:['id']}},
+  {name:'update_task',description:'Update an existing task. First use list_records or search to find the task ID.',input_schema:{type:'object',properties:{id:{type:'string',description:'Task UUID'},title:{type:'string'},description:{type:'string'},priority:{type:'string',enum:['High','Medium','Low']},status:{type:'string',enum:['To Do','In Progress','Done']},due_date:{type:'string',description:'YYYY-MM-DD format'}},required:['id']}},
+  {name:'complete_task',description:'Mark a task as Done. Shortcut for update_task with status=Done.',input_schema:{type:'object',properties:{id:{type:'string',description:'Task UUID'}},required:['id']}},
+  {name:'delete_record',description:'Delete a record from any table. Use with caution. First search to confirm the correct record.',input_schema:{type:'object',properties:{table:{type:'string',enum:['contacts','clients','prospects','tasks'],description:'Which table to delete from'},id:{type:'string',description:'Record UUID to delete'}},required:['table','id']}},
+  {name:'convert_prospect',description:'Convert a prospect to a client. Creates the client, links contact if available, marks prospect as Converted.',input_schema:{type:'object',properties:{id:{type:'string',description:'Prospect UUID'},role:{type:'string',enum:['Individual','Couple','Business','Organisation'],description:'Client role (defaults to prospect role)'}},required:['id']}},
+  {name:'add_renewal',description:'Add a membership renewal record for a ThriveHQ member. Search contacts first to get the contact_id.',input_schema:{type:'object',properties:{contact_id:{type:'string',description:'Contact UUID of the member'},period_start:{type:'string',description:'YYYY-MM-DD start of renewal period'},period_end:{type:'string',description:'YYYY-MM-DD end of renewal period'},amount:{type:'number',description:'Payment amount'},renewed_date:{type:'string',description:'YYYY-MM-DD date payment was made'},notes:{type:'string'}},required:['contact_id','period_start','period_end']}},
+  {name:'list_renewals',description:'List renewal history for a ThriveHQ member. Search contacts first to get the contact_id.',input_schema:{type:'object',properties:{contact_id:{type:'string',description:'Contact UUID to list renewals for'}},required:['contact_id']}},
+  {name:'add_referrer_payment',description:'Add a referrer payment record. Use list_records with table=referrers to find the referrer_id first.',input_schema:{type:'object',properties:{referrer_id:{type:'string',description:'Referrer UUID'},amount:{type:'number',description:'Payment amount'},payment_date:{type:'string',description:'YYYY-MM-DD'},period:{type:'string',description:'Payment period description'},status:{type:'string',enum:['Paid','Pending','Overdue']},notes:{type:'string'}},required:['referrer_id','amount']}},
+  {name:'manage_client_members',description:'Link or unlink a contact to/from a client relationship. Use search_clients and search_contacts first to get IDs.',input_schema:{type:'object',properties:{action:{type:'string',enum:['link','unlink'],description:'Whether to link or unlink the contact'},client_id:{type:'string',description:'Client UUID'},contact_id:{type:'string',description:'Contact UUID'}},required:['action','client_id','contact_id']}},
+  {name:'search_tasks',description:'Search tasks by title, description, or status.',input_schema:{type:'object',properties:{query:{type:'string',description:'Search term'}},required:['query']}}
 ];
 
 async function handleToolCall(name,input){
@@ -2660,6 +2670,174 @@ async function handleToolCall(name,input){
     return {error:null,result:`**CRM Stats:**\n- ${contacts.length} total contacts\n- ${activeCli} active clients (${clients.length} total)\n- ${prospects.length} prospects (${warmProsp} warm/hot)\n- ${openTasks} open tasks\n- ${referrals.length} referrers`};
   }
 
+  // UPDATE CLIENT — matches saveClient() fields
+  if(name==='update_client'){
+    if(!input.id) return {error:'Client ID is required. Search first to find the ID.',result:null};
+    const data={};
+    if(input.relationship_name) data.relationship_name=input.relationship_name.trim();
+    if(input.role) data.role=input.role;
+    if(input.status) data.status=input.status;
+    if(input.practitioner) data.practitioner=input.practitioner.trim();
+    if(input.notes!==undefined) data.notes=input.notes.trim()||null;
+    if(input.file_notes_link!==undefined) data.file_notes_link=input.file_notes_link.trim()||null;
+    if(input.xero_link!==undefined) data.xero_link=input.xero_link.trim()||null;
+    if(!Object.keys(data).length) return {error:'No fields to update',result:null};
+    const {error}=await supabase.from('clients').update(data).eq('id',input.id);
+    if(error) return {error:'Failed to update client: '+error.message,result:null};
+    await loadClients();renderClients();
+    return {error:null,result:'Client updated successfully.'};
+  }
+
+  // UPDATE TASK
+  if(name==='update_task'){
+    if(!input.id) return {error:'Task ID is required.',result:null};
+    const data={};
+    if(input.title) data.title=input.title.trim();
+    if(input.description!==undefined) data.description=input.description.trim()||null;
+    if(input.priority) data.priority=input.priority;
+    if(input.status) data.status=input.status;
+    if(input.due_date!==undefined) data.due_date=input.due_date||null;
+    if(!Object.keys(data).length) return {error:'No fields to update',result:null};
+    const {error}=await supabase.from('tasks').update(data).eq('id',input.id);
+    if(error) return {error:'Failed to update task: '+error.message,result:null};
+    await loadTasks();renderTasks();
+    return {error:null,result:'Task updated successfully.'};
+  }
+
+  // COMPLETE TASK
+  if(name==='complete_task'){
+    if(!input.id) return {error:'Task ID is required.',result:null};
+    const {error}=await supabase.from('tasks').update({status:'Done'}).eq('id',input.id);
+    if(error) return {error:'Failed to complete task: '+error.message,result:null};
+    await loadTasks();renderTasks();
+    return {error:null,result:'Task marked as **Done**.'};
+  }
+
+  // DELETE RECORD
+  if(name==='delete_record'){
+    if(!input.table||!input.id) return {error:'Both table and id are required',result:null};
+    const t=input.table;
+    let tableName=t;
+    if(t==='contacts') tableName='contacts';
+    else if(t==='clients') tableName='clients';
+    else if(t==='prospects') tableName='prospects';
+    else if(t==='tasks') tableName='tasks';
+    else return {error:'Cannot delete from table: '+t,result:null};
+    const {error}=await supabase.from(tableName).delete().eq('id',input.id);
+    if(error) return {error:'Failed to delete: '+error.message,result:null};
+    if(t==='contacts'){await loadContacts();renderMasterList();}
+    else if(t==='clients'){await loadClients();renderClients();}
+    else if(t==='prospects'){await loadProspects();renderProspects();}
+    else if(t==='tasks'){await loadTasks();renderTasks();}
+    return {error:null,result:'Record deleted from '+t+'.'};
+  }
+
+  // CONVERT PROSPECT TO CLIENT — matches convertProspectToClient()
+  if(name==='convert_prospect'){
+    if(!input.id) return {error:'Prospect ID is required.',result:null};
+    const p=prospects.find(x=>x.id===input.id);
+    if(!p) return {error:'Prospect not found with ID: '+input.id,result:null};
+    if(p.status==='Converted') return {error:'Prospect "'+p.name+'" is already converted.',result:null};
+    const clientData={
+      relationship_name:p.name,
+      role:input.role||p.role||'Individual',
+      status:'Active',
+      practitioner:'Cath Baker',
+      notes:p.notes||''
+    };
+    const {data:inserted,error}=await supabase.from('clients').insert(clientData).select();
+    if(error) return {error:'Failed to create client: '+error.message,result:null};
+    if(p.contact_id&&inserted&&inserted[0]){
+      await supabase.from('client_members').insert({client_id:inserted[0].id,contact_id:p.contact_id});
+    }
+    await supabase.from('prospects').update({status:'Converted'}).eq('id',input.id);
+    await Promise.all([loadProspects(),loadClients()]);
+    renderProspects();renderClients();
+    return {error:null,result:'**'+p.name+'** converted to client! (Client ID: '+inserted[0].id+')'};
+  }
+
+  // ADD RENEWAL — matches saveRenewal()
+  if(name==='add_renewal'){
+    if(!input.contact_id) return {error:'contact_id is required.',result:null};
+    const c=contacts.find(x=>x.id===input.contact_id);
+    if(!c) return {error:'Contact not found with ID: '+input.contact_id,result:null};
+    const data={
+      contact_id:input.contact_id,
+      period_start:input.period_start||null,
+      period_end:input.period_end||null,
+      amount:input.amount||null,
+      renewed_date:input.renewed_date||new Date().toISOString().split('T')[0],
+      notes:(input.notes||'').trim()||null
+    };
+    const {error}=await supabase.from('membership_renewals').insert(data).select();
+    if(error) return {error:'Failed to add renewal: '+error.message,result:null};
+    if(data.period_end){
+      await supabase.from('contacts').update({renewal_date:data.period_end}).eq('id',input.contact_id);
+    }
+    await Promise.all([loadContacts(),loadRenewals()]);
+    renderThqRenewals();renderThriveHQ();
+    return {error:null,result:'Renewal added for **'+c.first_name+' '+c.last_name+'** ('+data.period_start+' → '+data.period_end+')'};
+  }
+
+  // LIST RENEWALS
+  if(name==='list_renewals'){
+    if(!input.contact_id) return {error:'contact_id is required.',result:null};
+    const c=contacts.find(x=>x.id===input.contact_id);
+    const memberRenewals=renewals.filter(r=>r.contact_id===input.contact_id);
+    if(!memberRenewals.length) return {error:null,result:'No renewals found for '+(c?c.first_name+' '+c.last_name:'this contact')+'.'};
+    let result='**Renewals for '+(c?c.first_name+' '+c.last_name:'contact')+' ('+memberRenewals.length+'):**\n';
+    result+=memberRenewals.map(r=>`- ${r.period_start||'?'} → ${r.period_end||'?'} | $${r.amount?parseFloat(r.amount).toFixed(2):'—'} | Paid: ${r.renewed_date||'—'}${r.notes?' | '+r.notes:''}`).join('\n');
+    return {error:null,result:result};
+  }
+
+  // ADD REFERRER PAYMENT — matches saveRefPayment()
+  if(name==='add_referrer_payment'){
+    if(!input.referrer_id) return {error:'referrer_id is required.',result:null};
+    const ref=referrals.find(r=>r.id===input.referrer_id);
+    const data={
+      referrer_id:input.referrer_id,
+      amount:input.amount||0,
+      payment_date:input.payment_date||null,
+      period:(input.period||'').trim()||null,
+      status:input.status||'Pending',
+      notes:(input.notes||'').trim()||null
+    };
+    const {error}=await supabase.from('referrer_payments').insert(data).select();
+    if(error) return {error:'Failed to add payment: '+error.message,result:null};
+    await loadRefPayments();renderRefPayments();
+    return {error:null,result:'Payment of $'+parseFloat(data.amount).toFixed(2)+' added for **'+(ref?ref.name:'referrer')+'**.'};
+  }
+
+  // MANAGE CLIENT MEMBERS — link/unlink contacts to clients
+  if(name==='manage_client_members'){
+    if(!input.client_id||!input.contact_id) return {error:'Both client_id and contact_id are required.',result:null};
+    const cli=clients.find(c=>c.id===input.client_id);
+    const con=contacts.find(c=>c.id===input.contact_id);
+    if(!cli) return {error:'Client not found.',result:null};
+    if(!con) return {error:'Contact not found.',result:null};
+    if(input.action==='link'){
+      const {error}=await supabase.from('client_members').insert({client_id:input.client_id,contact_id:input.contact_id});
+      if(error) return {error:'Failed to link: '+error.message,result:null};
+      await loadClients();renderClients();
+      return {error:null,result:'**'+con.first_name+' '+con.last_name+'** linked to client **'+cli.relationship_name+'**.'};
+    } else {
+      const {error}=await supabase.from('client_members').delete().eq('client_id',input.client_id).eq('contact_id',input.contact_id);
+      if(error) return {error:'Failed to unlink: '+error.message,result:null};
+      await loadClients();renderClients();
+      return {error:null,result:'**'+con.first_name+' '+con.last_name+'** unlinked from client **'+cli.relationship_name+'**.'};
+    }
+  }
+
+  // SEARCH TASKS
+  if(name==='search_tasks'){
+    const q=input.query.toLowerCase();
+    const matches=tasks.filter(t=>
+      (t.title+' '+(t.description||'')+' '+(t.status||'')+' '+(t.priority||'')).toLowerCase().includes(q)
+    ).slice(0,10);
+    if(!matches.length) return {error:null,result:'No tasks found matching "'+input.query+'"'};
+    return {error:null,result:matches.map(t=>`**${t.title}** (ID: ${t.id})\n  Priority: ${t.priority||'Medium'} | Status: ${t.status||'To Do'} | Due: ${t.due_date||'—'}${t.description?'\n  '+t.description:''}`).join('\n\n')};
+  }
+
   return {error:'Unknown tool: '+name,result:null};
 }
 
@@ -2671,26 +2849,47 @@ function getSystemPrompt(){
 You help Cath and Lou manage their coaching business CRM. You can search, add, and update contacts, prospects, clients, and tasks.
 
 AVAILABLE TOOLS:
-- list_records: List ALL records from any table. ALWAYS use this when user says "show all", "list all", "all prospects", etc. Supports filtering e.g. filter_field="status" filter_value="Warm"
-- search_contacts: Search master list by specific name/email/phone
-- search_clients: Search client relationships by specific name
-- search_prospects: Search prospects by specific name
-- add_contact: Add to master list (ALWAYS use this, needs first_name + last_name)
-- add_prospect: Add prospect (ALWAYS use this, needs name)
-- add_task: Add task (ALWAYS use this, needs title)
-- update_contact: Update contact (needs id — search first)
-- update_prospect: Update prospect (needs id — search first)
+**Search & List:**
+- list_records: List ALL records from any table (contacts, clients, prospects, tasks, referrers). ALWAYS use when user says "show all", "list all", etc. Supports filtering e.g. filter_field="status" filter_value="Warm"
+- search_contacts: Search master list by name/email/phone
+- search_clients: Search client relationships by name
+- search_prospects: Search prospects by name/status
+- search_tasks: Search tasks by title/description/status
 - get_stats: Get CRM overview stats
+
+**Create:**
+- add_contact: Add to master list (needs first_name + last_name)
+- add_prospect: Add prospect (needs name, optionally link contact_id)
+- add_task: Add task (needs title)
+- add_renewal: Add ThriveHQ membership renewal (needs contact_id, period_start, period_end)
+- add_referrer_payment: Add referrer payment (needs referrer_id, amount)
+
+**Update:**
+- update_contact: Update contact fields (needs id — search first)
+- update_prospect: Update prospect fields (needs id — search first)
+- update_client: Update client fields like status, notes, practitioner, file_notes_link (needs id — search first)
+- update_task: Update task fields (needs id)
+- complete_task: Quick shortcut to mark task as Done (needs id)
+
+**Workflow:**
+- convert_prospect: Convert prospect to client (creates client, links contact, marks Converted)
+- manage_client_members: Link or unlink a contact to/from a client (needs action=link/unlink, client_id, contact_id)
+- list_renewals: View renewal history for a ThriveHQ member (needs contact_id)
+
+**Delete:**
+- delete_record: Delete from contacts, clients, prospects, or tasks (needs table + id). ALWAYS confirm with user before deleting.
 
 RULES:
 1. ALWAYS use the dedicated tools above. Never try to write raw database queries.
-2. To update a record, FIRST search for it to get the ID, THEN call the update tool.
+2. To update or delete a record, FIRST search for it to get the ID, THEN call the tool.
 3. When adding a prospect, check if the person already exists as a contact first using search_contacts.
-4. Be concise and friendly. Confirm what you did after each action.
-5. If something fails, tell the user the exact error message.
-6. Valid prospect statuses: New, Hot, Warm, Cold, Converted, Lost
-7. Valid roles: Individual, Couple, Business, Organisation
-8. Valid task priorities: High, Medium, Low`;
+4. NEVER delete a record without explicitly confirming with the user first.
+5. Be concise and friendly. Confirm what you did after each action.
+6. If something fails, tell the user the exact error message.
+7. Valid prospect statuses: New, Hot, Warm, Cold, Converted, Lost
+8. Valid roles: Individual, Couple, Business, Organisation
+9. Valid task priorities: High, Medium, Low
+10. Valid client statuses: Active, Inactive, Onboarding, Past`;
 }
 
 window.sendAiChat=async function(){
