@@ -2473,44 +2473,182 @@ window.toggleAiChat=function(){
 
 const aiChatHistory=[];
 
-function getDbSchema(){
-  return `You are Coach4U CRM assistant. You have access to a Supabase database.
+// ── DEDICATED TOOL HANDLERS (match existing UI code exactly) ──
 
-TABLES:
-- contacts: id, first_name, last_name, email, phone, type (Individual/ThriveHQ Member/Prospect), strengths (text[] top 10 CliftonStrengths), membership_start_date, renewal_date, referrer, notes
-- clients: id, relationship_name, role (Individual/Couple/Business/Organisation), status (Active/On Hold/Completed), practitioner, notes, referred_by (referrer id), xero_link, file_notes_link
-- client_members: id, client_id, contact_id, role
-- prospects: id, name, email, phone, role, status (New/Hot/Warm/Cold/Converted/Lost), source, notes, contact_id (linked contact)
-- referrers: id, name, meeting_link, status, notes
-- referrer_members: id, referrer_id, contact_id
-- tasks: id, title, description, owner, priority, status, due_date
-- membership_renewals: id, contact_id, renewed_date, period_start, period_end, amount, notes
-- referrer_payments: id, referrer_id, amount, payment_date, period, status, notes
+const aiTools=[
+  {name:'search_contacts',description:'Search contacts in the master list by name, email, or phone. Returns matching contacts with their details and strengths.',input_schema:{type:'object',properties:{query:{type:'string',description:'Search term (name, email, or phone)'}},required:['query']}},
+  {name:'search_clients',description:'Search clients/relationships by name. Returns client details including role, status, members.',input_schema:{type:'object',properties:{query:{type:'string',description:'Search term'}},required:['query']}},
+  {name:'search_prospects',description:'Search prospects by name, status, or notes.',input_schema:{type:'object',properties:{query:{type:'string',description:'Search term'}},required:['query']}},
+  {name:'add_contact',description:'Add a new contact to the master list. ALWAYS use this tool to add contacts, not any generic method.',input_schema:{type:'object',properties:{first_name:{type:'string'},last_name:{type:'string'},email:{type:'string'},phone:{type:'string'},contact_type:{type:'string',enum:['Individual','ThriveHQ Member','Prospect']},notes:{type:'string'}},required:['first_name','last_name']}},
+  {name:'add_prospect',description:'Add a new prospect. ALWAYS use this tool to add prospects. Optionally link to existing contact by contact_id.',input_schema:{type:'object',properties:{name:{type:'string',description:'Full name'},email:{type:'string'},phone:{type:'string'},role:{type:'string',enum:['Individual','Couple','Business','Organisation']},status:{type:'string',enum:['New','Hot','Warm','Cold']},source:{type:'string'},notes:{type:'string'},contact_id:{type:'string',description:'UUID of linked contact from master list (optional)'}},required:['name']}},
+  {name:'add_task',description:'Add a new task. ALWAYS use this tool to create tasks.',input_schema:{type:'object',properties:{title:{type:'string'},description:{type:'string'},priority:{type:'string',enum:['High','Medium','Low']},status:{type:'string',enum:['To Do','In Progress','Done']},due_date:{type:'string',description:'YYYY-MM-DD format'}},required:['title']}},
+  {name:'update_contact',description:'Update an existing contact. First use search_contacts to find the contact ID, then use this tool.',input_schema:{type:'object',properties:{id:{type:'string',description:'Contact UUID'},email:{type:'string'},phone:{type:'string'},contact_type:{type:'string'},notes:{type:'string'},first_name:{type:'string'},last_name:{type:'string'}},required:['id']}},
+  {name:'update_prospect',description:'Update an existing prospect. First use search_prospects to find the prospect ID.',input_schema:{type:'object',properties:{id:{type:'string',description:'Prospect UUID'},name:{type:'string'},status:{type:'string'},role:{type:'string'},notes:{type:'string'},email:{type:'string'},phone:{type:'string'}},required:['id']}},
+  {name:'get_stats',description:'Get current CRM statistics: contact count, client count, prospect count, task count.',input_schema:{type:'object',properties:{}}}
+];
 
-CURRENT DATA COUNTS: ${contacts.length} contacts, ${clients.length} clients, ${prospects.length} prospects, ${referrals.length} referrers
+async function handleToolCall(name,input){
+  // SEARCH CONTACTS
+  if(name==='search_contacts'){
+    const q=input.query.toLowerCase();
+    const matches=contacts.filter(c=>
+      (c.first_name+' '+c.last_name+' '+(c.email||'')+' '+(c.phone||'')).toLowerCase().includes(q)
+    ).slice(0,10);
+    if(!matches.length) return {error:null,result:'No contacts found matching "'+input.query+'"'};
+    return {error:null,result:matches.map(c=>{
+      const strengths=(c.strengths&&typeof c.strengths==='object')?c.strengths.filter(Boolean).slice(0,5).join(', '):(c.strengths||'');
+      return `**${c.first_name} ${c.last_name}** (ID: ${c.id})\n  Email: ${c.email||'—'} | Phone: ${c.phone||'—'} | Type: ${c.contact_type||'—'}${strengths?'\n  Top strengths: '+strengths:''}${c.notes?'\n  Notes: '+c.notes:''}`;
+    }).join('\n\n')};
+  }
 
-When the user asks you to look up, add, or update data, respond with a JSON action block wrapped in \`\`\`action tags.
+  // SEARCH CLIENTS
+  if(name==='search_clients'){
+    const q=input.query.toLowerCase();
+    const matches=clients.filter(c=>
+      (c.relationship_name+' '+(c.role||'')+' '+(c.status||'')+' '+(c.notes||'')).toLowerCase().includes(q)
+    ).slice(0,10);
+    if(!matches.length) return {error:null,result:'No clients found matching "'+input.query+'"'};
+    return {error:null,result:matches.map(c=>{
+      const members=(c.members||[]).map(mid=>{const ct=contacts.find(x=>x.id===mid);return ct?ct.first_name+' '+ct.last_name:'Unknown';}).join(', ');
+      return `**${c.relationship_name}** (ID: ${c.id})\n  Role: ${c.role||'—'} | Status: ${c.status||'—'} | Practitioner: ${c.practitioner||'—'}${members?'\n  Members: '+members:''}${c.notes?'\n  Notes: '+c.notes:''}`;
+    }).join('\n\n')};
+  }
 
-ACTION FORMAT:
-\`\`\`action
-{"type":"query","table":"contacts","filter":{"first_name":"ilike.*Michael*"},"select":"id,first_name,last_name,email,phone,type"}
-\`\`\`
+  // SEARCH PROSPECTS
+  if(name==='search_prospects'){
+    const q=input.query.toLowerCase();
+    const matches=prospects.filter(p=>
+      (p.name+' '+(p.email||'')+' '+(p.phone||'')+' '+(p.status||'')+' '+(p.notes||'')).toLowerCase().includes(q)
+    ).slice(0,10);
+    if(!matches.length) return {error:null,result:'No prospects found matching "'+input.query+'"'};
+    return {error:null,result:matches.map(p=>`**${p.name}** (ID: ${p.id})\n  Email: ${p.email||'—'} | Phone: ${p.phone||'—'} | Status: ${p.status||'New'} | Role: ${p.role||'Individual'}${p.notes?'\n  Notes: '+p.notes:''}`).join('\n\n')};
+  }
 
-\`\`\`action
-{"type":"insert","table":"prospects","data":{"name":"John Smith","phone":"0412345678","status":"New","role":"Individual"}}
-\`\`\`
+  // ADD CONTACT — matches saveContact() exactly
+  if(name==='add_contact'){
+    if(!input.first_name||!input.last_name) return {error:'First name and last name are required',result:null};
+    const data={
+      first_name:input.first_name.trim(),
+      last_name:input.last_name.trim(),
+      email:(input.email||'').trim()||null,
+      phone:(input.phone||'').trim()||null,
+      contact_type:input.contact_type||'Individual',
+      notes:(input.notes||'').trim()||null
+    };
+    const {data:inserted,error}=await supabase.from('contacts').insert(data).select();
+    if(error) return {error:'Failed to add contact: '+error.message,result:null};
+    await loadContacts();renderMasterList();
+    return {error:null,result:'Contact added: **'+data.first_name+' '+data.last_name+'** (ID: '+inserted[0].id+')'};
+  }
 
-\`\`\`action
-{"type":"update","table":"contacts","filter":{"id":"eq.some-uuid"},"data":{"phone":"0400111222"}}
-\`\`\`
+  // ADD PROSPECT — matches saveProspect() exactly
+  if(name==='add_prospect'){
+    if(!input.name) return {error:'Prospect name is required',result:null};
+    const data={
+      name:input.name.trim(),
+      email:(input.email||'').trim()||null,
+      phone:(input.phone||'').trim()||null,
+      role:input.role||'Individual',
+      status:input.status||'New',
+      source:(input.source||'').trim()||null,
+      notes:(input.notes||'').trim()||null,
+      contact_id:input.contact_id||null
+    };
+    const {data:inserted,error}=await supabase.from('prospects').insert(data).select();
+    if(error) return {error:'Failed to add prospect: '+error.message,result:null};
+    await loadProspects();renderProspects();
+    return {error:null,result:'Prospect added: **'+data.name+'** (Status: '+data.status+', Role: '+data.role+')'};
+  }
+
+  // ADD TASK — matches saveTask() exactly
+  if(name==='add_task'){
+    if(!input.title) return {error:'Task title is required',result:null};
+    const data={
+      title:input.title.trim(),
+      description:(input.description||'').trim()||null,
+      owner:'Cath Baker',
+      priority:input.priority||'Medium',
+      status:input.status||'To Do',
+      due_date:input.due_date||null
+    };
+    const {data:inserted,error}=await supabase.from('tasks').insert(data).select();
+    if(error) return {error:'Failed to add task: '+error.message,result:null};
+    await loadTasks();renderTasks();
+    return {error:null,result:'Task added: **'+data.title+'** (Priority: '+data.priority+', Due: '+(data.due_date||'not set')+')'};
+  }
+
+  // UPDATE CONTACT — matches saveContact() update path
+  if(name==='update_contact'){
+    if(!input.id) return {error:'Contact ID is required. Search first to find the ID.',result:null};
+    const data={};
+    if(input.first_name) data.first_name=input.first_name.trim();
+    if(input.last_name) data.last_name=input.last_name.trim();
+    if(input.email!==undefined) data.email=input.email.trim()||null;
+    if(input.phone!==undefined) data.phone=input.phone.trim()||null;
+    if(input.contact_type) data.contact_type=input.contact_type;
+    if(input.notes!==undefined) data.notes=input.notes.trim()||null;
+    if(!Object.keys(data).length) return {error:'No fields to update',result:null};
+    const {error}=await supabase.from('contacts').update(data).eq('id',input.id);
+    if(error) return {error:'Failed to update contact: '+error.message,result:null};
+    await loadContacts();renderMasterList();
+    return {error:null,result:'Contact updated successfully.'};
+  }
+
+  // UPDATE PROSPECT — matches saveProspect() update path
+  if(name==='update_prospect'){
+    if(!input.id) return {error:'Prospect ID is required. Search first to find the ID.',result:null};
+    const data={};
+    if(input.name) data.name=input.name.trim();
+    if(input.status) data.status=input.status;
+    if(input.role) data.role=input.role;
+    if(input.email!==undefined) data.email=input.email.trim()||null;
+    if(input.phone!==undefined) data.phone=input.phone.trim()||null;
+    if(input.notes!==undefined) data.notes=input.notes.trim()||null;
+    if(!Object.keys(data).length) return {error:'No fields to update',result:null};
+    const {error}=await supabase.from('prospects').update(data).eq('id',input.id);
+    if(error) return {error:'Failed to update prospect: '+error.message,result:null};
+    await loadProspects();renderProspects();
+    return {error:null,result:'Prospect updated successfully.'};
+  }
+
+  // GET STATS
+  if(name==='get_stats'){
+    const activeCli=clients.filter(c=>c.status==='Active').length;
+    const openTasks=tasks.filter(t=>t.status!=='Done').length;
+    const warmProsp=prospects.filter(p=>p.status==='Warm'||p.status==='Hot').length;
+    return {error:null,result:`**CRM Stats:**\n- ${contacts.length} total contacts\n- ${activeCli} active clients (${clients.length} total)\n- ${prospects.length} prospects (${warmProsp} warm/hot)\n- ${openTasks} open tasks\n- ${referrals.length} referrers`};
+  }
+
+  return {error:'Unknown tool: '+name,result:null};
+}
+
+function getSystemPrompt(){
+  const today=new Date();
+  const dateStr=today.toLocaleDateString('en-AU',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  return `You are Coach4U CRM assistant. Today is ${dateStr} (Australian Eastern Time).
+
+You help Cath and Lou manage their coaching business CRM. You can search, add, and update contacts, prospects, clients, and tasks.
+
+AVAILABLE TOOLS:
+- search_contacts: Search master list by name/email/phone
+- search_clients: Search client relationships
+- search_prospects: Search prospects
+- add_contact: Add to master list (ALWAYS use this, needs first_name + last_name)
+- add_prospect: Add prospect (ALWAYS use this, needs name)
+- add_task: Add task (ALWAYS use this, needs title)
+- update_contact: Update contact (needs id — search first)
+- update_prospect: Update prospect (needs id — search first)
+- get_stats: Get CRM overview stats
 
 RULES:
-- For lookups, use ilike with wildcards for flexible matching: {"first_name":"ilike.*john*"}
-- Always explain what you found or did in plain language AFTER the action block
-- If unsure, ask for clarification rather than guessing
-- For adding contacts, always include first_name and last_name as separate fields
-- When adding a prospect, suggest linking to an existing contact if one matches
-- Be concise and friendly`;
+1. ALWAYS use the dedicated tools above. Never try to write raw database queries.
+2. To update a record, FIRST search for it to get the ID, THEN call the update tool.
+3. When adding a prospect, check if the person already exists as a contact first using search_contacts.
+4. Be concise and friendly. Confirm what you did after each action.
+5. If something fails, tell the user the exact error message.
+6. Valid prospect statuses: New, Hot, Warm, Cold, Converted, Lost
+7. Valid roles: Individual, Couple, Business, Organisation
+8. Valid task priorities: High, Medium, Low`;
 }
 
 window.sendAiChat=async function(){
@@ -2524,12 +2662,11 @@ window.sendAiChat=async function(){
     aiChatHistory.push({role:'assistant',content:'waiting_for_key'});
     return;
   }
-  // Check if user is providing their API key
   if(aiChatHistory.length&&aiChatHistory[aiChatHistory.length-1].content==='waiting_for_key'){
     if(msg.startsWith('sk-ant-')){
       setAnthropicKey(msg);
       aiChatHistory.pop();
-      document.getElementById('aiChatMessages').lastChild.remove(); // remove the key from chat
+      document.getElementById('aiChatMessages').lastChild.remove();
       appendAiMsg('bot','API key saved! You can now ask me anything about your CRM data.');
       return;
     }
@@ -2538,118 +2675,88 @@ window.sendAiChat=async function(){
 
   appendAiMsg('user',msg);
   aiChatHistory.push({role:'user',content:msg});
-
   const thinkingEl=appendAiMsg('bot','Thinking...');
 
   try{
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'x-api-key':getAnthropicKey(),
-        'anthropic-version':'2023-06-01',
-        'anthropic-dangerous-direct-browser-access':'true'
-      },
-      body:JSON.stringify({
-        model:'claude-haiku-4-5-20251001',
-        max_tokens:1024,
-        system:getDbSchema(),
-        messages:aiChatHistory.slice(-10)
-      })
-    });
+    let messages=[...aiChatHistory.slice(-10)];
+    let finalReply='';
 
-    if(!resp.ok){
-      const err=await resp.text();
-      thinkingEl.textContent='Error: '+resp.status+' - Check your API key';
-      return;
-    }
+    // Tool use loop — keep going while AI wants to call tools
+    for(let step=0;step<5;step++){
+      const resp=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'x-api-key':getAnthropicKey(),
+          'anthropic-version':'2023-06-01',
+          'anthropic-dangerous-direct-browser-access':'true'
+        },
+        body:JSON.stringify({
+          model:'claude-haiku-4-5-20251001',
+          max_tokens:1024,
+          system:getSystemPrompt(),
+          tools:aiTools,
+          messages:messages
+        })
+      });
 
-    const data=await resp.json();
-    const reply=data.content[0].text;
-    aiChatHistory.push({role:'assistant',content:reply});
+      if(!resp.ok){
+        thinkingEl.textContent='Error: '+resp.status+' - Check your API key';
+        return;
+      }
 
-    // Extract and execute actions
-    const actionMatch=reply.match(/```action\s*([\s\S]*?)```/);
-    let resultText=reply.replace(/```action[\s\S]*?```/g,'').trim();
+      const data=await resp.json();
 
-    if(actionMatch){
-      try{
-        const action=JSON.parse(actionMatch[1].trim());
-        const result=await executeAiAction(action);
-        if(result){
-          resultText+='\n\n'+result;
+      // Collect text and tool calls from response
+      let textParts=[];
+      let toolCalls=[];
+      for(const block of data.content){
+        if(block.type==='text') textParts.push(block.text);
+        if(block.type==='tool_use') toolCalls.push(block);
+      }
+
+      if(toolCalls.length){
+        // Add assistant response to messages
+        messages.push({role:'assistant',content:data.content});
+
+        // Execute each tool and add results
+        const toolResults=[];
+        for(const tc of toolCalls){
+          thinkingEl.innerHTML=formatAiMsg('Working: '+tc.name+'...');
+          const result=await handleToolCall(tc.name,tc.input);
+          toolResults.push({
+            type:'tool_result',
+            tool_use_id:tc.id,
+            content:result.error?'ERROR: '+result.error:result.result
+          });
         }
-      }catch(e){
-        resultText+='\n\n(Action failed: '+e.message+')';
+        messages.push({role:'user',content:toolResults});
+
+        if(textParts.length) finalReply+=textParts.join('\n')+'\n';
+
+        // If stop_reason is end_turn, we're done
+        if(data.stop_reason==='end_turn') break;
+        // Otherwise loop to let AI process tool results
+      } else {
+        // No tool calls — just text response
+        finalReply+=textParts.join('\n');
+        break;
       }
     }
 
-    thinkingEl.innerHTML=formatAiMsg(resultText);
+    aiChatHistory.push({role:'assistant',content:finalReply});
+    thinkingEl.innerHTML=formatAiMsg(finalReply);
   }catch(e){
     thinkingEl.textContent='Error: '+e.message;
   }
 };
 
-async function executeAiAction(action){
-  if(action.type==='query'){
-    let query=supabase.from(action.table).select(action.select||'*');
-    if(action.filter){
-      Object.entries(action.filter).forEach(([key,val])=>{
-        if(typeof val==='string'&&val.includes('.')){
-          const [op,...rest]=val.split('.');
-          query=query.filter(key,op,rest.join('.'));
-        } else {
-          query=query.eq(key,val);
-        }
-      });
-    }
-    const {data,error}=await query.limit(action.limit||10);
-    if(error) return 'Query error: '+error.message;
-    if(!data||!data.length) return 'No results found.';
-    // Format results as readable text
-    return '**Found '+data.length+' result(s):**\n'+data.map(r=>{
-      const fields=Object.entries(r).filter(([k,v])=>v&&k!=='id'&&k!=='created_at'&&k!=='updated_at').map(([k,v])=>k.replace(/_/g,' ')+': '+v);
-      return '- '+fields.join(', ');
-    }).join('\n');
-  }
-  if(action.type==='insert'){
-    const {data,error}=await supabase.from(action.table).insert(action.data).select();
-    if(error) return 'Insert error: '+error.message;
-    // Reload relevant data
-    await reloadAfterAction(action.table);
-    return 'Record added successfully!';
-  }
-  if(action.type==='update'){
-    let query=supabase.from(action.table).update(action.data);
-    if(action.filter){
-      Object.entries(action.filter).forEach(([key,val])=>{
-        if(typeof val==='string'&&val.startsWith('eq.')){
-          query=query.eq(key,val.replace('eq.',''));
-        }
-      });
-    }
-    const {error}=await query;
-    if(error) return 'Update error: '+error.message;
-    await reloadAfterAction(action.table);
-    return 'Record updated successfully!';
-  }
-  return '';
-}
-
-async function reloadAfterAction(table){
-  if(table==='contacts'){await loadContacts();renderMasterList();}
-  if(table==='clients'){await loadClients();}
-  if(table==='prospects'){await loadProspects();renderProspects();}
-  if(table==='referrers'){await loadReferrers();}
-  if(table==='tasks'){await loadTasks();}
-}
-
 function appendAiMsg(role,text){
   const container=document.getElementById('aiChatMessages');
   const div=document.createElement('div');
   div.style.cssText=role==='user'
-    ?'background:#1e3a5f;color:#fff;border-radius:12px;padding:10px 14px;font-size:13px;max-width:85%;align-self:flex-end;'
-    :'background:#f0f6ff;color:#1e293b;border-radius:12px;padding:10px 14px;font-size:13px;max-width:85%;align-self:flex-start;line-height:1.5;';
+    ?'background:#1e3a5f;color:#fff;border-radius:12px;padding:10px 14px;font-size:13px;max-width:85%;align-self:flex-end;word-break:break-word;'
+    :'background:#f0f6ff;color:#1e293b;border-radius:12px;padding:10px 14px;font-size:13px;max-width:85%;align-self:flex-start;line-height:1.5;word-break:break-word;';
   if(role==='user') div.textContent=text;
   else div.innerHTML=formatAiMsg(text);
   container.appendChild(div);
