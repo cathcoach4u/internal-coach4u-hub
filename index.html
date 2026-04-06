@@ -1737,6 +1737,28 @@ window.saveTrial=async function(){
     contact_id:document.getElementById('trialContact').value||null
   };
   if(!data.name){toast('Name is required','error');return;}
+
+  // Auto-create contact in Master List if none linked (new trials only)
+  if(!id&&!data.contact_id){
+    const names=data.name.split(/\s+/);
+    const firstName=names[0]||data.name;
+    const lastName=names.slice(1).join(' ')||'';
+    // Check if contact already exists
+    const existing=contacts.find(c=>c.first_name.toLowerCase()===firstName.toLowerCase()&&c.last_name.toLowerCase()===lastName.toLowerCase());
+    if(existing){
+      data.contact_id=existing.id;
+    } else {
+      const {data:inserted,error:cErr}=await supabase.from('contacts').insert({
+        first_name:firstName,last_name:lastName,
+        email:data.email,phone:data.phone,
+        contact_type:'Prospect'
+      }).select();
+      if(cErr){toast('Error creating contact: '+cErr.message,'error');return;}
+      data.contact_id=inserted[0].id;
+      await loadContacts();
+    }
+  }
+
   if(id){
     const {error}=await supabase.from('thrivehq_trials').update(data).eq('id',id);
     if(error){toast('Error: '+error.message,'error');return;}
@@ -3051,7 +3073,7 @@ async function handleToolCall(name,input){
     return {error:null,result:matches.map(t=>`**${t.title}** (ID: ${t.id})\n  Priority: ${t.priority||'Medium'} | Status: ${t.status||'To Do'} | Due: ${t.due_date||'—'}${t.description?'\n  '+t.description:''}`).join('\n\n')};
   }
 
-  // ADD TRIAL
+  // ADD TRIAL — auto-creates contact if none linked
   if(name==='add_trial'){
     if(!input.name) return {error:'Trial name is required.',result:null};
     const today=new Date().toISOString().split('T')[0];
@@ -3067,10 +3089,24 @@ async function handleToolCall(name,input){
       notes:(input.notes||'').trim()||null,
       contact_id:input.contact_id||null
     };
+    if(!data.contact_id){
+      const names=data.name.split(/\s+/);
+      const firstName=names[0]||data.name;
+      const lastName=names.slice(1).join(' ')||'';
+      const existing=contacts.find(c=>c.first_name.toLowerCase()===firstName.toLowerCase()&&c.last_name.toLowerCase()===lastName.toLowerCase());
+      if(existing){
+        data.contact_id=existing.id;
+      } else {
+        const {data:inserted,error:cErr}=await supabase.from('contacts').insert({first_name:firstName,last_name:lastName,email:data.email,phone:data.phone,contact_type:'Prospect'}).select();
+        if(cErr) return {error:'Failed to create contact: '+cErr.message,result:null};
+        data.contact_id=inserted[0].id;
+        await loadContacts();renderMasterList();
+      }
+    }
     const {error}=await supabase.from('thrivehq_trials').insert(data).select();
     if(error) return {error:'Failed to add trial: '+error.message,result:null};
     await loadTrials();renderThqTrials();
-    return {error:null,result:'Trial added: **'+data.name+'** ('+data.trial_start+' → '+data.trial_end+')'};
+    return {error:null,result:'Trial added: **'+data.name+'** ('+data.trial_start+' → '+data.trial_end+'). Contact auto-added to Master List.'};
   }
 
   // LIST TRIALS
