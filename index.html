@@ -268,6 +268,15 @@ td .actions button{padding:8px 14px;font-size:12px;}
       <div id="thqDashContent"></div>
     </div>
 
+    <!-- THRIVEHQ TRIALS -->
+    <div class="screen" id="screen-thqtrials">
+      <div class="toolbar">
+        <input class="search-input" id="thqTrialSearch" placeholder="Search trials..." oninput="renderThqTrials()">
+        <button class="btn btn-blue" onclick="openTrialModal()">+ New Trial</button>
+      </div>
+      <div id="thqTrialsContent"></div>
+    </div>
+
     <!-- THRIVEHQ MEMBERS -->
     <div class="screen" id="screen-thrivehq">
       <div class="toolbar">
@@ -523,6 +532,33 @@ td .actions button{padding:8px 14px;font-size:12px;}
   </div>
 </div>
 
+<!-- THRIVEHQ TRIAL MODAL -->
+<div class="modal-overlay" id="trialModal">
+  <div class="modal">
+    <h3 id="trialModalTitle">New Trial</h3>
+    <input type="hidden" id="trialId">
+    <div class="form-group"><label>Link to Master List</label>
+      <select id="trialContact"><option value="">-- Select contact --</option></select>
+    </div>
+    <div class="form-group"><label>Name</label><input id="trialName"></div>
+    <div class="form-group"><label>Email</label><input id="trialEmail" type="email"></div>
+    <div class="form-group"><label>Phone</label><input id="trialPhone"></div>
+    <div class="form-group"><label>Trial Start</label><input id="trialStart" type="date"></div>
+    <div class="form-group"><label>Trial End</label><input id="trialEnd" type="date"></div>
+    <div class="form-group"><label>Status</label>
+      <select id="trialStatus"><option>Active</option><option>Extended</option><option>Converted</option><option>Expired</option><option>Cancelled</option></select>
+    </div>
+    <div class="form-group"><label>Source / Referrer</label><input id="trialSource"></div>
+    <div class="form-group"><label>Notes</label><textarea id="trialNotes"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-gray" onclick="closeModal('trialModal')">Cancel</button>
+      <button class="btn btn-red" onclick="deleteTrial(document.getElementById('trialId').value)" id="trialDelBtn" style="display:none;">Delete</button>
+      <button class="btn btn-green" onclick="convertTrialToMember()" id="trialConvertBtn" style="display:none;">Convert to Member</button>
+      <button class="btn btn-blue" onclick="saveTrial()">Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
@@ -605,7 +641,7 @@ async function loadTasks(){
 }
 
 async function loadAll(){
-  await Promise.all([loadContacts(), loadClients(), loadTasks(), loadProspects(), loadReferrers(), loadRefPayments(), loadRenewals(), loadContactReports()]);
+  await Promise.all([loadContacts(), loadClients(), loadTasks(), loadProspects(), loadReferrers(), loadRefPayments(), loadRenewals(), loadContactReports(), loadTrials()]);
   renderSidebarNav('home');
   renderDashboard();
   document.getElementById('appLoader').style.display='none';
@@ -618,7 +654,7 @@ document.getElementById('headerDate').textContent = new Date().toLocaleDateStrin
 window.navTo = function(tab,btn){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+tab).classList.add('active');
-  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ',strdash:'Strengths',opsdash:'Operations',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Strengths Hub',thqrenewals:'Renewals',thqcalls:'Coaching Calls',tasks:'Task Management',itprojects:'IT Projects'};
+  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ',strdash:'Strengths',opsdash:'Operations',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Strengths Hub',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Task Management',itprojects:'IT Projects'};
   document.getElementById('pageTitle').textContent=titles[tab]||'Coach4U';
   // Sync area tab
   const area=pageToArea[tab]||'home';
@@ -647,6 +683,7 @@ window.navTo = function(tab,btn){
   if(tab==='clinvoices') renderInvoices();
   if(tab==='prospects') renderProspects();
   if(tab==='referrals') renderReferrals();
+  if(tab==='thqtrials') renderThqTrials();
   if(tab==='thrivehq') renderThriveHQ();
   if(tab==='strengths') renderStrengths();
   if(tab==='thqrenewals') renderThqRenewals();
@@ -678,7 +715,7 @@ const areaConfig={
   referrers:{label:'Referrers',pages:[{id:'referrals',icon:'&#128101;',label:'Referral Hub'},{id:'refpayments',icon:'&#128176;',label:'Payments'}]},
   prospects:{label:'Prospects',pages:[{id:'prospdash',icon:'&#127793;',label:'Dashboard'},{id:'prospects',icon:'&#128203;',label:'Prospect List'}]},
   clients:{label:'Clients',pages:[{id:'clidash',icon:'&#129309;',label:'Dashboard'},{id:'clients',icon:'&#128101;',label:'Client List'},{id:'clinvoices',icon:'&#128206;',label:'Invoices'}]},
-  thrivehq:{label:'ThriveHQ',pages:[{id:'thqdash',icon:'&#128170;',label:'Dashboard'},{id:'thrivehq',icon:'&#128101;',label:'Members'},{id:'thqrenewals',icon:'&#128260;',label:'Renewals'},{id:'thqcalls',icon:'&#128222;',label:'Coaching Calls'}]},
+  thrivehq:{label:'ThriveHQ',pages:[{id:'thqdash',icon:'&#128170;',label:'Dashboard'},{id:'thqtrials',icon:'&#127793;',label:'Trials'},{id:'thrivehq',icon:'&#128101;',label:'Members'},{id:'thqrenewals',icon:'&#128260;',label:'Renewals'},{id:'thqcalls',icon:'&#128222;',label:'Coaching Calls'}]},
   strengths:{label:'Strengths',pages:[{id:'strdash',icon:'&#127919;',label:'Dashboard'},{id:'strengths',icon:'&#128161;',label:'Strengths Hub'}]},
   operations:{label:'Operations',pages:[{id:'opsdash',icon:'&#128736;',label:'Dashboard'},{id:'tasks',icon:'&#9989;',label:'Task Management'},{id:'itprojects',icon:'&#9881;',label:'IT Projects'}]}
 };
@@ -1608,6 +1645,176 @@ function renderStrengths(){
 }
 window.filterStrengths=function(){renderStrengths();};
 
+// ── THRIVEHQ TRIALS ──
+let thqTrials=[];
+async function loadTrials(){
+  const {data,error}=await supabase.from('thrivehq_trials').select('*').order('created_at',{ascending:false});
+  if(data) thqTrials=data;
+  if(error&&error.code!=='42P01') console.error('Load trials error:',error);
+}
+
+function renderThqTrials(){
+  const q=(document.getElementById('thqTrialSearch')||{}).value||'';
+  const ql=q.toLowerCase();
+  const now=new Date();
+  let items=thqTrials;
+  if(ql) items=items.filter(t=>(t.name+' '+(t.email||'')+' '+(t.status||'')+' '+(t.notes||'')).toLowerCase().includes(ql));
+
+  const active=items.filter(t=>t.status==='Active'||t.status==='Extended');
+  const converted=items.filter(t=>t.status==='Converted');
+  const expired=items.filter(t=>t.status==='Expired'||t.status==='Cancelled');
+
+  let html=`<div class="dash-cards">
+    <div class="dash-card"><div class="dc-icon" style="background:#eff6ff;color:#2563eb;">&#127793;</div><div class="dc-info"><h4>${active.length}</h4><p>Active Trials</p></div></div>
+    <div class="dash-card"><div class="dc-icon" style="background:#f0fdf4;color:#16a34a;">&#9989;</div><div class="dc-info"><h4>${converted.length}</h4><p>Converted</p></div></div>
+    <div class="dash-card"><div class="dc-icon" style="background:#fef2f2;color:#dc2626;">&#128683;</div><div class="dc-info"><h4>${expired.length}</h4><p>Expired / Cancelled</p></div></div>
+    <div class="dash-card"><div class="dc-icon amber">&#128202;</div><div class="dc-info"><h4>${items.length}</h4><p>Total</p></div></div>
+  </div>`;
+
+  if(!items.length){
+    html+='<p style="text-align:center;color:#64748b;margin-top:24px;">No trials yet. Click <b>+ New Trial</b> to add one.</p>';
+  } else {
+    html+='<div style="overflow-x:auto;"><table class="tbl"><thead><tr><th>Name</th><th>Status</th><th>Trial Period</th><th>Days Left</th><th>Source</th></tr></thead><tbody>';
+    items.forEach(t=>{
+      const statusColors={Active:'#2563eb',Extended:'#7c3aed',Converted:'#16a34a',Expired:'#dc2626',Cancelled:'#64748b'};
+      const endDate=t.trial_end?new Date(t.trial_end):null;
+      const daysLeft=endDate?Math.ceil((endDate-now)/(1000*60*60*24)):null;
+      const daysStr=(t.status==='Active'||t.status==='Extended')?(daysLeft!==null?(daysLeft>0?daysLeft+' days':'<span style="color:#dc2626;">Overdue</span>'):'—'):'—';
+      html+=`<tr onclick="openTrialModal('${t.id}')" style="cursor:pointer;">
+        <td><strong>${t.name||'—'}</strong></td>
+        <td><span style="background:${statusColors[t.status]||'#64748b'};color:#fff;padding:2px 8px;border-radius:8px;font-size:12px;">${t.status||'Active'}</span></td>
+        <td>${t.trial_start||'?'} → ${t.trial_end||'?'}</td>
+        <td>${daysStr}</td>
+        <td>${t.source||'—'}</td>
+      </tr>`;
+    });
+    html+='</tbody></table></div>';
+  }
+  document.getElementById('thqTrialsContent').innerHTML=html;
+}
+
+window.openTrialModal=function(id){
+  const t=id?thqTrials.find(x=>x.id===id):null;
+  document.getElementById('trialModalTitle').textContent=t?'Edit Trial':'New Trial';
+  document.getElementById('trialId').value=t?t.id:'';
+  document.getElementById('trialName').value=t?t.name||'':'';
+  document.getElementById('trialEmail').value=t?t.email||'':'';
+  document.getElementById('trialPhone').value=t?t.phone||'':'';
+  document.getElementById('trialStart').value=t?t.trial_start||'':new Date().toISOString().split('T')[0];
+  const defaultEnd=new Date();defaultEnd.setDate(defaultEnd.getDate()+14);
+  document.getElementById('trialEnd').value=t?t.trial_end||'':defaultEnd.toISOString().split('T')[0];
+  document.getElementById('trialStatus').value=t?t.status||'Active':'Active';
+  document.getElementById('trialSource').value=t?t.source||'':'';
+  document.getElementById('trialNotes').value=t?t.notes||'':'';
+  document.getElementById('trialDelBtn').style.display=t?'inline-block':'none';
+  document.getElementById('trialConvertBtn').style.display=(t&&t.status!=='Converted')?'inline-block':'none';
+  // Populate contact dropdown
+  const sel=document.getElementById('trialContact');
+  sel.innerHTML='<option value="">-- Select contact --</option>'+contacts.map(c=>'<option value="'+c.id+'"'+(t&&t.contact_id===c.id?' selected':'')+'>'+c.first_name+' '+c.last_name+'</option>').join('');
+  // Auto-fill name from contact selection
+  sel.onchange=function(){
+    const c=contacts.find(x=>x.id===sel.value);
+    if(c&&!document.getElementById('trialName').value){
+      document.getElementById('trialName').value=c.first_name+' '+c.last_name;
+      document.getElementById('trialEmail').value=c.email||'';
+      document.getElementById('trialPhone').value=c.phone||'';
+    }
+  };
+  document.getElementById('trialModal').classList.add('open');
+};
+
+window.saveTrial=async function(){
+  const id=document.getElementById('trialId').value;
+  const data={
+    name:document.getElementById('trialName').value.trim(),
+    email:document.getElementById('trialEmail').value.trim()||null,
+    phone:document.getElementById('trialPhone').value.trim()||null,
+    trial_start:document.getElementById('trialStart').value||null,
+    trial_end:document.getElementById('trialEnd').value||null,
+    status:document.getElementById('trialStatus').value,
+    source:document.getElementById('trialSource').value.trim()||null,
+    notes:document.getElementById('trialNotes').value.trim()||null,
+    contact_id:document.getElementById('trialContact').value||null
+  };
+  if(!data.name){toast('Name is required','error');return;}
+  if(id){
+    const {error}=await supabase.from('thrivehq_trials').update(data).eq('id',id);
+    if(error){toast('Error: '+error.message,'error');return;}
+  } else {
+    const {error}=await supabase.from('thrivehq_trials').insert(data).select();
+    if(error){toast('Error: '+error.message,'error');return;}
+  }
+  closeModal('trialModal');
+  await loadTrials();
+  renderThqTrials();
+  toast('Trial saved','success');
+};
+
+window.deleteTrial=async function(id){
+  if(!id||!confirm('Delete this trial?')) return;
+  const {error}=await supabase.from('thrivehq_trials').delete().eq('id',id);
+  if(error){toast('Error: '+error.message,'error');return;}
+  closeModal('trialModal');
+  await loadTrials();
+  renderThqTrials();
+  toast('Trial deleted','success');
+};
+
+window.convertTrialToMember=async function(){
+  const id=document.getElementById('trialId').value;
+  const t=thqTrials.find(x=>x.id===id);
+  if(!t){toast('No trial selected','error');return;}
+  if(!confirm('Convert "'+t.name+'" to a ThriveHQ member?')) return;
+
+  // Find or create the contact
+  let contactId=t.contact_id;
+  if(!contactId){
+    // Create contact from trial info
+    const names=t.name.trim().split(/\s+/);
+    const firstName=names[0]||t.name;
+    const lastName=names.slice(1).join(' ')||'';
+    const {data:inserted,error}=await supabase.from('contacts').insert({
+      first_name:firstName,last_name:lastName,
+      email:t.email||null,phone:t.phone||null,
+      contact_type:'ThriveHQ Member'
+    }).select();
+    if(error){toast('Error creating contact: '+error.message,'error');return;}
+    contactId=inserted[0].id;
+  } else {
+    // Update contact type
+    await supabase.from('contacts').update({contact_type:'ThriveHQ Member'}).eq('id',contactId);
+  }
+
+  // Find or create ThriveHQ organisation client
+  let thqClient=clients.find(cl=>cl.relationship_name.toLowerCase().includes('thrivehq')&&cl.role==='Organisation');
+  if(!thqClient){
+    const {data:newCl,error}=await supabase.from('clients').insert({
+      relationship_name:'ThriveHQ',role:'Organisation',status:'Active',practitioner:'Cath Baker'
+    }).select();
+    if(error){toast('Error creating ThriveHQ client: '+error.message,'error');return;}
+    thqClient=newCl[0];
+  }
+
+  // Link contact to ThriveHQ client
+  await supabase.from('client_members').insert({client_id:thqClient.id,contact_id:contactId}).select();
+
+  // Set membership start date
+  const startDate=t.trial_end||new Date().toISOString().split('T')[0];
+  const renewDate=new Date(startDate);renewDate.setMonth(renewDate.getMonth()+6);
+  await supabase.from('contacts').update({
+    membership_start_date:startDate,
+    renewal_date:renewDate.toISOString().split('T')[0]
+  }).eq('id',contactId);
+
+  // Mark trial as converted
+  await supabase.from('thrivehq_trials').update({status:'Converted'}).eq('id',id);
+
+  closeModal('trialModal');
+  await Promise.all([loadContacts(),loadClients(),loadTrials()]);
+  renderThqTrials();renderThriveHQ();renderThqDash();
+  toast(t.name+' converted to ThriveHQ member!','success');
+};
+
 // ── THRIVEHQ MEMBERS ──
 const thqGroupState={};
 function toggleThqGroup(g){thqGroupState[g]=!thqGroupState[g];renderThriveHQ();}
@@ -2476,7 +2683,7 @@ const aiChatHistory=[];
 // ── DEDICATED TOOL HANDLERS (match existing UI code exactly) ──
 
 const aiTools=[
-  {name:'list_records',description:'List ALL records from a table. Use this when the user asks to see all prospects, all clients, all contacts, all tasks, etc. Also use for filtered lists like "all warm prospects" or "all active clients".',input_schema:{type:'object',properties:{table:{type:'string',enum:['contacts','clients','prospects','tasks','referrers'],description:'Which table to list'},filter_field:{type:'string',description:'Optional field to filter on (e.g. status, role, contact_type)'},filter_value:{type:'string',description:'Optional value to filter by (e.g. Warm, Active, Couple)'}},required:['table']}},
+  {name:'list_records',description:'List ALL records from a table. Use this when the user asks to see all prospects, all clients, all contacts, all tasks, etc. Also use for filtered lists like "all warm prospects" or "all active clients".',input_schema:{type:'object',properties:{table:{type:'string',enum:['contacts','clients','prospects','tasks','referrers','trials'],description:'Which table to list'},filter_field:{type:'string',description:'Optional field to filter on (e.g. status, role, contact_type)'},filter_value:{type:'string',description:'Optional value to filter by (e.g. Warm, Active, Couple)'}},required:['table']}},
   {name:'search_contacts',description:'Search contacts in the master list by name, email, or phone. Use for specific lookups, not listing all.',input_schema:{type:'object',properties:{query:{type:'string',description:'Search term (name, email, or phone)'}},required:['query']}},
   {name:'search_clients',description:'Search clients/relationships by name. Use for specific lookups.',input_schema:{type:'object',properties:{query:{type:'string',description:'Search term'}},required:['query']}},
   {name:'search_prospects',description:'Search prospects by name, status, or notes. Use for specific lookups.',input_schema:{type:'object',properties:{query:{type:'string',description:'Search term'}},required:['query']}},
@@ -2495,7 +2702,10 @@ const aiTools=[
   {name:'list_renewals',description:'List renewal history for a ThriveHQ member. Search contacts first to get the contact_id.',input_schema:{type:'object',properties:{contact_id:{type:'string',description:'Contact UUID to list renewals for'}},required:['contact_id']}},
   {name:'add_referrer_payment',description:'Add a referrer payment record. Use list_records with table=referrers to find the referrer_id first.',input_schema:{type:'object',properties:{referrer_id:{type:'string',description:'Referrer UUID'},amount:{type:'number',description:'Payment amount'},payment_date:{type:'string',description:'YYYY-MM-DD'},period:{type:'string',description:'Payment period description'},status:{type:'string',enum:['Paid','Pending','Overdue']},notes:{type:'string'}},required:['referrer_id','amount']}},
   {name:'manage_client_members',description:'Link or unlink a contact to/from a client relationship. Use search_clients and search_contacts first to get IDs.',input_schema:{type:'object',properties:{action:{type:'string',enum:['link','unlink'],description:'Whether to link or unlink the contact'},client_id:{type:'string',description:'Client UUID'},contact_id:{type:'string',description:'Contact UUID'}},required:['action','client_id','contact_id']}},
-  {name:'search_tasks',description:'Search tasks by title, description, or status.',input_schema:{type:'object',properties:{query:{type:'string',description:'Search term'}},required:['query']}}
+  {name:'search_tasks',description:'Search tasks by title, description, or status.',input_schema:{type:'object',properties:{query:{type:'string',description:'Search term'}},required:['query']}},
+  {name:'add_trial',description:'Add a new ThriveHQ trial. Optionally link to existing contact by contact_id.',input_schema:{type:'object',properties:{name:{type:'string',description:'Full name'},email:{type:'string'},phone:{type:'string'},trial_start:{type:'string',description:'YYYY-MM-DD'},trial_end:{type:'string',description:'YYYY-MM-DD'},status:{type:'string',enum:['Active','Extended','Converted','Expired','Cancelled']},source:{type:'string'},notes:{type:'string'},contact_id:{type:'string',description:'UUID of linked contact (optional)'}},required:['name']}},
+  {name:'list_trials',description:'List all ThriveHQ trials. Optionally filter by status.',input_schema:{type:'object',properties:{status:{type:'string',enum:['Active','Extended','Converted','Expired','Cancelled'],description:'Optional status filter'}}}},
+  {name:'convert_trial',description:'Convert a ThriveHQ trial to a full member. Creates contact if needed, links to ThriveHQ org, sets membership dates.',input_schema:{type:'object',properties:{id:{type:'string',description:'Trial UUID'}},required:['id']}}
 ];
 
 async function handleToolCall(name,input){
@@ -2508,6 +2718,7 @@ async function handleToolCall(name,input){
     else if(t==='prospects') items=prospects;
     else if(t==='tasks') items=tasks;
     else if(t==='referrers') items=referrals;
+    else if(t==='trials') items=thqTrials;
     else return {error:'Unknown table: '+t,result:null};
 
     // Apply optional filter
@@ -2535,6 +2746,8 @@ async function handleToolCall(name,input){
       result+=items.map(tk=>`- **${tk.title}** | ${tk.priority||'Medium'} | ${tk.status||'To Do'} | Due: ${tk.due_date||'—'}`).join('\n');
     } else if(t==='referrers'){
       result+=items.map(r=>`- **${r.name}** | ${r.status||'Active'}`).join('\n');
+    } else if(t==='trials'){
+      result+=items.map(t=>`- **${t.name}** | Status: ${t.status||'Active'} | ${t.trial_start||'?'} → ${t.trial_end||'?'}${t.source?' | Source: '+t.source:''}`).join('\n');
     }
     return {error:null,result:result};
   }
@@ -2838,6 +3051,70 @@ async function handleToolCall(name,input){
     return {error:null,result:matches.map(t=>`**${t.title}** (ID: ${t.id})\n  Priority: ${t.priority||'Medium'} | Status: ${t.status||'To Do'} | Due: ${t.due_date||'—'}${t.description?'\n  '+t.description:''}`).join('\n\n')};
   }
 
+  // ADD TRIAL
+  if(name==='add_trial'){
+    if(!input.name) return {error:'Trial name is required.',result:null};
+    const today=new Date().toISOString().split('T')[0];
+    const defaultEnd=new Date();defaultEnd.setDate(defaultEnd.getDate()+14);
+    const data={
+      name:input.name.trim(),
+      email:(input.email||'').trim()||null,
+      phone:(input.phone||'').trim()||null,
+      trial_start:input.trial_start||today,
+      trial_end:input.trial_end||defaultEnd.toISOString().split('T')[0],
+      status:input.status||'Active',
+      source:(input.source||'').trim()||null,
+      notes:(input.notes||'').trim()||null,
+      contact_id:input.contact_id||null
+    };
+    const {error}=await supabase.from('thrivehq_trials').insert(data).select();
+    if(error) return {error:'Failed to add trial: '+error.message,result:null};
+    await loadTrials();renderThqTrials();
+    return {error:null,result:'Trial added: **'+data.name+'** ('+data.trial_start+' → '+data.trial_end+')'};
+  }
+
+  // LIST TRIALS
+  if(name==='list_trials'){
+    let items=thqTrials;
+    if(input.status) items=items.filter(t=>t.status===input.status);
+    if(!items.length) return {error:null,result:'No trials found'+(input.status?' with status '+input.status:'')+'.'};
+    let result='**'+items.length+' trial(s):**\n';
+    result+=items.map(t=>`- **${t.name}** | Status: ${t.status||'Active'} | ${t.trial_start||'?'} → ${t.trial_end||'?'} | ${t.source||'No source'}${t.notes?' | '+t.notes:''}`).join('\n');
+    return {error:null,result:result};
+  }
+
+  // CONVERT TRIAL TO MEMBER
+  if(name==='convert_trial'){
+    if(!input.id) return {error:'Trial ID is required.',result:null};
+    const t=thqTrials.find(x=>x.id===input.id);
+    if(!t) return {error:'Trial not found.',result:null};
+    if(t.status==='Converted') return {error:'"'+t.name+'" is already converted.',result:null};
+    // Find or create contact
+    let contactId=t.contact_id;
+    if(!contactId){
+      const names=t.name.trim().split(/\s+/);
+      const {data:inserted,error}=await supabase.from('contacts').insert({first_name:names[0]||t.name,last_name:names.slice(1).join(' ')||'',email:t.email||null,phone:t.phone||null,contact_type:'ThriveHQ Member'}).select();
+      if(error) return {error:'Failed to create contact: '+error.message,result:null};
+      contactId=inserted[0].id;
+    } else {
+      await supabase.from('contacts').update({contact_type:'ThriveHQ Member'}).eq('id',contactId);
+    }
+    // Find or create ThriveHQ org
+    let thqClient=clients.find(cl=>cl.relationship_name.toLowerCase().includes('thrivehq')&&cl.role==='Organisation');
+    if(!thqClient){
+      const {data:newCl}=await supabase.from('clients').insert({relationship_name:'ThriveHQ',role:'Organisation',status:'Active',practitioner:'Cath Baker'}).select();
+      if(newCl) thqClient=newCl[0];
+    }
+    if(thqClient) await supabase.from('client_members').insert({client_id:thqClient.id,contact_id:contactId}).select();
+    const startDate=t.trial_end||new Date().toISOString().split('T')[0];
+    const renewDate=new Date(startDate);renewDate.setMonth(renewDate.getMonth()+6);
+    await supabase.from('contacts').update({membership_start_date:startDate,renewal_date:renewDate.toISOString().split('T')[0]}).eq('id',contactId);
+    await supabase.from('thrivehq_trials').update({status:'Converted'}).eq('id',input.id);
+    await Promise.all([loadContacts(),loadClients(),loadTrials()]);
+    renderThqTrials();renderThriveHQ();
+    return {error:null,result:'**'+t.name+'** converted to ThriveHQ member! Membership starts '+startDate+'.'};
+  }
+
   return {error:'Unknown tool: '+name,result:null};
 }
 
@@ -2870,6 +3147,11 @@ AVAILABLE TOOLS:
 - update_client: Update client fields like status, notes, practitioner, file_notes_link (needs id — search first)
 - update_task: Update task fields (needs id)
 - complete_task: Quick shortcut to mark task as Done (needs id)
+
+**ThriveHQ Trials:**
+- add_trial: Add a new ThriveHQ trial (needs name, defaults to 14-day trial)
+- list_trials: List all trials, optionally filter by status (Active, Extended, Converted, Expired, Cancelled)
+- convert_trial: Convert trial to full ThriveHQ member (creates contact, links to org, sets membership dates)
 
 **Workflow:**
 - convert_prospect: Convert prospect to client (creates client, links contact, marks Converted)
@@ -2992,9 +3274,22 @@ function appendAiMsg(role,text){
   const div=document.createElement('div');
   div.style.cssText=role==='user'
     ?'background:#1e3a5f;color:#fff;border-radius:12px;padding:10px 14px;font-size:13px;max-width:85%;align-self:flex-end;word-break:break-word;'
-    :'background:#f0f6ff;color:#1e293b;border-radius:12px;padding:10px 14px;font-size:13px;max-width:85%;align-self:flex-start;line-height:1.5;word-break:break-word;';
+    :'background:#f0f6ff;color:#1e293b;border-radius:12px;padding:10px 14px;font-size:13px;max-width:85%;align-self:flex-start;line-height:1.5;word-break:break-word;position:relative;';
   if(role==='user') div.textContent=text;
-  else div.innerHTML=formatAiMsg(text);
+  else {
+    div.innerHTML=formatAiMsg(text);
+    const copyBtn=document.createElement('button');
+    copyBtn.innerHTML='&#128203;';
+    copyBtn.title='Copy';
+    copyBtn.style.cssText='position:absolute;top:4px;right:4px;background:none;border:none;cursor:pointer;font-size:14px;opacity:0.4;padding:2px 4px;border-radius:4px;';
+    copyBtn.onmouseenter=function(){copyBtn.style.opacity='1';};
+    copyBtn.onmouseleave=function(){copyBtn.style.opacity='0.4';};
+    copyBtn.onclick=function(){
+      const plainText=text.replace(/\*\*(.*?)\*\*/g,'$1');
+      navigator.clipboard.writeText(plainText).then(()=>{copyBtn.innerHTML='&#9989;';setTimeout(()=>{copyBtn.innerHTML='&#128203;';},1500);});
+    };
+    div.appendChild(copyBtn);
+  }
   container.appendChild(div);
   container.scrollTop=container.scrollHeight;
   return div;
