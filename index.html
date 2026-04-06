@@ -2657,21 +2657,16 @@ window.sendAiChat=async function(){
   if(!msg) return;
   input.value='';
 
-  if(!getAnthropicKey()){
-    appendAiMsg('bot','Please enter your Anthropic API key to get started. Paste it below and send.');
-    aiChatHistory.push({role:'assistant',content:'waiting_for_key'});
+  // Handle API key entry
+  if(msg.startsWith('sk-ant-')){
+    setAnthropicKey(msg);
+    appendAiMsg('bot','API key saved! You can now ask me anything about your CRM data.');
     return;
   }
-  if(aiChatHistory.length&&aiChatHistory[aiChatHistory.length-1].content==='waiting_for_key'){
-    if(msg.startsWith('sk-ant-')){
-      setAnthropicKey(msg);
-      aiChatHistory.pop();
-      document.getElementById('aiChatMessages').lastChild.remove();
-      appendAiMsg('bot','API key saved! You can now ask me anything about your CRM data.');
-      return;
-    }
+  if(!getAnthropicKey()){
+    appendAiMsg('bot','Please paste your Anthropic API key (starts with sk-ant-) and press Send.');
+    return;
   }
-  if(msg.startsWith('sk-ant-')){setAnthropicKey(msg);appendAiMsg('bot','API key updated!');return;}
 
   appendAiMsg('user',msg);
   aiChatHistory.push({role:'user',content:msg});
