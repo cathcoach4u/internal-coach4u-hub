@@ -2460,7 +2460,9 @@ window.addEventListener('resize',()=>{
 });
 
 // ── AI CHAT ASSISTANT ──
-const ANTHROPIC_KEY = ''; // ADD YOUR ANTHROPIC API KEY HERE
+// API key stored in browser localStorage for security (not in code)
+function getAnthropicKey(){return localStorage.getItem('coach4u_anthropic_key')||'';}
+function setAnthropicKey(key){localStorage.setItem('coach4u_anthropic_key',key);}
 
 window.toggleAiChat=function(){
   const panel=document.getElementById('aiChatPanel');
@@ -2517,10 +2519,22 @@ window.sendAiChat=async function(){
   if(!msg) return;
   input.value='';
 
-  if(!ANTHROPIC_KEY){
-    appendAiMsg('bot','Please add your Anthropic API key to the app. Edit index.html and find ANTHROPIC_KEY near the bottom of the file.');
+  if(!getAnthropicKey()){
+    appendAiMsg('bot','Please enter your Anthropic API key to get started. Paste it below and send.');
+    aiChatHistory.push({role:'assistant',content:'waiting_for_key'});
     return;
   }
+  // Check if user is providing their API key
+  if(aiChatHistory.length&&aiChatHistory[aiChatHistory.length-1].content==='waiting_for_key'){
+    if(msg.startsWith('sk-ant-')){
+      setAnthropicKey(msg);
+      aiChatHistory.pop();
+      document.getElementById('aiChatMessages').lastChild.remove(); // remove the key from chat
+      appendAiMsg('bot','API key saved! You can now ask me anything about your CRM data.');
+      return;
+    }
+  }
+  if(msg.startsWith('sk-ant-')){setAnthropicKey(msg);appendAiMsg('bot','API key updated!');return;}
 
   appendAiMsg('user',msg);
   aiChatHistory.push({role:'user',content:msg});
@@ -2532,7 +2546,7 @@ window.sendAiChat=async function(){
       method:'POST',
       headers:{
         'Content-Type':'application/json',
-        'x-api-key':ANTHROPIC_KEY,
+        'x-api-key':getAnthropicKey(),
         'anthropic-version':'2023-06-01',
         'anthropic-dangerous-direct-browser-access':'true'
       },
