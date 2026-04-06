@@ -2476,9 +2476,10 @@ const aiChatHistory=[];
 // ── DEDICATED TOOL HANDLERS (match existing UI code exactly) ──
 
 const aiTools=[
-  {name:'search_contacts',description:'Search contacts in the master list by name, email, or phone. Returns matching contacts with their details and strengths.',input_schema:{type:'object',properties:{query:{type:'string',description:'Search term (name, email, or phone)'}},required:['query']}},
-  {name:'search_clients',description:'Search clients/relationships by name. Returns client details including role, status, members.',input_schema:{type:'object',properties:{query:{type:'string',description:'Search term'}},required:['query']}},
-  {name:'search_prospects',description:'Search prospects by name, status, or notes.',input_schema:{type:'object',properties:{query:{type:'string',description:'Search term'}},required:['query']}},
+  {name:'list_records',description:'List ALL records from a table. Use this when the user asks to see all prospects, all clients, all contacts, all tasks, etc. Also use for filtered lists like "all warm prospects" or "all active clients".',input_schema:{type:'object',properties:{table:{type:'string',enum:['contacts','clients','prospects','tasks','referrers'],description:'Which table to list'},filter_field:{type:'string',description:'Optional field to filter on (e.g. status, role, contact_type)'},filter_value:{type:'string',description:'Optional value to filter by (e.g. Warm, Active, Couple)'}},required:['table']}},
+  {name:'search_contacts',description:'Search contacts in the master list by name, email, or phone. Use for specific lookups, not listing all.',input_schema:{type:'object',properties:{query:{type:'string',description:'Search term (name, email, or phone)'}},required:['query']}},
+  {name:'search_clients',description:'Search clients/relationships by name. Use for specific lookups.',input_schema:{type:'object',properties:{query:{type:'string',description:'Search term'}},required:['query']}},
+  {name:'search_prospects',description:'Search prospects by name, status, or notes. Use for specific lookups.',input_schema:{type:'object',properties:{query:{type:'string',description:'Search term'}},required:['query']}},
   {name:'add_contact',description:'Add a new contact to the master list. ALWAYS use this tool to add contacts, not any generic method.',input_schema:{type:'object',properties:{first_name:{type:'string'},last_name:{type:'string'},email:{type:'string'},phone:{type:'string'},contact_type:{type:'string',enum:['Individual','ThriveHQ Member','Prospect']},notes:{type:'string'}},required:['first_name','last_name']}},
   {name:'add_prospect',description:'Add a new prospect. ALWAYS use this tool to add prospects. Optionally link to existing contact by contact_id.',input_schema:{type:'object',properties:{name:{type:'string',description:'Full name'},email:{type:'string'},phone:{type:'string'},role:{type:'string',enum:['Individual','Couple','Business','Organisation']},status:{type:'string',enum:['New','Hot','Warm','Cold']},source:{type:'string'},notes:{type:'string'},contact_id:{type:'string',description:'UUID of linked contact from master list (optional)'}},required:['name']}},
   {name:'add_task',description:'Add a new task. ALWAYS use this tool to create tasks.',input_schema:{type:'object',properties:{title:{type:'string'},description:{type:'string'},priority:{type:'string',enum:['High','Medium','Low']},status:{type:'string',enum:['To Do','In Progress','Done']},due_date:{type:'string',description:'YYYY-MM-DD format'}},required:['title']}},
@@ -2488,6 +2489,46 @@ const aiTools=[
 ];
 
 async function handleToolCall(name,input){
+  // LIST ALL RECORDS
+  if(name==='list_records'){
+    const t=input.table;
+    let items=[];
+    if(t==='contacts') items=contacts;
+    else if(t==='clients') items=clients;
+    else if(t==='prospects') items=prospects;
+    else if(t==='tasks') items=tasks;
+    else if(t==='referrers') items=referrals;
+    else return {error:'Unknown table: '+t,result:null};
+
+    // Apply optional filter
+    if(input.filter_field&&input.filter_value){
+      const ff=input.filter_field.toLowerCase();
+      const fv=input.filter_value.toLowerCase();
+      items=items.filter(r=>{
+        const val=r[ff]||'';
+        return String(val).toLowerCase()===fv;
+      });
+    }
+
+    if(!items.length) return {error:null,result:'No '+t+' found'+(input.filter_value?' with '+input.filter_field+'='+input.filter_value:'')+'.'};
+
+    // Format based on table
+    let result='**'+items.length+' '+t+':**\n';
+    if(t==='contacts'){
+      result+=items.slice(0,30).map(c=>`- **${c.first_name} ${c.last_name}** | ${c.email||'—'} | ${c.phone||'—'} | ${c.contact_type||'Individual'}`).join('\n');
+      if(items.length>30) result+='\n... and '+(items.length-30)+' more';
+    } else if(t==='clients'){
+      result+=items.map(c=>`- **${c.relationship_name}** | Role: ${c.role||'—'} | Status: ${c.status||'—'}`).join('\n');
+    } else if(t==='prospects'){
+      result+=items.map(p=>`- **${p.name}** | Status: ${p.status||'New'} | Role: ${p.role||'Individual'} | ${p.phone||p.email||'No contact'}${p.notes?' | '+p.notes:''}`).join('\n');
+    } else if(t==='tasks'){
+      result+=items.map(tk=>`- **${tk.title}** | ${tk.priority||'Medium'} | ${tk.status||'To Do'} | Due: ${tk.due_date||'—'}`).join('\n');
+    } else if(t==='referrers'){
+      result+=items.map(r=>`- **${r.name}** | ${r.status||'Active'}`).join('\n');
+    }
+    return {error:null,result:result};
+  }
+
   // SEARCH CONTACTS
   if(name==='search_contacts'){
     const q=input.query.toLowerCase();
@@ -2630,9 +2671,10 @@ function getSystemPrompt(){
 You help Cath and Lou manage their coaching business CRM. You can search, add, and update contacts, prospects, clients, and tasks.
 
 AVAILABLE TOOLS:
-- search_contacts: Search master list by name/email/phone
-- search_clients: Search client relationships
-- search_prospects: Search prospects
+- list_records: List ALL records from any table. ALWAYS use this when user says "show all", "list all", "all prospects", etc. Supports filtering e.g. filter_field="status" filter_value="Warm"
+- search_contacts: Search master list by specific name/email/phone
+- search_clients: Search client relationships by specific name
+- search_prospects: Search prospects by specific name
 - add_contact: Add to master list (ALWAYS use this, needs first_name + last_name)
 - add_prospect: Add prospect (ALWAYS use this, needs name)
 - add_task: Add task (ALWAYS use this, needs title)
