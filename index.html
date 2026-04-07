@@ -217,10 +217,6 @@ td .actions button{padding:8px 14px;font-size:12px;}
           <div class="dc-icon green">&#129309;</div>
           <div class="dc-info"><h4 id="dcClients">0</h4><p>Active Clients</p></div>
         </div>
-        <div class="dash-card" onclick="navTo('prospects')" style="cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
-          <div class="dc-icon amber">&#127793;</div>
-          <div class="dc-info"><h4 id="dcProspects">0</h4><p>Prospects</p></div>
-        </div>
         <div class="dash-card" onclick="navTo('thqtrials')" style="cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
           <div class="dc-icon" style="background:#eff6ff;color:#2563eb;">&#127793;</div>
           <div class="dc-info"><h4 id="dcTrials">0</h4><p>ThriveHQ Trials</p></div>
@@ -404,6 +400,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     <div class="modal-actions">
       <button class="btn btn-gray" onclick="closeModal('prospModal')">Cancel</button>
       <button class="btn btn-red" onclick="deleteProspect(document.getElementById('prospId').value)" id="prospDelBtn" style="display:none;">Delete</button>
+      <button class="btn" onclick="markProspectLost()" id="prospLostBtn" style="display:none;background:#64748b;color:#fff;">Mark as Lost</button>
       <button class="btn btn-green" onclick="convertProspectToClient()" id="prospConvertBtn" style="display:none;">Convert to Client</button>
       <button class="btn btn-blue" onclick="saveProspect()">Save</button>
     </div>
@@ -832,7 +829,7 @@ const areaConfig={
   home:{label:'Home',pages:[{id:'dashboard',icon:'&#9776;',label:'Dashboard'}]},
   crm:{label:'CRM',pages:[{id:'masterlist',icon:'&#128209;',label:'Master List'}]},
   referrers:{label:'Referrers',pages:[{id:'referrals',icon:'&#128101;',label:'Referral Hub'},{id:'refpayments',icon:'&#128176;',label:'Payments'}]},
-  prospects:{label:'Prospects',pages:[{id:'prospdash',icon:'&#127793;',label:'Dashboard'},{id:'prospects',icon:'&#128203;',label:'Prospect List'}]},
+  prospects:{label:'Prospects',pages:[{id:'prospects',icon:'&#128203;',label:'Prospect List'}]},
   clients:{label:'Clients',pages:[{id:'clidash',icon:'&#129309;',label:'Dashboard'},{id:'clients',icon:'&#128101;',label:'Client List'},{id:'clinvoices',icon:'&#128206;',label:'Invoices'}]},
   thrivehq:{label:'ThriveHQ',pages:[{id:'thqdash',icon:'&#128170;',label:'Dashboard'},{id:'thqtrials',icon:'&#127793;',label:'Trials'},{id:'thrivehq',icon:'&#128101;',label:'Members'},{id:'thqrenewals',icon:'&#128260;',label:'Renewals'},{id:'thqcalls',icon:'&#128222;',label:'Coaching Calls'}]},
   strengths:{label:'Strengths',pages:[{id:'strdash',icon:'&#127919;',label:'Dashboard'},{id:'strengths',icon:'&#128161;',label:'Strengths Hub'}]},
@@ -934,7 +931,6 @@ window.toggleDashGroup=toggleDashGroup;
 function renderDashboard(){
   document.getElementById('dcContacts').textContent=contacts.length;
   document.getElementById('dcClients').textContent=clients.filter(c=>c.status==='Active').length;
-  document.getElementById('dcProspects').textContent=prospects.length;
   document.getElementById('dcTrials').textContent=thqTrials.filter(t=>t.status==='Active'||t.status==='Extended').length;
 }
 
@@ -1215,9 +1211,12 @@ function renderProspects(){
   } else {
     html=`<div style="display:flex;flex-direction:column;gap:8px;">`;
     filtered.forEach(p=>{
-      const statusCol=p.status==='Hot'?'#dc2626':p.status==='Warm'?'#d97706':p.status==='Converted'?'#15803d':'#64748b';
-      const statusBg=p.status==='Hot'?'#fef2f2':p.status==='Warm'?'#fef3c7':p.status==='Converted'?'#dcfce7':'#f1f5f9';
-      html+=`<div onclick="openProspectModal('${p.id}')" style="background:#fff;border:1px solid #e2e8f0;border-left:3px solid ${statusCol};border-radius:8px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
+      const statusCol=p.status==='Hot'?'#dc2626':p.status==='Warm'?'#d97706':p.status==='Converted'?'#15803d':p.status==='Lost'?'#94a3b8':p.status==='New'?'#2563eb':'#64748b';
+      const statusBg=p.status==='Hot'?'#fef2f2':p.status==='Warm'?'#fef3c7':p.status==='Converted'?'#dcfce7':p.status==='Lost'?'#f8fafc':p.status==='New'?'#eff6ff':'#f1f5f9';
+      const isClosedProspect=p.status==='Lost'||p.status==='Converted';
+      const cardOpacity=isClosedProspect?'opacity:.6;':'';
+
+      html+=`<div onclick="openProspectModal('${p.id}')" style="background:#fff;border:1px solid #e2e8f0;border-left:3px solid ${statusCol};border-radius:8px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;${cardOpacity}" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
         <div>
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
             <span style="font-weight:600;font-size:14px;color:#1e293b;">${p.name||'—'}</span>
@@ -1252,7 +1251,8 @@ window.openProspectModal=function(id){
   document.getElementById('prospSource').value=p?p.source||'':'';
   document.getElementById('prospNotes').value=p?p.notes||'':'';
   document.getElementById('prospDelBtn').style.display=p?'inline-block':'none';
-  document.getElementById('prospConvertBtn').style.display=(p&&p.status!=='Converted')?'inline-block':'none';
+  document.getElementById('prospLostBtn').style.display=(p&&p.status!=='Converted'&&p.status!=='Lost')?'inline-block':'none';
+  document.getElementById('prospConvertBtn').style.display=(p&&p.status!=='Converted'&&p.status!=='Lost')?'inline-block':'none';
   // Set linked contact
   document.getElementById('prospContact').value=p&&p.contact_id?p.contact_id:'';
   const badge=document.getElementById('prospContactBadge');
@@ -1345,6 +1345,19 @@ window.deleteProspect=async function(id){
   renderProspects();
   toast('Prospect deleted','success');
 };
+window.markProspectLost=async function(){
+  const id=document.getElementById('prospId').value;
+  const p=prospects.find(x=>x.id===id);
+  if(!p) return;
+  if(!confirm('Mark "'+p.name+'" as lost?')) return;
+  const {error}=await supabase.from('prospects').update({status:'Lost'}).eq('id',id);
+  if(error){toast('Error: '+error.message,'error');return;}
+  closeModal('prospModal');
+  await loadProspects();
+  renderProspects();
+  toast(p.name+' marked as lost','success');
+};
+
 window.convertProspectToClient=async function(){
   const id=document.getElementById('prospId').value;
   const p=prospects.find(x=>x.id===id);
