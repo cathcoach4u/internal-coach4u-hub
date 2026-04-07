@@ -168,7 +168,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
 </div>
 
 <!-- SIDEBAR -->
-<nav class="sidebar" id="sidebar">
+<nav class="sidebar" id="sidebar" style="display:none;">
   <div class="sidebar-logo">
     <img src="C4U.png" alt="Coach4U">
     <span>Coach4U</span>
@@ -184,7 +184,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
 <div class="mobile-overlay" id="mobileOverlay" onclick="closeMobile()"></div>
 
 <!-- MAIN -->
-<div class="main">
+<div class="main" id="appMain" style="display:none;">
   <div class="header">
     <div style="display:flex;align-items:center;gap:12px;">
       <button class="btn btn-gray" style="display:none;padding:6px 10px;" id="mobileToggle" onclick="openMobile()">&#9776;</button>
@@ -3075,6 +3075,8 @@ function showLogin(){
 }
 function hideLogin(){
   document.getElementById('loginScreen').style.display='none';
+  document.getElementById('sidebar').style.display='';
+  document.getElementById('appMain').style.display='';
 }
 function showLoggedInUser(email){
   const el=document.getElementById('loggedInUser');
@@ -3180,14 +3182,23 @@ supabase.auth.onAuthStateChange((event,session)=>{
 
 // ── BOOT ──
 (async function boot(){
-  const {data:{session}}=await supabase.auth.getSession();
-  if(session){
-    hideLogin();
-    showLoggedInUser(session.user.email);
-    loadAll();
-  } else {
-    showLogin();
+  try {
+    const {data:{session}}=await supabase.auth.getSession();
+    if(session){
+      // Verify the session is actually valid (not a deleted user)
+      const {data:{user},error}=await supabase.auth.getUser();
+      if(user&&!error){
+        hideLogin();
+        showLoggedInUser(user.email);
+        loadAll();
+        return;
+      }
+    }
+  } catch(e){
+    console.error('Auth check failed:',e);
   }
+  // No valid session — show login
+  showLogin();
 })();
 
 // ── MOBILE CHECK ──
