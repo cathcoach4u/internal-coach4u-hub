@@ -551,8 +551,12 @@ td .actions button{padding:8px 14px;font-size:12px;}
         <span style="font-size:11px;font-weight:400;opacity:.8;">— one meeting first</span>
       </button>
       <button class="btn" onclick="closeModal('newMemberChoiceModal');openAddMemberModal();" style="background:#16a34a;color:#fff;padding:14px 20px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;border:none;display:flex;align-items:center;gap:10px;justify-content:center;">
-        &#128101; Add as Full Member
+        &#128101; New Full Member
         <span style="font-size:11px;font-weight:400;opacity:.8;">— skip trial</span>
+      </button>
+      <button class="btn" onclick="closeModal('newMemberChoiceModal');openExistingToMemberModal();" style="background:#7c3aed;color:#fff;padding:14px 20px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;border:none;display:flex;align-items:center;gap:10px;justify-content:center;">
+        &#128203; Existing Contact → Member
+        <span style="font-size:11px;font-weight:400;opacity:.8;">— already in Master List</span>
       </button>
     </div>
     <button class="btn btn-gray" onclick="closeModal('newMemberChoiceModal')" style="margin-top:16px;width:100%;">Cancel</button>
@@ -605,6 +609,26 @@ td .actions button{padding:8px 14px;font-size:12px;}
     <div class="modal-actions">
       <button class="btn btn-gray" onclick="closeModal('addMemberModal')">Cancel</button>
       <button class="btn btn-blue" onclick="saveNewMember()">Add Member</button>
+    </div>
+  </div>
+</div>
+
+<!-- EXISTING CONTACT TO MEMBER MODAL -->
+<div class="modal-overlay" id="existingToMemberModal">
+  <div class="modal">
+    <h3>Add Existing Contact as Member</h3>
+    <input type="hidden" id="existMemContactId" value="">
+    <div class="form-group"><label>Search Master List <span id="existMemBadge" style="font-size:11px;color:#16a34a;display:none;">&#9989; Selected</span></label>
+      <div style="position:relative;">
+        <input id="existMemSearch" placeholder="Start typing a name..." autocomplete="off" oninput="searchExistMemContacts()">
+        <div id="existMemSuggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #e2e8f0;border-radius:8px;max-height:220px;overflow-y:auto;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,.15);"></div>
+      </div>
+    </div>
+    <div id="existMemDetails" style="display:none;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 16px;margin-bottom:12px;font-size:13px;"></div>
+    <div class="form-group"><label>Membership Start</label><input id="existMemStart" type="date"></div>
+    <div class="modal-actions">
+      <button class="btn btn-gray" onclick="closeModal('existingToMemberModal')">Cancel</button>
+      <button class="btn btn-blue" onclick="saveExistingAsMember()">Add as Member</button>
     </div>
   </div>
 </div>
@@ -1973,6 +1997,90 @@ window.convertTrialToMember=async function(){
 
 window.openNewMemberChoice=function(){
   document.getElementById('newMemberChoiceModal').classList.add('open');
+};
+
+// ── EXISTING CONTACT → THRIVEHQ MEMBER ──
+window.openExistingToMemberModal=function(){
+  document.getElementById('existMemContactId').value='';
+  document.getElementById('existMemSearch').value='';
+  document.getElementById('existMemStart').value=new Date().toISOString().split('T')[0];
+  document.getElementById('existMemBadge').style.display='none';
+  document.getElementById('existMemSuggestions').style.display='none';
+  document.getElementById('existMemDetails').style.display='none';
+  document.getElementById('existingToMemberModal').classList.add('open');
+};
+
+window.searchExistMemContacts=function(){
+  const q=document.getElementById('existMemSearch').value.trim().toLowerCase();
+  const box=document.getElementById('existMemSuggestions');
+  document.getElementById('existMemContactId').value='';
+  document.getElementById('existMemBadge').style.display='none';
+  document.getElementById('existMemDetails').style.display='none';
+  if(q.length<2){box.style.display='none';return;}
+  const matches=contacts.filter(c=>(c.first_name+' '+c.last_name+' '+(c.email||'')).toLowerCase().includes(q)).slice(0,10);
+  if(!matches.length){
+    box.innerHTML='<div style="padding:10px 14px;color:#64748b;font-size:13px;">No contacts found</div>';
+    box.style.display='block';
+    return;
+  }
+  box.innerHTML=matches.map(c=>`<div onclick="selectExistMemContact('${c.id}')" style="padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background='#fff'">
+    <span><strong>${c.first_name} ${c.last_name}</strong></span>
+    <span style="color:#64748b;font-size:11px;">${c.email||c.phone||c.contact_type||''}</span>
+  </div>`).join('');
+  box.style.display='block';
+};
+
+window.selectExistMemContact=function(contactId){
+  const c=contacts.find(x=>x.id===contactId);
+  if(!c) return;
+  document.getElementById('existMemContactId').value=c.id;
+  document.getElementById('existMemSearch').value=c.first_name+' '+c.last_name;
+  document.getElementById('existMemSuggestions').style.display='none';
+  document.getElementById('existMemBadge').style.display='inline';
+  const details=document.getElementById('existMemDetails');
+  details.innerHTML=`<strong>${c.first_name} ${c.last_name}</strong><br>
+    Email: ${c.email||'—'} | Phone: ${c.phone||'—'}<br>
+    Type: ${c.contact_type||'Individual'}`;
+  details.style.display='block';
+};
+
+window.saveExistingAsMember=async function(){
+  const contactId=document.getElementById('existMemContactId').value;
+  if(!contactId){toast('Please search and select a contact first','error');return;}
+  const c=contacts.find(x=>x.id===contactId);
+  const startDate=document.getElementById('existMemStart').value||new Date().toISOString().split('T')[0];
+
+  // Update contact type + membership dates
+  const renewDate=new Date(startDate);renewDate.setMonth(renewDate.getMonth()+6);
+  await supabase.from('contacts').update({
+    contact_type:'ThriveHQ Member',
+    membership_start_date:startDate,
+    renewal_date:renewDate.toISOString().split('T')[0]
+  }).eq('id',contactId);
+
+  // Find or create ThriveHQ org client
+  let thqClient=clients.find(cl=>cl.relationship_name.toLowerCase().includes('thrivehq')&&cl.role==='Organisation');
+  if(!thqClient){
+    const {data:newCl,error}=await supabase.from('clients').insert({
+      relationship_name:'ThriveHQ',role:'Organisation',status:'Active',practitioner:'Cath Baker'
+    }).select();
+    if(error){toast('Error: '+error.message,'error');return;}
+    thqClient=newCl[0];
+  }
+
+  // Check if already linked
+  const {data:existingLink}=await supabase.from('client_members').select('id').eq('client_id',thqClient.id).eq('contact_id',contactId);
+  if(existingLink&&existingLink.length){
+    toast((c?c.first_name+' '+c.last_name:'This contact')+' is already a ThriveHQ member','error');
+    return;
+  }
+
+  await supabase.from('client_members').insert({client_id:thqClient.id,contact_id:contactId});
+
+  closeModal('existingToMemberModal');
+  await Promise.all([loadContacts(),loadClients()]);
+  renderThriveHQ();renderThqDash();
+  toast((c?c.first_name+' '+c.last_name:'Contact')+' added as ThriveHQ member!','success');
 };
 
 // ── ADD THRIVEHQ MEMBER (direct, skip trial) ──
