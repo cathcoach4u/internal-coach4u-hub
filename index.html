@@ -276,7 +276,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     <div class="screen" id="screen-thqtrials">
       <div class="toolbar">
         <input class="search-input" id="thqTrialSearch" placeholder="Search trials..." oninput="renderThqTrials()">
-        <button class="btn btn-blue" onclick="openTrialModal()">+ New Trial</button>
+        <button class="btn btn-blue" onclick="openNewMemberChoice()">+ New Member</button>
       </div>
       <div id="thqTrialsContent"></div>
     </div>
@@ -285,7 +285,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     <div class="screen" id="screen-thrivehq">
       <div class="toolbar">
         <input class="search-input" id="thqSearch" placeholder="Search members..." oninput="filterThriveHQ()">
-        <button class="btn btn-blue" onclick="openAddMemberModal()">+ Add Member</button>
+        <button class="btn btn-blue" onclick="openNewMemberChoice()">+ New Member</button>
       </div>
       <div id="thqContent"></div>
     </div>
@@ -540,6 +540,25 @@ td .actions button{padding:8px 14px;font-size:12px;}
   </div>
 </div>
 
+<!-- NEW MEMBER CHOICE MODAL -->
+<div class="modal-overlay" id="newMemberChoiceModal">
+  <div class="modal" style="max-width:400px;text-align:center;">
+    <h3 style="margin-bottom:8px;">New Member</h3>
+    <p style="color:#64748b;font-size:13px;margin-bottom:20px;">How would you like to add this member?</p>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <button class="btn" onclick="closeModal('newMemberChoiceModal');openTrialModal();" style="background:#2563eb;color:#fff;padding:14px 20px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;border:none;display:flex;align-items:center;gap:10px;justify-content:center;">
+        &#127793; Start with Trial
+        <span style="font-size:11px;font-weight:400;opacity:.8;">— one meeting first</span>
+      </button>
+      <button class="btn" onclick="closeModal('newMemberChoiceModal');openAddMemberModal();" style="background:#16a34a;color:#fff;padding:14px 20px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;border:none;display:flex;align-items:center;gap:10px;justify-content:center;">
+        &#128101; Add as Full Member
+        <span style="font-size:11px;font-weight:400;opacity:.8;">— skip trial</span>
+      </button>
+    </div>
+    <button class="btn btn-gray" onclick="closeModal('newMemberChoiceModal')" style="margin-top:16px;width:100%;">Cancel</button>
+  </div>
+</div>
+
 <!-- THRIVEHQ TRIAL MODAL -->
 <div class="modal-overlay" id="trialModal">
   <div class="modal">
@@ -554,8 +573,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="form-group"><label>Email</label><input id="trialEmail" type="email"></div>
     <div class="form-group"><label>Phone</label><input id="trialPhone"></div>
-    <div class="form-group"><label>Trial Start</label><input id="trialStart" type="date"></div>
-    <div class="form-group"><label>Trial End</label><input id="trialEnd" type="date"></div>
+    <div class="form-group"><label>Trial Date</label><input id="trialStart" type="date"></div>
     <div class="form-group"><label>Status</label>
       <select id="trialStatus"><option>Active</option><option>Extended</option><option>Converted</option><option>Expired</option><option>Cancelled</option></select>
     </div>
@@ -865,7 +883,10 @@ function renderThqDash(){
   const dueSoon=members.filter(m=>{const r=m.contact.renewal_date?new Date(m.contact.renewal_date):null;return r&&r>=now&&(r-now)/(1000*60*60*24)<=30;});
   const upToDate=members.filter(m=>{const r=m.contact.renewal_date?new Date(m.contact.renewal_date):null;return r&&r>=now&&(r-now)/(1000*60*60*24)>30;});
 
-  let html=`<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+  let html=`<div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+    <button class="btn btn-blue" onclick="openNewMemberChoice()" style="font-size:14px;padding:10px 20px;">+ New Member</button>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
     <div style="flex:1;min-width:200px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 18px;display:flex;align-items:center;gap:10px;">
       <span style="font-size:18px;">&#128194;</span>
       <a href="https://netorgft4053847.sharepoint.com/:f:/s/Clients/IgCvrdCt_QJ3Q4duGfiHWxWmATOFwyLG_YdMRsorhU_jsuI?e=FiDtiW" target="_blank" style="font-weight:600;color:#3b82f6;text-decoration:none;font-size:14px;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">ThriveHQ Folders, Files &amp; Recordings</a>
@@ -1768,17 +1789,13 @@ function renderThqTrials(){
   if(!items.length){
     html+='<p style="text-align:center;color:#64748b;margin-top:24px;">No trials yet. Click <b>+ New Trial</b> to add one.</p>';
   } else {
-    html+='<div style="overflow-x:auto;"><table class="tbl"><thead><tr><th>Name</th><th>Status</th><th>Trial Period</th><th>Days Left</th><th>Source</th></tr></thead><tbody>';
+    html+='<div style="overflow-x:auto;"><table class="tbl"><thead><tr><th>Name</th><th>Status</th><th>Trial Date</th><th>Source</th></tr></thead><tbody>';
     items.forEach(t=>{
       const statusColors={Active:'#2563eb',Extended:'#7c3aed',Converted:'#16a34a',Expired:'#dc2626',Cancelled:'#64748b'};
-      const endDate=t.trial_end?new Date(t.trial_end):null;
-      const daysLeft=endDate?Math.ceil((endDate-now)/(1000*60*60*24)):null;
-      const daysStr=(t.status==='Active'||t.status==='Extended')?(daysLeft!==null?(daysLeft>0?daysLeft+' days':'<span style="color:#dc2626;">Overdue</span>'):'—'):'—';
       html+=`<tr onclick="openTrialModal('${t.id}')" style="cursor:pointer;">
         <td><strong>${t.name||'—'}</strong></td>
         <td><span style="background:${statusColors[t.status]||'#64748b'};color:#fff;padding:2px 8px;border-radius:8px;font-size:12px;">${t.status||'Active'}</span></td>
-        <td>${t.trial_start||'?'} → ${t.trial_end||'?'}</td>
-        <td>${daysStr}</td>
+        <td>${t.trial_start||'—'}</td>
         <td>${t.source||'—'}</td>
       </tr>`;
     });
@@ -1795,8 +1812,6 @@ window.openTrialModal=function(id){
   document.getElementById('trialEmail').value=t?t.email||'':'';
   document.getElementById('trialPhone').value=t?t.phone||'':'';
   document.getElementById('trialStart').value=t?t.trial_start||'':new Date().toISOString().split('T')[0];
-  const defaultEnd=new Date();defaultEnd.setDate(defaultEnd.getDate()+14);
-  document.getElementById('trialEnd').value=t?t.trial_end||'':defaultEnd.toISOString().split('T')[0];
   document.getElementById('trialStatus').value=t?t.status||'Active':'Active';
   document.getElementById('trialSource').value=t?t.source||'':'';
   document.getElementById('trialNotes').value=t?t.notes||'':'';
@@ -1849,7 +1864,7 @@ window.saveTrial=async function(){
     email:document.getElementById('trialEmail').value.trim()||null,
     phone:document.getElementById('trialPhone').value.trim()||null,
     trial_start:document.getElementById('trialStart').value||null,
-    trial_end:document.getElementById('trialEnd').value||null,
+    trial_end:null,
     status:document.getElementById('trialStatus').value,
     source:document.getElementById('trialSource').value.trim()||null,
     notes:document.getElementById('trialNotes').value.trim()||null,
@@ -1940,7 +1955,7 @@ window.convertTrialToMember=async function(){
   await supabase.from('client_members').insert({client_id:thqClient.id,contact_id:contactId}).select();
 
   // Set membership start date
-  const startDate=t.trial_end||new Date().toISOString().split('T')[0];
+  const startDate=t.trial_start||new Date().toISOString().split('T')[0];
   const renewDate=new Date(startDate);renewDate.setMonth(renewDate.getMonth()+6);
   await supabase.from('contacts').update({
     membership_start_date:startDate,
@@ -1954,6 +1969,10 @@ window.convertTrialToMember=async function(){
   await Promise.all([loadContacts(),loadClients(),loadTrials()]);
   renderThqTrials();renderThriveHQ();renderThqDash();
   toast(t.name+' converted to ThriveHQ member!','success');
+};
+
+window.openNewMemberChoice=function(){
+  document.getElementById('newMemberChoiceModal').classList.add('open');
 };
 
 // ── ADD THRIVEHQ MEMBER (direct, skip trial) ──
@@ -2942,7 +2961,7 @@ const aiTools=[
   {name:'add_referrer_payment',description:'Add a referrer payment record. Use list_records with table=referrers to find the referrer_id first.',input_schema:{type:'object',properties:{referrer_id:{type:'string',description:'Referrer UUID'},amount:{type:'number',description:'Payment amount'},payment_date:{type:'string',description:'YYYY-MM-DD'},period:{type:'string',description:'Payment period description'},status:{type:'string',enum:['Paid','Pending','Overdue']},notes:{type:'string'}},required:['referrer_id','amount']}},
   {name:'manage_client_members',description:'Link or unlink a contact to/from a client relationship. Use search_clients and search_contacts first to get IDs.',input_schema:{type:'object',properties:{action:{type:'string',enum:['link','unlink'],description:'Whether to link or unlink the contact'},client_id:{type:'string',description:'Client UUID'},contact_id:{type:'string',description:'Contact UUID'}},required:['action','client_id','contact_id']}},
   {name:'search_tasks',description:'Search tasks by title, description, or status.',input_schema:{type:'object',properties:{query:{type:'string',description:'Search term'}},required:['query']}},
-  {name:'add_trial',description:'Add a new ThriveHQ trial. Optionally link to existing contact by contact_id.',input_schema:{type:'object',properties:{name:{type:'string',description:'Full name'},email:{type:'string'},phone:{type:'string'},trial_start:{type:'string',description:'YYYY-MM-DD'},trial_end:{type:'string',description:'YYYY-MM-DD'},status:{type:'string',enum:['Active','Extended','Converted','Expired','Cancelled']},source:{type:'string'},notes:{type:'string'},contact_id:{type:'string',description:'UUID of linked contact (optional)'}},required:['name']}},
+  {name:'add_trial',description:'Add a new ThriveHQ trial (single meeting date). Optionally link to existing contact by contact_id.',input_schema:{type:'object',properties:{name:{type:'string',description:'Full name'},email:{type:'string'},phone:{type:'string'},trial_date:{type:'string',description:'YYYY-MM-DD trial meeting date'},status:{type:'string',enum:['Active','Extended','Converted','Expired','Cancelled']},source:{type:'string'},notes:{type:'string'},contact_id:{type:'string',description:'UUID of linked contact (optional)'}},required:['name']}},
   {name:'list_trials',description:'List all ThriveHQ trials. Optionally filter by status.',input_schema:{type:'object',properties:{status:{type:'string',enum:['Active','Extended','Converted','Expired','Cancelled'],description:'Optional status filter'}}}},
   {name:'convert_trial',description:'Convert a ThriveHQ trial to a full member. Creates contact if needed, links to ThriveHQ org, sets membership dates.',input_schema:{type:'object',properties:{id:{type:'string',description:'Trial UUID'}},required:['id']}}
 ];
@@ -2986,7 +3005,7 @@ async function handleToolCall(name,input){
     } else if(t==='referrers'){
       result+=items.map(r=>`- **${r.name}** | ${r.status||'Active'}`).join('\n');
     } else if(t==='trials'){
-      result+=items.map(t=>`- **${t.name}** | Status: ${t.status||'Active'} | ${t.trial_start||'?'} → ${t.trial_end||'?'}${t.source?' | Source: '+t.source:''}`).join('\n');
+      result+=items.map(t=>`- **${t.name}** | Status: ${t.status||'Active'} | ${t.trial_start||'—'}${t.source?' | Source: '+t.source:''}`).join('\n');
     }
     return {error:null,result:result};
   }
@@ -3294,13 +3313,12 @@ async function handleToolCall(name,input){
   if(name==='add_trial'){
     if(!input.name) return {error:'Trial name is required.',result:null};
     const today=new Date().toISOString().split('T')[0];
-    const defaultEnd=new Date();defaultEnd.setDate(defaultEnd.getDate()+14);
     const data={
       name:input.name.trim(),
       email:(input.email||'').trim()||null,
       phone:(input.phone||'').trim()||null,
-      trial_start:input.trial_start||today,
-      trial_end:input.trial_end||defaultEnd.toISOString().split('T')[0],
+      trial_start:input.trial_date||today,
+      trial_end:null,
       status:input.status||'Active',
       source:(input.source||'').trim()||null,
       notes:(input.notes||'').trim()||null,
@@ -3323,7 +3341,7 @@ async function handleToolCall(name,input){
     const {error}=await supabase.from('thrivehq_trials').insert(data).select();
     if(error) return {error:'Failed to add trial: '+error.message,result:null};
     await loadTrials();renderThqTrials();
-    return {error:null,result:'Trial added: **'+data.name+'** ('+data.trial_start+' → '+data.trial_end+'). Contact auto-added to Master List.'};
+    return {error:null,result:'Trial added: **'+data.name+'** (Date: '+data.trial_start+'). Contact auto-added to Master List.'};
   }
 
   // LIST TRIALS
@@ -3332,7 +3350,7 @@ async function handleToolCall(name,input){
     if(input.status) items=items.filter(t=>t.status===input.status);
     if(!items.length) return {error:null,result:'No trials found'+(input.status?' with status '+input.status:'')+'.'};
     let result='**'+items.length+' trial(s):**\n';
-    result+=items.map(t=>`- **${t.name}** | Status: ${t.status||'Active'} | ${t.trial_start||'?'} → ${t.trial_end||'?'} | ${t.source||'No source'}${t.notes?' | '+t.notes:''}`).join('\n');
+    result+=items.map(t=>`- **${t.name}** | Status: ${t.status||'Active'} | ${t.trial_start||'—'} | ${t.source||'No source'}${t.notes?' | '+t.notes:''}`).join('\n');
     return {error:null,result:result};
   }
 
@@ -3359,7 +3377,7 @@ async function handleToolCall(name,input){
       if(newCl) thqClient=newCl[0];
     }
     if(thqClient) await supabase.from('client_members').insert({client_id:thqClient.id,contact_id:contactId}).select();
-    const startDate=t.trial_end||new Date().toISOString().split('T')[0];
+    const startDate=t.trial_start||new Date().toISOString().split('T')[0];
     const renewDate=new Date(startDate);renewDate.setMonth(renewDate.getMonth()+6);
     await supabase.from('contacts').update({membership_start_date:startDate,renewal_date:renewDate.toISOString().split('T')[0]}).eq('id',contactId);
     await supabase.from('thrivehq_trials').update({status:'Converted'}).eq('id',input.id);
