@@ -285,6 +285,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     <div class="screen" id="screen-thrivehq">
       <div class="toolbar">
         <input class="search-input" id="thqSearch" placeholder="Search members..." oninput="filterThriveHQ()">
+        <button class="btn btn-blue" onclick="openAddMemberModal()">+ Add Member</button>
       </div>
       <div id="thqContent"></div>
     </div>
@@ -565,6 +566,27 @@ td .actions button{padding:8px 14px;font-size:12px;}
       <button class="btn btn-red" onclick="deleteTrial(document.getElementById('trialId').value)" id="trialDelBtn" style="display:none;">Delete</button>
       <button class="btn btn-green" onclick="convertTrialToMember()" id="trialConvertBtn" style="display:none;">Convert to Member</button>
       <button class="btn btn-blue" onclick="saveTrial()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD THRIVEHQ MEMBER MODAL -->
+<div class="modal-overlay" id="addMemberModal">
+  <div class="modal">
+    <h3>Add ThriveHQ Member</h3>
+    <input type="hidden" id="addMemContactId" value="">
+    <div class="form-group"><label>Name <span id="addMemBadge" style="font-size:11px;color:#16a34a;display:none;">&#9989; Found in Master List</span></label>
+      <div style="position:relative;">
+        <input id="addMemName" placeholder="Start typing to search Master List..." autocomplete="off" oninput="searchAddMemContacts()">
+        <div id="addMemSuggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #e2e8f0;border-radius:8px;max-height:180px;overflow-y:auto;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,.15);"></div>
+      </div>
+    </div>
+    <div class="form-group"><label>Email</label><input id="addMemEmail" type="email"></div>
+    <div class="form-group"><label>Phone</label><input id="addMemPhone"></div>
+    <div class="form-group"><label>Membership Start</label><input id="addMemStart" type="date"></div>
+    <div class="modal-actions">
+      <button class="btn btn-gray" onclick="closeModal('addMemberModal')">Cancel</button>
+      <button class="btn btn-blue" onclick="saveNewMember()">Add Member</button>
     </div>
   </div>
 </div>
@@ -1932,6 +1954,104 @@ window.convertTrialToMember=async function(){
   await Promise.all([loadContacts(),loadClients(),loadTrials()]);
   renderThqTrials();renderThriveHQ();renderThqDash();
   toast(t.name+' converted to ThriveHQ member!','success');
+};
+
+// ── ADD THRIVEHQ MEMBER (direct, skip trial) ──
+window.openAddMemberModal=function(){
+  document.getElementById('addMemContactId').value='';
+  document.getElementById('addMemName').value='';
+  document.getElementById('addMemEmail').value='';
+  document.getElementById('addMemPhone').value='';
+  document.getElementById('addMemStart').value=new Date().toISOString().split('T')[0];
+  document.getElementById('addMemBadge').style.display='none';
+  document.getElementById('addMemSuggestions').style.display='none';
+  document.getElementById('addMemberModal').classList.add('open');
+};
+
+window.searchAddMemContacts=function(){
+  const q=document.getElementById('addMemName').value.trim().toLowerCase();
+  const box=document.getElementById('addMemSuggestions');
+  document.getElementById('addMemContactId').value='';
+  document.getElementById('addMemBadge').style.display='none';
+  if(q.length<2){box.style.display='none';return;}
+  const matches=contacts.filter(c=>(c.first_name+' '+c.last_name).toLowerCase().includes(q)).slice(0,8);
+  if(!matches.length){
+    box.innerHTML='<div style="padding:10px 14px;color:#64748b;font-size:13px;">No matches — a new contact will be created</div>';
+    box.style.display='block';
+    return;
+  }
+  box.innerHTML=matches.map(c=>`<div onclick="selectAddMemContact('${c.id}')" style="padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background='#fff'">
+    <span><strong>${c.first_name} ${c.last_name}</strong></span>
+    <span style="color:#64748b;font-size:11px;">${c.email||c.phone||c.contact_type||''}</span>
+  </div>`).join('')+'<div style="padding:8px 14px;color:#64748b;font-size:11px;background:#f8fafc;">Or keep typing for a new contact</div>';
+  box.style.display='block';
+};
+
+window.selectAddMemContact=function(contactId){
+  const c=contacts.find(x=>x.id===contactId);
+  if(!c) return;
+  document.getElementById('addMemContactId').value=c.id;
+  document.getElementById('addMemName').value=c.first_name+' '+c.last_name;
+  document.getElementById('addMemEmail').value=c.email||'';
+  document.getElementById('addMemPhone').value=c.phone||'';
+  document.getElementById('addMemSuggestions').style.display='none';
+  document.getElementById('addMemBadge').style.display='inline';
+};
+
+window.saveNewMember=async function(){
+  const name=document.getElementById('addMemName').value.trim();
+  if(!name){toast('Name is required','error');return;}
+  let contactId=document.getElementById('addMemContactId').value;
+  const email=document.getElementById('addMemEmail').value.trim()||null;
+  const phone=document.getElementById('addMemPhone').value.trim()||null;
+  const startDate=document.getElementById('addMemStart').value||new Date().toISOString().split('T')[0];
+
+  // Find or create contact
+  if(!contactId){
+    const names=name.split(/\s+/);
+    const firstName=names[0]||name;
+    const lastName=names.slice(1).join(' ')||'';
+    const existing=contacts.find(c=>c.first_name.toLowerCase()===firstName.toLowerCase()&&c.last_name.toLowerCase()===lastName.toLowerCase());
+    if(existing){
+      contactId=existing.id;
+    } else {
+      const {data:inserted,error}=await supabase.from('contacts').insert({
+        first_name:firstName,last_name:lastName,email:email,phone:phone,
+        contact_type:'ThriveHQ Member'
+      }).select();
+      if(error){toast('Error creating contact: '+error.message,'error');return;}
+      contactId=inserted[0].id;
+    }
+  }
+
+  // Update contact type + membership dates
+  const renewDate=new Date(startDate);renewDate.setMonth(renewDate.getMonth()+6);
+  await supabase.from('contacts').update({
+    contact_type:'ThriveHQ Member',
+    membership_start_date:startDate,
+    renewal_date:renewDate.toISOString().split('T')[0]
+  }).eq('id',contactId);
+
+  // Find or create ThriveHQ organisation client
+  let thqClient=clients.find(cl=>cl.relationship_name.toLowerCase().includes('thrivehq')&&cl.role==='Organisation');
+  if(!thqClient){
+    const {data:newCl,error}=await supabase.from('clients').insert({
+      relationship_name:'ThriveHQ',role:'Organisation',status:'Active',practitioner:'Cath Baker'
+    }).select();
+    if(error){toast('Error creating ThriveHQ org: '+error.message,'error');return;}
+    thqClient=newCl[0];
+  }
+
+  // Link contact to ThriveHQ (check if already linked)
+  const {data:existingLink}=await supabase.from('client_members').select('id').eq('client_id',thqClient.id).eq('contact_id',contactId);
+  if(!existingLink||!existingLink.length){
+    await supabase.from('client_members').insert({client_id:thqClient.id,contact_id:contactId});
+  }
+
+  closeModal('addMemberModal');
+  await Promise.all([loadContacts(),loadClients()]);
+  renderThriveHQ();renderThqDash();renderMasterList();
+  toast(name+' added as ThriveHQ member!','success');
 };
 
 // ── THRIVEHQ MEMBERS ──
