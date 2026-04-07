@@ -158,6 +158,12 @@ td .actions button{padding:8px 14px;font-size:12px;}
       <button class="login-btn" id="resetBtn" onclick="handleResetPassword()">Send Reset Link</button>
       <div style="margin-top:14px;"><a href="#" onclick="showLoginForm();return false;" style="color:#3b82f6;font-size:12px;text-decoration:none;">Back to sign in</a></div>
     </div>
+    <div id="newPasswordForm" style="display:none;">
+      <p style="color:#1e293b;font-size:13px;margin-bottom:16px;">Enter your new password below.</p>
+      <input type="password" id="newPassword" placeholder="New password" autocomplete="new-password">
+      <input type="password" id="confirmPassword" placeholder="Confirm new password" autocomplete="new-password">
+      <button class="login-btn" id="newPassBtn" onclick="handleSetNewPassword()">Update Password</button>
+    </div>
   </div>
 </div>
 
@@ -3133,9 +3139,41 @@ document.getElementById('loginEmail').addEventListener('keydown',function(e){
   if(e.key==='Enter') document.getElementById('loginPassword').focus();
 });
 
-// Listen for auth state changes (session expired, token refresh failed)
+window.handleSetNewPassword=async function(){
+  const pw=document.getElementById('newPassword').value;
+  const confirm=document.getElementById('confirmPassword').value;
+  const errorEl=document.getElementById('loginError');
+  const btn=document.getElementById('newPassBtn');
+  errorEl.textContent='';errorEl.style.color='#ef4444';
+  if(!pw||pw.length<6){errorEl.textContent='Password must be at least 6 characters';return;}
+  if(pw!==confirm){errorEl.textContent='Passwords do not match';return;}
+  btn.disabled=true;btn.textContent='Updating...';
+  const {error}=await supabase.auth.updateUser({password:pw});
+  btn.disabled=false;btn.textContent='Update Password';
+  if(error){errorEl.textContent=error.message;return;}
+  errorEl.style.color='#16a34a';
+  errorEl.textContent='Password updated! Signing you in...';
+  setTimeout(()=>{hideLogin();loadAll();},1000);
+};
+
+function showNewPasswordForm(){
+  document.getElementById('loginForm').style.display='none';
+  document.getElementById('forgotForm').style.display='none';
+  document.getElementById('newPasswordForm').style.display='block';
+  document.getElementById('loginError').textContent='';
+  const h2=document.querySelector('.login-box h2');
+  if(h2) h2.textContent='Set New Password';
+  const p=document.querySelector('.login-box > p');
+  if(p) p.style.display='none';
+}
+
+// Listen for auth state changes
 supabase.auth.onAuthStateChange((event,session)=>{
-  if(event==='SIGNED_OUT'||event==='TOKEN_REFRESHED'&&!session){
+  if(event==='PASSWORD_RECOVERY'){
+    showLogin();
+    showNewPasswordForm();
+  }
+  if(event==='SIGNED_OUT'&&!document.getElementById('loginScreen').style.display!=='flex'){
     showLogin();
   }
 });
