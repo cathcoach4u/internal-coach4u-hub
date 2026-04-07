@@ -123,9 +123,35 @@ td .actions button{padding:8px 14px;font-size:12px;}
   .dash-cards{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));}
 }
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── LOGIN ── */
+.login-screen{position:fixed;inset:0;background:linear-gradient(135deg,#1e3a5f 0%,#3b82f6 100%);display:flex;align-items:center;justify-content:center;z-index:10000;}
+.login-box{background:#fff;border-radius:16px;padding:40px 36px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.2);text-align:center;}
+.login-box img{width:56px;height:56px;border-radius:12px;margin-bottom:12px;}
+.login-box h2{font-family:'Quicksand','Inter',sans-serif;color:#1e3a5f;font-size:22px;margin-bottom:4px;}
+.login-box p{color:#64748b;font-size:13px;margin-bottom:24px;}
+.login-box input{width:100%;padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:12px;outline:none;transition:border .2s;}
+.login-box input:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.1);}
+.login-box .login-btn{width:100%;padding:12px;background:#1e3a5f;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .2s;}
+.login-box .login-btn:hover{background:#2d5283;}
+.login-box .login-btn:disabled{opacity:.6;cursor:not-allowed;}
+.login-error{color:#ef4444;font-size:12px;margin-bottom:12px;min-height:16px;}
 </style>
 </head>
 <body>
+
+<!-- LOGIN SCREEN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <img src="C4U.png" alt="Coach4U">
+    <h2>Coach4U CRM</h2>
+    <p>Sign in to continue</p>
+    <div class="login-error" id="loginError"></div>
+    <input type="email" id="loginEmail" placeholder="Email address" autocomplete="email">
+    <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
+    <button class="login-btn" id="loginBtn" onclick="handleLogin()">Sign In</button>
+  </div>
+</div>
 
 <!-- SIDEBAR -->
 <nav class="sidebar" id="sidebar">
@@ -134,7 +160,10 @@ td .actions button{padding:8px 14px;font-size:12px;}
     <span>Coach4U</span>
   </div>
   <div id="sidebarNav" style="padding:8px 0;flex:1;overflow-y:auto;"></div>
-  <div class="sidebar-footer">Coach4U CRM v1.0</div>
+  <div class="sidebar-footer">
+    <div id="loggedInUser" style="margin-bottom:8px;color:rgba(255,255,255,.6);"></div>
+    <button onclick="handleLogout()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.6);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:11px;font-family:inherit;width:100%;transition:all .15s;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.6)'">Sign Out</button>
+  </div>
 </nav>
 
 <!-- MOBILE OVERLAY -->
@@ -662,7 +691,9 @@ td .actions button{padding:8px 14px;font-size:12px;}
 // ── SUPABASE ──
 const SUPABASE_URL = 'https://uoixetfvboevjxlkfyqy.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_m3qgSGvWF0n2TePf6vhqMw_9obUvJEJ';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth:{persistSession:true,autoRefreshToken:true}
+});
 
 // ── CLIFTONSTRENGTHS 34 THEMES ──
 const CS34 = ['','Achiever','Activator','Adaptability','Analytical','Arranger','Belief','Command','Communication','Competition','Connectedness','Consistency','Context','Deliberative','Developer','Discipline','Empathy','Focus','Futuristic','Harmony','Ideation','Includer','Individualization','Input','Intellection','Learner','Maximizer','Positivity','Relator','Responsibility','Restorative','Self-Assurance','Significance','Strategic','Woo'];
@@ -3023,8 +3054,59 @@ window.deleteITProject=function(id){
   itprojects=itprojects.filter(p=>p.id!==id);toast('Project deleted','success');renderITProjects();
 };
 
+// ── AUTH ──
+function showLogin(){
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('appLoader').style.display='none';
+}
+function hideLogin(){
+  document.getElementById('loginScreen').style.display='none';
+}
+function showLoggedInUser(email){
+  const el=document.getElementById('loggedInUser');
+  if(el) el.textContent=email||'';
+}
+
+window.handleLogin=async function(){
+  const email=document.getElementById('loginEmail').value.trim();
+  const password=document.getElementById('loginPassword').value;
+  const errorEl=document.getElementById('loginError');
+  const btn=document.getElementById('loginBtn');
+  errorEl.textContent='';
+  if(!email||!password){errorEl.textContent='Please enter email and password';return;}
+  btn.disabled=true;btn.textContent='Signing in...';
+  const {data,error}=await supabase.auth.signInWithPassword({email,password});
+  btn.disabled=false;btn.textContent='Sign In';
+  if(error){errorEl.textContent=error.message;return;}
+  hideLogin();
+  showLoggedInUser(data.user.email);
+  loadAll();
+};
+
+window.handleLogout=async function(){
+  await supabase.auth.signOut();
+  location.reload();
+};
+
+// Allow Enter key on login form
+document.getElementById('loginPassword').addEventListener('keydown',function(e){
+  if(e.key==='Enter') handleLogin();
+});
+document.getElementById('loginEmail').addEventListener('keydown',function(e){
+  if(e.key==='Enter') document.getElementById('loginPassword').focus();
+});
+
 // ── BOOT ──
-loadAll();
+(async function boot(){
+  const {data:{session}}=await supabase.auth.getSession();
+  if(session){
+    hideLogin();
+    showLoggedInUser(session.user.email);
+    loadAll();
+  } else {
+    showLogin();
+  }
+})();
 
 // ── MOBILE CHECK ──
 if(window.innerWidth<=768) document.getElementById('mobileToggle').style.display='inline-block';
