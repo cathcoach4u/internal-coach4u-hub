@@ -1291,25 +1291,10 @@ window.sendDailySummary=async function(){
   summary+='📊 **Stats:** '+active.length+' active | '+completedToday.length+' done today | '+needsDecision.length+' need decisions | '+blocked.length+' blocked\n\n';
   summary+='_Sent from Coach4U CRM_';
 
-  // Post to Teams
-  const webhookUrl=getTeamsWebhook();
-  const isPowerAutomate=webhookUrl.includes('powerplatform.com')||webhookUrl.includes('logic.azure.com')||webhookUrl.includes('flow.microsoft.com');
-
-  let payload;
-  if(isPowerAutomate){
-    payload={title:'Coach4U Daily Summary — '+dateStr,text:summary};
-  } else if(webhookUrl.includes('IncomingWebhook')){
-    payload={"@type":"MessageCard","@context":"http://schema.org/extensions","themeColor":"1e3a5f","summary":"Coach4U Daily Summary","sections":[{"activityTitle":"**Coach4U Daily Summary**","activitySubtitle":dateStr,"text":summary,"markdown":true}]};
-  } else {
-    payload={type:'message',attachments:[{contentType:'application/vnd.microsoft.card.adaptive',contentUrl:null,content:{'$schema':'http://adaptivecards.io/schemas/adaptive-card.json',type:'AdaptiveCard',version:'1.4',body:[{type:'TextBlock',text:summary,wrap:true}]}}]};
-  }
-
-  try{
-    await fetch(webhookUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),mode:'no-cors'});
-    toast('Daily summary sent to Teams!','success');
-  }catch(e){
-    toast('Error: '+e.message,'error');
-  }
+  // Post to Teams using the same function that works for individual task logs
+  const sent=await postToTeams('Coach4U Daily Summary','','',
+    'STATUS UPDATE',summary,'Coach4U CRM',false);
+  toast(sent?'Daily summary sent to Teams!':'Failed — check webhook config','success');
 };
 
 // ── REFERRERS DASHBOARD ──
@@ -3605,7 +3590,7 @@ async function postToTeams(taskTitle,taskStatus,taskPriority,logType,message,pos
     };
   }
   try{
-    await fetch(webhookUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),mode:'no-cors'});
+    const resp=await fetch(webhookUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     return true;
   }catch(e){
     console.error('Teams webhook error:',e);
