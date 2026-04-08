@@ -1166,7 +1166,7 @@ function renderOpsDash(){
   let html=`<div class="dash-cards">
     <div class="dash-card" onclick="navTo('tasks');document.getElementById('tkFilterView').value='my-decisions';filterTasks();" style="cursor:pointer;${needsDecision.length?'box-shadow:0 0 0 2px #fbbf24;':''}">
       <div class="dc-icon" style="background:${needsDecision.length?'#fef3c7':'#f1f5f9'};color:${needsDecision.length?'#d97706':'#64748b'};">&#9888;</div>
-      <div class="dc-info"><h4>${needsDecision.length}</h4><p>Needs My Decision</p></div>
+      <div class="dc-info"><h4>${needsDecision.length}</h4><p>Needs Cath's Decision</p></div>
     </div>
     <div class="dash-card" onclick="navTo('tasks');document.getElementById('tkFilterView').value='waiting';filterTasks();" style="cursor:pointer;">
       <div class="dc-icon" style="background:${blocked.length?'#fef2f2':'#eff6ff'};color:${blocked.length?'#dc2626':'#2563eb'};">&#128683;</div>
@@ -1183,7 +1183,7 @@ function renderOpsDash(){
   </div>`;
 
   // Sections in priority order — what Cath needs to see first
-  html+=briefingSection('Needs Your Decision','&#9888;','#d97706',needsDecision);
+  html+=briefingSection('Needs Cath\'s Decision','&#9888;','#d97706',needsDecision);
   html+=briefingSection('Blocked','&#128683;','#dc2626',blocked);
   html+=briefingSection('Overdue','&#128344;','#ef4444',overdue.filter(t=>!needsDecision.includes(t)&&!blocked.includes(t)));
   html+=briefingSection('Urgent','&#9889;','#dc2626',urgent.filter(t=>!needsDecision.includes(t)&&!blocked.includes(t)&&!overdue.includes(t)));
