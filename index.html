@@ -353,8 +353,9 @@ td .actions button{padding:8px 14px;font-size:12px;}
       <div class="toolbar" style="flex-wrap:wrap;gap:8px;">
         <input class="search-input" id="tkSearch" placeholder="Search tasks..." oninput="filterTasks()" style="min-width:140px;">
         <select id="tkFilterView" onchange="filterTasks()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;font-weight:600;">
+          <option value="lousday">Lou's Day</option>
           <option value="active">Active Tasks</option>
-          <option value="my-decisions">Needs My Decision</option>
+          <option value="my-decisions">Needs Decision</option>
           <option value="waiting">Waiting / Blocked</option>
           <option value="cath">Cath's Tasks</option>
           <option value="va">CoachVA Tasks</option>
@@ -428,9 +429,14 @@ td .actions button{padding:8px 14px;font-size:12px;}
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="form-group"><label>Category</label>
+        <select id="tkCategory"><option>Task</option><option>Action Plan</option><option>BAU</option></select>
+      </div>
       <div class="form-group"><label>Type</label>
         <select id="tkType"><option>Admin</option><option>Finance</option><option>Client</option><option>Tech</option><option>Personal</option><option>System</option></select>
       </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
       <div class="form-group"><label>Priority</label>
         <select id="tkPriority"><option>Urgent</option><option>Normal</option><option>Low</option></select>
       </div>
@@ -1133,6 +1139,7 @@ function renderStrDash(){
 // ── OPERATIONS DASHBOARD (Daily Briefing) ──
 function renderOpsDash(){
   const now=new Date();
+  const todayStr=now.toISOString().split('T')[0];
   const active=tasks.filter(t=>t.status!=='Complete');
   const needsDecision=active.filter(t=>t.decision_required==='Yes'||t.status==='Waiting on Cath');
   const blocked=active.filter(t=>t.status==='Blocked');
@@ -1140,7 +1147,8 @@ function renderOpsDash(){
   const inProgress=active.filter(t=>t.status==='In Progress');
   const overdue=active.filter(t=>t.due_date&&new Date(t.due_date)<now);
   const urgent=active.filter(t=>t.priority==='Urgent');
-  const completedToday=tasks.filter(t=>t.status==='Complete'&&t.updated_at&&t.updated_at.startsWith(now.toISOString().split('T')[0]));
+  const completedToday=tasks.filter(t=>t.status==='Complete'&&t.updated_at&&t.updated_at.startsWith(todayStr));
+  const focusToday=active.filter(t=>t.focus_date===todayStr);
 
   function briefingSection(title,icon,color,items,emptyMsg){
     if(!items.length) return '';
@@ -1182,6 +1190,10 @@ function renderOpsDash(){
     </div>
   </div>`;
 
+  // Lou's Focus Today
+  if(focusToday.length){
+    html+=briefingSection('Lou\'s Focus Today','&#9733;','#f59e0b',focusToday);
+  }
   // Sections in priority order — what Cath needs to see first
   html+=briefingSection('Needs Cath\'s Decision','&#9888;','#d97706',needsDecision);
   html+=briefingSection('Blocked','&#128683;','#dc2626',blocked);
@@ -1205,89 +1217,64 @@ window.copyDailySummary=function(){
   const today=now.toISOString().split('T')[0];
   const active=tasks.filter(t=>t.status!=='Complete');
   const completedToday=tasks.filter(t=>t.status==='Complete'&&t.updated_at&&t.updated_at.startsWith(today));
+
+  // Lou's Day categories
+  const priorities=active.filter(t=>t.focus_date===today).sort(taskSorter);
+  const pendings=active.filter(t=>t.focus_date!==today&&(t.work_category||'Task')==='Task').sort(taskSorter);
+  const actionPlan=active.filter(t=>(t.work_category)==='Action Plan').sort(taskSorter);
+  const bau=active.filter(t=>(t.work_category)==='BAU').sort(taskSorter);
+
+  // Alerts
   const needsDecision=active.filter(t=>t.decision_required==='Yes'||t.status==='Waiting on Cath');
   const blocked=active.filter(t=>t.status==='Blocked');
-  const inProgress=active.filter(t=>t.status==='In Progress');
-  const waitingVA=active.filter(t=>t.status==='Waiting on CoachVA');
-  const notStarted=active.filter(t=>t.status==='Not Started');
-  const overdue=active.filter(t=>t.due_date&&new Date(t.due_date)<now);
-  const urgent=active.filter(t=>t.priority==='Urgent'&&t.status!=='Complete');
 
-  // Get today's activity logs
-  const todayLogs=taskLogs.filter(l=>l.created_at&&l.created_at.startsWith(today));
-
-  // Build summary as plain text (Teams renders markdown in chat)
   const dateStr=now.toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  let summary='Hi Cath,\n\nProgress update for today ('+dateStr+'):\n\n';
+  let summary='Hi Cath,\n\nProgress update for '+dateStr+':\n\n';
 
+  // Alerts first
   if(needsDecision.length){
     summary+='⚠️ NEEDS CATH\'S DECISION:\n';
     summary+=needsDecision.map(t=>'• '+t.title+(t.due_date?' — Due: '+t.due_date:'')).join('\n');
     summary+='\n\n';
   }
-
   if(blocked.length){
     summary+='🚫 BLOCKED:\n';
     summary+=blocked.map(t=>'• '+t.title+(t.blocked_reason?' — '+t.blocked_reason:'')).join('\n');
     summary+='\n\n';
   }
 
-  if(overdue.length){
-    summary+='🕐 OVERDUE:\n';
-    summary+=overdue.map(t=>'• '+t.title+' — Due: '+t.due_date).join('\n');
+  // Main sections matching Lou's format
+  if(priorities.length){
+    summary+='PRIORITIES:\n';
+    summary+=priorities.map(t=>'• '+t.title).join('\n');
     summary+='\n\n';
   }
 
-  if(urgent.length){
-    const urgentFiltered=urgent.filter(t=>!needsDecision.includes(t)&&!blocked.includes(t));
-    if(urgentFiltered.length){
-      summary+='⚡ URGENT:\n';
-      summary+=urgentFiltered.map(t=>'• '+t.title).join('\n');
-      summary+='\n\n';
-    }
-  }
-
-  if(inProgress.length){
-    summary+='▶️ IN PROGRESS:\n';
-    summary+=inProgress.map(t=>'• '+t.title+(t.owner?' — '+t.owner:'')).join('\n');
+  if(pendings.length){
+    summary+='PENDINGS:\n';
+    summary+=pendings.map(t=>'• '+t.title).join('\n');
     summary+='\n\n';
   }
 
-  if(waitingVA.length){
-    summary+='⏳ WAITING ON COACHVA:\n';
-    summary+=waitingVA.map(t=>'• '+t.title).join('\n');
+  if(actionPlan.length){
+    summary+='2026 ACTION PLAN:\n';
+    summary+=actionPlan.map(t=>'• '+t.title).join('\n');
     summary+='\n\n';
   }
 
-  if(notStarted.length){
-    summary+='📋 PENDING:\n';
-    summary+=notStarted.map(t=>'• '+t.title+(t.due_date?' — Due: '+t.due_date:'')).join('\n');
+  if(bau.length){
+    summary+='BUSINESS AS USUAL:\n';
+    summary+=bau.map(t=>'• '+t.title).join('\n');
     summary+='\n\n';
   }
 
   if(completedToday.length){
-    summary+='✅ COMPLETED TODAY:\n';
+    summary+='COMPLETED TODAY:\n';
     summary+=completedToday.map(t=>'• '+t.title).join('\n');
     summary+='\n\n';
   }
 
-  if(todayLogs.length){
-    summary+='💬 ACTIVITY LOG:\n';
-    const logsByTask={};
-    todayLogs.forEach(l=>{
-      const t=tasks.find(x=>x.id===l.task_id);
-      const key=t?t.title:'Unknown';
-      if(!logsByTask[key]) logsByTask[key]=[];
-      logsByTask[key].push(l);
-    });
-    Object.keys(logsByTask).forEach(title=>{
-      summary+='• '+title+': '+logsByTask[title].map(l=>l.message).join(' → ')+'\n';
-    });
-    summary+='\n';
-  }
-
-  summary+='📊 Stats: '+active.length+' active | '+completedToday.length+' done today | '+needsDecision.length+' need decisions | '+blocked.length+' blocked\n\n';
-  summary+='Thanks, Cath!';
+  summary+='I will keep you updated of my progress.\nThanks, Cath!';
 
   navigator.clipboard.writeText(summary).then(()=>{
     toast('Daily summary copied — paste into Teams!','success');
@@ -2817,12 +2804,13 @@ async function loadTaskLogs(){
   if(error&&error.code!=='42P01') console.error('Load task_logs error:',error);
 }
 
-function renderTaskCard(t){
+function renderTaskCard(t,showStar){
   const isDone=t.status==='Complete';
   const isBlocked=t.status==='Blocked';
-  const isWaiting=t.status==='Waiting on Cath'||t.status==='Waiting on CoachVA';
   const needsDecision=t.decision_required==='Yes'&&t.status!=='Complete';
   const overdue=t.due_date&&!isDone&&new Date(t.due_date)<new Date();
+  const todayStr=new Date().toISOString().split('T')[0];
+  const isFocused=t.focus_date===todayStr;
 
   const statusColors={'Not Started':'#64748b','In Progress':'#2563eb','Waiting on Cath':'#d97706','Waiting on CoachVA':'#7c3aed','Blocked':'#dc2626','Complete':'#16a34a'};
   const statusBg={'Not Started':'#f1f5f9','In Progress':'#eff6ff','Waiting on Cath':'#fef3c7','Waiting on CoachVA':'#f5f3ff','Blocked':'#fef2f2','Complete':'#dcfce7'};
@@ -2831,7 +2819,11 @@ function renderTaskCard(t){
   const st=t.status||'Not Started';
   const borderColor=overdue?'#ef4444':isBlocked?'#dc2626':needsDecision?'#d97706':statusColors[st]||'#64748b';
 
-  return `<div onclick="openTaskModal('${t.id}')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid ${borderColor};border-radius:8px;padding:14px 16px;cursor:pointer;${isDone?'opacity:.5;':''}${needsDecision?'box-shadow:0 0 0 2px #fbbf24;':''}" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
+  const starHtml=showStar!==false?`<span onclick="event.stopPropagation();toggleFocusTask('${t.id}',${isFocused?'false':'true'})" style="font-size:20px;cursor:pointer;min-width:28px;text-align:center;color:${isFocused?'#f59e0b':'#d1d5db'};" title="${isFocused?'Remove from today':'Add to today\'s priorities'}">${isFocused?'&#9733;':'&#9734;'}</span>`:'';
+
+  return `<div style="display:flex;align-items:stretch;gap:0;">
+    ${starHtml}
+    <div onclick="openTaskModal('${t.id}')" style="flex:1;background:#fff;border:1px solid #e2e8f0;border-left:4px solid ${borderColor};border-radius:8px;padding:14px 16px;cursor:pointer;${isDone?'opacity:.5;':''}${needsDecision?'box-shadow:0 0 0 2px #fbbf24;':''}" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
       <span style="font-weight:600;font-size:14px;color:#1e293b;${isDone?'text-decoration:line-through;color:#94a3b8;':''}">${t.title}</span>
       ${needsDecision?'<span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;">DECISION NEEDED</span>':''}
@@ -2846,6 +2838,39 @@ function renderTaskCard(t){
     </div>
     ${t.blocked_reason&&isBlocked?'<div style="font-size:11px;color:#dc2626;margin-top:4px;font-weight:600;">Blocked: '+t.blocked_reason+'</div>':''}
     ${t.description&&!isDone?'<div style="font-size:12px;color:#64748b;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+t.description+'</div>':''}
+  </div></div>`;
+}
+
+window.toggleFocusTask=async function(id,focus){
+  const todayStr=new Date().toISOString().split('T')[0];
+  const {error}=await supabase.from('tasks').update({focus_date:focus?todayStr:null}).eq('id',id);
+  if(error){toast('Error: '+error.message,'error');return;}
+  const t=tasks.find(x=>x.id===id);
+  if(t) t.focus_date=focus?todayStr:null;
+  renderTasks();
+};
+
+function taskSorter(a,b){
+  const po={'Urgent':0,'Normal':1,'Low':2};
+  if((po[a.priority]||1)!==(po[b.priority]||1)) return (po[a.priority]||1)-(po[b.priority]||1);
+  if(a.due_date&&b.due_date) return a.due_date.localeCompare(b.due_date);
+  return a.due_date?-1:b.due_date?1:0;
+}
+
+function renderTaskSection(title,icon,color,items,showStar){
+  if(!items.length) return '';
+  const key='sec_'+title;
+  const collapsed=tkGroupState[key]||false;
+  const arrow=collapsed?'&#9654;':'&#9660;';
+  return `<div style="margin-bottom:12px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;overflow:hidden;">
+    <div onclick="toggleTkGroup('${key}')" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;user-select:none;background:#f8fafc;border-bottom:${collapsed?'none':'1px solid #e2e8f0'};">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:12px;color:#94a3b8;">${arrow}</span>
+        <span style="font-weight:700;font-size:14px;color:${color};">${icon} ${title}</span>
+        <span style="background:#f1f5f9;color:#64748b;font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;">${items.length}</span>
+      </div>
+    </div>
+    ${collapsed?'':`<div style="display:flex;flex-direction:column;gap:8px;padding:12px;">${items.map(t=>renderTaskCard(t,showStar)).join('')}</div>`}
   </div>`;
 }
 
@@ -2853,52 +2878,57 @@ function renderTasks(){
   const q=document.getElementById('tkSearch').value.toLowerCase();
   const view=document.getElementById('tkFilterView').value;
   const typeFilter=document.getElementById('tkFilterType').value;
+  const todayStr=new Date().toISOString().split('T')[0];
   let filtered=tasks;
-
-  // Apply view filter
-  if(view==='active') filtered=filtered.filter(t=>t.status!=='Complete');
-  else if(view==='my-decisions') filtered=filtered.filter(t=>(t.decision_required==='Yes'||t.status==='Waiting on Cath')&&t.status!=='Complete');
-  else if(view==='waiting') filtered=filtered.filter(t=>['Waiting on Cath','Waiting on CoachVA','Blocked'].includes(t.status));
-  else if(view==='cath') filtered=filtered.filter(t=>t.owner==='Cath Baker'&&t.status!=='Complete');
-  else if(view==='va') filtered=filtered.filter(t=>t.owner==='CoachVA (Lou)'&&t.status!=='Complete');
-  else if(view==='complete') filtered=filtered.filter(t=>t.status==='Complete');
 
   // Apply type filter
   if(typeFilter) filtered=filtered.filter(t=>t.task_type===typeFilter);
-
   // Apply search
   if(q) filtered=filtered.filter(t=>(t.title+' '+(t.owner||'')+' '+(t.description||'')+' '+(t.task_type||'')).toLowerCase().includes(q));
 
-  // Group by status
-  const statusOrder=['Waiting on Cath','Blocked','In Progress','Not Started','Waiting on CoachVA','Complete'];
-  const grouped={};
-  filtered.forEach(t=>{const s=t.status||'Not Started';if(!grouped[s])grouped[s]=[];grouped[s].push(t);});
-
-  // Sort within groups: Urgent first, then by due date
-  Object.values(grouped).forEach(arr=>arr.sort((a,b)=>{
-    const po={'Urgent':0,'Normal':1,'Low':2};
-    if((po[a.priority]||1)!==(po[b.priority]||1)) return (po[a.priority]||1)-(po[b.priority]||1);
-    if(a.due_date&&b.due_date) return a.due_date.localeCompare(b.due_date);
-    return a.due_date?-1:b.due_date?1:0;
-  }));
-
   let html='';
-  statusOrder.forEach(s=>{
-    if(!grouped[s]||!grouped[s].length)return;
-    const collapsed=tkGroupState[s]||false;
-    const arrow=collapsed?'&#9654;':'&#9660;';
+
+  if(view==='lousday'){
+    // Lou's Day view: 4 sections matching her Teams format
+    const active=filtered.filter(t=>t.status!=='Complete');
+    const priorities=active.filter(t=>t.focus_date===todayStr).sort(taskSorter);
+    const pendings=active.filter(t=>t.focus_date!==todayStr&&(t.work_category||'Task')==='Task').sort(taskSorter);
+    const actionPlan=active.filter(t=>(t.work_category)==='Action Plan').sort(taskSorter);
+    const bau=active.filter(t=>(t.work_category)==='BAU').sort(taskSorter);
+    const completedToday=filtered.filter(t=>t.status==='Complete'&&t.updated_at&&t.updated_at.startsWith(todayStr));
+
+    if(!priorities.length){
+      html+=`<div style="padding:16px 20px;margin-bottom:12px;border:1px dashed #d1d5db;border-radius:10px;color:#94a3b8;text-align:center;font-size:13px;">
+        &#9734; Tap the star on any task to add it to today's priorities
+      </div>`;
+    }
+    html+=renderTaskSection("Today's Priorities",'&#9733;','#f59e0b',priorities,true);
+    html+=renderTaskSection('Pending','&#128203;','#64748b',pendings,true);
+    html+=renderTaskSection('Action Plan','&#127919;','#7c3aed',actionPlan,true);
+    html+=renderTaskSection('BAU (Daily Monitoring)','&#128260;','#2563eb',bau,false);
+    if(completedToday.length) html+=renderTaskSection('Completed Today','&#10004;','#16a34a',completedToday,false);
+
+  } else {
+    // Standard status-based views
+    if(view==='active') filtered=filtered.filter(t=>t.status!=='Complete');
+    else if(view==='my-decisions') filtered=filtered.filter(t=>(t.decision_required==='Yes'||t.status==='Waiting on Cath')&&t.status!=='Complete');
+    else if(view==='waiting') filtered=filtered.filter(t=>['Waiting on Cath','Waiting on CoachVA','Blocked'].includes(t.status));
+    else if(view==='cath') filtered=filtered.filter(t=>t.owner==='Cath Baker'&&t.status!=='Complete');
+    else if(view==='va') filtered=filtered.filter(t=>t.owner==='CoachVA (Lou)'&&t.status!=='Complete');
+    else if(view==='complete') filtered=filtered.filter(t=>t.status==='Complete');
+
+    const statusOrder=['Waiting on Cath','Blocked','In Progress','Not Started','Waiting on CoachVA','Complete'];
     const statusColors={'Not Started':'#64748b','In Progress':'#2563eb','Waiting on Cath':'#d97706','Waiting on CoachVA':'#7c3aed','Blocked':'#dc2626','Complete':'#16a34a'};
-    html+=`<div style="margin-bottom:12px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;overflow:hidden;">
-      <div onclick="toggleTkGroup('${s}')" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;user-select:none;background:#f8fafc;border-bottom:${collapsed?'none':'1px solid #e2e8f0'};">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <span style="font-size:12px;color:#94a3b8;">${arrow}</span>
-          <span style="font-weight:700;font-size:14px;color:${statusColors[s]||'#1e293b'};">${s}</span>
-          <span style="background:${s==='Waiting on Cath'||s==='Blocked'?'#fef2f2':'#f1f5f9'};color:${s==='Waiting on Cath'||s==='Blocked'?'#dc2626':'#64748b'};font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;">${grouped[s].length}</span>
-        </div>
-      </div>
-      ${collapsed?'':`<div style="display:flex;flex-direction:column;gap:8px;padding:12px;">${grouped[s].map(t=>renderTaskCard(t)).join('')}</div>`}
-    </div>`;
-  });
+    const grouped={};
+    filtered.forEach(t=>{const s=t.status||'Not Started';if(!grouped[s])grouped[s]=[];grouped[s].push(t);});
+    Object.values(grouped).forEach(arr=>arr.sort(taskSorter));
+
+    statusOrder.forEach(s=>{
+      if(!grouped[s]||!grouped[s].length)return;
+      html+=renderTaskSection(s,'',statusColors[s]||'#64748b',grouped[s],true);
+    });
+  }
+
   document.getElementById('tkCards').innerHTML=html||'<div style="padding:20px;text-align:center;color:#94a3b8;">No tasks found.</div>';
 }
 window.filterTasks=function(){renderTasks();};
@@ -2911,6 +2941,7 @@ window.openTaskModal=function(id){
   document.getElementById('tkDesc').value=t?t.description||'':'';
   document.getElementById('tkOwner').value=t?t.owner:'CoachVA (Lou)';
   document.getElementById('tkRequester').value=t?t.requester||'Cath Baker':'Cath Baker';
+  document.getElementById('tkCategory').value=t?t.work_category||'Task':'Task';
   document.getElementById('tkType').value=t?t.task_type||'Admin':'Admin';
   document.getElementById('tkPriority').value=t?t.priority||'Normal':'Normal';
   document.getElementById('tkStatus').value=t?t.status||'Not Started':'Not Started';
@@ -3005,6 +3036,7 @@ window.saveTask=async function(){
     description:document.getElementById('tkDesc').value.trim()||null,
     owner:document.getElementById('tkOwner').value,
     requester:document.getElementById('tkRequester').value,
+    work_category:document.getElementById('tkCategory').value,
     task_type:document.getElementById('tkType').value,
     priority:document.getElementById('tkPriority').value,
     status:document.getElementById('tkStatus').value,
@@ -3634,12 +3666,12 @@ const aiTools=[
   {name:'search_prospects',description:'Search prospects by name, status, or notes. Use for specific lookups.',input_schema:{type:'object',properties:{query:{type:'string',description:'Search term'}},required:['query']}},
   {name:'add_contact',description:'Add a new contact to the master list. ALWAYS use this tool to add contacts, not any generic method.',input_schema:{type:'object',properties:{first_name:{type:'string'},last_name:{type:'string'},email:{type:'string'},phone:{type:'string'},contact_type:{type:'string',enum:['Individual','ThriveHQ Member','Prospect']},notes:{type:'string'}},required:['first_name','last_name']}},
   {name:'add_prospect',description:'Add a new prospect. ALWAYS use this tool to add prospects. Optionally link to existing contact by contact_id.',input_schema:{type:'object',properties:{name:{type:'string',description:'Full name'},email:{type:'string'},phone:{type:'string'},role:{type:'string',enum:['Individual','Couple','Business','Organisation']},status:{type:'string',enum:['New','Hot','Warm','Cold']},source:{type:'string'},notes:{type:'string'},contact_id:{type:'string',description:'UUID of linked contact from master list (optional)'}},required:['name']}},
-  {name:'add_task',description:'Add a new task. ALWAYS use this tool to create tasks.',input_schema:{type:'object',properties:{title:{type:'string'},description:{type:'string'},owner:{type:'string',enum:['Cath Baker','CoachVA (Lou)'],description:'Who owns/does this task'},requester:{type:'string',enum:['Cath Baker','CoachVA (Lou)','System','Client'],description:'Who requested this task'},task_type:{type:'string',enum:['Admin','Finance','Client','Tech','Personal','System']},priority:{type:'string',enum:['Urgent','Normal','Low']},status:{type:'string',enum:['Not Started','In Progress','Waiting on Cath','Waiting on CoachVA','Blocked','Complete']},source:{type:'string',enum:['Chat','Email','Call','System','Self'],description:'Where did this task come from'},decision_required:{type:'string',enum:['No','Yes'],description:'Does this need Cath decision?'},due_date:{type:'string',description:'YYYY-MM-DD format'},blocked_reason:{type:'string',description:'Why is this blocked (only if status=Blocked)'}},required:['title']}},
+  {name:'add_task',description:'Add a new task. ALWAYS use this tool to create tasks.',input_schema:{type:'object',properties:{title:{type:'string'},description:{type:'string'},work_category:{type:'string',enum:['Task','Action Plan','BAU'],description:'Task=regular task, Action Plan=strategic goal, BAU=recurring daily monitoring'},owner:{type:'string',enum:['Cath Baker','CoachVA (Lou)'],description:'Who owns/does this task'},requester:{type:'string',enum:['Cath Baker','CoachVA (Lou)','System','Client'],description:'Who requested this task'},task_type:{type:'string',enum:['Admin','Finance','Client','Tech','Personal','System']},priority:{type:'string',enum:['Urgent','Normal','Low']},status:{type:'string',enum:['Not Started','In Progress','Waiting on Cath','Waiting on CoachVA','Blocked','Complete']},source:{type:'string',enum:['Chat','Email','Call','System','Self'],description:'Where did this task come from'},decision_required:{type:'string',enum:['No','Yes'],description:'Does this need Cath decision?'},due_date:{type:'string',description:'YYYY-MM-DD format'},blocked_reason:{type:'string',description:'Why is this blocked (only if status=Blocked)'},focus_today:{type:'boolean',description:'Set true to add to today\'s priorities'}},required:['title']}},
   {name:'update_contact',description:'Update an existing contact. First use search_contacts to find the contact ID, then use this tool.',input_schema:{type:'object',properties:{id:{type:'string',description:'Contact UUID'},email:{type:'string'},phone:{type:'string'},contact_type:{type:'string'},notes:{type:'string'},first_name:{type:'string'},last_name:{type:'string'}},required:['id']}},
   {name:'update_prospect',description:'Update an existing prospect. First use search_prospects to find the prospect ID.',input_schema:{type:'object',properties:{id:{type:'string',description:'Prospect UUID'},name:{type:'string'},status:{type:'string'},role:{type:'string'},notes:{type:'string'},email:{type:'string'},phone:{type:'string'}},required:['id']}},
   {name:'get_stats',description:'Get current CRM statistics: contact count, client count, prospect count, task count.',input_schema:{type:'object',properties:{}}},
   {name:'update_client',description:'Update an existing client. First use search_clients to find the client ID.',input_schema:{type:'object',properties:{id:{type:'string',description:'Client UUID'},relationship_name:{type:'string'},role:{type:'string',enum:['Individual','Couple','Business','Organisation']},status:{type:'string',enum:['Active','Inactive','Onboarding','Past']},practitioner:{type:'string'},notes:{type:'string'},file_notes_link:{type:'string',description:'SharePoint URL for file notes'},xero_link:{type:'string',description:'Xero accounting link'}},required:['id']}},
-  {name:'update_task',description:'Update an existing task. First use list_records or search to find the task ID.',input_schema:{type:'object',properties:{id:{type:'string',description:'Task UUID'},title:{type:'string'},description:{type:'string'},owner:{type:'string',enum:['Cath Baker','CoachVA (Lou)']},requester:{type:'string',enum:['Cath Baker','CoachVA (Lou)','System','Client']},task_type:{type:'string',enum:['Admin','Finance','Client','Tech','Personal','System']},priority:{type:'string',enum:['Urgent','Normal','Low']},status:{type:'string',enum:['Not Started','In Progress','Waiting on Cath','Waiting on CoachVA','Blocked','Complete']},source:{type:'string',enum:['Chat','Email','Call','System','Self']},decision_required:{type:'string',enum:['No','Yes']},due_date:{type:'string',description:'YYYY-MM-DD format'},blocked_reason:{type:'string'}},required:['id']}},
+  {name:'update_task',description:'Update an existing task. First use list_records or search to find the task ID.',input_schema:{type:'object',properties:{id:{type:'string',description:'Task UUID'},title:{type:'string'},description:{type:'string'},work_category:{type:'string',enum:['Task','Action Plan','BAU']},owner:{type:'string',enum:['Cath Baker','CoachVA (Lou)']},requester:{type:'string',enum:['Cath Baker','CoachVA (Lou)','System','Client']},task_type:{type:'string',enum:['Admin','Finance','Client','Tech','Personal','System']},priority:{type:'string',enum:['Urgent','Normal','Low']},status:{type:'string',enum:['Not Started','In Progress','Waiting on Cath','Waiting on CoachVA','Blocked','Complete']},source:{type:'string',enum:['Chat','Email','Call','System','Self']},decision_required:{type:'string',enum:['No','Yes']},due_date:{type:'string',description:'YYYY-MM-DD format'},blocked_reason:{type:'string'},focus_today:{type:'boolean',description:'Set true to focus today, false to unfocus'}},required:['id']}},
   {name:'complete_task',description:'Mark a task as Complete. Shortcut for update_task with status=Complete.',input_schema:{type:'object',properties:{id:{type:'string',description:'Task UUID'}},required:['id']}},
   {name:'add_task_log',description:'Add a communication log entry to a task. Use for status updates, action requests, confirmations, blocks, or notes.',input_schema:{type:'object',properties:{task_id:{type:'string',description:'Task UUID'},log_type:{type:'string',enum:['STATUS UPDATE','ACTION REQUIRED','CONFIRMATION REQUEST','BLOCKED','NOTE']},message:{type:'string',description:'Log message content'},posted_by:{type:'string',enum:['Cath Baker','CoachVA (Lou)','System']},response_required:{type:'boolean',description:'Does this need a response?'}},required:['task_id','message']}},
   {name:'delete_record',description:'Delete a record from any table. Use with caution. First search to confirm the correct record.',input_schema:{type:'object',properties:{table:{type:'string',enum:['contacts','clients','prospects','tasks'],description:'Which table to delete from'},id:{type:'string',description:'Record UUID to delete'}},required:['table','id']}},
@@ -3689,7 +3721,7 @@ async function handleToolCall(name,input){
     } else if(t==='prospects'){
       result+=items.map(p=>`- **${p.name}** | Status: ${p.status||'New'} | Role: ${p.role||'Individual'} | ${p.phone||p.email||'No contact'}${p.notes?' | '+p.notes:''}`).join('\n');
     } else if(t==='tasks'){
-      result+=items.map(tk=>`- **${tk.title}** | Owner: ${tk.owner||'—'} | ${tk.priority||'Normal'} | ${tk.status||'Not Started'} | Type: ${tk.task_type||'—'} | Due: ${tk.due_date||'—'}${tk.decision_required==='Yes'?' | ⚠️ DECISION NEEDED':''}${tk.blocked_reason?' | Blocked: '+tk.blocked_reason:''}`).join('\n');
+      result+=items.map(tk=>`- **${tk.title}** | Owner: ${tk.owner||'—'} | ${tk.priority||'Normal'} | ${tk.status||'Not Started'} | Category: ${tk.work_category||'Task'} | Type: ${tk.task_type||'—'} | Due: ${tk.due_date||'—'}${tk.focus_date===new Date().toISOString().split('T')[0]?' | ⭐ TODAY\'S PRIORITY':''}${tk.decision_required==='Yes'?' | ⚠️ DECISION NEEDED':''}${tk.blocked_reason?' | Blocked: '+tk.blocked_reason:''}`).join('\n');
     } else if(t==='referrers'){
       result+=items.map(r=>`- **${r.name}** | ${r.status||'Active'}`).join('\n');
     } else if(t==='trials'){
@@ -3773,9 +3805,11 @@ async function handleToolCall(name,input){
   // ADD TASK — matches saveTask() exactly
   if(name==='add_task'){
     if(!input.title) return {error:'Task title is required',result:null};
+    const todayStr=new Date().toISOString().split('T')[0];
     const data={
       title:input.title.trim(),
       description:(input.description||'').trim()||null,
+      work_category:input.work_category||'Task',
       owner:input.owner||'Cath Baker',
       requester:input.requester||'Cath Baker',
       task_type:input.task_type||'Admin',
@@ -3784,12 +3818,14 @@ async function handleToolCall(name,input){
       source:input.source||'Chat',
       decision_required:input.decision_required||'No',
       due_date:input.due_date||null,
-      blocked_reason:(input.blocked_reason||'').trim()||null
+      blocked_reason:(input.blocked_reason||'').trim()||null,
+      focus_date:input.focus_today?todayStr:null
     };
     const {data:inserted,error}=await supabase.from('tasks').insert(data).select();
     if(error) return {error:'Failed to add task: '+error.message,result:null};
     await loadTasks();renderTasks();
-    return {error:null,result:'Task added: **'+data.title+'** (Owner: '+data.owner+', Priority: '+data.priority+', Due: '+(data.due_date||'not set')+')'};
+    const cat=data.work_category!=='Task'?' ['+data.work_category+']':'';
+    return {error:null,result:'Task added: **'+data.title+'**'+cat+' (Owner: '+data.owner+', Priority: '+data.priority+(data.focus_date?', Focused today':'')+')'};
   }
 
   // UPDATE CONTACT — matches saveContact() update path
@@ -3869,6 +3905,9 @@ async function handleToolCall(name,input){
     if(input.decision_required) data.decision_required=input.decision_required;
     if(input.due_date!==undefined) data.due_date=input.due_date||null;
     if(input.blocked_reason!==undefined) data.blocked_reason=input.blocked_reason.trim()||null;
+    if(input.work_category) data.work_category=input.work_category;
+    if(input.focus_today===true) data.focus_date=new Date().toISOString().split('T')[0];
+    else if(input.focus_today===false) data.focus_date=null;
     if(!Object.keys(data).length) return {error:'No fields to update',result:null};
     const {error}=await supabase.from('tasks').update(data).eq('id',input.id);
     if(error) return {error:'Failed to update task: '+error.message,result:null};
@@ -4007,7 +4046,7 @@ async function handleToolCall(name,input){
       (t.title+' '+(t.description||'')+' '+(t.status||'')+' '+(t.priority||'')).toLowerCase().includes(q)
     ).slice(0,10);
     if(!matches.length) return {error:null,result:'No tasks found matching "'+input.query+'"'};
-    return {error:null,result:matches.map(t=>`**${t.title}** (ID: ${t.id})\n  Owner: ${t.owner||'—'} | Priority: ${t.priority||'Normal'} | Status: ${t.status||'Not Started'} | Type: ${t.task_type||'—'} | Due: ${t.due_date||'—'}${t.decision_required==='Yes'?'\n  ⚠️ DECISION NEEDED':''}${t.blocked_reason?'\n  Blocked: '+t.blocked_reason:''}${t.description?'\n  '+t.description:''}`).join('\n\n')};
+    return {error:null,result:matches.map(t=>`**${t.title}** (ID: ${t.id})\n  Owner: ${t.owner||'—'} | Priority: ${t.priority||'Normal'} | Status: ${t.status||'Not Started'} | Category: ${t.work_category||'Task'} | Type: ${t.task_type||'—'} | Due: ${t.due_date||'—'}${t.focus_date===new Date().toISOString().split('T')[0]?'\n  ⭐ TODAY\'S PRIORITY':''}${t.decision_required==='Yes'?'\n  ⚠️ DECISION NEEDED':''}${t.blocked_reason?'\n  Blocked: '+t.blocked_reason:''}${t.description?'\n  '+t.description:''}`).join('\n\n')};
   }
 
   // ADD TRIAL — auto-creates contact if none linked
@@ -4127,7 +4166,7 @@ AVAILABLE TOOLS:
 **Create:**
 - add_contact: Add to master list (needs first_name + last_name)
 - add_prospect: Add prospect (needs name, optionally link contact_id)
-- add_task: Add task (needs title). Fields: owner (Cath Baker/CoachVA Lou), requester, task_type (Admin/Finance/Client/Tech/Personal/System), priority (Urgent/Normal/Low), status (Not Started/In Progress/Waiting on Cath/Waiting on CoachVA/Blocked/Complete), source (Chat/Email/Call/System/Self), decision_required (Yes/No), due_date, blocked_reason
+- add_task: Add task (needs title). Fields: owner (Cath Baker/CoachVA Lou), requester, task_type (Admin/Finance/Client/Tech/Personal/System), priority (Urgent/Normal/Low), status (Not Started/In Progress/Waiting on Cath/Waiting on CoachVA/Blocked/Complete), source (Chat/Email/Call/System/Self), decision_required (Yes/No), due_date, blocked_reason, work_category (Task/Action Plan/BAU), focus_today (true to add to today's priorities)
 - add_task_log: Add a communication log to a task (needs task_id + message). Types: STATUS UPDATE, ACTION REQUIRED, CONFIRMATION REQUEST, BLOCKED, NOTE
 - add_renewal: Add ThriveHQ membership renewal (needs contact_id, period_start, period_end)
 - add_referrer_payment: Add referrer payment (needs referrer_id, amount)
@@ -4136,7 +4175,7 @@ AVAILABLE TOOLS:
 - update_contact: Update contact fields (needs id — search first)
 - update_prospect: Update prospect fields (needs id — search first)
 - update_client: Update client fields like status, notes, practitioner, file_notes_link (needs id — search first)
-- update_task: Update task fields including owner, requester, task_type, priority, status, source, decision_required, blocked_reason (needs id)
+- update_task: Update task fields including owner, requester, task_type, priority, status, source, decision_required, blocked_reason, work_category, focus_today (needs id)
 - complete_task: Quick shortcut to mark task as Complete (needs id)
 
 **ThriveHQ Trials:**
@@ -4165,7 +4204,10 @@ RULES:
 10. Valid task statuses: Not Started, In Progress, Waiting on Cath, Waiting on CoachVA, Blocked, Complete
 11. Valid client statuses: Active, Inactive, Onboarding, Past
 12. Task owners are "Cath Baker" or "CoachVA (Lou)"
-13. When creating tasks, set decision_required to "Yes" if Cath needs to make a decision on it`;
+13. When creating tasks, set decision_required to "Yes" if Cath needs to make a decision on it
+14. Task categories: "Task" (regular one-off tasks), "Action Plan" (strategic goals for 2026), "BAU" (Business As Usual — recurring daily monitoring like emails, social media)
+15. Use focus_today=true to add a task to today's priorities (Lou's daily focus). Tasks auto-expire from priorities the next day.
+16. Lou's Day view shows 4 sections: Priorities (today's focus), Pending (backlog tasks), Action Plan (strategic goals), BAU (daily recurring)`;
 }
 
 window.sendAiChat=async function(){
