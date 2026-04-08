@@ -3464,7 +3464,13 @@ window.handleSetNewPassword=async function(){
   if(error){errorEl.textContent=error.message;return;}
   errorEl.style.color='#16a34a';
   errorEl.textContent='Password updated! Signing you in...';
-  setTimeout(()=>{hideLogin();loadAll();},1000);
+  window.location.hash='';
+  setTimeout(async()=>{
+    const {data:{user}}=await supabase.auth.getUser();
+    if(user) showLoggedInUser(user.email);
+    hideLogin();
+    loadAll();
+  },1000);
 };
 
 function showNewPasswordForm(){
@@ -3491,6 +3497,12 @@ supabase.auth.onAuthStateChange((event,session)=>{
 
 // ── BOOT ──
 (async function boot(){
+  // If this is a password reset link, don't auto-login — wait for PASSWORD_RECOVERY event
+  const hash=window.location.hash||'';
+  if(hash.includes('type=recovery')||hash.includes('type=magiclink')){
+    showLogin();
+    return;
+  }
   try {
     const {data:{session}}=await supabase.auth.getSession();
     if(session){
