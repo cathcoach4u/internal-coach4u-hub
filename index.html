@@ -4044,16 +4044,34 @@ window.sendAiChat=async function(){
     appendAiMsg('bot','API key saved! You can now ask me anything about your CRM data.');
     return;
   }
-  // Handle Teams webhook URL entry (legacy Incoming Webhook or new Workflows)
-  if(msg.startsWith('https://') && (msg.includes('.logic.azure.com') || msg.includes('.azure.com/') || msg.includes('webhook.office.com') || msg.includes('IncomingWebhook'))){
+  // Handle Teams webhook URL entry (legacy Incoming Webhook, Power Automate Workflows, or explicit command)
+  if(msg.toLowerCase().startsWith('teams webhook ')){
+    const url=msg.substring(14).trim();
+    if(url.startsWith('https://')){
+      setTeamsWebhook(url);
+      appendAiMsg('bot','Teams webhook saved! Open any task — you\'ll see a **"Send to Teams"** checkbox when posting activity log entries.\n\nCommands: **teams status** | **teams remove** | **teams test**');
+    } else {
+      appendAiMsg('bot','Webhook URL must start with https://. Try: **teams webhook https://your-url-here**');
+    }
+    return;
+  }
+  if(msg.startsWith('https://') && (msg.includes('.logic.azure.com') || msg.includes('.azure.com/') || msg.includes('webhook.office.com') || msg.includes('IncomingWebhook') || msg.includes('flow.microsoft.com') || msg.includes('powerautomate'))){
     setTeamsWebhook(msg.trim());
-    appendAiMsg('bot','Teams Workflow webhook saved! Task updates can now be sent to your Teams channel. Open any task — you\'ll see a **"Send to Teams"** checkbox when posting activity log entries.');
+    appendAiMsg('bot','Teams webhook saved! Open any task — you\'ll see a **"Send to Teams"** checkbox when posting activity log entries.\n\nCommands: **teams status** | **teams remove** | **teams test**');
     return;
   }
   // Handle Teams webhook commands
   if(msg.toLowerCase()==='teams status'){
     const url=getTeamsWebhook();
-    appendAiMsg('bot',url?'Teams webhook is configured: `'+url.substring(0,60)+'...`\n\nTo remove it, type: **teams remove**':'No Teams webhook configured. Paste an Incoming Webhook URL to set it up.');
+    appendAiMsg('bot',url?'Teams webhook is configured: `'+url.substring(0,60)+'...`\n\nCommands: **teams remove** | **teams test**':'No Teams webhook configured.\n\nType: **teams webhook https://your-url-here**');
+    return;
+  }
+  if(msg.toLowerCase()==='teams test'){
+    const url=getTeamsWebhook();
+    if(!url){appendAiMsg('bot','No webhook configured. Type: **teams webhook https://your-url-here**');return;}
+    appendAiMsg('bot','Sending test message to Teams...');
+    const ok=await postToTeams('Test Task','In Progress','Normal','NOTE','This is a test message from Coach4U CRM.','System',false);
+    appendAiMsg('bot',ok?'Test message sent! Check your Teams channel.':'Failed to send. The webhook URL may be incorrect or blocked by CORS. Check the browser console for errors.');
     return;
   }
   if(msg.toLowerCase()==='teams remove'){
