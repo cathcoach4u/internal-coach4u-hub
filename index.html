@@ -454,12 +454,20 @@ td .actions button{padding:8px 14px;font-size:12px;}
     <div id="taskLogSection" style="display:none;">
       <div style="font-weight:700;font-size:13px;color:#1e3a5f;margin:12px 0 8px;">Activity Log</div>
       <div id="taskLogEntries" style="max-height:200px;overflow-y:auto;margin-bottom:8px;"></div>
-      <div style="display:flex;gap:8px;">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <select id="tkLogType" style="padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;">
           <option>STATUS UPDATE</option><option>ACTION REQUIRED</option><option>CONFIRMATION REQUEST</option><option>BLOCKED</option><option>NOTE</option>
         </select>
-        <input id="tkLogMsg" placeholder="Add update..." style="flex:1;padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;">
+        <input id="tkLogMsg" placeholder="Add update..." style="flex:1;min-width:120px;padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;">
         <button class="btn btn-blue" onclick="addTaskLog()" style="padding:6px 14px;font-size:12px;">Post</button>
+      </div>
+      <div id="tkTeamsRow" style="display:none;margin-top:8px;display:flex;gap:16px;align-items:center;">
+        <label style="font-size:12px;display:flex;align-items:center;gap:4px;cursor:pointer;color:#475569;">
+          <input type="checkbox" id="tkSendTeams"> Send to Teams
+        </label>
+        <label id="tkNotifyCathLabel" style="font-size:12px;display:none;align-items:center;gap:4px;cursor:pointer;color:#d97706;font-weight:600;">
+          <input type="checkbox" id="tkNotifyCath"> Notify Cath
+        </label>
       </div>
     </div>
     <div class="modal-actions">
@@ -2817,6 +2825,19 @@ window.openTaskModal=function(id){
   } else {
     logSection.style.display='none';
   }
+  // Teams integration row
+  const teamsRow=document.getElementById('tkTeamsRow');
+  const sendTeamsCb=document.getElementById('tkSendTeams');
+  const notifyLabel=document.getElementById('tkNotifyCathLabel');
+  if(getTeamsWebhook()){
+    teamsRow.style.display='flex';
+    sendTeamsCb.checked=false;
+    document.getElementById('tkNotifyCath').checked=false;
+    notifyLabel.style.display='none';
+    sendTeamsCb.onchange=function(){notifyLabel.style.display=this.checked?'flex':'none';};
+  } else {
+    teamsRow.style.display='none';
+  }
   document.getElementById('taskModal').classList.add('open');
 };
 
@@ -2834,6 +2855,7 @@ function renderTaskLogEntries(taskId){
       </div>
       <div style="font-size:12px;color:#1e293b;">${l.message||''}</div>
       ${l.response_required?'<div style="font-size:10px;color:#dc2626;font-weight:600;margin-top:2px;">RESPONSE REQUIRED</div>':''}
+      ${l.sent_to_teams?'<div style="font-size:10px;color:#6264a7;margin-top:2px;">&#9986; Sent to Teams</div>':''}
     </div>`;
   }).join('');
 }
@@ -2845,16 +2867,27 @@ window.addTaskLog=async function(){
   if(!msg){toast('Enter a message','error');return;}
   const logType=document.getElementById('tkLogType').value;
   const responseRequired=logType==='ACTION REQUIRED'||logType==='CONFIRMATION REQUEST';
+  const sendToTeams=document.getElementById('tkSendTeams')&&document.getElementById('tkSendTeams').checked;
+  const notifyCath=document.getElementById('tkNotifyCath')&&document.getElementById('tkNotifyCath').checked;
   const {data:session}=await supabase.auth.getSession();
   const postedBy=session?.session?.user?.email||'Unknown';
   const {error}=await supabase.from('task_logs').insert({
-    task_id:taskId,log_type:logType,message:msg,posted_by:postedBy,response_required:responseRequired
+    task_id:taskId,log_type:logType,message:msg,posted_by:postedBy,response_required:responseRequired,sent_to_teams:sendToTeams||false
   });
   if(error){toast('Error: '+error.message,'error');return;}
+  // Send to Teams if checked
+  if(sendToTeams){
+    const t=tasks.find(x=>x.id===taskId);
+    const sent=await postToTeams(t?t.title:'Task',t?t.status:'',t?t.priority:'',logType,msg,postedBy,notifyCath);
+    if(!sent) toast('Teams: no webhook configured','error');
+  }
   document.getElementById('tkLogMsg').value='';
+  if(document.getElementById('tkSendTeams')) document.getElementById('tkSendTeams').checked=false;
+  if(document.getElementById('tkNotifyCath')) document.getElementById('tkNotifyCath').checked=false;
+  if(document.getElementById('tkNotifyCathLabel')) document.getElementById('tkNotifyCathLabel').style.display='none';
   await loadTaskLogs();
   renderTaskLogEntries(taskId);
-  toast('Update posted','success');
+  toast(sendToTeams?'Update posted + sent to Teams':'Update posted','success');
 };
 
 window.saveTask=async function(){
@@ -3379,6 +3412,42 @@ window.addEventListener('resize',()=>{
 // API key stored in browser localStorage for security (not in code)
 function getAnthropicKey(){return localStorage.getItem('coach4u_anthropic_key')||'';}
 function setAnthropicKey(key){localStorage.setItem('coach4u_anthropic_key',key);}
+
+// Teams Incoming Webhook URL stored in localStorage
+function getTeamsWebhook(){return localStorage.getItem('coach4u_teams_webhook')||'';}
+function setTeamsWebhook(url){localStorage.setItem('coach4u_teams_webhook',url);}
+
+async function postToTeams(taskTitle,taskStatus,taskPriority,logType,message,postedBy,notifyCath){
+  const webhookUrl=getTeamsWebhook();
+  if(!webhookUrl) return false;
+  const urgentBanner=notifyCath?'🔔 **ATTENTION NEEDED — Cath**\n\n':'';
+  const typeEmoji={'STATUS UPDATE':'📋','ACTION REQUIRED':'🚨','CONFIRMATION REQUEST':'❓','BLOCKED':'🚫','NOTE':'📝'};
+  const statusColor={'Not Started':'#94a3b8','In Progress':'#2563eb','Waiting on Cath':'#d97706','Waiting on CoachVA':'#8b5cf6','Blocked':'#ef4444','Complete':'#16a34a'};
+  const card={
+    "@type":"MessageCard",
+    "@context":"http://schema.org/extensions",
+    "themeColor":notifyCath?"FF0000":(statusColor[taskStatus]||'2563eb').replace('#',''),
+    "summary":"Task Update: "+taskTitle,
+    "sections":[{
+      "activityTitle":urgentBanner+"**"+taskTitle+"**",
+      "activitySubtitle":"Posted by "+postedBy,
+      "facts":[
+        {"name":"Status","value":taskStatus||'—'},
+        {"name":"Priority","value":taskPriority||'—'},
+        {"name":"Update Type","value":(typeEmoji[logType]||'📝')+" "+logType}
+      ],
+      "text":message,
+      "markdown":true
+    }]
+  };
+  try{
+    await fetch(webhookUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(card)});
+    return true;
+  }catch(e){
+    console.error('Teams webhook error:',e);
+    return false;
+  }
+}
 
 window.toggleAiChat=function(){
   const panel=document.getElementById('aiChatPanel');
@@ -3942,6 +4011,23 @@ window.sendAiChat=async function(){
   if(msg.startsWith('sk-ant-')){
     setAnthropicKey(msg);
     appendAiMsg('bot','API key saved! You can now ask me anything about your CRM data.');
+    return;
+  }
+  // Handle Teams webhook URL entry
+  if(msg.startsWith('https://') && msg.includes('webhook.office.com')){
+    setTeamsWebhook(msg);
+    appendAiMsg('bot','Teams webhook saved! Task updates can now be sent to your Teams channel. Look for the "Send to Teams" checkbox when posting task updates.');
+    return;
+  }
+  // Handle Teams webhook commands
+  if(msg.toLowerCase()==='teams status'){
+    const url=getTeamsWebhook();
+    appendAiMsg('bot',url?'Teams webhook is configured: `'+url.substring(0,60)+'...`\n\nTo remove it, type: **teams remove**':'No Teams webhook configured. Paste an Incoming Webhook URL to set it up.');
+    return;
+  }
+  if(msg.toLowerCase()==='teams remove'){
+    localStorage.removeItem('coach4u_teams_webhook');
+    appendAiMsg('bot','Teams webhook removed. Task updates will stay internal only.');
     return;
   }
   if(!getAnthropicKey()){
