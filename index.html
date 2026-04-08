@@ -350,13 +350,19 @@ td .actions button{padding:8px 14px;font-size:12px;}
 
     <!-- TASK MANAGEMENT -->
     <div class="screen" id="screen-tasks">
-      <div class="toolbar">
-        <input class="search-input" id="tkSearch" placeholder="Search tasks..." oninput="filterTasks()">
-        <select id="tkFilterStatus" onchange="filterTasks()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;background:#fff;">
-          <option value="">All Status</option><option>To Do</option><option>In Progress</option><option>Done</option>
+      <div class="toolbar" style="flex-wrap:wrap;gap:8px;">
+        <input class="search-input" id="tkSearch" placeholder="Search tasks..." oninput="filterTasks()" style="min-width:140px;">
+        <select id="tkFilterView" onchange="filterTasks()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;font-weight:600;">
+          <option value="active">Active Tasks</option>
+          <option value="my-decisions">Needs My Decision</option>
+          <option value="waiting">Waiting / Blocked</option>
+          <option value="cath">Cath's Tasks</option>
+          <option value="va">CoachVA Tasks</option>
+          <option value="complete">Completed</option>
+          <option value="all">All Tasks</option>
         </select>
-        <select id="tkFilterPriority" onchange="filterTasks()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;background:#fff;">
-          <option value="">All Priority</option><option>High</option><option>Medium</option><option>Low</option>
+        <select id="tkFilterType" onchange="filterTasks()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
+          <option value="">All Types</option><option>Admin</option><option>Finance</option><option>Client</option><option>Tech</option><option>Personal</option><option>System</option>
         </select>
         <button class="btn btn-blue" onclick="openTaskModal()">+ Add Task</button>
       </div>
@@ -412,20 +418,53 @@ td .actions button{padding:8px 14px;font-size:12px;}
   <div class="modal">
     <h3 id="taskModalTitle">Add Task</h3>
     <input type="hidden" id="taskId">
-    <div class="form-group"><label>Title</label><input id="tkTitle"></div>
-    <div class="form-group"><label>Description</label><textarea id="tkDesc"></textarea></div>
-    <div class="form-group"><label>Owner</label>
-      <select id="tkOwner"><option>Cath Baker</option></select>
+    <div class="form-group"><label>Title</label><input id="tkTitle" placeholder="One clear outcome..."></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="form-group"><label>Owner</label>
+        <select id="tkOwner"><option>Cath Baker</option><option>CoachVA (Lou)</option></select>
+      </div>
+      <div class="form-group"><label>Requester</label>
+        <select id="tkRequester"><option>Cath Baker</option><option>CoachVA (Lou)</option><option>System</option><option>Client</option></select>
+      </div>
     </div>
-    <div class="form-group"><label>Priority</label>
-      <select id="tkPriority"><option>High</option><option>Medium</option><option>Low</option></select>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="form-group"><label>Type</label>
+        <select id="tkType"><option>Admin</option><option>Finance</option><option>Client</option><option>Tech</option><option>Personal</option><option>System</option></select>
+      </div>
+      <div class="form-group"><label>Priority</label>
+        <select id="tkPriority"><option>Urgent</option><option>Normal</option><option>Low</option></select>
+      </div>
     </div>
-    <div class="form-group"><label>Status</label>
-      <select id="tkStatus"><option>To Do</option><option>In Progress</option><option>Done</option></select>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="form-group"><label>Status</label>
+        <select id="tkStatus"><option>Not Started</option><option>In Progress</option><option>Waiting on Cath</option><option>Waiting on CoachVA</option><option>Blocked</option><option>Complete</option></select>
+      </div>
+      <div class="form-group"><label>Source</label>
+        <select id="tkSource"><option>Chat</option><option>Email</option><option>Call</option><option>System</option><option>Self</option></select>
+      </div>
     </div>
-    <div class="form-group"><label>Due Date</label><input id="tkDue" type="date"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="form-group"><label>Decision Required?</label>
+        <select id="tkDecision"><option value="No">No</option><option value="Yes">Yes — needs Cath's input</option></select>
+      </div>
+      <div class="form-group"><label>Due Date</label><input id="tkDue" type="date"></div>
+    </div>
+    <div class="form-group"><label>Description / Context</label><textarea id="tkDesc" placeholder="What is the clear outcome? Any context needed..."></textarea></div>
+    <div class="form-group" id="tkBlockedGroup" style="display:none;"><label>Blocked Reason</label><input id="tkBlocked" placeholder="Why is this blocked?"></div>
+    <div id="taskLogSection" style="display:none;">
+      <div style="font-weight:700;font-size:13px;color:#1e3a5f;margin:12px 0 8px;">Activity Log</div>
+      <div id="taskLogEntries" style="max-height:200px;overflow-y:auto;margin-bottom:8px;"></div>
+      <div style="display:flex;gap:8px;">
+        <select id="tkLogType" style="padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;">
+          <option>STATUS UPDATE</option><option>ACTION REQUIRED</option><option>CONFIRMATION REQUEST</option><option>BLOCKED</option><option>NOTE</option>
+        </select>
+        <input id="tkLogMsg" placeholder="Add update..." style="flex:1;padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;">
+        <button class="btn btn-blue" onclick="addTaskLog()" style="padding:6px 14px;font-size:12px;">Post</button>
+      </div>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-gray" onclick="closeModal('taskModal')">Cancel</button>
+      <button class="btn btn-red" onclick="deleteTask(document.getElementById('taskId').value)" id="tkDelBtn" style="display:none;">Delete</button>
       <button class="btn btn-green" onclick="saveTask()">Save</button>
     </div>
   </div>
@@ -757,7 +796,7 @@ async function loadTasks(){
 }
 
 async function loadAll(){
-  await Promise.all([loadContacts(), loadClients(), loadTasks(), loadProspects(), loadReferrers(), loadRefPayments(), loadRenewals(), loadContactReports(), loadTrials()]);
+  await Promise.all([loadContacts(), loadClients(), loadTasks(), loadProspects(), loadReferrers(), loadRefPayments(), loadRenewals(), loadContactReports(), loadTrials(), loadTaskLogs()]);
   renderSidebarNav('home');
   renderDashboard();
   document.getElementById('appLoader').style.display='none';
@@ -1083,63 +1122,67 @@ function renderStrDash(){
   document.getElementById('strDashContent').innerHTML=html;
 }
 
-// ── OPERATIONS DASHBOARD ──
+// ── OPERATIONS DASHBOARD (Daily Briefing) ──
 function renderOpsDash(){
   const now=new Date();
-  const openTasks=tasks.filter(t=>t.status!=='Done');
-  const doneTasks=tasks.filter(t=>t.status==='Done');
-  const overdueTasks=openTasks.filter(t=>t.due_date&&new Date(t.due_date)<now);
-  const highPriority=openTasks.filter(t=>t.priority==='High');
+  const active=tasks.filter(t=>t.status!=='Complete');
+  const needsDecision=active.filter(t=>t.decision_required==='Yes'||t.status==='Waiting on Cath');
+  const blocked=active.filter(t=>t.status==='Blocked');
+  const waitingVA=active.filter(t=>t.status==='Waiting on CoachVA');
+  const inProgress=active.filter(t=>t.status==='In Progress');
+  const overdue=active.filter(t=>t.due_date&&new Date(t.due_date)<now);
+  const urgent=active.filter(t=>t.priority==='Urgent');
+  const completedToday=tasks.filter(t=>t.status==='Complete'&&t.updated_at&&t.updated_at.startsWith(now.toISOString().split('T')[0]));
 
-  let html=`<div class="dash-cards">
-    <div class="dash-card"><div class="dc-icon blue">&#128203;</div><div class="dc-info"><h4>${openTasks.length}</h4><p>Open Tasks</p></div></div>
-    <div class="dash-card"><div class="dc-icon green">&#10004;</div><div class="dc-info"><h4>${doneTasks.length}</h4><p>Completed</p></div></div>
-    <div class="dash-card"><div class="dc-icon" style="background:#fef2f2;color:#dc2626;">&#128680;</div><div class="dc-info"><h4>${overdueTasks.length}</h4><p>Overdue</p></div></div>
-    <div class="dash-card"><div class="dc-icon amber">&#9889;</div><div class="dc-info"><h4>${highPriority.length}</h4><p>High Priority</p></div></div>
-  </div>`;
-
-  // Overdue tasks
-  if(overdueTasks.length){
-    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #dc2626;border-radius:12px;padding:16px 20px;margin-bottom:16px;">
-      <div style="font-weight:700;font-size:14px;color:#dc2626;margin-bottom:8px;">Overdue Tasks</div>
+  function briefingSection(title,icon,color,items,emptyMsg){
+    if(!items.length) return '';
+    return `<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid ${color};border-radius:12px;padding:16px 20px;margin-bottom:12px;">
+      <div style="font-weight:700;font-size:14px;color:${color};margin-bottom:10px;">${icon} ${title} (${items.length})</div>
       <div style="display:flex;flex-direction:column;gap:6px;">
-        ${overdueTasks.map(t=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border:1px solid #fef2f2;border-radius:6px;background:#fff;">
-          <span style="font-weight:600;font-size:13px;color:#1e293b;">${t.title}</span>
-          <span style="font-size:11px;color:#dc2626;font-weight:600;">${t.due_date}</span>
-        </div>`).join('')}
-      </div>
-    </div>`;
-  }
-
-  // High priority tasks
-  if(highPriority.length){
-    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #d97706;border-radius:12px;padding:16px 20px;margin-bottom:16px;">
-      <div style="font-weight:700;font-size:14px;color:#d97706;margin-bottom:8px;">High Priority</div>
-      <div style="display:flex;flex-direction:column;gap:6px;">
-        ${highPriority.map(t=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border:1px solid #fef3c7;border-radius:6px;background:#fff;">
-          <span style="font-weight:600;font-size:13px;color:#1e293b;">${t.title}</span>
-          <span style="font-size:11px;color:#64748b;">${t.status} ${t.due_date?'— '+t.due_date:''}</span>
-        </div>`).join('')}
-      </div>
-    </div>`;
-  }
-
-  // Open tasks summary
-  html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;">
-    <div style="font-family:'Quicksand','Inter',sans-serif;font-size:16px;font-weight:700;color:#1e3a5f;margin-bottom:14px;">All Open Tasks</div>
-    <div style="display:flex;flex-direction:column;gap:6px;">
-      ${openTasks.length?openTasks.map(t=>{
-        const priorityCol=t.priority==='High'?'#dc2626':t.priority==='Medium'?'#d97706':'#64748b';
-        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border:1px solid #f1f5f9;border-radius:8px;">
-          <span style="font-weight:600;font-size:13px;color:#1e293b;">${t.title}</span>
-          <div style="display:flex;gap:6px;align-items:center;">
-            <span style="font-size:10px;padding:2px 8px;border-radius:99px;font-weight:600;color:#fff;background:${priorityCol};">${t.priority||'—'}</span>
-            <span style="font-size:11px;color:#64748b;">${t.status}</span>
+        ${items.map(t=>`<div onclick="openTaskModal('${t.id}')" style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid #f1f5f9;border-radius:8px;cursor:pointer;gap:8px;flex-wrap:wrap;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
+          <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">
+            <span style="font-weight:600;font-size:13px;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${t.title}</span>
+            ${t.task_type?'<span style="font-size:10px;padding:2px 6px;border-radius:99px;background:#f1f5f9;color:#64748b;">'+t.task_type+'</span>':''}
           </div>
-        </div>`;
-      }).join(''):'<div style="text-align:center;color:#94a3b8;padding:12px;">No open tasks</div>'}
+          <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
+            <span style="font-size:10px;color:#94a3b8;">${t.owner||''}</span>
+            ${t.blocked_reason?'<span style="font-size:10px;color:#dc2626;">'+t.blocked_reason+'</span>':''}
+            ${t.due_date?'<span style="font-size:10px;color:'+(overdue.includes(t)?'#dc2626':'#64748b')+';font-weight:600;">'+t.due_date+'</span>':''}
+          </div>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  // Stats cards
+  let html=`<div class="dash-cards">
+    <div class="dash-card" onclick="navTo('tasks');document.getElementById('tkFilterView').value='my-decisions';filterTasks();" style="cursor:pointer;${needsDecision.length?'box-shadow:0 0 0 2px #fbbf24;':''}">
+      <div class="dc-icon" style="background:${needsDecision.length?'#fef3c7':'#f1f5f9'};color:${needsDecision.length?'#d97706':'#64748b'};">&#9888;</div>
+      <div class="dc-info"><h4>${needsDecision.length}</h4><p>Needs My Decision</p></div>
+    </div>
+    <div class="dash-card" onclick="navTo('tasks');document.getElementById('tkFilterView').value='waiting';filterTasks();" style="cursor:pointer;">
+      <div class="dc-icon" style="background:${blocked.length?'#fef2f2':'#eff6ff'};color:${blocked.length?'#dc2626':'#2563eb'};">&#128683;</div>
+      <div class="dc-info"><h4>${blocked.length+waitingVA.length}</h4><p>Blocked / Waiting</p></div>
+    </div>
+    <div class="dash-card" onclick="navTo('tasks');document.getElementById('tkFilterView').value='active';filterTasks();" style="cursor:pointer;">
+      <div class="dc-icon blue">&#128203;</div>
+      <div class="dc-info"><h4>${active.length}</h4><p>Active Tasks</p></div>
+    </div>
+    <div class="dash-card" onclick="navTo('tasks');document.getElementById('tkFilterView').value='complete';filterTasks();" style="cursor:pointer;">
+      <div class="dc-icon green">&#10004;</div>
+      <div class="dc-info"><h4>${completedToday.length}</h4><p>Done Today</p></div>
     </div>
   </div>`;
+
+  // Sections in priority order — what Cath needs to see first
+  html+=briefingSection('Needs Your Decision','&#9888;','#d97706',needsDecision);
+  html+=briefingSection('Blocked','&#128683;','#dc2626',blocked);
+  html+=briefingSection('Overdue','&#128344;','#ef4444',overdue.filter(t=>!needsDecision.includes(t)&&!blocked.includes(t)));
+  html+=briefingSection('Urgent','&#9889;','#dc2626',urgent.filter(t=>!needsDecision.includes(t)&&!blocked.includes(t)&&!overdue.includes(t)));
+  html+=briefingSection('In Progress','&#9654;','#2563eb',inProgress.filter(t=>!needsDecision.includes(t)&&!blocked.includes(t)));
+  html+=briefingSection('Waiting on CoachVA','&#9203;','#7c3aed',waitingVA);
+
+  if(!active.length) html+='<div style="padding:30px;text-align:center;color:#94a3b8;">All clear — no active tasks.</div>';
 
   document.getElementById('opsDashContent').innerHTML=html;
 }
@@ -2650,48 +2693,91 @@ const tkGroupState={};
 function toggleTkGroup(g){tkGroupState[g]=!tkGroupState[g];renderTasks();}
 window.toggleTkGroup=toggleTkGroup;
 
+// Task log data
+let taskLogs=[];
+async function loadTaskLogs(){
+  const {data,error}=await supabase.from('task_logs').select('*').order('created_at',{ascending:false});
+  if(data) taskLogs=data;
+  if(error&&error.code!=='42P01') console.error('Load task_logs error:',error);
+}
+
 function renderTaskCard(t){
-  const overdue=t.due_date&&t.status!=='Done'&&new Date(t.due_date)<new Date();
-  const borderColor=overdue?'#ef4444':t.priority==='High'?'#eab308':t.priority==='Medium'?'#3b82f6':'#94a3b8';
-  return `<div style="background:#fff;border:1px solid #e2e8f0;border-left:3px solid ${borderColor};border-radius:8px;padding:14px 16px;display:flex;gap:12px;align-items:center;">
-    <div style="flex:1;min-width:0;">
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-        <span style="font-weight:600;font-size:14px;color:#1e293b;${t.status==='Done'?'text-decoration:line-through;color:#94a3b8;':''}">${t.title}</span>
-        <span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:500;${t.priority==='High'?'background:#fef2f2;color:#dc2626;':t.priority==='Medium'?'background:#fef9c3;color:#a16207;':'background:#f1f5f9;color:#64748b;'}">${t.priority}</span>
-      </div>
-      <div style="font-size:12px;color:#64748b;margin-top:4px;">${t.owner}${t.due_date?' &middot; Due: <strong style="color:'+(overdue?'#ef4444':'#1e293b')+';">'+t.due_date+'</strong>':''}${t.description?' &middot; '+t.description:''}</div>
+  const isDone=t.status==='Complete';
+  const isBlocked=t.status==='Blocked';
+  const isWaiting=t.status==='Waiting on Cath'||t.status==='Waiting on CoachVA';
+  const needsDecision=t.decision_required==='Yes'&&t.status!=='Complete';
+  const overdue=t.due_date&&!isDone&&new Date(t.due_date)<new Date();
+
+  const statusColors={'Not Started':'#64748b','In Progress':'#2563eb','Waiting on Cath':'#d97706','Waiting on CoachVA':'#7c3aed','Blocked':'#dc2626','Complete':'#16a34a'};
+  const statusBg={'Not Started':'#f1f5f9','In Progress':'#eff6ff','Waiting on Cath':'#fef3c7','Waiting on CoachVA':'#f5f3ff','Blocked':'#fef2f2','Complete':'#dcfce7'};
+  const priColors={'Urgent':'#dc2626','Normal':'#64748b','Low':'#94a3b8'};
+  const typeColors={'Admin':'#6366f1','Finance':'#16a34a','Client':'#2563eb','Tech':'#7c3aed','Personal':'#ec4899','System':'#64748b'};
+  const st=t.status||'Not Started';
+  const borderColor=overdue?'#ef4444':isBlocked?'#dc2626':needsDecision?'#d97706':statusColors[st]||'#64748b';
+
+  return `<div onclick="openTaskModal('${t.id}')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid ${borderColor};border-radius:8px;padding:14px 16px;cursor:pointer;${isDone?'opacity:.5;':''}${needsDecision?'box-shadow:0 0 0 2px #fbbf24;':''}" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
+      <span style="font-weight:600;font-size:14px;color:#1e293b;${isDone?'text-decoration:line-through;color:#94a3b8;':''}">${t.title}</span>
+      ${needsDecision?'<span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;">DECISION NEEDED</span>':''}
+      ${overdue?'<span style="background:#fef2f2;color:#dc2626;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;">OVERDUE</span>':''}
     </div>
-    <div style="display:flex;gap:6px;flex-shrink:0;">
-      <button style="background:none;border:1px solid #e2e8f0;border-radius:6px;padding:6px 12px;font-size:12px;color:#475569;cursor:pointer;" onclick="openTaskModal('${t.id}')">Edit</button>
-      ${t.status!=='Done'?'<button style="background:none;border:1px solid #bbf7d0;border-radius:6px;padding:6px 12px;font-size:12px;color:#16a34a;cursor:pointer;" onclick="completeTask(\''+t.id+'\')">Done</button>':''}
-      <button style="background:none;border:1px solid #fecaca;border-radius:6px;padding:6px 12px;font-size:12px;color:#dc2626;cursor:pointer;" onclick="deleteTask('${t.id}')">Del</button>
+    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:11px;">
+      <span style="background:${statusBg[st]||'#f1f5f9'};color:${statusColors[st]||'#64748b'};padding:2px 8px;border-radius:99px;font-weight:600;">${st}</span>
+      <span style="background:#f1f5f9;color:${priColors[t.priority]||'#64748b'};padding:2px 8px;border-radius:99px;font-weight:500;">${t.priority||'Normal'}</span>
+      ${t.task_type?'<span style="background:#f8fafc;color:'+(typeColors[t.task_type]||'#64748b')+';padding:2px 8px;border-radius:99px;font-weight:500;">'+t.task_type+'</span>':''}
+      <span style="color:#94a3b8;">&#8594; ${t.owner||'Unassigned'}</span>
+      ${t.due_date?'<span style="color:'+(overdue?'#dc2626':'#64748b')+';font-weight:'+(overdue?'700':'400')+';">Due: '+t.due_date+'</span>':''}
     </div>
+    ${t.blocked_reason&&isBlocked?'<div style="font-size:11px;color:#dc2626;margin-top:4px;font-weight:600;">Blocked: '+t.blocked_reason+'</div>':''}
+    ${t.description&&!isDone?'<div style="font-size:12px;color:#64748b;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+t.description+'</div>':''}
   </div>`;
 }
 
 function renderTasks(){
   const q=document.getElementById('tkSearch').value.toLowerCase();
-  const fs=document.getElementById('tkFilterStatus').value;
-  const fp=document.getElementById('tkFilterPriority').value;
-  const filtered=tasks.filter(t=>{
-    if(fs&&t.status!==fs)return false;
-    if(fp&&t.priority!==fp)return false;
-    return(t.title+' '+t.owner+' '+t.description).toLowerCase().includes(q);
-  });
-  const statusOrder=['To Do','In Progress','Done'];
+  const view=document.getElementById('tkFilterView').value;
+  const typeFilter=document.getElementById('tkFilterType').value;
+  let filtered=tasks;
+
+  // Apply view filter
+  if(view==='active') filtered=filtered.filter(t=>t.status!=='Complete');
+  else if(view==='my-decisions') filtered=filtered.filter(t=>(t.decision_required==='Yes'||t.status==='Waiting on Cath')&&t.status!=='Complete');
+  else if(view==='waiting') filtered=filtered.filter(t=>['Waiting on Cath','Waiting on CoachVA','Blocked'].includes(t.status));
+  else if(view==='cath') filtered=filtered.filter(t=>t.owner==='Cath Baker'&&t.status!=='Complete');
+  else if(view==='va') filtered=filtered.filter(t=>t.owner==='CoachVA (Lou)'&&t.status!=='Complete');
+  else if(view==='complete') filtered=filtered.filter(t=>t.status==='Complete');
+
+  // Apply type filter
+  if(typeFilter) filtered=filtered.filter(t=>t.task_type===typeFilter);
+
+  // Apply search
+  if(q) filtered=filtered.filter(t=>(t.title+' '+(t.owner||'')+' '+(t.description||'')+' '+(t.task_type||'')).toLowerCase().includes(q));
+
+  // Group by status
+  const statusOrder=['Waiting on Cath','Blocked','In Progress','Not Started','Waiting on CoachVA','Complete'];
   const grouped={};
-  filtered.forEach(t=>{const s=t.status||'To Do';if(!grouped[s])grouped[s]=[];grouped[s].push(t);});
+  filtered.forEach(t=>{const s=t.status||'Not Started';if(!grouped[s])grouped[s]=[];grouped[s].push(t);});
+
+  // Sort within groups: Urgent first, then by due date
+  Object.values(grouped).forEach(arr=>arr.sort((a,b)=>{
+    const po={'Urgent':0,'Normal':1,'Low':2};
+    if((po[a.priority]||1)!==(po[b.priority]||1)) return (po[a.priority]||1)-(po[b.priority]||1);
+    if(a.due_date&&b.due_date) return a.due_date.localeCompare(b.due_date);
+    return a.due_date?-1:b.due_date?1:0;
+  }));
+
   let html='';
   statusOrder.forEach(s=>{
     if(!grouped[s]||!grouped[s].length)return;
     const collapsed=tkGroupState[s]||false;
     const arrow=collapsed?'&#9654;':'&#9660;';
+    const statusColors={'Not Started':'#64748b','In Progress':'#2563eb','Waiting on Cath':'#d97706','Waiting on CoachVA':'#7c3aed','Blocked':'#dc2626','Complete':'#16a34a'};
     html+=`<div style="margin-bottom:12px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;overflow:hidden;">
       <div onclick="toggleTkGroup('${s}')" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;user-select:none;background:#f8fafc;border-bottom:${collapsed?'none':'1px solid #e2e8f0'};">
         <div style="display:flex;align-items:center;gap:10px;">
           <span style="font-size:12px;color:#94a3b8;">${arrow}</span>
-          <span style="font-weight:700;font-size:14px;color:#1e293b;">${s}</span>
-          <span style="background:#f1f5f9;color:#64748b;font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;">${grouped[s].length}</span>
+          <span style="font-weight:700;font-size:14px;color:${statusColors[s]||'#1e293b'};">${s}</span>
+          <span style="background:${s==='Waiting on Cath'||s==='Blocked'?'#fef2f2':'#f1f5f9'};color:${s==='Waiting on Cath'||s==='Blocked'?'#dc2626':'#64748b'};font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;">${grouped[s].length}</span>
         </div>
       </div>
       ${collapsed?'':`<div style="display:flex;flex-direction:column;gap:8px;padding:12px;">${grouped[s].map(t=>renderTaskCard(t)).join('')}</div>`}
@@ -2706,17 +2792,86 @@ window.openTaskModal=function(id){
   document.getElementById('taskModalTitle').textContent=t?'Edit Task':'Add Task';
   document.getElementById('taskId').value=t?t.id:'';
   document.getElementById('tkTitle').value=t?t.title:'';
-  document.getElementById('tkDesc').value=t?t.description:'';
-  document.getElementById('tkOwner').value=t?t.owner:'Cath';
-  document.getElementById('tkPriority').value=t?t.priority:'Medium';
-  document.getElementById('tkStatus').value=t?t.status:'To Do';
-  document.getElementById('tkDue').value=t?t.due_date:'';
+  document.getElementById('tkDesc').value=t?t.description||'':'';
+  document.getElementById('tkOwner').value=t?t.owner:'CoachVA (Lou)';
+  document.getElementById('tkRequester').value=t?t.requester||'Cath Baker':'Cath Baker';
+  document.getElementById('tkType').value=t?t.task_type||'Admin':'Admin';
+  document.getElementById('tkPriority').value=t?t.priority||'Normal':'Normal';
+  document.getElementById('tkStatus').value=t?t.status||'Not Started':'Not Started';
+  document.getElementById('tkSource').value=t?t.source||'Chat':'Chat';
+  document.getElementById('tkDecision').value=t?t.decision_required||'No':'No';
+  document.getElementById('tkDue').value=t?t.due_date||'':'';
+  document.getElementById('tkBlocked').value=t?t.blocked_reason||'':'';
+  document.getElementById('tkDelBtn').style.display=t?'inline-block':'none';
+  // Show/hide blocked reason
+  const bGroup=document.getElementById('tkBlockedGroup');
+  bGroup.style.display=(t&&t.status==='Blocked')?'block':'none';
+  document.getElementById('tkStatus').onchange=function(){
+    bGroup.style.display=this.value==='Blocked'?'block':'none';
+  };
+  // Show task log section for existing tasks
+  const logSection=document.getElementById('taskLogSection');
+  if(t){
+    logSection.style.display='block';
+    renderTaskLogEntries(t.id);
+  } else {
+    logSection.style.display='none';
+  }
   document.getElementById('taskModal').classList.add('open');
+};
+
+function renderTaskLogEntries(taskId){
+  const logs=taskLogs.filter(l=>l.task_id===taskId).slice(0,20);
+  const el=document.getElementById('taskLogEntries');
+  if(!logs.length){el.innerHTML='<div style="color:#94a3b8;font-size:12px;padding:8px;">No activity yet.</div>';return;}
+  const typeColors={'ACTION REQUIRED':'#dc2626','CONFIRMATION REQUEST':'#d97706','STATUS UPDATE':'#2563eb','BLOCKED':'#ef4444','NOTE':'#64748b'};
+  el.innerHTML=logs.map(l=>{
+    const d=l.created_at?new Date(l.created_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'';
+    return `<div style="padding:8px 12px;border-left:3px solid ${typeColors[l.log_type]||'#e2e8f0'};margin-bottom:6px;background:#f8fafc;border-radius:0 6px 6px 0;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
+        <span style="font-size:10px;font-weight:700;color:${typeColors[l.log_type]||'#64748b'};text-transform:uppercase;">${l.log_type||'NOTE'}</span>
+        <span style="font-size:10px;color:#94a3b8;">${l.posted_by||''} · ${d}</span>
+      </div>
+      <div style="font-size:12px;color:#1e293b;">${l.message||''}</div>
+      ${l.response_required?'<div style="font-size:10px;color:#dc2626;font-weight:600;margin-top:2px;">RESPONSE REQUIRED</div>':''}
+    </div>`;
+  }).join('');
+}
+
+window.addTaskLog=async function(){
+  const taskId=document.getElementById('taskId').value;
+  if(!taskId) return;
+  const msg=document.getElementById('tkLogMsg').value.trim();
+  if(!msg){toast('Enter a message','error');return;}
+  const logType=document.getElementById('tkLogType').value;
+  const responseRequired=logType==='ACTION REQUIRED'||logType==='CONFIRMATION REQUEST';
+  const {data:session}=await supabase.auth.getSession();
+  const postedBy=session?.session?.user?.email||'Unknown';
+  const {error}=await supabase.from('task_logs').insert({
+    task_id:taskId,log_type:logType,message:msg,posted_by:postedBy,response_required:responseRequired
+  });
+  if(error){toast('Error: '+error.message,'error');return;}
+  document.getElementById('tkLogMsg').value='';
+  await loadTaskLogs();
+  renderTaskLogEntries(taskId);
+  toast('Update posted','success');
 };
 
 window.saveTask=async function(){
   const id=document.getElementById('taskId').value;
-  const data={title:document.getElementById('tkTitle').value.trim(),description:document.getElementById('tkDesc').value.trim(),owner:document.getElementById('tkOwner').value,priority:document.getElementById('tkPriority').value,status:document.getElementById('tkStatus').value,due_date:document.getElementById('tkDue').value||null};
+  const data={
+    title:document.getElementById('tkTitle').value.trim(),
+    description:document.getElementById('tkDesc').value.trim()||null,
+    owner:document.getElementById('tkOwner').value,
+    requester:document.getElementById('tkRequester').value,
+    task_type:document.getElementById('tkType').value,
+    priority:document.getElementById('tkPriority').value,
+    status:document.getElementById('tkStatus').value,
+    source:document.getElementById('tkSource').value,
+    decision_required:document.getElementById('tkDecision').value,
+    due_date:document.getElementById('tkDue').value||null,
+    blocked_reason:document.getElementById('tkStatus').value==='Blocked'?document.getElementById('tkBlocked').value.trim()||null:null
+  };
   if(!data.title){toast('Task title required','error');return;}
   if(id){
     const {error}=await supabase.from('tasks').update(data).eq('id',id);
@@ -2727,20 +2882,20 @@ window.saveTask=async function(){
     if(error){toast('Error: '+error.message,'error');return;}
     toast('Task added','success');
   }
-  closeModal('taskModal');await loadTasks();renderTasks();
+  closeModal('taskModal');await loadTasks();renderTasks();renderOpsDash();
 };
 
 window.completeTask=async function(id){
-  const {error}=await supabase.from('tasks').update({status:'Done'}).eq('id',id);
+  const {error}=await supabase.from('tasks').update({status:'Complete'}).eq('id',id);
   if(error){toast('Error: '+error.message,'error');return;}
-  toast('Task completed','success');await loadTasks();renderTasks();
+  toast('Task completed','success');await loadTasks();renderTasks();renderOpsDash();
 };
 
 window.deleteTask=async function(id){
   if(!confirm('Delete this task?'))return;
   const {error}=await supabase.from('tasks').delete().eq('id',id);
   if(error){toast('Error: '+error.message,'error');return;}
-  toast('Task deleted','success');await loadTasks();renderTasks();
+  toast('Task deleted','success');await loadTasks();renderTasks();renderOpsDash();
 };
 
 // ── REFERRALS (Supabase-backed) ──
@@ -3243,13 +3398,14 @@ const aiTools=[
   {name:'search_prospects',description:'Search prospects by name, status, or notes. Use for specific lookups.',input_schema:{type:'object',properties:{query:{type:'string',description:'Search term'}},required:['query']}},
   {name:'add_contact',description:'Add a new contact to the master list. ALWAYS use this tool to add contacts, not any generic method.',input_schema:{type:'object',properties:{first_name:{type:'string'},last_name:{type:'string'},email:{type:'string'},phone:{type:'string'},contact_type:{type:'string',enum:['Individual','ThriveHQ Member','Prospect']},notes:{type:'string'}},required:['first_name','last_name']}},
   {name:'add_prospect',description:'Add a new prospect. ALWAYS use this tool to add prospects. Optionally link to existing contact by contact_id.',input_schema:{type:'object',properties:{name:{type:'string',description:'Full name'},email:{type:'string'},phone:{type:'string'},role:{type:'string',enum:['Individual','Couple','Business','Organisation']},status:{type:'string',enum:['New','Hot','Warm','Cold']},source:{type:'string'},notes:{type:'string'},contact_id:{type:'string',description:'UUID of linked contact from master list (optional)'}},required:['name']}},
-  {name:'add_task',description:'Add a new task. ALWAYS use this tool to create tasks.',input_schema:{type:'object',properties:{title:{type:'string'},description:{type:'string'},priority:{type:'string',enum:['High','Medium','Low']},status:{type:'string',enum:['To Do','In Progress','Done']},due_date:{type:'string',description:'YYYY-MM-DD format'}},required:['title']}},
+  {name:'add_task',description:'Add a new task. ALWAYS use this tool to create tasks.',input_schema:{type:'object',properties:{title:{type:'string'},description:{type:'string'},owner:{type:'string',enum:['Cath Baker','CoachVA (Lou)'],description:'Who owns/does this task'},requester:{type:'string',enum:['Cath Baker','CoachVA (Lou)','System','Client'],description:'Who requested this task'},task_type:{type:'string',enum:['Admin','Finance','Client','Tech','Personal','System']},priority:{type:'string',enum:['Urgent','Normal','Low']},status:{type:'string',enum:['Not Started','In Progress','Waiting on Cath','Waiting on CoachVA','Blocked','Complete']},source:{type:'string',enum:['Chat','Email','Call','System','Self'],description:'Where did this task come from'},decision_required:{type:'string',enum:['No','Yes'],description:'Does this need Cath decision?'},due_date:{type:'string',description:'YYYY-MM-DD format'},blocked_reason:{type:'string',description:'Why is this blocked (only if status=Blocked)'}},required:['title']}},
   {name:'update_contact',description:'Update an existing contact. First use search_contacts to find the contact ID, then use this tool.',input_schema:{type:'object',properties:{id:{type:'string',description:'Contact UUID'},email:{type:'string'},phone:{type:'string'},contact_type:{type:'string'},notes:{type:'string'},first_name:{type:'string'},last_name:{type:'string'}},required:['id']}},
   {name:'update_prospect',description:'Update an existing prospect. First use search_prospects to find the prospect ID.',input_schema:{type:'object',properties:{id:{type:'string',description:'Prospect UUID'},name:{type:'string'},status:{type:'string'},role:{type:'string'},notes:{type:'string'},email:{type:'string'},phone:{type:'string'}},required:['id']}},
   {name:'get_stats',description:'Get current CRM statistics: contact count, client count, prospect count, task count.',input_schema:{type:'object',properties:{}}},
   {name:'update_client',description:'Update an existing client. First use search_clients to find the client ID.',input_schema:{type:'object',properties:{id:{type:'string',description:'Client UUID'},relationship_name:{type:'string'},role:{type:'string',enum:['Individual','Couple','Business','Organisation']},status:{type:'string',enum:['Active','Inactive','Onboarding','Past']},practitioner:{type:'string'},notes:{type:'string'},file_notes_link:{type:'string',description:'SharePoint URL for file notes'},xero_link:{type:'string',description:'Xero accounting link'}},required:['id']}},
-  {name:'update_task',description:'Update an existing task. First use list_records or search to find the task ID.',input_schema:{type:'object',properties:{id:{type:'string',description:'Task UUID'},title:{type:'string'},description:{type:'string'},priority:{type:'string',enum:['High','Medium','Low']},status:{type:'string',enum:['To Do','In Progress','Done']},due_date:{type:'string',description:'YYYY-MM-DD format'}},required:['id']}},
-  {name:'complete_task',description:'Mark a task as Done. Shortcut for update_task with status=Done.',input_schema:{type:'object',properties:{id:{type:'string',description:'Task UUID'}},required:['id']}},
+  {name:'update_task',description:'Update an existing task. First use list_records or search to find the task ID.',input_schema:{type:'object',properties:{id:{type:'string',description:'Task UUID'},title:{type:'string'},description:{type:'string'},owner:{type:'string',enum:['Cath Baker','CoachVA (Lou)']},requester:{type:'string',enum:['Cath Baker','CoachVA (Lou)','System','Client']},task_type:{type:'string',enum:['Admin','Finance','Client','Tech','Personal','System']},priority:{type:'string',enum:['Urgent','Normal','Low']},status:{type:'string',enum:['Not Started','In Progress','Waiting on Cath','Waiting on CoachVA','Blocked','Complete']},source:{type:'string',enum:['Chat','Email','Call','System','Self']},decision_required:{type:'string',enum:['No','Yes']},due_date:{type:'string',description:'YYYY-MM-DD format'},blocked_reason:{type:'string'}},required:['id']}},
+  {name:'complete_task',description:'Mark a task as Complete. Shortcut for update_task with status=Complete.',input_schema:{type:'object',properties:{id:{type:'string',description:'Task UUID'}},required:['id']}},
+  {name:'add_task_log',description:'Add a communication log entry to a task. Use for status updates, action requests, confirmations, blocks, or notes.',input_schema:{type:'object',properties:{task_id:{type:'string',description:'Task UUID'},log_type:{type:'string',enum:['STATUS UPDATE','ACTION REQUIRED','CONFIRMATION REQUEST','BLOCKED','NOTE']},message:{type:'string',description:'Log message content'},posted_by:{type:'string',enum:['Cath Baker','CoachVA (Lou)','System']},response_required:{type:'boolean',description:'Does this need a response?'}},required:['task_id','message']}},
   {name:'delete_record',description:'Delete a record from any table. Use with caution. First search to confirm the correct record.',input_schema:{type:'object',properties:{table:{type:'string',enum:['contacts','clients','prospects','tasks'],description:'Which table to delete from'},id:{type:'string',description:'Record UUID to delete'}},required:['table','id']}},
   {name:'convert_prospect',description:'Convert a prospect to a client. Creates the client, links contact if available, marks prospect as Converted.',input_schema:{type:'object',properties:{id:{type:'string',description:'Prospect UUID'},role:{type:'string',enum:['Individual','Couple','Business','Organisation'],description:'Client role (defaults to prospect role)'}},required:['id']}},
   {name:'add_renewal',description:'Add a membership renewal record for a ThriveHQ member. Search contacts first to get the contact_id.',input_schema:{type:'object',properties:{contact_id:{type:'string',description:'Contact UUID of the member'},period_start:{type:'string',description:'YYYY-MM-DD start of renewal period'},period_end:{type:'string',description:'YYYY-MM-DD end of renewal period'},amount:{type:'number',description:'Payment amount'},renewed_date:{type:'string',description:'YYYY-MM-DD date payment was made'},notes:{type:'string'}},required:['contact_id','period_start','period_end']}},
@@ -3297,7 +3453,7 @@ async function handleToolCall(name,input){
     } else if(t==='prospects'){
       result+=items.map(p=>`- **${p.name}** | Status: ${p.status||'New'} | Role: ${p.role||'Individual'} | ${p.phone||p.email||'No contact'}${p.notes?' | '+p.notes:''}`).join('\n');
     } else if(t==='tasks'){
-      result+=items.map(tk=>`- **${tk.title}** | ${tk.priority||'Medium'} | ${tk.status||'To Do'} | Due: ${tk.due_date||'—'}`).join('\n');
+      result+=items.map(tk=>`- **${tk.title}** | Owner: ${tk.owner||'—'} | ${tk.priority||'Normal'} | ${tk.status||'Not Started'} | Type: ${tk.task_type||'—'} | Due: ${tk.due_date||'—'}${tk.decision_required==='Yes'?' | ⚠️ DECISION NEEDED':''}${tk.blocked_reason?' | Blocked: '+tk.blocked_reason:''}`).join('\n');
     } else if(t==='referrers'){
       result+=items.map(r=>`- **${r.name}** | ${r.status||'Active'}`).join('\n');
     } else if(t==='trials'){
@@ -3384,15 +3540,20 @@ async function handleToolCall(name,input){
     const data={
       title:input.title.trim(),
       description:(input.description||'').trim()||null,
-      owner:'Cath Baker',
-      priority:input.priority||'Medium',
-      status:input.status||'To Do',
-      due_date:input.due_date||null
+      owner:input.owner||'Cath Baker',
+      requester:input.requester||'Cath Baker',
+      task_type:input.task_type||'Admin',
+      priority:input.priority||'Normal',
+      status:input.status||'Not Started',
+      source:input.source||'Chat',
+      decision_required:input.decision_required||'No',
+      due_date:input.due_date||null,
+      blocked_reason:(input.blocked_reason||'').trim()||null
     };
     const {data:inserted,error}=await supabase.from('tasks').insert(data).select();
     if(error) return {error:'Failed to add task: '+error.message,result:null};
     await loadTasks();renderTasks();
-    return {error:null,result:'Task added: **'+data.title+'** (Priority: '+data.priority+', Due: '+(data.due_date||'not set')+')'};
+    return {error:null,result:'Task added: **'+data.title+'** (Owner: '+data.owner+', Priority: '+data.priority+', Due: '+(data.due_date||'not set')+')'};
   }
 
   // UPDATE CONTACT — matches saveContact() update path
@@ -3432,9 +3593,11 @@ async function handleToolCall(name,input){
   // GET STATS
   if(name==='get_stats'){
     const activeCli=clients.filter(c=>c.status==='Active').length;
-    const openTasks=tasks.filter(t=>t.status!=='Done').length;
+    const openTasks=tasks.filter(t=>t.status!=='Complete').length;
+    const decisionTasks=tasks.filter(t=>t.status!=='Complete'&&(t.decision_required==='Yes'||t.status==='Waiting on Cath')).length;
+    const blockedTasks=tasks.filter(t=>t.status==='Blocked').length;
     const warmProsp=prospects.filter(p=>p.status==='Warm'||p.status==='Hot').length;
-    return {error:null,result:`**CRM Stats:**\n- ${contacts.length} total contacts\n- ${activeCli} active clients (${clients.length} total)\n- ${prospects.length} prospects (${warmProsp} warm/hot)\n- ${openTasks} open tasks\n- ${referrals.length} referrers`};
+    return {error:null,result:`**CRM Stats:**\n- ${contacts.length} total contacts\n- ${activeCli} active clients (${clients.length} total)\n- ${prospects.length} prospects (${warmProsp} warm/hot)\n- ${openTasks} active tasks (${decisionTasks} need decisions, ${blockedTasks} blocked)\n- ${referrals.length} referrers`};
   }
 
   // UPDATE CLIENT — matches saveClient() fields
@@ -3461,9 +3624,15 @@ async function handleToolCall(name,input){
     const data={};
     if(input.title) data.title=input.title.trim();
     if(input.description!==undefined) data.description=input.description.trim()||null;
+    if(input.owner) data.owner=input.owner;
+    if(input.requester) data.requester=input.requester;
+    if(input.task_type) data.task_type=input.task_type;
     if(input.priority) data.priority=input.priority;
     if(input.status) data.status=input.status;
+    if(input.source) data.source=input.source;
+    if(input.decision_required) data.decision_required=input.decision_required;
     if(input.due_date!==undefined) data.due_date=input.due_date||null;
+    if(input.blocked_reason!==undefined) data.blocked_reason=input.blocked_reason.trim()||null;
     if(!Object.keys(data).length) return {error:'No fields to update',result:null};
     const {error}=await supabase.from('tasks').update(data).eq('id',input.id);
     if(error) return {error:'Failed to update task: '+error.message,result:null};
@@ -3474,10 +3643,10 @@ async function handleToolCall(name,input){
   // COMPLETE TASK
   if(name==='complete_task'){
     if(!input.id) return {error:'Task ID is required.',result:null};
-    const {error}=await supabase.from('tasks').update({status:'Done'}).eq('id',input.id);
+    const {error}=await supabase.from('tasks').update({status:'Complete'}).eq('id',input.id);
     if(error) return {error:'Failed to complete task: '+error.message,result:null};
     await loadTasks();renderTasks();
-    return {error:null,result:'Task marked as **Done**.'};
+    return {error:null,result:'Task marked as **Complete**.'};
   }
 
   // DELETE RECORD
@@ -3602,7 +3771,7 @@ async function handleToolCall(name,input){
       (t.title+' '+(t.description||'')+' '+(t.status||'')+' '+(t.priority||'')).toLowerCase().includes(q)
     ).slice(0,10);
     if(!matches.length) return {error:null,result:'No tasks found matching "'+input.query+'"'};
-    return {error:null,result:matches.map(t=>`**${t.title}** (ID: ${t.id})\n  Priority: ${t.priority||'Medium'} | Status: ${t.status||'To Do'} | Due: ${t.due_date||'—'}${t.description?'\n  '+t.description:''}`).join('\n\n')};
+    return {error:null,result:matches.map(t=>`**${t.title}** (ID: ${t.id})\n  Owner: ${t.owner||'—'} | Priority: ${t.priority||'Normal'} | Status: ${t.status||'Not Started'} | Type: ${t.task_type||'—'} | Due: ${t.due_date||'—'}${t.decision_required==='Yes'?'\n  ⚠️ DECISION NEEDED':''}${t.blocked_reason?'\n  Blocked: '+t.blocked_reason:''}${t.description?'\n  '+t.description:''}`).join('\n\n')};
   }
 
   // ADD TRIAL — auto-creates contact if none linked
@@ -3682,6 +3851,24 @@ async function handleToolCall(name,input){
     return {error:null,result:'**'+t.name+'** converted to ThriveHQ member! Membership starts '+startDate+'.'};
   }
 
+  // ADD TASK LOG
+  if(name==='add_task_log'){
+    if(!input.task_id||!input.message) return {error:'task_id and message are required.',result:null};
+    const t=tasks.find(x=>x.id===input.task_id);
+    if(!t) return {error:'Task not found with ID: '+input.task_id,result:null};
+    const data={
+      task_id:input.task_id,
+      log_type:input.log_type||'NOTE',
+      message:input.message.trim(),
+      posted_by:input.posted_by||'Cath Baker',
+      response_required:input.response_required||false
+    };
+    const {error}=await supabase.from('task_logs').insert(data).select();
+    if(error) return {error:'Failed to add log: '+error.message,result:null};
+    await loadTaskLogs();
+    return {error:null,result:'Log added to task "**'+t.title+'**": ['+data.log_type+'] '+data.message};
+  }
+
   return {error:'Unknown tool: '+name,result:null};
 }
 
@@ -3704,7 +3891,8 @@ AVAILABLE TOOLS:
 **Create:**
 - add_contact: Add to master list (needs first_name + last_name)
 - add_prospect: Add prospect (needs name, optionally link contact_id)
-- add_task: Add task (needs title)
+- add_task: Add task (needs title). Fields: owner (Cath Baker/CoachVA Lou), requester, task_type (Admin/Finance/Client/Tech/Personal/System), priority (Urgent/Normal/Low), status (Not Started/In Progress/Waiting on Cath/Waiting on CoachVA/Blocked/Complete), source (Chat/Email/Call/System/Self), decision_required (Yes/No), due_date, blocked_reason
+- add_task_log: Add a communication log to a task (needs task_id + message). Types: STATUS UPDATE, ACTION REQUIRED, CONFIRMATION REQUEST, BLOCKED, NOTE
 - add_renewal: Add ThriveHQ membership renewal (needs contact_id, period_start, period_end)
 - add_referrer_payment: Add referrer payment (needs referrer_id, amount)
 
@@ -3712,8 +3900,8 @@ AVAILABLE TOOLS:
 - update_contact: Update contact fields (needs id — search first)
 - update_prospect: Update prospect fields (needs id — search first)
 - update_client: Update client fields like status, notes, practitioner, file_notes_link (needs id — search first)
-- update_task: Update task fields (needs id)
-- complete_task: Quick shortcut to mark task as Done (needs id)
+- update_task: Update task fields including owner, requester, task_type, priority, status, source, decision_required, blocked_reason (needs id)
+- complete_task: Quick shortcut to mark task as Complete (needs id)
 
 **ThriveHQ Trials:**
 - add_trial: Add a new ThriveHQ trial (needs name, defaults to 14-day trial)
@@ -3737,8 +3925,11 @@ RULES:
 6. If something fails, tell the user the exact error message.
 7. Valid prospect statuses: New, Hot, Warm, Cold, Converted, Lost
 8. Valid roles: Individual, Couple, Business, Organisation
-9. Valid task priorities: High, Medium, Low
-10. Valid client statuses: Active, Inactive, Onboarding, Past`;
+9. Valid task priorities: Urgent, Normal, Low
+10. Valid task statuses: Not Started, In Progress, Waiting on Cath, Waiting on CoachVA, Blocked, Complete
+11. Valid client statuses: Active, Inactive, Onboarding, Past
+12. Task owners are "Cath Baker" or "CoachVA (Lou)"
+13. When creating tasks, set decision_required to "Yes" if Cath needs to make a decision on it`;
 }
 
 window.sendAiChat=async function(){
