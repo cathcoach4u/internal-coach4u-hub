@@ -3413,35 +3413,50 @@ window.addEventListener('resize',()=>{
 function getAnthropicKey(){return localStorage.getItem('coach4u_anthropic_key')||'';}
 function setAnthropicKey(key){localStorage.setItem('coach4u_anthropic_key',key);}
 
-// Teams Incoming Webhook URL stored in localStorage
+// Teams Workflow Webhook URL stored in localStorage
 function getTeamsWebhook(){return localStorage.getItem('coach4u_teams_webhook')||'';}
 function setTeamsWebhook(url){localStorage.setItem('coach4u_teams_webhook',url);}
 
 async function postToTeams(taskTitle,taskStatus,taskPriority,logType,message,postedBy,notifyCath){
   const webhookUrl=getTeamsWebhook();
   if(!webhookUrl) return false;
-  const urgentBanner=notifyCath?'🔔 **ATTENTION NEEDED — Cath**\n\n':'';
   const typeEmoji={'STATUS UPDATE':'📋','ACTION REQUIRED':'🚨','CONFIRMATION REQUEST':'❓','BLOCKED':'🚫','NOTE':'📝'};
-  const statusColor={'Not Started':'#94a3b8','In Progress':'#2563eb','Waiting on Cath':'#d97706','Waiting on CoachVA':'#8b5cf6','Blocked':'#ef4444','Complete':'#16a34a'};
-  const card={
-    "@type":"MessageCard",
-    "@context":"http://schema.org/extensions",
-    "themeColor":notifyCath?"FF0000":(statusColor[taskStatus]||'2563eb').replace('#',''),
-    "summary":"Task Update: "+taskTitle,
-    "sections":[{
-      "activityTitle":urgentBanner+"**"+taskTitle+"**",
-      "activitySubtitle":"Posted by "+postedBy,
-      "facts":[
-        {"name":"Status","value":taskStatus||'—'},
-        {"name":"Priority","value":taskPriority||'—'},
-        {"name":"Update Type","value":(typeEmoji[logType]||'📝')+" "+logType}
-      ],
-      "text":message,
-      "markdown":true
+  const statusColor={'Not Started':'Default','In Progress':'Accent','Waiting on Cath':'Warning','Waiting on CoachVA':'Accent','Blocked':'Attention','Complete':'Good'};
+  const bodyItems=[];
+  // Notify Cath banner
+  if(notifyCath){
+    bodyItems.push({type:'Container',style:'attention',bleed:true,items:[{type:'TextBlock',text:'🔔 ATTENTION NEEDED — Cath',weight:'Bolder',size:'Medium',color:'Attention'}]});
+  }
+  // Task title
+  bodyItems.push({type:'TextBlock',text:taskTitle,weight:'Bolder',size:'Large',wrap:true});
+  // Status row
+  bodyItems.push({type:'ColumnSet',columns:[
+    {type:'Column',width:'auto',items:[{type:'TextBlock',text:'Status:',weight:'Bolder',size:'Small'}]},
+    {type:'Column',width:'auto',items:[{type:'TextBlock',text:taskStatus||'—',size:'Small',color:statusColor[taskStatus]||'Default'}]},
+    {type:'Column',width:'auto',items:[{type:'TextBlock',text:'Priority:',weight:'Bolder',size:'Small'}]},
+    {type:'Column',width:'auto',items:[{type:'TextBlock',text:taskPriority||'—',size:'Small'}]}
+  ]});
+  // Update type + message
+  bodyItems.push({type:'TextBlock',text:(typeEmoji[logType]||'📝')+' '+logType,weight:'Bolder',size:'Small',spacing:'Medium'});
+  bodyItems.push({type:'TextBlock',text:message,wrap:true,spacing:'Small'});
+  // Posted by
+  bodyItems.push({type:'TextBlock',text:'Posted by '+postedBy+' · '+new Date().toLocaleString('en-AU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}),size:'Small',isSubtle:true,spacing:'Medium'});
+
+  const payload={
+    type:'message',
+    attachments:[{
+      contentType:'application/vnd.microsoft.card.adaptive',
+      contentUrl:null,
+      content:{
+        '$schema':'http://adaptivecards.io/schemas/adaptive-card.json',
+        type:'AdaptiveCard',
+        version:'1.4',
+        body:bodyItems
+      }
     }]
   };
   try{
-    await fetch(webhookUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(card)});
+    await fetch(webhookUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     return true;
   }catch(e){
     console.error('Teams webhook error:',e);
@@ -4013,10 +4028,10 @@ window.sendAiChat=async function(){
     appendAiMsg('bot','API key saved! You can now ask me anything about your CRM data.');
     return;
   }
-  // Handle Teams webhook URL entry
-  if(msg.startsWith('https://') && msg.includes('webhook.office.com')){
-    setTeamsWebhook(msg);
-    appendAiMsg('bot','Teams webhook saved! Task updates can now be sent to your Teams channel. Look for the "Send to Teams" checkbox when posting task updates.');
+  // Handle Teams webhook URL entry (Workflows: logic.azure.com / prod-XX.azure.com / webhook.office.com)
+  if(msg.startsWith('https://') && (msg.includes('.logic.azure.com') || msg.includes('.azure.com/') || msg.includes('webhook.office.com'))){
+    setTeamsWebhook(msg.trim());
+    appendAiMsg('bot','Teams Workflow webhook saved! Task updates can now be sent to your Teams channel. Open any task — you\'ll see a **"Send to Teams"** checkbox when posting activity log entries.');
     return;
   }
   // Handle Teams webhook commands
