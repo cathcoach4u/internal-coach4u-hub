@@ -1192,20 +1192,15 @@ function renderOpsDash(){
 
   if(!active.length) html+='<div style="padding:30px;text-align:center;color:#94a3b8;">All clear — no active tasks.</div>';
 
-  // Daily Summary button
-  if(getTeamsWebhook()){
-    html+=`<div style="margin-top:16px;text-align:center;">
-      <button class="btn" onclick="sendDailySummary()" style="background:#6264a7;color:#fff;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;">&#128233; Send Daily Summary to Teams</button>
-    </div>`;
-  }
+  // Daily Summary button — always available
+  html+=`<div style="margin-top:16px;text-align:center;">
+    <button class="btn" onclick="copyDailySummary()" style="background:#1e3a5f;color:#fff;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;">&#128203; Copy Daily Summary</button>
+  </div>`;
 
   document.getElementById('opsDashContent').innerHTML=html;
 }
 
-window.sendDailySummary=async function(){
-  if(!getTeamsWebhook()){toast('No Teams webhook configured','error');return;}
-  if(!confirm('Send today\'s daily summary to Teams?')) return;
-
+window.copyDailySummary=function(){
   const now=new Date();
   const today=now.toISOString().split('T')[0];
   const active=tasks.filter(t=>t.status!=='Complete');
@@ -1221,60 +1216,63 @@ window.sendDailySummary=async function(){
   // Get today's activity logs
   const todayLogs=taskLogs.filter(l=>l.created_at&&l.created_at.startsWith(today));
 
-  // Build summary text
+  // Build summary as plain text (Teams renders markdown in chat)
   const dateStr=now.toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  let summary='**Coach4U Daily Summary — '+dateStr+'**\n\n';
+  let summary='Hi Cath,\n\nProgress update for today ('+dateStr+'):\n\n';
 
   if(needsDecision.length){
-    summary+='⚠️ **NEEDS YOUR DECISION ('+needsDecision.length+'):**\n';
+    summary+='⚠️ NEEDS CATH\'S DECISION:\n';
     summary+=needsDecision.map(t=>'• '+t.title+(t.due_date?' — Due: '+t.due_date:'')).join('\n');
     summary+='\n\n';
   }
 
   if(blocked.length){
-    summary+='🚫 **BLOCKED ('+blocked.length+'):**\n';
+    summary+='🚫 BLOCKED:\n';
     summary+=blocked.map(t=>'• '+t.title+(t.blocked_reason?' — '+t.blocked_reason:'')).join('\n');
     summary+='\n\n';
   }
 
   if(overdue.length){
-    summary+='🕐 **OVERDUE ('+overdue.length+'):**\n';
+    summary+='🕐 OVERDUE:\n';
     summary+=overdue.map(t=>'• '+t.title+' — Due: '+t.due_date).join('\n');
     summary+='\n\n';
   }
 
   if(urgent.length){
-    summary+='⚡ **URGENT ('+urgent.length+'):**\n';
-    summary+=urgent.filter(t=>!needsDecision.includes(t)&&!blocked.includes(t)).map(t=>'• '+t.title).join('\n');
-    summary+='\n\n';
+    const urgentFiltered=urgent.filter(t=>!needsDecision.includes(t)&&!blocked.includes(t));
+    if(urgentFiltered.length){
+      summary+='⚡ URGENT:\n';
+      summary+=urgentFiltered.map(t=>'• '+t.title).join('\n');
+      summary+='\n\n';
+    }
   }
 
   if(inProgress.length){
-    summary+='▶️ **IN PROGRESS ('+inProgress.length+'):**\n';
+    summary+='▶️ IN PROGRESS:\n';
     summary+=inProgress.map(t=>'• '+t.title+(t.owner?' — '+t.owner:'')).join('\n');
     summary+='\n\n';
   }
 
   if(waitingVA.length){
-    summary+='⏳ **WAITING ON COACHVA ('+waitingVA.length+'):**\n';
+    summary+='⏳ WAITING ON COACHVA:\n';
     summary+=waitingVA.map(t=>'• '+t.title).join('\n');
     summary+='\n\n';
   }
 
   if(notStarted.length){
-    summary+='📋 **PENDING / NOT STARTED ('+notStarted.length+'):**\n';
+    summary+='📋 PENDING:\n';
     summary+=notStarted.map(t=>'• '+t.title+(t.due_date?' — Due: '+t.due_date:'')).join('\n');
     summary+='\n\n';
   }
 
   if(completedToday.length){
-    summary+='✅ **COMPLETED TODAY ('+completedToday.length+'):**\n';
+    summary+='✅ COMPLETED TODAY:\n';
     summary+=completedToday.map(t=>'• '+t.title).join('\n');
     summary+='\n\n';
   }
 
   if(todayLogs.length){
-    summary+='💬 **ACTIVITY TODAY ('+todayLogs.length+' updates):**\n';
+    summary+='💬 ACTIVITY LOG:\n';
     const logsByTask={};
     todayLogs.forEach(l=>{
       const t=tasks.find(x=>x.id===l.task_id);
@@ -1283,18 +1281,26 @@ window.sendDailySummary=async function(){
       logsByTask[key].push(l);
     });
     Object.keys(logsByTask).forEach(title=>{
-      summary+='• **'+title+'**: '+logsByTask[title].map(l=>l.message).join(' → ')+'\n';
+      summary+='• '+title+': '+logsByTask[title].map(l=>l.message).join(' → ')+'\n';
     });
     summary+='\n';
   }
 
-  summary+='📊 **Stats:** '+active.length+' active | '+completedToday.length+' done today | '+needsDecision.length+' need decisions | '+blocked.length+' blocked\n\n';
-  summary+='_Sent from Coach4U CRM_';
+  summary+='📊 Stats: '+active.length+' active | '+completedToday.length+' done today | '+needsDecision.length+' need decisions | '+blocked.length+' blocked\n\n';
+  summary+='Thanks, Cath!';
 
-  // Post to Teams using the same function that works for individual task logs
-  const sent=await postToTeams('Coach4U Daily Summary','','',
-    'STATUS UPDATE',summary,'Coach4U CRM',false);
-  toast(sent?'Daily summary sent to Teams!':'Failed — check webhook config','success');
+  navigator.clipboard.writeText(summary).then(()=>{
+    toast('Daily summary copied — paste into Teams!','success');
+  }).catch(()=>{
+    // Fallback: select text from a temporary textarea
+    const ta=document.createElement('textarea');
+    ta.value=summary;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    toast('Daily summary copied — paste into Teams!','success');
+  });
 };
 
 // ── REFERRERS DASHBOARD ──
