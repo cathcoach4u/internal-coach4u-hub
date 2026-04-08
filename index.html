@@ -3422,9 +3422,25 @@ async function postToTeams(taskTitle,taskStatus,taskPriority,logType,message,pos
   if(!webhookUrl) return false;
   const typeEmoji={'STATUS UPDATE':'📋','ACTION REQUIRED':'🚨','CONFIRMATION REQUEST':'❓','BLOCKED':'🚫','NOTE':'📝'};
   const isLegacy=webhookUrl.includes('IncomingWebhook');
+  const isPowerAutomate=webhookUrl.includes('powerplatform.com')||webhookUrl.includes('logic.azure.com')||webhookUrl.includes('flow.microsoft.com');
   let payload;
 
-  if(isLegacy){
+  if(isPowerAutomate){
+    // Power Automate Workflow — send simple JSON, the flow handles posting
+    const urgentTag=notifyCath?'🔔 ATTENTION NEEDED — Cath\n\n':'';
+    const emoji=typeEmoji[logType]||'📝';
+    const timestamp=new Date().toLocaleString('en-AU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+    payload={
+      title:taskTitle,
+      status:taskStatus||'—',
+      priority:taskPriority||'—',
+      updateType:logType,
+      message:message,
+      postedBy:postedBy,
+      notifyCath:notifyCath||false,
+      text:urgentTag+emoji+' **'+logType+'** — **'+taskTitle+'**\n\nStatus: '+taskStatus+' | Priority: '+taskPriority+'\n\n'+message+'\n\n_Posted by '+postedBy+' · '+timestamp+'_'
+    };
+  } else if(isLegacy){
     // Legacy Incoming Webhook — MessageCard format
     const urgentBanner=notifyCath?'🔔 **ATTENTION NEEDED — Cath**\n\n':'';
     const statusColor={'Not Started':'94a3b8','In Progress':'2563eb','Waiting on Cath':'d97706','Waiting on CoachVA':'8b5cf6','Blocked':'ef4444','Complete':'16a34a'};
@@ -3446,7 +3462,7 @@ async function postToTeams(taskTitle,taskStatus,taskPriority,logType,message,pos
       }]
     };
   } else {
-    // New Workflows Webhook — Adaptive Card format
+    // Generic Workflows Webhook — Adaptive Card format
     const statusColor={'Not Started':'Default','In Progress':'Accent','Waiting on Cath':'Warning','Waiting on CoachVA':'Accent','Blocked':'Attention','Complete':'Good'};
     const bodyItems=[];
     if(notifyCath){
