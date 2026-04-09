@@ -2400,7 +2400,7 @@ window.openIntakeDetail=function(id){
   html+=`</div>`;
 
   document.getElementById('intakeDetailBody').innerHTML=html;
-  openModal('intakeDetailModal');
+  document.getElementById('intakeDetailModal').classList.add('open');
 };
 
 window.markIntakeReviewed=async function(id){
