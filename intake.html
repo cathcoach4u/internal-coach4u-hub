@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ThriveHQ — ADHD Group Program Intake</title>
+<title>ThriveHQ — Join the Program</title>
 <link rel="icon" href="icon-192.png" type="image/png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,321 +11,165 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:'Inter',system-ui,sans-serif;background:#f0f6ff;color:#1e293b;min-height:100vh;}
-
 .header{background:linear-gradient(135deg,#1e3a5f 0%,#234b78 100%);padding:28px 20px;text-align:center;}
 .header img{width:48px;height:48px;border-radius:12px;background:#fff;padding:2px;margin-bottom:8px;}
 .header h1{font-family:'Quicksand',sans-serif;font-size:22px;font-weight:700;color:#fff;margin-bottom:4px;}
-.header p{font-size:13px;color:rgba(255,255,255,.7);max-width:400px;margin:0 auto;line-height:1.5;}
-
-.progress{display:flex;gap:0;padding:16px 20px;background:#fff;border-bottom:1px solid #e2e8f0;overflow-x:auto;}
-.progress-step{flex:1;text-align:center;font-size:11px;font-weight:600;color:#94a3b8;padding:8px 4px;border-bottom:3px solid #e2e8f0;cursor:pointer;white-space:nowrap;min-width:60px;transition:all .2s;}
+.header p{font-size:13px;color:rgba(255,255,255,.7);max-width:380px;margin:0 auto;line-height:1.5;}
+.progress{display:flex;padding:12px 20px;background:#fff;border-bottom:1px solid #e2e8f0;}
+.progress-step{flex:1;text-align:center;font-size:12px;font-weight:600;color:#94a3b8;padding:8px 4px;border-bottom:3px solid #e2e8f0;cursor:pointer;transition:all .2s;}
 .progress-step.active{color:#1e3a5f;border-bottom-color:#3b82f6;}
 .progress-step.done{color:#16a34a;border-bottom-color:#16a34a;}
-
-.container{max-width:600px;margin:0 auto;padding:20px;}
+.container{max-width:540px;margin:0 auto;padding:20px;}
 .section{display:none;animation:fadeIn .3s ease;}
 .section.active{display:block;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
-
-.section-title{font-family:'Quicksand',sans-serif;font-size:18px;font-weight:700;color:#1e3a5f;margin-bottom:4px;}
-.section-desc{font-size:13px;color:#64748b;margin-bottom:20px;line-height:1.5;}
-
-.form-group{margin-bottom:16px;}
-.form-group label{display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:5px;text-transform:uppercase;letter-spacing:.3px;}
-.form-group label .req{color:#ef4444;margin-left:2px;}
-.form-group input,.form-group select,.form-group textarea{width:100%;padding:12px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:14px;font-family:inherit;background:#fff;transition:all .2s;-webkit-appearance:none;}
+.section-title{font-family:'Quicksand',sans-serif;font-size:18px;font-weight:700;color:#1e3a5f;margin-bottom:16px;}
+.form-group{margin-bottom:14px;}
+.form-group label{display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px;}
+.form-group label .req{color:#ef4444;}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:11px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:14px;font-family:inherit;background:#fff;transition:all .2s;-webkit-appearance:none;}
 .form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.12);}
-.form-group textarea{height:100px;resize:vertical;}
-.form-group .hint{font-size:11px;color:#94a3b8;margin-top:4px;}
-
+.form-group textarea{height:80px;resize:vertical;}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 @media(max-width:500px){.row{grid-template-columns:1fr;}}
-
-.chip-group{display:flex;flex-wrap:wrap;gap:8px;}
-.chip{padding:8px 16px;border:1px solid #e2e8f0;border-radius:99px;font-size:13px;font-weight:500;color:#475569;background:#fff;cursor:pointer;transition:all .15s;user-select:none;}
+.chip-group{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;}
+.chip{padding:7px 14px;border:1px solid #e2e8f0;border-radius:99px;font-size:12px;font-weight:500;color:#475569;background:#fff;cursor:pointer;transition:all .15s;user-select:none;}
 .chip:hover{border-color:#3b82f6;color:#2563eb;}
 .chip.selected{background:#3b82f6;color:#fff;border-color:#3b82f6;}
-
-.consent-item{display:flex;align-items:flex-start;gap:10px;padding:12px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:10px;}
-.consent-item input[type="checkbox"]{width:20px;height:20px;margin-top:2px;flex-shrink:0;accent-color:#3b82f6;}
-.consent-item label{font-size:13px;color:#1e293b;line-height:1.5;cursor:pointer;text-transform:none;letter-spacing:0;font-weight:400;}
-
-.nav-buttons{display:flex;gap:12px;margin-top:28px;margin-bottom:40px;}
+.consent-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:8px;}
+.consent-item input[type="checkbox"]{width:18px;height:18px;margin-top:2px;flex-shrink:0;accent-color:#3b82f6;}
+.consent-item label{font-size:13px;color:#1e293b;line-height:1.4;cursor:pointer;}
+.nav-buttons{display:flex;gap:12px;margin-top:24px;margin-bottom:40px;}
 .btn{padding:14px 24px;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;flex:1;text-align:center;}
-.btn-back{background:#f1f5f9;color:#1e293b;border:1px solid #e2e8f0;}
-.btn-back:hover{background:#e2e8f0;}
-.btn-next{background:#3b82f6;color:#fff;box-shadow:0 2px 8px rgba(59,130,246,.25);}
-.btn-next:hover{background:#2563eb;}
-.btn-submit{background:#16a34a;color:#fff;box-shadow:0 2px 8px rgba(22,163,74,.25);}
-.btn-submit:hover{background:#15803d;}
+.btn-back{background:#f1f5f9;color:#1e293b;border:1px solid #e2e8f0;}.btn-back:hover{background:#e2e8f0;}
+.btn-next{background:#3b82f6;color:#fff;box-shadow:0 2px 8px rgba(59,130,246,.25);}.btn-next:hover{background:#2563eb;}
+.btn-submit{background:#16a34a;color:#fff;box-shadow:0 2px 8px rgba(22,163,74,.25);}.btn-submit:hover{background:#15803d;}
 .btn:disabled{opacity:.5;cursor:not-allowed;}
-
 .success-screen{display:none;text-align:center;padding:60px 20px;}
 .success-screen .icon{font-size:64px;margin-bottom:16px;}
 .success-screen h2{font-family:'Quicksand',sans-serif;font-size:24px;color:#1e3a5f;margin-bottom:8px;}
 .success-screen p{font-size:14px;color:#64748b;line-height:1.6;max-width:400px;margin:0 auto;}
-
-.error-msg{background:#fef2f2;color:#dc2626;padding:10px 14px;border-radius:8px;font-size:13px;font-weight:500;margin-bottom:16px;display:none;}
-
+.error-msg{background:#fef2f2;color:#dc2626;padding:10px 14px;border-radius:8px;font-size:13px;font-weight:500;margin-bottom:12px;display:none;}
 .hp{position:absolute;left:-9999px;opacity:0;height:0;width:0;pointer-events:none;}
-
-.info-box{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:14px 16px;margin-bottom:20px;font-size:13px;color:#1e3a5f;line-height:1.5;}
 </style>
 </head>
 <body>
 
 <div class="header">
   <img src="C4U.png" alt="Coach4U">
-  <h1>ThriveHQ Intake Form</h1>
-  <p>ADHD Group Coaching Program — please complete this form so we can best support you.</p>
+  <h1>ThriveHQ</h1>
+  <p>ADHD Group Coaching — quick form to get you started.</p>
 </div>
 
 <div class="progress" id="progressBar">
-  <div class="progress-step active" onclick="goStep(0)">About You</div>
-  <div class="progress-step" onclick="goStep(1)">Your ADHD</div>
-  <div class="progress-step" onclick="goStep(2)">Support</div>
-  <div class="progress-step" onclick="goStep(3)">Referral</div>
-  <div class="progress-step" onclick="goStep(4)">Consent</div>
+  <div class="progress-step active" onclick="goStep(0)">Your Details</div>
+  <div class="progress-step" onclick="goStep(1)">ADHD & Consent</div>
 </div>
 
 <div class="container" id="formContainer">
   <div class="error-msg" id="errorMsg"></div>
 
-  <!-- STEP 1: About You -->
+  <!-- STEP 1: Your Details -->
   <div class="section active" id="step0">
-    <h2 class="section-title">About You</h2>
-    <p class="section-desc">Let's start with your basic details.</p>
-
+    <h2 class="section-title">Your Details</h2>
     <div class="row">
-      <div class="form-group"><label>First Name <span class="req">*</span></label><input id="fFirstName" required></div>
-      <div class="form-group"><label>Last Name <span class="req">*</span></label><input id="fLastName" required></div>
+      <div class="form-group"><label>First Name <span class="req">*</span></label><input id="fFirstName"></div>
+      <div class="form-group"><label>Last Name <span class="req">*</span></label><input id="fLastName"></div>
     </div>
-    <div class="form-group"><label>Preferred Name</label><input id="fPreferred" placeholder="What would you like us to call you?"></div>
+    <div class="form-group"><label>Preferred Name</label><input id="fPreferred" placeholder="What should we call you?"></div>
     <div class="row">
-      <div class="form-group"><label>Email <span class="req">*</span></label><input id="fEmail" type="email" required></div>
+      <div class="form-group"><label>Email <span class="req">*</span></label><input id="fEmail" type="email"></div>
       <div class="form-group"><label>Phone</label><input id="fPhone" type="tel"></div>
     </div>
-    <div class="row">
-      <div class="form-group"><label>Date of Birth</label><input id="fDob" type="date"></div>
-      <div class="form-group"><label>Suburb</label><input id="fSuburb"></div>
+    <div class="form-group"><label>Suburb</label><input id="fSuburb"></div>
+    <div class="form-group">
+      <label>How did you hear about ThriveHQ?</label>
+      <select id="fHowHeard">
+        <option value="">Select...</option>
+        <option>Word of Mouth</option>
+        <option>Social Media</option>
+        <option>Google</option>
+        <option>Referral</option>
+        <option>ADHD Support Group</option>
+        <option>Health Professional</option>
+        <option>Other</option>
+      </select>
     </div>
-    <div class="form-group"><label>Current Occupation / Role</label><input id="fOccupation" placeholder="E.g. Teacher, Stay-at-home parent, Student..."></div>
 
-    <!-- Honeypot -->
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-top:16px;">
+      <div style="font-weight:700;font-size:12px;color:#1e3a5f;margin-bottom:10px;">Emergency Contact <span style="color:#ef4444;">*</span></div>
+      <div class="row">
+        <div class="form-group"><label>Name</label><input id="fEmName"></div>
+        <div class="form-group"><label>Phone</label><input id="fEmPhone" type="tel"></div>
+      </div>
+    </div>
+
     <div class="hp"><label>Leave blank</label><input id="fWebsite" tabindex="-1" autocomplete="off"></div>
-
-    <div class="nav-buttons">
-      <button class="btn btn-next" onclick="nextStep()">Next &rarr;</button>
-    </div>
+    <div class="nav-buttons"><button class="btn btn-next" onclick="nextStep()">Next &rarr;</button></div>
   </div>
 
-  <!-- STEP 2: Your ADHD -->
+  <!-- STEP 2: ADHD & Consent -->
   <div class="section" id="step1">
     <h2 class="section-title">Your ADHD</h2>
-    <p class="section-desc">This helps us understand where you're at and how to best support you in the program. There are no wrong answers.</p>
 
     <div class="form-group">
       <label>ADHD Diagnosis Status <span class="req">*</span></label>
       <select id="fDiagnosis">
-        <option value="">Please select...</option>
+        <option value="">Select...</option>
         <option>Formally Diagnosed</option>
         <option>Self-Identified</option>
         <option>Currently Being Assessed</option>
         <option>Exploring / Unsure</option>
       </select>
     </div>
-    <div class="form-group">
-      <label>If diagnosed, when and by whom?</label>
-      <input id="fDiagnosisDetails" placeholder="E.g. 2023 by psychiatrist, childhood diagnosis...">
-    </div>
 
     <div class="form-group">
-      <label>What are your biggest ADHD challenges? <span class="req">*</span></label>
-      <textarea id="fChallenges" placeholder="E.g. Focus, time management, emotional regulation, motivation, relationships..."></textarea>
-    </div>
-
-    <div class="form-group">
-      <label>What do you hope to get from ThriveHQ? <span class="req">*</span></label>
-      <textarea id="fGoals" placeholder="E.g. Learn strategies, connect with others who get it, build confidence..." style="height:80px;"></textarea>
-    </div>
-
-    <div class="form-group">
-      <label>Areas you'd like to work on</label>
-      <div class="hint" style="margin-bottom:8px;">Select all that apply</div>
+      <label>What do you most want help with?</label>
       <div class="chip-group" id="areasChips">
-        <div class="chip" onclick="toggleChip(this)">Focus & Attention</div>
+        <div class="chip" onclick="toggleChip(this)">Focus</div>
         <div class="chip" onclick="toggleChip(this)">Time Management</div>
         <div class="chip" onclick="toggleChip(this)">Emotional Regulation</div>
         <div class="chip" onclick="toggleChip(this)">Organisation</div>
         <div class="chip" onclick="toggleChip(this)">Motivation</div>
+        <div class="chip" onclick="toggleChip(this)">Overwhelm</div>
+        <div class="chip" onclick="toggleChip(this)">Confidence</div>
         <div class="chip" onclick="toggleChip(this)">Relationships</div>
-        <div class="chip" onclick="toggleChip(this)">Self-Esteem</div>
         <div class="chip" onclick="toggleChip(this)">Work / Career</div>
-        <div class="chip" onclick="toggleChip(this)">Overwhelm & Burnout</div>
         <div class="chip" onclick="toggleChip(this)">Sleep</div>
-        <div class="chip" onclick="toggleChip(this)">Parenting with ADHD</div>
-        <div class="chip" onclick="toggleChip(this)">Strengths Discovery</div>
-      </div>
-    </div>
-
-    <div class="nav-buttons">
-      <button class="btn btn-back" onclick="prevStep()">&larr; Back</button>
-      <button class="btn btn-next" onclick="nextStep()">Next &rarr;</button>
-    </div>
-  </div>
-
-  <!-- STEP 3: Support & Safety -->
-  <div class="section" id="step2">
-    <h2 class="section-title">Support & Safety</h2>
-    <p class="section-desc">This helps us support you safely. Everything shared is strictly confidential.</p>
-
-    <div class="form-group">
-      <label>Are you currently taking ADHD medication?</label>
-      <select id="fMedication" onchange="document.getElementById('medDetails').style.display=this.value==='Yes'?'block':'none';">
-        <option value="No">No</option>
-        <option value="Yes">Yes</option>
-        <option value="Previously">Previously, but not currently</option>
-      </select>
-    </div>
-    <div class="form-group" id="medDetails" style="display:none;">
-      <label>Medication details (optional)</label>
-      <input id="fMedDetails" placeholder="E.g. Vyvanse 40mg">
-    </div>
-
-    <div class="form-group">
-      <label>Are you currently seeing any of the following?</label>
-      <div class="hint" style="margin-bottom:8px;">Select all that apply</div>
-      <div class="chip-group" id="supportChips">
-        <div class="chip" onclick="toggleChip(this)">Psychiatrist</div>
-        <div class="chip" onclick="toggleChip(this)">Psychologist</div>
-        <div class="chip" onclick="toggleChip(this)">GP</div>
-        <div class="chip" onclick="toggleChip(this)">Counsellor</div>
-        <div class="chip" onclick="toggleChip(this)">ADHD Coach</div>
-        <div class="chip" onclick="toggleChip(this)">OT</div>
-        <div class="chip" onclick="toggleChip(this)">None currently</div>
       </div>
     </div>
 
     <div class="form-group">
-      <label>Any other health conditions we should be aware of?</label>
-      <textarea id="fHealth" placeholder="Optional — e.g. anxiety, autism, dyslexia, physical conditions..." style="height:70px;"></textarea>
-      <div class="hint">Many people with ADHD have co-occurring conditions. This helps us tailor our support.</div>
+      <label>Anything else you'd like us to know?</label>
+      <textarea id="fGoals" placeholder="Optional — goals, challenges, what you're hoping for..." style="height:70px;"></textarea>
     </div>
 
-    <div class="form-group">
-      <label>Have you been part of a coaching or support group before?</label>
-      <select id="fPrevCoaching" onchange="document.getElementById('prevDetails').style.display=this.value==='Yes'?'block':'none';">
-        <option value="No">No</option>
-        <option value="Yes">Yes</option>
-      </select>
-    </div>
-    <div class="form-group" id="prevDetails" style="display:none;">
-      <label>Tell us about your experience</label>
-      <input id="fPrevDetails" placeholder="What worked, what didn't...">
-    </div>
-
-    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-top:20px;margin-bottom:4px;">
-      <div style="font-weight:700;font-size:13px;color:#1e3a5f;margin-bottom:12px;">Emergency Contact <span style="color:#ef4444;">*</span></div>
-      <div class="row">
-        <div class="form-group"><label>Name</label><input id="fEmName" required></div>
-        <div class="form-group"><label>Phone</label><input id="fEmPhone" type="tel" required></div>
-      </div>
-      <div class="form-group" style="margin-bottom:0;"><label>Relationship</label><input id="fEmRelationship" placeholder="E.g. Partner, Parent, Friend"></div>
-    </div>
-
-    <div class="nav-buttons">
-      <button class="btn btn-back" onclick="prevStep()">&larr; Back</button>
-      <button class="btn btn-next" onclick="nextStep()">Next &rarr;</button>
-    </div>
-  </div>
-
-  <!-- STEP 4: Referral -->
-  <div class="section" id="step3">
-    <h2 class="section-title">How Did You Find Us?</h2>
-    <p class="section-desc">We'd love to know how you heard about ThriveHQ.</p>
-
-    <div class="form-group">
-      <label>How did you hear about ThriveHQ?</label>
-      <select id="fHowHeard" onchange="document.getElementById('referrerRow').style.display=this.value==='Referral'?'block':'none';">
-        <option value="">Please select...</option>
-        <option>Word of Mouth</option>
-        <option>Social Media</option>
-        <option>Google Search</option>
-        <option>Referral</option>
-        <option>ADHD Support Group</option>
-        <option>Health Professional</option>
-        <option>Event / Workshop</option>
-        <option>Linktree</option>
-        <option>Other</option>
-      </select>
-    </div>
-    <div class="form-group" id="referrerRow" style="display:none;">
-      <label>Who referred you?</label>
-      <input id="fReferrer" placeholder="Their name or organisation">
-    </div>
-
-    <div class="form-group">
-      <label>Is there anything else you'd like us to know?</label>
-      <textarea id="fAnythingElse" placeholder="Optional — anything that would help us support you better..." style="height:70px;"></textarea>
-    </div>
-
-    <div class="nav-buttons">
-      <button class="btn btn-back" onclick="prevStep()">&larr; Back</button>
-      <button class="btn btn-next" onclick="nextStep()">Next &rarr;</button>
-    </div>
-  </div>
-
-  <!-- STEP 5: Consent -->
-  <div class="section" id="step4">
-    <h2 class="section-title">Consent & Agreement</h2>
-    <p class="section-desc">Please read and acknowledge the following before submitting.</p>
-
-    <div class="info-box">ThriveHQ is a peer-support group coaching program — not a clinical or therapeutic service. If you are in crisis, please contact Lifeline on <strong>13 11 14</strong> or Beyond Blue on <strong>1300 22 4636</strong>.</div>
+    <div style="font-weight:700;font-size:13px;color:#1e3a5f;margin:20px 0 10px;">Consent</div>
 
     <div class="consent-item">
       <input type="checkbox" id="cData">
-      <label for="cData">I consent to Coach4U collecting and storing my personal information for the purpose of delivering the ThriveHQ ADHD program. <span class="req">*</span></label>
-    </div>
-    <div class="consent-item">
-      <input type="checkbox" id="cComms">
-      <label for="cComms">I consent to receiving communications about ThriveHQ sessions, resources, and ADHD-related content.</label>
+      <label for="cData">I consent to Coach4U storing my information for ThriveHQ. <span class="req">*</span></label>
     </div>
     <div class="consent-item">
       <input type="checkbox" id="cGroup">
-      <label for="cGroup">I understand ThriveHQ involves group sessions. I agree to participate respectfully, maintain confidentiality of other members, and understand that shared experiences stay within the group. <span class="req">*</span></label>
-    </div>
-    <div class="consent-item">
-      <input type="checkbox" id="cNotClinical">
-      <label for="cNotClinical">I understand that ThriveHQ is a coaching and peer-support program, not a substitute for clinical treatment, and I will continue any existing medical or psychological care. <span class="req">*</span></label>
-    </div>
-    <div class="consent-item">
-      <input type="checkbox" id="cPhoto">
-      <label for="cPhoto">I consent to photos/videos being taken during sessions for promotional purposes. (Optional — you can opt out at any time)</label>
+      <label for="cGroup">I agree to respect group confidentiality — what's shared in the group stays in the group. <span class="req">*</span></label>
     </div>
     <div class="consent-item">
       <input type="checkbox" id="cTerms">
-      <label for="cTerms">I have read and agree to the ThriveHQ terms of participation. <span class="req">*</span></label>
-    </div>
-
-    <div class="form-group" style="margin-top:20px;">
-      <label>Digital Signature <span class="req">*</span></label>
-      <input id="fSignature" placeholder="Type your full name as your signature">
-      <div class="hint">By typing your name above, you confirm all information provided is accurate.</div>
+      <label for="cTerms">I understand ThriveHQ is a coaching program, not clinical treatment. <span class="req">*</span></label>
     </div>
 
     <div class="nav-buttons">
       <button class="btn btn-back" onclick="prevStep()">&larr; Back</button>
-      <button class="btn btn-submit" id="submitBtn" onclick="submitForm()">Submit Intake Form</button>
+      <button class="btn btn-submit" id="submitBtn" onclick="submitForm()">Submit</button>
     </div>
   </div>
 </div>
 
-<!-- SUCCESS -->
 <div class="success-screen" id="successScreen">
   <div class="icon">&#127881;</div>
   <h2>You're In!</h2>
-  <p>Your intake form has been submitted successfully. The Coach4U team will be in touch soon to welcome you to ThriveHQ.</p>
-  <p style="margin-top:12px;font-size:14px;color:#475569;">We can't wait to have you in the group.</p>
+  <p>We've got your details. The Coach4U team will be in touch soon to welcome you to ThriveHQ.</p>
   <p style="margin-top:16px;font-size:13px;color:#94a3b8;">You can close this page now.</p>
 </div>
 
@@ -336,183 +180,81 @@ const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 const supabase=window.supabase.createClient(SB_URL,SB_KEY);
 
 let currentStep=0;
-const totalSteps=5;
-
-function goStep(n){
-  if(n>currentStep) return;
-  showStep(n);
-}
-
+function goStep(n){if(n<=currentStep)showStep(n);}
 function showStep(n){
   currentStep=n;
-  document.querySelectorAll('.section').forEach((s,i)=>{s.classList.toggle('active',i===n);});
-  document.querySelectorAll('.progress-step').forEach((s,i)=>{
-    s.classList.remove('active','done');
-    if(i===n) s.classList.add('active');
-    else if(i<n) s.classList.add('done');
-  });
-  hideError();
-  window.scrollTo({top:0,behavior:'smooth'});
-  saveProgress();
+  document.querySelectorAll('.section').forEach((s,i)=>s.classList.toggle('active',i===n));
+  document.querySelectorAll('.progress-step').forEach((s,i)=>{s.classList.remove('active','done');if(i===n)s.classList.add('active');else if(i<n)s.classList.add('done');});
+  hideError();window.scrollTo({top:0,behavior:'smooth'});
 }
-
-function nextStep(){
-  if(!validateStep(currentStep)) return;
-  if(currentStep<totalSteps-1) showStep(currentStep+1);
-}
-
-function prevStep(){
-  if(currentStep>0) showStep(currentStep-1);
-}
+function nextStep(){if(validateStep(currentStep))showStep(currentStep+1);}
+function prevStep(){if(currentStep>0)showStep(currentStep-1);}
+function g(id){return document.getElementById(id).value.trim();}
+function toggleChip(el){el.classList.toggle('selected');}
+function getChips(id){return Array.from(document.querySelectorAll('#'+id+' .chip.selected')).map(c=>c.textContent).join(', ');}
+function showError(msg){const el=document.getElementById('errorMsg');el.textContent=msg;el.style.display='block';el.scrollIntoView({behavior:'smooth',block:'center'});}
+function hideError(){document.getElementById('errorMsg').style.display='none';}
 
 function validateStep(n){
   hideError();
   if(n===0){
-    if(!g('fFirstName')||!g('fLastName')){showError('First name and last name are required.');return false;}
-    const em=g('fEmail');
-    if(!em||!em.includes('@')){showError('A valid email address is required.');return false;}
-  }
-  if(n===1){
-    if(!g('fDiagnosis')){showError('Please select your ADHD diagnosis status.');return false;}
-    if(!g('fChallenges')){showError('Please tell us about your biggest ADHD challenges.');return false;}
-    if(!g('fGoals')){showError('Please tell us what you hope to get from ThriveHQ.');return false;}
-  }
-  if(n===2){
-    if(!g('fEmName')||!g('fEmPhone')){showError('Emergency contact name and phone are required.');return false;}
+    if(!g('fFirstName')||!g('fLastName')){showError('First and last name are required.');return false;}
+    if(!g('fEmail')||!g('fEmail').includes('@')){showError('Valid email is required.');return false;}
+    if(!g('fEmName')||!g('fEmPhone')){showError('Emergency contact is required.');return false;}
   }
   return true;
 }
 
-function showError(msg){
-  const el=document.getElementById('errorMsg');
-  el.textContent=msg;
-  el.style.display='block';
-  el.scrollIntoView({behavior:'smooth',block:'center'});
-}
-function hideError(){document.getElementById('errorMsg').style.display='none';}
-function g(id){return document.getElementById(id).value.trim();}
-function toggleChip(el){el.classList.toggle('selected');}
-
-function getChips(containerId){
-  return Array.from(document.querySelectorAll('#'+containerId+' .chip.selected')).map(c=>c.textContent).join(', ');
-}
-
 async function submitForm(){
-  if(!validateStep(4)) return;
-  if(!document.getElementById('cData').checked){showError('You must consent to data storage to proceed.');return;}
-  if(!document.getElementById('cGroup').checked){showError('You must agree to the group participation terms.');return;}
-  if(!document.getElementById('cNotClinical').checked){showError('You must acknowledge that ThriveHQ is not a clinical service.');return;}
-  if(!document.getElementById('cTerms').checked){showError('You must agree to the terms of participation.');return;}
-  if(!g('fSignature')){showError('Please type your full name as a digital signature.');return;}
-
-  // Honeypot
-  if(g('fWebsite')) return;
+  hideError();
+  if(!g('fDiagnosis')){showError('Please select your ADHD status.');return;}
+  if(!document.getElementById('cData').checked||!document.getElementById('cGroup').checked||!document.getElementById('cTerms').checked){showError('Please agree to all required consent items.');return;}
+  if(g('fWebsite'))return;
 
   const btn=document.getElementById('submitBtn');
-  btn.disabled=true;
-  btn.textContent='Submitting...';
+  btn.disabled=true;btn.textContent='Submitting...';
 
-  const data={
+  const {error}=await supabase.from('intake_submissions').insert({
     first_name:g('fFirstName'),
     last_name:g('fLastName'),
     preferred_name:g('fPreferred')||null,
     email:g('fEmail'),
     phone:g('fPhone')||null,
-    date_of_birth:g('fDob')||null,
     suburb:g('fSuburb')||null,
-    occupation:g('fOccupation')||null,
-    adhd_diagnosis:g('fDiagnosis'),
-    diagnosis_details:g('fDiagnosisDetails')||null,
-    current_medication:document.getElementById('fMedication').value==='No'?null:document.getElementById('fMedication').value+(g('fMedDetails')?' — '+g('fMedDetails'):''),
-    current_support:getChips('supportChips')||null,
-    wellbeing_goals:g('fGoals'),
-    current_challenges:g('fChallenges'),
-    previous_coaching:document.getElementById('fPrevCoaching').value==='Yes',
-    previous_coaching_details:g('fPrevDetails')||null,
-    areas_of_interest:getChips('areasChips')||null,
-    health_conditions:g('fHealth')||null,
-    mental_health_support:getChips('supportChips').length>0&&!getChips('supportChips').includes('None'),
+    how_heard:g('fHowHeard')||null,
     emergency_contact_name:g('fEmName'),
     emergency_contact_phone:g('fEmPhone'),
-    emergency_contact_relationship:g('fEmRelationship')||null,
-    how_heard:g('fHowHeard')||null,
-    referrer_name:g('fReferrer')||null,
+    adhd_diagnosis:g('fDiagnosis'),
+    areas_of_interest:getChips('areasChips')||null,
+    wellbeing_goals:g('fGoals')||null,
     consent_data:document.getElementById('cData').checked,
-    consent_comms:document.getElementById('cComms').checked,
     consent_group:document.getElementById('cGroup').checked,
-    consent_photo:document.getElementById('cPhoto').checked,
     agreed_terms:document.getElementById('cTerms').checked,
-    signature_name:g('fSignature')
-  };
+    signature_name:g('fFirstName')+' '+g('fLastName')
+  });
 
-  const {error}=await supabase.from('intake_submissions').insert(data);
-
-  if(error){
-    btn.disabled=false;
-    btn.textContent='Submit Intake Form';
-    showError('Something went wrong. Please try again. ('+error.message+')');
-    return;
-  }
-
-  localStorage.removeItem('thq_intake_progress');
+  if(error){btn.disabled=false;btn.textContent='Submit';showError('Something went wrong: '+error.message);return;}
+  localStorage.removeItem('thq_intake');
   document.getElementById('formContainer').style.display='none';
   document.getElementById('progressBar').style.display='none';
   document.getElementById('successScreen').style.display='block';
 }
 
-// Save/restore progress
-function saveProgress(){
-  const data={
-    step:currentStep,
-    fFirstName:g('fFirstName'),fLastName:g('fLastName'),fPreferred:g('fPreferred'),
-    fEmail:g('fEmail'),fPhone:g('fPhone'),fDob:g('fDob'),fSuburb:g('fSuburb'),
-    fOccupation:g('fOccupation'),fDiagnosis:g('fDiagnosis'),fDiagnosisDetails:g('fDiagnosisDetails'),
-    fMedication:document.getElementById('fMedication').value,fMedDetails:g('fMedDetails'),
-    fGoals:g('fGoals'),fChallenges:g('fChallenges'),
-    fPrevCoaching:document.getElementById('fPrevCoaching').value,fPrevDetails:g('fPrevDetails'),
-    areas:getChips('areasChips'),support:getChips('supportChips'),
-    fHealth:g('fHealth'),fEmName:g('fEmName'),fEmPhone:g('fEmPhone'),
-    fEmRelationship:g('fEmRelationship'),fHowHeard:g('fHowHeard'),fReferrer:g('fReferrer'),
-    fAnythingElse:g('fAnythingElse')
-  };
-  try{localStorage.setItem('thq_intake_progress',JSON.stringify(data));}catch(e){}
-}
-
-function restoreProgress(){
-  try{
-    const saved=JSON.parse(localStorage.getItem('thq_intake_progress'));
-    if(!saved) return;
-    ['fFirstName','fLastName','fPreferred','fEmail','fPhone','fDob','fSuburb',
-     'fOccupation','fDiagnosisDetails','fMedDetails','fGoals','fChallenges',
-     'fPrevDetails','fHealth','fEmName','fEmPhone','fEmRelationship','fReferrer','fAnythingElse'].forEach(id=>{
-      if(saved[id]) document.getElementById(id).value=saved[id];
-    });
-    if(saved.fDiagnosis) document.getElementById('fDiagnosis').value=saved.fDiagnosis;
-    if(saved.fMedication){
-      document.getElementById('fMedication').value=saved.fMedication;
-      if(saved.fMedication==='Yes') document.getElementById('medDetails').style.display='block';
-    }
-    if(saved.fPrevCoaching){
-      document.getElementById('fPrevCoaching').value=saved.fPrevCoaching;
-      if(saved.fPrevCoaching==='Yes') document.getElementById('prevDetails').style.display='block';
-    }
-    if(saved.fHowHeard){
-      document.getElementById('fHowHeard').value=saved.fHowHeard;
-      if(saved.fHowHeard==='Referral') document.getElementById('referrerRow').style.display='block';
-    }
-    if(saved.areas){
-      const a=saved.areas.split(', ');
-      document.querySelectorAll('#areasChips .chip').forEach(c=>{if(a.includes(c.textContent))c.classList.add('selected');});
-    }
-    if(saved.support){
-      const s=saved.support.split(', ');
-      document.querySelectorAll('#supportChips .chip').forEach(c=>{if(s.includes(c.textContent))c.classList.add('selected');});
-    }
-  }catch(e){}
-}
-
-document.addEventListener('input',()=>{clearTimeout(window._saveTmr);window._saveTmr=setTimeout(saveProgress,500);});
-restoreProgress();
+// Auto-save
+function save(){try{localStorage.setItem('thq_intake',JSON.stringify({
+  fFirstName:g('fFirstName'),fLastName:g('fLastName'),fPreferred:g('fPreferred'),
+  fEmail:g('fEmail'),fPhone:g('fPhone'),fSuburb:g('fSuburb'),fHowHeard:g('fHowHeard'),
+  fEmName:g('fEmName'),fEmPhone:g('fEmPhone'),fDiagnosis:g('fDiagnosis'),
+  fGoals:g('fGoals'),areas:getChips('areasChips')
+}));}catch(e){}}
+function restore(){try{const s=JSON.parse(localStorage.getItem('thq_intake'));if(!s)return;
+  ['fFirstName','fLastName','fPreferred','fEmail','fPhone','fSuburb','fEmName','fEmPhone','fGoals'].forEach(id=>{if(s[id])document.getElementById(id).value=s[id];});
+  if(s.fHowHeard)document.getElementById('fHowHeard').value=s.fHowHeard;
+  if(s.fDiagnosis)document.getElementById('fDiagnosis').value=s.fDiagnosis;
+  if(s.areas){const a=s.areas.split(', ');document.querySelectorAll('#areasChips .chip').forEach(c=>{if(a.includes(c.textContent))c.classList.add('selected');});}
+}catch(e){}}
+document.addEventListener('input',()=>{clearTimeout(window._t);window._t=setTimeout(save,500);});
+restore();
 </script>
 </body>
 </html>
