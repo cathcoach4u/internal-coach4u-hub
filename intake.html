@@ -67,7 +67,6 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f6ff;color:#1e293b;m
 </div>
 
 <div class="container" id="formContainer">
-  <div class="error-msg" id="errorMsg"></div>
 
   <!-- STEP 1: Your Details -->
   <div class="section active" id="step0">
@@ -105,7 +104,8 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f6ff;color:#1e293b;m
     </div>
 
     <div class="hp"><label>Leave blank</label><input id="fWebsite" tabindex="-1" autocomplete="off"></div>
-    <div class="nav-buttons"><button class="btn btn-next" onclick="nextStep()">Next &rarr;</button></div>
+    <div class="error-msg" id="errorMsg0"></div>
+    <div class="nav-buttons"><button type="button" class="btn btn-next" onclick="nextStep()">Next &rarr;</button></div>
   </div>
 
   <!-- STEP 2: ADHD & Consent -->
@@ -159,9 +159,10 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f6ff;color:#1e293b;m
       <label for="cTerms">I understand ThriveHQ is a coaching program, not clinical treatment. <span class="req">*</span></label>
     </div>
 
+    <div class="error-msg" id="errorMsg1"></div>
     <div class="nav-buttons">
-      <button class="btn btn-back" onclick="prevStep()">&larr; Back</button>
-      <button class="btn btn-submit" id="submitBtn" onclick="submitForm()">Submit</button>
+      <button type="button" class="btn btn-back" onclick="prevStep()">&larr; Back</button>
+      <button type="button" class="btn btn-submit" id="submitBtn" onclick="submitForm()">Submit</button>
     </div>
   </div>
 </div>
@@ -177,7 +178,8 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f6ff;color:#1e293b;m
 <script>
 const SB_URL='https://uoixetfvboevjxlkfyqy.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVvaXhldGZ2Ym9ldmp4bGtmeXF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI4NzE4NzMsImV4cCI6MjA1ODQ0Nzg3M30.gFLMnCbnTEbAsrFUaVx_uU-K-xPBJvmJoZVRsK-GTCE';
-const supabase=window.supabase.createClient(SB_URL,SB_KEY);
+let sb=null;
+function getSB(){if(!sb&&window.supabase)sb=window.supabase.createClient(SB_URL,SB_KEY);return sb;}
 
 let currentStep=0;
 function goStep(n){if(n<=currentStep)showStep(n);}
@@ -192,8 +194,8 @@ function prevStep(){if(currentStep>0)showStep(currentStep-1);}
 function g(id){return document.getElementById(id).value.trim();}
 function toggleChip(el){el.classList.toggle('selected');}
 function getChips(id){return Array.from(document.querySelectorAll('#'+id+' .chip.selected')).map(c=>c.textContent).join(', ');}
-function showError(msg){const el=document.getElementById('errorMsg');el.textContent=msg;el.style.display='block';el.scrollIntoView({behavior:'smooth',block:'center'});}
-function hideError(){document.getElementById('errorMsg').style.display='none';}
+function showError(msg){const el=document.getElementById('errorMsg'+currentStep);if(el){el.textContent=msg;el.style.display='block';el.scrollIntoView({behavior:'smooth',block:'center'});}}
+function hideError(){document.querySelectorAll('.error-msg').forEach(el=>el.style.display='none');}
 
 function validateStep(n){
   hideError();
@@ -214,6 +216,8 @@ async function submitForm(){
   const btn=document.getElementById('submitBtn');
   btn.disabled=true;btn.textContent='Submitting...';
 
+  const supabase=getSB();
+  if(!supabase){showError('Still loading — please try again in a moment.');btn.disabled=false;btn.textContent='Submit';return;}
   const {error}=await supabase.from('intake_submissions').insert({
     first_name:g('fFirstName'),
     last_name:g('fLastName'),
