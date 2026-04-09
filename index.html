@@ -108,6 +108,9 @@ td .actions button{padding:8px 14px;font-size:12px;}
 .member-tag{background:#dbeafe;color:#2563eb;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:500;display:inline-flex;align-items:center;gap:4px;}
 .member-tag .remove{cursor:pointer;font-weight:700;}
 
+/* ── TWO-COL GRID (mobile-responsive) ── */
+.mob-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
 /* ── MOBILE ── */
 @media(max-width:768px){
   .sidebar{display:none;}
@@ -119,8 +122,11 @@ td .actions button{padding:8px 14px;font-size:12px;}
   .area-tabs{display:none;}
   .content{padding:14px 16px;}
   .header{padding:12px 16px;}
-  .modal{padding:18px;}
+  .modal{padding:18px;max-width:92vw;}
   .dash-cards{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));}
+  .mob-grid-2{grid-template-columns:1fr;}
+  .toolbar{flex-direction:column;align-items:stretch;}
+  .toolbar .search-input{width:100%;}
 }
 @keyframes spin{to{transform:rotate(360deg)}}
 
@@ -371,6 +377,11 @@ td .actions button{padding:8px 14px;font-size:12px;}
       <div id="tkCards"></div>
     </div>
 
+    <!-- LOU'S PLAYBOOK -->
+    <div class="screen" id="screen-playbook">
+      <div id="playbookContent"></div>
+    </div>
+
     <!-- IT PROJECTS -->
     <div class="screen" id="screen-itprojects">
       <div class="toolbar">
@@ -459,7 +470,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     <h3 id="taskModalTitle">Add Task</h3>
     <input type="hidden" id="taskId">
     <div class="form-group"><label>Title</label><input id="tkTitle" placeholder="One clear outcome..."></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+    <div class="mob-grid-2">
       <div class="form-group"><label>Owner</label>
         <select id="tkOwner"><option>Cath Baker</option><option>CoachVA (Lou)</option></select>
       </div>
@@ -467,7 +478,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
         <select id="tkRequester"><option>Cath Baker</option><option>CoachVA (Lou)</option><option>System</option><option>Client</option></select>
       </div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+    <div class="mob-grid-2">
       <div class="form-group"><label>Category</label>
         <select id="tkCategory"><option>Task</option><option>Action Plan</option><option>BAU</option></select>
       </div>
@@ -475,36 +486,36 @@ td .actions button{padding:8px 14px;font-size:12px;}
         <select id="tkType"><option>Admin</option><option>Finance</option><option>Client</option><option>Tech</option><option>Personal</option><option>System</option></select>
       </div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+    <div class="mob-grid-2">
       <div class="form-group"><label>Priority</label>
         <select id="tkPriority"><option>Urgent</option><option>Normal</option><option>Low</option></select>
       </div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
       <div class="form-group"><label>Status</label>
         <select id="tkStatus"><option>Not Started</option><option>In Progress</option><option>Waiting on Cath</option><option>Waiting on CoachVA</option><option>Blocked</option><option>Complete</option></select>
       </div>
+    </div>
+    <div class="mob-grid-2">
       <div class="form-group"><label>Source</label>
         <select id="tkSource"><option>Chat</option><option>Email</option><option>Call</option><option>System</option><option>Self</option></select>
       </div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
       <div class="form-group"><label>Decision Required?</label>
         <select id="tkDecision"><option value="No">No</option><option value="Yes">Yes — needs Cath's input</option></select>
       </div>
-      <div class="form-group"><label>Due Date</label><input id="tkDue" type="date"></div>
     </div>
+    <div class="form-group"><label>Due Date</label><input id="tkDue" type="date"></div>
     <div class="form-group"><label>Description / Context</label><textarea id="tkDesc" placeholder="What is the clear outcome? Any context needed..."></textarea></div>
     <div class="form-group" id="tkBlockedGroup" style="display:none;"><label>Blocked Reason</label><input id="tkBlocked" placeholder="Why is this blocked?"></div>
     <div id="taskLogSection" style="display:none;">
       <div style="font-weight:700;font-size:13px;color:#1e3a5f;margin:12px 0 8px;">Activity Log</div>
       <div id="taskLogEntries" style="max-height:200px;overflow-y:auto;margin-bottom:8px;"></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <select id="tkLogType" style="padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;">
-          <option>STATUS UPDATE</option><option>ACTION REQUIRED</option><option>CONFIRMATION REQUEST</option><option>BLOCKED</option><option>NOTE</option>
-        </select>
-        <input id="tkLogMsg" placeholder="Add update..." style="flex:1;min-width:120px;padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;">
-        <button class="btn btn-blue" onclick="addTaskLog()" style="padding:6px 14px;font-size:12px;">Post</button>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div style="display:flex;gap:6px;">
+          <select id="tkLogType" style="padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;flex:1;">
+            <option>STATUS UPDATE</option><option>ACTION REQUIRED</option><option>CONFIRMATION REQUEST</option><option>BLOCKED</option><option>NOTE</option>
+          </select>
+          <button class="btn btn-blue" onclick="addTaskLog()" style="padding:8px 14px;font-size:12px;">Post</button>
+        </div>
+        <input id="tkLogMsg" placeholder="Add update..." style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;">
       </div>
       <div id="tkTeamsRow" style="display:none;margin-top:8px;display:flex;gap:16px;align-items:center;">
         <label style="font-size:12px;display:flex;align-items:center;gap:4px;cursor:pointer;color:#475569;">
@@ -862,7 +873,7 @@ document.getElementById('headerDate').textContent = new Date().toLocaleDateStrin
 window.navTo = function(tab,btn){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+tab).classList.add('active');
-  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ',strdash:'Strengths',opsdash:'Operations',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Strengths Hub',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Task Management',itprojects:'IT Projects',findash:'Finance',finincome:'Income',finspend:'Where Money Goes',fintxns:'Transactions'};
+  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ',strdash:'Strengths',opsdash:'Operations',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Strengths Hub',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Task Management',playbook:'Lou\'s Playbook',itprojects:'IT Projects',findash:'Finance',finincome:'Income',finspend:'Where Money Goes',fintxns:'Transactions'};
   document.getElementById('pageTitle').textContent=titles[tab]||'Coach4U';
   // Sync area tab
   const area=pageToArea[tab]||'home';
@@ -898,6 +909,7 @@ window.navTo = function(tab,btn){
   if(tab==='thqcalls') renderCoachingCalls();
   if(tab==='tasks') renderTasks();
   if(tab==='refpayments') renderRefPayments();
+  if(tab==='playbook') renderPlaybook();
   if(tab==='itprojects') renderITProjects();
   if(tab==='findash') renderFinDash();
   if(tab==='finincome') renderFinIncome();
@@ -929,7 +941,7 @@ const areaConfig={
   clients:{label:'Clients',pages:[{id:'clidash',icon:'&#129309;',label:'Dashboard'},{id:'clients',icon:'&#128101;',label:'Client List'},{id:'clinvoices',icon:'&#128206;',label:'Invoices'}]},
   thrivehq:{label:'ThriveHQ',pages:[{id:'thqdash',icon:'&#128170;',label:'Dashboard'},{id:'thqtrials',icon:'&#127793;',label:'Trials'},{id:'thrivehq',icon:'&#128101;',label:'Members'},{id:'thqrenewals',icon:'&#128260;',label:'Renewals'},{id:'thqcalls',icon:'&#128222;',label:'Coaching Calls'}]},
   strengths:{label:'Strengths',pages:[{id:'strdash',icon:'&#127919;',label:'Dashboard'},{id:'strengths',icon:'&#128161;',label:'Strengths Hub'}]},
-  operations:{label:'Operations',pages:[{id:'opsdash',icon:'&#128736;',label:'Dashboard'},{id:'tasks',icon:'&#9989;',label:'Task Management'},{id:'itprojects',icon:'&#9881;',label:'IT Projects'}]},
+  operations:{label:'Operations',pages:[{id:'opsdash',icon:'&#128736;',label:'Dashboard'},{id:'tasks',icon:'&#9989;',label:'Task Management'},{id:'playbook',icon:'&#128214;',label:'Playbook'},{id:'itprojects',icon:'&#9881;',label:'IT Projects'}]},
   finance:{label:'Finance',pages:[{id:'findash',icon:'&#128176;',label:'Dashboard'},{id:'finincome',icon:'&#128181;',label:'Income'},{id:'finspend',icon:'&#128200;',label:'Where Money Goes'},{id:'fintxns',icon:'&#128203;',label:'Transactions'}]}
 };
 let currentArea='home';
@@ -1333,6 +1345,176 @@ window.copyDailySummary=function(){
     toast('Daily summary copied — paste into Teams!','success');
   });
 };
+
+// ── LOU'S PLAYBOOK ──
+let playbookLinks=[
+  {cat:'Finance & Invoicing',items:[
+    {label:'Xero Dashboard',url:'https://go.xero.com/Dashboard/',icon:'&#128176;'},
+    {label:'GoCardless',url:'https://manage.gocardless.com/payments',icon:'&#128179;'},
+    {label:'Stripe Dashboard',url:'https://dashboard.stripe.com/',icon:'&#128179;'}
+  ]},
+  {cat:'Client & NDIS',items:[
+    {label:'NDIS Portal (PRODA)',url:'https://proda.humanservices.gov.au/',icon:'&#128101;'},
+    {label:'myGov / Services Australia',url:'https://my.gov.au/',icon:'&#127970;'}
+  ]},
+  {cat:'Communication',items:[
+    {label:'Microsoft Teams',url:'https://teams.microsoft.com/',icon:'&#128172;'},
+    {label:'WhatsApp Web',url:'https://web.whatsapp.com/',icon:'&#128242;'},
+    {label:'Outlook / Email',url:'https://outlook.office365.com/',icon:'&#9993;'}
+  ]},
+  {cat:'Scheduling & CRM',items:[
+    {label:'Coach4U CRM (this app)',url:'#',icon:'&#128203;',onclick:'navTo("dashboard")'},
+    {label:'Calendly / Booking',url:'https://calendly.com/app/scheduled_events/upcoming',icon:'&#128197;'},
+    {label:'Zoom',url:'https://zoom.us/meeting',icon:'&#127909;'}
+  ]},
+  {cat:'Content & Social',items:[
+    {label:'Canva',url:'https://www.canva.com/',icon:'&#127912;'},
+    {label:'Instagram',url:'https://www.instagram.com/',icon:'&#128247;'},
+    {label:'Facebook Business',url:'https://business.facebook.com/',icon:'&#128220;'},
+    {label:'LinkedIn',url:'https://www.linkedin.com/',icon:'&#128100;'}
+  ]},
+  {cat:'Admin & Docs',items:[
+    {label:'Google Drive',url:'https://drive.google.com/',icon:'&#128194;'},
+    {label:'SharePoint / OneDrive',url:'https://onedrive.live.com/',icon:'&#128193;'},
+    {label:'GitHub Pages (CRM deploy)',url:'https://github.com/cathcoach4u/internal-coach4u-hub',icon:'&#128187;'}
+  ]}
+];
+
+const dailyProcedures=[
+  {time:'Morning',tasks:[
+    'Check Teams for messages from Cath',
+    'Review today\'s priorities in CRM Task Management',
+    'Check email inbox — flag anything urgent',
+    'Check Xero — any overdue invoices or payments received?',
+    'Review calendar — any sessions or calls today?'
+  ]},
+  {time:'Midday',tasks:[
+    'Post progress update to Cath via Teams',
+    'Follow up on any pending client responses',
+    'Process any new referrals or enquiries',
+    'Update task statuses in CRM'
+  ]},
+  {time:'End of Day',tasks:[
+    'Send daily summary update to Cath (use Copy Daily Summary in Ops Dashboard)',
+    'Mark completed tasks as done in CRM',
+    'Star tomorrow\'s priority tasks',
+    'Check GoCardless for any failed payments',
+    'Log off Xero and close out any open tabs'
+  ]}
+];
+
+function renderPlaybook(){
+  const now=new Date();
+  const todayStr=now.toISOString().split('T')[0];
+  const dateStr=now.toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const active=tasks.filter(t=>t.status!=='Complete');
+  const priorities=active.filter(t=>t.focus_date===todayStr).sort(taskSorter);
+  const pendings=active.filter(t=>t.focus_date!==todayStr&&(t.work_category||'Task')==='Task').sort(taskSorter);
+  const actionPlan=active.filter(t=>(t.work_category)==='Action Plan').sort(taskSorter);
+  const bau=active.filter(t=>(t.work_category)==='BAU').sort(taskSorter);
+  const completedToday=tasks.filter(t=>t.status==='Complete'&&t.updated_at&&t.updated_at.startsWith(todayStr));
+  const needsDecision=active.filter(t=>t.decision_required==='Yes'||t.status==='Waiting on Cath');
+  const blocked=active.filter(t=>t.status==='Blocked');
+
+  let html='';
+
+  // ── Section 1: Live Daily Update ──
+  html+=`<div style="margin-bottom:24px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+      <div>
+        <h3 style="font-family:'Quicksand',sans-serif;font-size:20px;color:#1e3a5f;margin-bottom:2px;">&#128214; Lou's Playbook</h3>
+        <div style="font-size:13px;color:#64748b;">${dateStr}</div>
+      </div>
+      <button class="btn btn-blue" onclick="copyDailySummary()" style="font-size:13px;">&#128203; Copy Update for Teams</button>
+    </div>`;
+
+  // Alerts
+  if(needsDecision.length){
+    html+=`<div style="background:#fef3c7;border:1px solid #fbbf24;border-radius:10px;padding:14px 16px;margin-bottom:10px;">
+      <div style="font-weight:700;font-size:13px;color:#92400e;margin-bottom:6px;">&#9888; Needs Cath's Decision (${needsDecision.length})</div>
+      ${needsDecision.map(t=>`<div onclick="openTaskModal('${t.id}')" style="padding:6px 0;cursor:pointer;font-size:13px;color:#1e293b;">&#8226; ${t.title}${t.due_date?' <span style="color:#94a3b8;font-size:11px;">Due: '+t.due_date+'</span>':''}</div>`).join('')}
+    </div>`;
+  }
+  if(blocked.length){
+    html+=`<div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:14px 16px;margin-bottom:10px;">
+      <div style="font-weight:700;font-size:13px;color:#dc2626;margin-bottom:6px;">&#128683; Blocked (${blocked.length})</div>
+      ${blocked.map(t=>`<div onclick="openTaskModal('${t.id}')" style="padding:6px 0;cursor:pointer;font-size:13px;color:#1e293b;">&#8226; ${t.title}${t.blocked_reason?' — <span style="color:#dc2626;font-size:11px;">'+t.blocked_reason+'</span>':''}</div>`).join('')}
+    </div>`;
+  }
+
+  // Task sections as cards
+  function pbSection(title,icon,color,items){
+    if(!items.length) return '';
+    return `<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid ${color};border-radius:10px;padding:14px 16px;margin-bottom:10px;">
+      <div style="font-weight:700;font-size:13px;color:${color};margin-bottom:8px;">${icon} ${title} (${items.length})</div>
+      ${items.map(t=>{
+        const st=t.status||'Not Started';
+        const statusColors={'Not Started':'#94a3b8','In Progress':'#2563eb','Waiting on Cath':'#d97706','Waiting on CoachVA':'#7c3aed','Blocked':'#dc2626','Complete':'#16a34a'};
+        return `<div onclick="openTaskModal('${t.id}')" style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;cursor:pointer;gap:8px;flex-wrap:wrap;">
+          <span style="font-size:13px;color:#1e293b;flex:1;min-width:0;">&#8226; ${t.title}</span>
+          <span style="font-size:10px;padding:2px 8px;border-radius:99px;background:#f1f5f9;color:${statusColors[st]||'#64748b'};font-weight:600;white-space:nowrap;">${st}</span>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
+
+  html+=pbSection("Today's Priorities",'&#9733;','#f59e0b',priorities);
+  html+=pbSection('Pending Tasks','&#128203;','#64748b',pendings.slice(0,15));
+  if(pendings.length>15) html+=`<div style="text-align:center;margin-bottom:10px;"><button class="btn btn-gray" onclick="navTo('tasks')" style="font-size:12px;">View all ${pendings.length} pending tasks</button></div>`;
+  html+=pbSection('Action Plan','&#127919;','#7c3aed',actionPlan);
+  html+=pbSection('BAU (Daily Monitoring)','&#128260;','#2563eb',bau);
+  if(completedToday.length) html+=pbSection('Completed Today','&#10004;','#16a34a',completedToday);
+  html+=`</div>`;
+
+  // ── Section 2: Daily Procedures ──
+  html+=`<div style="margin-bottom:24px;">
+    <h3 style="font-family:'Quicksand',sans-serif;font-size:17px;color:#1e3a5f;margin-bottom:12px;">&#128221; Daily Procedures</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;">
+    ${dailyProcedures.map(p=>`
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.04);">
+        <div style="font-weight:700;font-size:14px;color:#1e3a5f;margin-bottom:10px;">&#128336; ${p.time}</div>
+        ${p.tasks.map(t=>`<div style="display:flex;gap:8px;align-items:flex-start;padding:4px 0;font-size:13px;color:#475569;">
+          <span style="color:#d1d5db;flex-shrink:0;">&#9634;</span> ${t}
+        </div>`).join('')}
+      </div>
+    `).join('')}
+    </div>
+  </div>`;
+
+  // ── Section 3: Quick Links ──
+  html+=`<div style="margin-bottom:24px;">
+    <h3 style="font-family:'Quicksand',sans-serif;font-size:17px;color:#1e3a5f;margin-bottom:12px;">&#128279; Quick Links & Tools</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;">
+    ${playbookLinks.map(cat=>`
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.04);">
+        <div style="font-weight:700;font-size:13px;color:#1e3a5f;margin-bottom:10px;">${cat.cat}</div>
+        ${cat.items.map(l=>{
+          if(l.onclick) return `<div onclick="${l.onclick}" style="display:flex;align-items:center;gap:10px;padding:8px 10px;margin:4px 0;border:1px solid #f1f5f9;border-radius:8px;cursor:pointer;font-size:13px;color:#2563eb;font-weight:500;transition:all .15s;" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background='#fff'">
+            <span style="font-size:18px;">${l.icon}</span> ${l.label}
+          </div>`;
+          return `<a href="${l.url}" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:10px;padding:8px 10px;margin:4px 0;border:1px solid #f1f5f9;border-radius:8px;text-decoration:none;font-size:13px;color:#2563eb;font-weight:500;transition:all .15s;" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background='#fff'">
+            <span style="font-size:18px;">${l.icon}</span> ${l.label}
+          </a>`;
+        }).join('')}
+      </div>
+    `).join('')}
+    </div>
+  </div>`;
+
+  // ── Section 4: Handover info ──
+  html+=`<div style="background:#f0f6ff;border:1px solid #bfdbfe;border-radius:10px;padding:16px 20px;margin-bottom:24px;">
+    <div style="font-weight:700;font-size:14px;color:#1e3a5f;margin-bottom:8px;">&#128161; If Someone Else is Covering</div>
+    <div style="font-size:13px;color:#475569;line-height:1.7;">
+      <p style="margin-bottom:8px;">1. <strong>Check this Playbook page</strong> — it shows today's live priorities and what's pending</p>
+      <p style="margin-bottom:8px;">2. <strong>Follow the Daily Procedures</strong> above (Morning / Midday / End of Day)</p>
+      <p style="margin-bottom:8px;">3. <strong>Use the Quick Links</strong> to access all tools (Xero, Teams, NDIS portal, etc.)</p>
+      <p style="margin-bottom:8px;">4. <strong>Post updates to Cath via Teams</strong> — use the "Copy Update for Teams" button at the top</p>
+      <p>5. <strong>If stuck</strong>, message Cath via Teams or WhatsApp</p>
+    </div>
+  </div>`;
+
+  document.getElementById('playbookContent').innerHTML=html;
+}
 
 // ── REFERRERS DASHBOARD ──
 const refDashState={};
