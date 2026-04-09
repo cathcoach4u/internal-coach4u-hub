@@ -385,6 +385,11 @@ td .actions button{padding:8px 14px;font-size:12px;}
       <div id="finDashContent"></div>
     </div>
 
+    <!-- WHERE MONEY GOES -->
+    <div class="screen" id="screen-finspend">
+      <div id="finSpendContent"></div>
+    </div>
+
     <!-- FINANCE TRANSACTIONS -->
     <div class="screen" id="screen-fintxns">
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;">
@@ -852,7 +857,7 @@ document.getElementById('headerDate').textContent = new Date().toLocaleDateStrin
 window.navTo = function(tab,btn){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+tab).classList.add('active');
-  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ',strdash:'Strengths',opsdash:'Operations',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Strengths Hub',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Task Management',itprojects:'IT Projects',findash:'Finance',fintxns:'Transactions'};
+  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ',strdash:'Strengths',opsdash:'Operations',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Strengths Hub',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Task Management',itprojects:'IT Projects',findash:'Finance',finspend:'Where Money Goes',fintxns:'Transactions'};
   document.getElementById('pageTitle').textContent=titles[tab]||'Coach4U';
   // Sync area tab
   const area=pageToArea[tab]||'home';
@@ -890,6 +895,7 @@ window.navTo = function(tab,btn){
   if(tab==='refpayments') renderRefPayments();
   if(tab==='itprojects') renderITProjects();
   if(tab==='findash') renderFinDash();
+  if(tab==='finspend') renderFinSpend();
   if(tab==='fintxns') renderFinTransactions();
   closeMobile();
 };
@@ -918,7 +924,7 @@ const areaConfig={
   thrivehq:{label:'ThriveHQ',pages:[{id:'thqdash',icon:'&#128170;',label:'Dashboard'},{id:'thqtrials',icon:'&#127793;',label:'Trials'},{id:'thrivehq',icon:'&#128101;',label:'Members'},{id:'thqrenewals',icon:'&#128260;',label:'Renewals'},{id:'thqcalls',icon:'&#128222;',label:'Coaching Calls'}]},
   strengths:{label:'Strengths',pages:[{id:'strdash',icon:'&#127919;',label:'Dashboard'},{id:'strengths',icon:'&#128161;',label:'Strengths Hub'}]},
   operations:{label:'Operations',pages:[{id:'opsdash',icon:'&#128736;',label:'Dashboard'},{id:'tasks',icon:'&#9989;',label:'Task Management'},{id:'itprojects',icon:'&#9881;',label:'IT Projects'}]},
-  finance:{label:'Finance',pages:[{id:'findash',icon:'&#128176;',label:'Dashboard'},{id:'fintxns',icon:'&#128203;',label:'Transactions'}]}
+  finance:{label:'Finance',pages:[{id:'findash',icon:'&#128176;',label:'Dashboard'},{id:'finspend',icon:'&#128200;',label:'Where Money Goes'},{id:'fintxns',icon:'&#128203;',label:'Transactions'}]}
 };
 let currentArea='home';
 
@@ -3636,13 +3642,53 @@ function renderFinDash(){
   }
   html+='</div>';
 
-  // Expense breakdown by category
+  // Link to spend page
+  html+='<div onclick="navTo(\'finspend\')" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:background .15s;" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'#fff\'">';
+  html+='<div><div style="font-weight:700;font-size:15px;color:#1e3a5f;">Where Your Money Goes &#x279C;</div><div style="font-size:12px;color:#94a3b8;margin-top:2px;">Expense breakdown, subscriptions &amp; category drill-down</div></div>';
+  html+='<div style="font-size:28px;">&#128200;</div></div>';
+
+  el.innerHTML=html;
+}
+
+function renderFinSpend(){
+  const el=document.getElementById('finSpendContent');
+  const txns=financeTransactions.filter(t=>finIsExpense(t.account)&&!finIsBalance(t.account));
+  if(!txns.length){
+    el.innerHTML='<div style="text-align:center;padding:60px 20px;color:#64748b;"><div style="font-size:48px;margin-bottom:16px;">&#128200;</div><h3 style="margin:0 0 8px;color:#1e3a5f;">No expense data yet</h3><p>Upload your Xero CSV in the Transactions page first.</p></div>';
+    return;
+  }
+
+  const categoryTotals={},subVendors={},monthSet=new Set();
+  txns.forEach(t=>{
+    const ym=finMonthKey(t.transaction_date);
+    monthSet.add(ym);
+    if(!categoryTotals[t.account]) categoryTotals[t.account]=0;
+    categoryTotals[t.account]+=t.gross;
+    if(t.account==='Subscriptions'){
+      const vendor=(t.description||'').split(' - ')[0].split(' –')[0].trim();
+      if(vendor){
+        if(!subVendors[vendor]) subVendors[vendor]={total:0,count:0,months:new Set()};
+        subVendors[vendor].total+=t.gross;
+        subVendors[vendor].count++;
+        subVendors[vendor].months.add(ym);
+      }
+    }
+  });
+
+  const numMonths=monthSet.size||1;
+  const totalExpenses=txns.reduce((s,t)=>s+t.gross,0);
   const sortedCats=Object.entries(categoryTotals).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
   const totalExp=sortedCats.reduce((s,[,v])=>s+v,0)||1;
-  html+='<div style="display:grid;grid-template-columns:1fr;gap:16px;">';
 
-  html+='<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;">';
-  html+='<h3 style="margin:0 0 12px;font-size:15px;color:#1e3a5f;">Where Your Money Goes</h3>';
+  // Top summary
+  let html=`<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:14px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;">
+    <div><div style="font-size:12px;color:#dc2626;font-weight:600;">Total Expenses (${numMonths} months)</div><div style="font-size:22px;font-weight:700;color:#dc2626;">$${totalExpenses.toLocaleString('en-AU',{minimumFractionDigits:0})}</div></div>
+    <div style="text-align:right;"><div style="font-size:12px;color:#64748b;">Monthly average</div><div style="font-size:18px;font-weight:700;color:#1e3a5f;">$${(totalExpenses/numMonths).toLocaleString('en-AU',{minimumFractionDigits:0})}/mo</div></div>
+  </div>`;
+
+  // Category breakdown
+  html+='<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:16px;">';
+  html+='<h3 style="margin:0 0 12px;font-size:15px;color:#1e3a5f;">By Category</h3>';
   sortedCats.forEach(([cat,amt])=>{
     const pct=((amt/totalExp)*100).toFixed(1);
     const monthAvg=(amt/numMonths).toFixed(2);
@@ -3655,12 +3701,12 @@ function renderFinDash(){
   html+='</div>';
 
   // Subscription audit
-  html+='<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;">';
-  html+='<h3 style="margin:0 0 4px;font-size:15px;color:#1e3a5f;">Subscription Audit</h3>';
-  html+='<p style="margin:0 0 12px;font-size:12px;color:#94a3b8;">Monthly recurring costs — review what you still need</p>';
   const sortedSubs=Object.entries(subVendors).sort((a,b)=>b[1].total-a[1].total);
   const totalSubs=sortedSubs.reduce((s,[,v])=>s+v.total,0);
-  html+=`<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px;margin-bottom:12px;font-size:12px;"><strong>Total:</strong> $${totalSubs.toLocaleString('en-AU',{minimumFractionDigits:0})} over ${numMonths} months = <strong style="color:#dc2626;">~$${(totalSubs/numMonths).toLocaleString('en-AU',{minimumFractionDigits:0})}/mo</strong></div>`;
+  html+='<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;">';
+  html+='<h3 style="margin:0 0 4px;font-size:15px;color:#1e3a5f;">Subscription Audit</h3>';
+  html+='<p style="margin:0 0 12px;font-size:12px;color:#94a3b8;">Monthly recurring costs — tap any to see all charges</p>';
+  html+=`<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px;margin-bottom:12px;font-size:12px;"><strong>Total subscriptions:</strong> $${totalSubs.toLocaleString('en-AU',{minimumFractionDigits:0})} = <strong style="color:#dc2626;">~$${(totalSubs/numMonths).toLocaleString('en-AU',{minimumFractionDigits:0})}/mo</strong></div>`;
   sortedSubs.forEach(([vendor,data])=>{
     const monthly=(data.total/data.months.size).toFixed(2);
     html+=`<div onclick="finDrillSearch('${vendor.replace(/'/g,"\\'")}')" style="display:flex;justify-content:space-between;align-items:center;padding:8px 6px;border-bottom:1px solid #f1f5f9;font-size:12px;cursor:pointer;border-radius:6px;transition:background .15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
@@ -3670,7 +3716,6 @@ function renderFinDash(){
   });
   html+='</div>';
 
-  html+='</div>'; // close grid
   el.innerHTML=html;
 }
 
