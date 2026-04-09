@@ -203,6 +203,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     <button class="area-tab" onclick="switchArea('thrivehq')"><span class="tab-icon">&#128170;</span>ThriveHQ</button>
     <button class="area-tab" onclick="switchArea('strengths')"><span class="tab-icon">&#127919;</span>Strengths</button>
     <button class="area-tab" onclick="switchArea('operations')"><span class="tab-icon">&#128736;</span>Operations</button>
+    <button class="area-tab" onclick="switchArea('finance')"><span class="tab-icon">&#128176;</span>Finance</button>
   </div>
   <div class="content">
 
@@ -377,6 +378,29 @@ td .actions button{padding:8px 14px;font-size:12px;}
         <button class="btn btn-blue" onclick="openITModal()">+ Add Project</button>
       </div>
       <div id="itCards"></div>
+    </div>
+
+    <!-- FINANCE DASHBOARD -->
+    <div class="screen" id="screen-findash">
+      <div id="finDashContent"></div>
+    </div>
+
+    <!-- FINANCE TRANSACTIONS -->
+    <div class="screen" id="screen-fintxns">
+      <div class="toolbar" style="flex-wrap:wrap;gap:8px;">
+        <input class="search-input" id="finSearch" placeholder="Search transactions..." oninput="renderFinTransactions()" style="flex:1;min-width:180px;">
+        <select id="finAccFilter" onchange="renderFinTransactions()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
+          <option value="">All Accounts</option>
+        </select>
+        <select id="finTypeFilter" onchange="renderFinTransactions()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
+          <option value="">All Types</option>
+          <option value="income">Income</option>
+          <option value="expense">Expenses</option>
+        </select>
+        <button class="btn btn-blue" onclick="triggerFinUpload()">Upload Xero CSV</button>
+        <input type="file" id="finFileInput" accept=".csv" style="display:none" onchange="handleFinUpload(event)">
+      </div>
+      <div id="finTxnList"></div>
     </div>
 
   </div>
@@ -810,7 +834,7 @@ async function loadTasks(){
 }
 
 async function loadAll(){
-  await Promise.all([loadContacts(), loadClients(), loadTasks(), loadProspects(), loadReferrers(), loadRefPayments(), loadRenewals(), loadContactReports(), loadTrials(), loadTaskLogs()]);
+  await Promise.all([loadContacts(), loadClients(), loadTasks(), loadProspects(), loadReferrers(), loadRefPayments(), loadRenewals(), loadContactReports(), loadTrials(), loadTaskLogs(), loadFinanceTransactions()]);
   renderSidebarNav('home');
   renderDashboard();
   document.getElementById('appLoader').style.display='none';
@@ -823,7 +847,7 @@ document.getElementById('headerDate').textContent = new Date().toLocaleDateStrin
 window.navTo = function(tab,btn){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+tab).classList.add('active');
-  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ',strdash:'Strengths',opsdash:'Operations',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Strengths Hub',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Task Management',itprojects:'IT Projects'};
+  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ',strdash:'Strengths',opsdash:'Operations',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Strengths Hub',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Task Management',itprojects:'IT Projects',findash:'Finance',fintxns:'Transactions'};
   document.getElementById('pageTitle').textContent=titles[tab]||'Coach4U';
   // Sync area tab
   const area=pageToArea[tab]||'home';
@@ -860,6 +884,8 @@ window.navTo = function(tab,btn){
   if(tab==='tasks') renderTasks();
   if(tab==='refpayments') renderRefPayments();
   if(tab==='itprojects') renderITProjects();
+  if(tab==='findash') renderFinDash();
+  if(tab==='fintxns') renderFinTransactions();
   closeMobile();
 };
 
@@ -886,7 +912,8 @@ const areaConfig={
   clients:{label:'Clients',pages:[{id:'clidash',icon:'&#129309;',label:'Dashboard'},{id:'clients',icon:'&#128101;',label:'Client List'},{id:'clinvoices',icon:'&#128206;',label:'Invoices'}]},
   thrivehq:{label:'ThriveHQ',pages:[{id:'thqdash',icon:'&#128170;',label:'Dashboard'},{id:'thqtrials',icon:'&#127793;',label:'Trials'},{id:'thrivehq',icon:'&#128101;',label:'Members'},{id:'thqrenewals',icon:'&#128260;',label:'Renewals'},{id:'thqcalls',icon:'&#128222;',label:'Coaching Calls'}]},
   strengths:{label:'Strengths',pages:[{id:'strdash',icon:'&#127919;',label:'Dashboard'},{id:'strengths',icon:'&#128161;',label:'Strengths Hub'}]},
-  operations:{label:'Operations',pages:[{id:'opsdash',icon:'&#128736;',label:'Dashboard'},{id:'tasks',icon:'&#9989;',label:'Task Management'},{id:'itprojects',icon:'&#9881;',label:'IT Projects'}]}
+  operations:{label:'Operations',pages:[{id:'opsdash',icon:'&#128736;',label:'Dashboard'},{id:'tasks',icon:'&#9989;',label:'Task Management'},{id:'itprojects',icon:'&#9881;',label:'IT Projects'}]},
+  finance:{label:'Finance',pages:[{id:'findash',icon:'&#128176;',label:'Dashboard'},{id:'fintxns',icon:'&#128203;',label:'Transactions'}]}
 };
 let currentArea='home';
 
@@ -3408,6 +3435,275 @@ window.deleteITProject=function(id){
   if(!confirm('Delete this project?'))return;
   itprojects=itprojects.filter(p=>p.id!==id);toast('Project deleted','success');renderITProjects();
 };
+
+// ── FINANCE ──
+let financeTransactions=[];
+const FIN_INCOME_ACCOUNTS=['Sales','Other Revenue','Interest Income','MHPN Payments'];
+const FIN_BALANCE_ACCOUNTS=['Wages Payable - Payroll','PAYG Withholdings Payable','Superannuation Payable','GST','Loan'];
+
+async function loadFinanceTransactions(){
+  const {data,error}=await supabase.from('finance_transactions').select('*').order('transaction_date',{ascending:true});
+  if(!error&&data) financeTransactions=data;
+}
+
+function finParseAmount(s){
+  if(!s) return 0;
+  s=String(s).trim();
+  const neg=s.startsWith('(')&&s.endsWith(')');
+  if(neg) s=s.slice(1,-1);
+  s=s.replace(/,/g,'');
+  const n=parseFloat(s)||0;
+  return neg?-n:n;
+}
+
+function finParseDate(s){
+  if(!s) return null;
+  const d=new Date(s.trim());
+  if(isNaN(d.getTime())) return null;
+  return d.toISOString().split('T')[0];
+}
+
+function parseXeroCSV(text){
+  // Find header row
+  const headerMatch=text.indexOf('Account,Date,Source,Description,Gross,GST,Net');
+  if(headerMatch===-1) return [];
+  const csvBody=text.substring(headerMatch);
+  // Parse CSV handling quoted multi-line fields
+  const records=[];
+  let field='',row=[],inQuote=false;
+  for(let i=0;i<csvBody.length;i++){
+    const ch=csvBody[i];
+    if(inQuote){
+      if(ch==='"'){
+        if(i+1<csvBody.length&&csvBody[i+1]==='"'){field+='"';i++;}
+        else inQuote=false;
+      } else field+=ch;
+    } else {
+      if(ch==='"') inQuote=true;
+      else if(ch===','){row.push(field);field='';}
+      else if(ch==='\n'||(ch==='\r'&&csvBody[i+1]==='\n')){
+        if(ch==='\r') i++;
+        row.push(field);field='';
+        if(row.length>=7&&row[0]!=='Account') records.push(row);
+        row=[];
+      } else field+=ch;
+    }
+  }
+  if(row.length>=7&&row[0]!=='Account'){row.push(field);records.push(row);}
+  // Convert to objects, skip Total row
+  return records.filter(r=>r[0]&&r[0]!=='Total'&&r[1]).map(r=>({
+    account:r[0].trim(),
+    transaction_date:finParseDate(r[1]),
+    source:(r[2]||'').trim(),
+    description:(r[3]||'').trim().replace(/\n/g,' ').substring(0,500),
+    gross:finParseAmount(r[4]),
+    gst:finParseAmount(r[5]),
+    net:finParseAmount(r[6])
+  })).filter(r=>r.transaction_date);
+}
+
+window.triggerFinUpload=function(){document.getElementById('finFileInput').click();};
+
+window.handleFinUpload=async function(e){
+  const file=e.target.files[0];
+  if(!file) return;
+  const text=await file.text();
+  const parsed=parseXeroCSV(text);
+  if(!parsed.length){toast('No valid transactions found in CSV','error');return;}
+  if(!confirm('Found '+parsed.length+' transactions. This will replace all existing finance data. Continue?')) return;
+  toast('Uploading '+parsed.length+' transactions...','info');
+  // Delete existing
+  await supabase.from('finance_transactions').delete().neq('id','00000000-0000-0000-0000-000000000000');
+  // Batch insert in groups of 100
+  for(let i=0;i<parsed.length;i+=100){
+    const batch=parsed.slice(i,i+100);
+    const {error}=await supabase.from('finance_transactions').insert(batch);
+    if(error){toast('Upload error: '+error.message,'error');return;}
+  }
+  await loadFinanceTransactions();
+  toast(parsed.length+' transactions imported!','success');
+  renderFinDash();
+  e.target.value='';
+};
+
+function finIsIncome(account){return FIN_INCOME_ACCOUNTS.includes(account);}
+function finIsBalance(account){return FIN_BALANCE_ACCOUNTS.includes(account);}
+function finIsExpense(account){return !finIsIncome(account)&&!finIsBalance(account);}
+
+function finMonthKey(dateStr){return dateStr?dateStr.substring(0,7):'';}
+function finMonthLabel(ym){
+  const [y,m]=ym.split('-');
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return months[parseInt(m)-1]+' '+y;
+}
+
+function renderFinDash(){
+  const el=document.getElementById('finDashContent');
+  const txns=financeTransactions.filter(t=>!finIsBalance(t.account));
+  if(!txns.length){
+    el.innerHTML='<div style="text-align:center;padding:60px 20px;color:#64748b;"><div style="font-size:48px;margin-bottom:16px;">&#128176;</div><h3 style="margin:0 0 8px;color:#1e3a5f;">Finance Dashboard</h3><p>No financial data yet. Go to <strong>Transactions</strong> and upload your Xero CSV to get started.</p></div>';
+    return;
+  }
+
+  // Calculate totals
+  let totalIncome=0,totalExpenses=0;
+  const monthlyData={},categoryTotals={},vendorTotals={},subVendors={};
+
+  txns.forEach(t=>{
+    const ym=finMonthKey(t.transaction_date);
+    if(!monthlyData[ym]) monthlyData[ym]={income:0,expenses:0};
+    if(finIsIncome(t.account)){
+      const amt=-t.gross; // income is negative in GL
+      totalIncome+=amt;
+      monthlyData[ym].income+=amt;
+    } else {
+      totalExpenses+=t.gross;
+      monthlyData[ym].expenses+=t.gross;
+      // Category breakdown
+      if(!categoryTotals[t.account]) categoryTotals[t.account]=0;
+      categoryTotals[t.account]+=t.gross;
+      // Vendor extraction
+      const vendor=(t.description||'').split(' - ')[0].split(' –')[0].trim();
+      if(vendor){
+        if(!vendorTotals[vendor]) vendorTotals[vendor]=0;
+        vendorTotals[vendor]+=t.gross;
+      }
+      // Subscription tracking
+      if(t.account==='Subscriptions'){
+        const sv=vendor;
+        if(!subVendors[sv]) subVendors[sv]={total:0,count:0,months:new Set()};
+        subVendors[sv].total+=t.gross;
+        subVendors[sv].count++;
+        subVendors[sv].months.add(ym);
+      }
+    }
+  });
+
+  const netProfit=totalIncome-totalExpenses;
+  const months=Object.keys(monthlyData).sort();
+  const numMonths=months.length||1;
+
+  // Summary cards
+  let html='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:24px;">';
+  html+=finCard('&#128200;','Total Income','$'+Math.abs(totalIncome).toLocaleString('en-AU',{minimumFractionDigits:2}),'#16a34a','#f0fdf4');
+  html+=finCard('&#128201;','Total Expenses','$'+totalExpenses.toLocaleString('en-AU',{minimumFractionDigits:2}),'#dc2626','#fef2f2');
+  html+=finCard(netProfit>=0?'&#9989;':'&#9888;','Net P&L',(netProfit>=0?'$':'-$')+Math.abs(netProfit).toLocaleString('en-AU',{minimumFractionDigits:2}),netProfit>=0?'#16a34a':'#dc2626',netProfit>=0?'#f0fdf4':'#fef2f2');
+  html+=finCard('&#128197;','Period',finMonthLabel(months[0])+' — '+finMonthLabel(months[months.length-1]),'#2563eb','#eff6ff');
+  html+='</div>';
+
+  // Monthly P&L
+  const maxMonth=Math.max(...months.map(m=>Math.max(monthlyData[m].income,monthlyData[m].expenses)))||1;
+  html+='<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:20px;">';
+  html+='<h3 style="margin:0 0 16px;font-size:16px;color:#1e3a5f;">Monthly Income vs Expenses</h3>';
+  html+='<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;">';
+  html+='<tr style="border-bottom:2px solid #e2e8f0;"><th style="text-align:left;padding:8px;">Month</th><th style="text-align:right;padding:8px;">Income</th><th style="text-align:right;padding:8px;">Expenses</th><th style="text-align:right;padding:8px;">Net</th><th style="padding:8px;width:200px;"></th></tr>';
+  months.forEach(m=>{
+    const d=monthlyData[m];
+    const net=d.income-d.expenses;
+    const incW=Math.round((d.income/maxMonth)*100);
+    const expW=Math.round((d.expenses/maxMonth)*100);
+    html+=`<tr style="border-bottom:1px solid #f1f5f9;">
+      <td style="padding:8px;font-weight:600;">${finMonthLabel(m)}</td>
+      <td style="padding:8px;text-align:right;color:#16a34a;">$${d.income.toLocaleString('en-AU',{minimumFractionDigits:2})}</td>
+      <td style="padding:8px;text-align:right;color:#dc2626;">$${d.expenses.toLocaleString('en-AU',{minimumFractionDigits:2})}</td>
+      <td style="padding:8px;text-align:right;font-weight:600;color:${net>=0?'#16a34a':'#dc2626'};">${net>=0?'$':'-$'}${Math.abs(net).toLocaleString('en-AU',{minimumFractionDigits:2})}</td>
+      <td style="padding:8px;"><div style="display:flex;gap:2px;align-items:center;"><div style="height:12px;width:${incW}%;background:#86efac;border-radius:3px;"></div><div style="height:12px;width:${expW}%;background:#fca5a5;border-radius:3px;"></div></div></td>
+    </tr>`;
+  });
+  html+='</table></div></div>';
+
+  // Expense breakdown by category
+  const sortedCats=Object.entries(categoryTotals).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+  const totalExp=sortedCats.reduce((s,[,v])=>s+v,0)||1;
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">';
+
+  html+='<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;">';
+  html+='<h3 style="margin:0 0 16px;font-size:16px;color:#1e3a5f;">Where Your Money Goes</h3>';
+  sortedCats.forEach(([cat,amt])=>{
+    const pct=((amt/totalExp)*100).toFixed(1);
+    const monthAvg=(amt/numMonths).toFixed(2);
+    html+=`<div style="margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;"><span style="font-weight:600;">${cat}</span><span>$${amt.toLocaleString('en-AU',{minimumFractionDigits:2})} (${pct}%)</span></div>
+      <div style="background:#f1f5f9;border-radius:6px;height:8px;"><div style="background:${amt===sortedCats[0][1]?'#dc2626':'#3b82f6'};height:8px;border-radius:6px;width:${pct}%;"></div></div>
+      <div style="font-size:11px;color:#94a3b8;margin-top:2px;">~$${parseFloat(monthAvg).toLocaleString('en-AU',{minimumFractionDigits:2})}/month</div>
+    </div>`;
+  });
+  html+='</div>';
+
+  // Subscription audit
+  html+='<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;">';
+  html+='<h3 style="margin:0 0 4px;font-size:16px;color:#1e3a5f;">Subscription Audit</h3>';
+  html+='<p style="margin:0 0 16px;font-size:12px;color:#94a3b8;">Monthly recurring costs — review what you still need</p>';
+  const sortedSubs=Object.entries(subVendors).sort((a,b)=>b[1].total-a[1].total);
+  const totalSubs=sortedSubs.reduce((s,[,v])=>s+v.total,0);
+  html+=`<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px;margin-bottom:16px;font-size:13px;"><strong>Total subscriptions:</strong> $${totalSubs.toLocaleString('en-AU',{minimumFractionDigits:2})} over ${numMonths} months = <strong style="color:#dc2626;">~$${(totalSubs/numMonths).toLocaleString('en-AU',{minimumFractionDigits:2})}/month</strong></div>`;
+  sortedSubs.forEach(([vendor,data])=>{
+    const monthly=(data.total/data.months.size).toFixed(2);
+    html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;">
+      <div><span style="font-weight:600;">${vendor}</span><span style="color:#94a3b8;margin-left:8px;">${data.count}x charges</span></div>
+      <div style="text-align:right;"><div style="font-weight:600;">~$${parseFloat(monthly).toLocaleString('en-AU',{minimumFractionDigits:2})}/mo</div><div style="font-size:11px;color:#94a3b8;">$${data.total.toLocaleString('en-AU',{minimumFractionDigits:2})} total</div></div>
+    </div>`;
+  });
+  html+='</div>';
+
+  html+='</div>'; // close grid
+  el.innerHTML=html;
+}
+
+function finCard(icon,label,value,color,bg){
+  return `<div style="background:${bg};border:1px solid ${color}22;border-radius:12px;padding:16px;text-align:center;">
+    <div style="font-size:28px;margin-bottom:4px;">${icon}</div>
+    <div style="font-size:12px;color:#64748b;margin-bottom:4px;">${label}</div>
+    <div style="font-size:18px;font-weight:700;color:${color};">${value}</div>
+  </div>`;
+}
+
+function renderFinTransactions(){
+  const el=document.getElementById('finTxnList');
+  const search=(document.getElementById('finSearch').value||'').toLowerCase();
+  const accFilter=document.getElementById('finAccFilter').value;
+  const typeFilter=document.getElementById('finTypeFilter').value;
+
+  // Populate account filter
+  const accounts=[...new Set(financeTransactions.map(t=>t.account))].sort();
+  const accSel=document.getElementById('finAccFilter');
+  if(accSel.options.length<=1){
+    accounts.forEach(a=>{const o=document.createElement('option');o.value=a;o.textContent=a;accSel.appendChild(o);});
+  }
+
+  let txns=financeTransactions.filter(t=>!finIsBalance(t.account));
+  if(accFilter) txns=txns.filter(t=>t.account===accFilter);
+  if(typeFilter==='income') txns=txns.filter(t=>finIsIncome(t.account));
+  if(typeFilter==='expense') txns=txns.filter(t=>finIsExpense(t.account));
+  if(search) txns=txns.filter(t=>(t.account+' '+t.description+' '+t.source).toLowerCase().includes(search));
+
+  // Sort newest first
+  txns.sort((a,b)=>b.transaction_date.localeCompare(a.transaction_date));
+
+  if(!txns.length){
+    el.innerHTML='<div style="text-align:center;padding:40px;color:#94a3b8;">No transactions found</div>';
+    return;
+  }
+
+  let html='<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;">';
+  html+='<tr style="background:#f8fafc;border-bottom:2px solid #e2e8f0;"><th style="text-align:left;padding:10px;">Date</th><th style="text-align:left;padding:10px;">Account</th><th style="text-align:left;padding:10px;">Description</th><th style="text-align:right;padding:10px;">Gross</th><th style="text-align:right;padding:10px;">GST</th><th style="text-align:right;padding:10px;">Net</th></tr>';
+  txns.slice(0,200).forEach(t=>{
+    const isInc=finIsIncome(t.account);
+    const desc=(t.description||'').length>80?(t.description.substring(0,80)+'...'):t.description;
+    const amt=Math.abs(t.gross);
+    html+=`<tr style="border-bottom:1px solid #f1f5f9;" title="${(t.description||'').replace(/"/g,'&quot;')}">
+      <td style="padding:8px 10px;white-space:nowrap;">${t.transaction_date}</td>
+      <td style="padding:8px 10px;"><span style="background:${isInc?'#dcfce7':'#fee2e2'};color:${isInc?'#16a34a':'#dc2626'};padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;">${t.account}</span></td>
+      <td style="padding:8px 10px;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${desc}</td>
+      <td style="padding:8px 10px;text-align:right;color:${t.gross<0?'#16a34a':'#dc2626'};font-weight:600;">${t.gross<0?'-':''}$${amt.toLocaleString('en-AU',{minimumFractionDigits:2})}</td>
+      <td style="padding:8px 10px;text-align:right;color:#64748b;">$${Math.abs(t.gst).toLocaleString('en-AU',{minimumFractionDigits:2})}</td>
+      <td style="padding:8px 10px;text-align:right;">$${Math.abs(t.net).toLocaleString('en-AU',{minimumFractionDigits:2})}</td>
+    </tr>`;
+  });
+  if(txns.length>200) html+=`<tr><td colspan="6" style="padding:12px;text-align:center;color:#94a3b8;">Showing 200 of ${txns.length} transactions</td></tr>`;
+  html+='</table></div>';
+  el.innerHTML=html;
+}
 
 // ── AUTH ──
 function showLogin(){
