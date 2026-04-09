@@ -3622,8 +3622,8 @@ function renderFinDash(){
   sortedCats.forEach(([cat,amt])=>{
     const pct=((amt/totalExp)*100).toFixed(1);
     const monthAvg=(amt/numMonths).toFixed(2);
-    html+=`<div style="margin-bottom:12px;">
-      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;"><span style="font-weight:600;">${cat}</span><span>$${amt.toLocaleString('en-AU',{minimumFractionDigits:2})} (${pct}%)</span></div>
+    html+=`<div style="margin-bottom:12px;cursor:pointer;padding:8px;border-radius:8px;transition:background .15s;" onclick="finDrillCategory('${cat.replace(/'/g,"\\'")}')" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;"><span style="font-weight:600;">${cat} <span style="font-size:11px;color:#3b82f6;">&#x279C;</span></span><span>$${amt.toLocaleString('en-AU',{minimumFractionDigits:2})} (${pct}%)</span></div>
       <div style="background:#f1f5f9;border-radius:6px;height:8px;"><div style="background:${amt===sortedCats[0][1]?'#dc2626':'#3b82f6'};height:8px;border-radius:6px;width:${pct}%;"></div></div>
       <div style="font-size:11px;color:#94a3b8;margin-top:2px;">~$${parseFloat(monthAvg).toLocaleString('en-AU',{minimumFractionDigits:2})}/month</div>
     </div>`;
@@ -3639,8 +3639,8 @@ function renderFinDash(){
   html+=`<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px;margin-bottom:16px;font-size:13px;"><strong>Total subscriptions:</strong> $${totalSubs.toLocaleString('en-AU',{minimumFractionDigits:2})} over ${numMonths} months = <strong style="color:#dc2626;">~$${(totalSubs/numMonths).toLocaleString('en-AU',{minimumFractionDigits:2})}/month</strong></div>`;
   sortedSubs.forEach(([vendor,data])=>{
     const monthly=(data.total/data.months.size).toFixed(2);
-    html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;">
-      <div><span style="font-weight:600;">${vendor}</span><span style="color:#94a3b8;margin-left:8px;">${data.count}x charges</span></div>
+    html+=`<div onclick="finDrillSearch('${vendor.replace(/'/g,"\\'")}')" style="display:flex;justify-content:space-between;align-items:center;padding:8px;border-bottom:1px solid #f1f5f9;font-size:13px;cursor:pointer;border-radius:6px;transition:background .15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+      <div><span style="font-weight:600;">${vendor}</span> <span style="font-size:11px;color:#3b82f6;">&#x279C;</span><span style="color:#94a3b8;margin-left:8px;">${data.count}x charges</span></div>
       <div style="text-align:right;"><div style="font-weight:600;">~$${parseFloat(monthly).toLocaleString('en-AU',{minimumFractionDigits:2})}/mo</div><div style="font-size:11px;color:#94a3b8;">$${data.total.toLocaleString('en-AU',{minimumFractionDigits:2})} total</div></div>
     </div>`;
   });
@@ -3649,6 +3649,20 @@ function renderFinDash(){
   html+='</div>'; // close grid
   el.innerHTML=html;
 }
+
+window.finDrillCategory=function(account){
+  document.getElementById('finAccFilter').value=account;
+  document.getElementById('finTypeFilter').value='';
+  document.getElementById('finSearch').value='';
+  navTo('fintxns');
+};
+
+window.finDrillSearch=function(query){
+  document.getElementById('finAccFilter').value='Subscriptions';
+  document.getElementById('finTypeFilter').value='';
+  document.getElementById('finSearch').value=query;
+  navTo('fintxns');
+};
 
 function finCard(icon,label,value,color,bg){
   return `<div style="background:${bg};border:1px solid ${color}22;border-radius:12px;padding:16px;text-align:center;">
@@ -3664,11 +3678,13 @@ function renderFinTransactions(){
   const accFilter=document.getElementById('finAccFilter').value;
   const typeFilter=document.getElementById('finTypeFilter').value;
 
-  // Populate account filter
-  const accounts=[...new Set(financeTransactions.map(t=>t.account))].sort();
+  // Populate account filter (preserve current selection)
+  const accounts=[...new Set(financeTransactions.map(t=>t.account))].filter(a=>!finIsBalance(a)).sort();
   const accSel=document.getElementById('finAccFilter');
+  const curVal=accSel.value;
   if(accSel.options.length<=1){
     accounts.forEach(a=>{const o=document.createElement('option');o.value=a;o.textContent=a;accSel.appendChild(o);});
+    if(curVal) accSel.value=curVal;
   }
 
   let txns=financeTransactions.filter(t=>!finIsBalance(t.account));
