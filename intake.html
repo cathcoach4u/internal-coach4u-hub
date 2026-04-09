@@ -158,6 +158,14 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f6ff;color:#1e293b;m
       <input type="checkbox" id="cTerms">
       <label for="cTerms">I understand ThriveHQ is a coaching program, not clinical treatment. <span class="req">*</span></label>
     </div>
+    <div class="consent-item">
+      <input type="checkbox" id="cMedical">
+      <label for="cMedical">I understand that medical topics may be discussed in sessions but no medical advice will be given. <span class="req">*</span></label>
+    </div>
+    <div class="consent-item">
+      <input type="checkbox" id="cRecording">
+      <label for="cRecording">I consent to sessions being recorded. <span class="req">*</span></label>
+    </div>
 
     <div class="error-msg" id="errorMsg1"></div>
     <div class="nav-buttons">
@@ -210,7 +218,7 @@ function validateStep(n){
 async function submitForm(){
   hideError();
   if(!g('fDiagnosis')){showError('Please select your ADHD status.');return;}
-  if(!document.getElementById('cData').checked||!document.getElementById('cGroup').checked||!document.getElementById('cTerms').checked){showError('Please agree to all required consent items.');return;}
+  if(!document.getElementById('cData').checked||!document.getElementById('cGroup').checked||!document.getElementById('cTerms').checked||!document.getElementById('cMedical').checked||!document.getElementById('cRecording').checked){showError('Please agree to all required consent items.');return;}
   if(g('fWebsite'))return;
 
   const btn=document.getElementById('submitBtn');
