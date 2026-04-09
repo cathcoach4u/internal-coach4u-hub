@@ -318,6 +318,18 @@ td .actions button{padding:8px 14px;font-size:12px;}
       <div id="thqDashContent"></div>
     </div>
 
+    <!-- THRIVEHQ INTAKE FORMS -->
+    <div class="screen" id="screen-thqintake">
+      <div class="toolbar">
+        <input class="search-input" id="intakeSearch" placeholder="Search submissions..." oninput="renderIntakeSubmissions()">
+        <select id="intakeFilter" onchange="renderIntakeSubmissions()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
+          <option value="">All</option><option value="New">New</option><option value="Reviewed">Reviewed</option><option value="Converted">Converted</option>
+        </select>
+        <button class="btn btn-blue" onclick="copyIntakeLink()">&#128279; Copy Intake Link</button>
+      </div>
+      <div id="intakeContent"></div>
+    </div>
+
     <!-- THRIVEHQ TRIALS -->
     <div class="screen" id="screen-thqtrials">
       <div class="toolbar">
@@ -429,6 +441,13 @@ td .actions button{padding:8px 14px;font-size:12px;}
       <div id="finTxnList"></div>
     </div>
 
+  </div>
+</div>
+
+<!-- INTAKE DETAIL MODAL -->
+<div class="modal-overlay" id="intakeDetailModal">
+  <div class="modal" style="max-width:600px;">
+    <div id="intakeDetailBody"></div>
   </div>
 </div>
 
@@ -860,7 +879,7 @@ async function loadTasks(){
 }
 
 async function loadAll(){
-  await Promise.all([loadContacts(), loadClients(), loadTasks(), loadProspects(), loadReferrers(), loadRefPayments(), loadRenewals(), loadContactReports(), loadTrials(), loadTaskLogs(), loadFinanceTransactions()]);
+  await Promise.all([loadContacts(), loadClients(), loadTasks(), loadProspects(), loadReferrers(), loadRefPayments(), loadRenewals(), loadContactReports(), loadTrials(), loadTaskLogs(), loadFinanceTransactions(), loadIntakeSubmissions()]);
   renderSidebarNav('home');
   renderDashboard();
   document.getElementById('appLoader').style.display='none';
@@ -873,7 +892,7 @@ document.getElementById('headerDate').textContent = new Date().toLocaleDateStrin
 window.navTo = function(tab,btn){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+tab).classList.add('active');
-  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ',strdash:'Strengths',opsdash:'Operations',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Strengths Hub',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Task Management',playbook:'Lou\'s Playbook',itprojects:'IT Projects',findash:'Finance',finincome:'Income',finspend:'Where Money Goes',fintxns:'Transactions'};
+  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ',thqintake:'Intake Forms',strdash:'Strengths',opsdash:'Operations',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Strengths Hub',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Task Management',playbook:'Lou\'s Playbook',itprojects:'IT Projects',findash:'Finance',finincome:'Income',finspend:'Where Money Goes',fintxns:'Transactions'};
   document.getElementById('pageTitle').textContent=titles[tab]||'Coach4U';
   // Sync area tab
   const area=pageToArea[tab]||'home';
@@ -907,6 +926,7 @@ window.navTo = function(tab,btn){
   if(tab==='strengths') renderStrengths();
   if(tab==='thqrenewals') renderThqRenewals();
   if(tab==='thqcalls') renderCoachingCalls();
+  if(tab==='thqintake') renderIntakeSubmissions();
   if(tab==='tasks') renderTasks();
   if(tab==='refpayments') renderRefPayments();
   if(tab==='playbook') renderPlaybook();
@@ -939,7 +959,7 @@ const areaConfig={
   referrers:{label:'Referrers',pages:[{id:'referrals',icon:'&#128101;',label:'Referral Hub'},{id:'refpayments',icon:'&#128176;',label:'Payments'}]},
   prospects:{label:'Prospects',pages:[{id:'prospects',icon:'&#128203;',label:'Prospect List'}]},
   clients:{label:'Clients',pages:[{id:'clidash',icon:'&#129309;',label:'Dashboard'},{id:'clients',icon:'&#128101;',label:'Client List'},{id:'clinvoices',icon:'&#128206;',label:'Invoices'}]},
-  thrivehq:{label:'ThriveHQ',pages:[{id:'thqdash',icon:'&#128170;',label:'Dashboard'},{id:'thqtrials',icon:'&#127793;',label:'Trials'},{id:'thrivehq',icon:'&#128101;',label:'Members'},{id:'thqrenewals',icon:'&#128260;',label:'Renewals'},{id:'thqcalls',icon:'&#128222;',label:'Coaching Calls'}]},
+  thrivehq:{label:'ThriveHQ',pages:[{id:'thqdash',icon:'&#128170;',label:'Dashboard'},{id:'thqintake',icon:'&#128221;',label:'Intake Forms'},{id:'thqtrials',icon:'&#127793;',label:'Trials'},{id:'thrivehq',icon:'&#128101;',label:'Members'},{id:'thqrenewals',icon:'&#128260;',label:'Renewals'},{id:'thqcalls',icon:'&#128222;',label:'Coaching Calls'}]},
   strengths:{label:'Strengths',pages:[{id:'strdash',icon:'&#127919;',label:'Dashboard'},{id:'strengths',icon:'&#128161;',label:'Strengths Hub'}]},
   operations:{label:'Operations',pages:[{id:'opsdash',icon:'&#128736;',label:'Dashboard'},{id:'tasks',icon:'&#9989;',label:'Task Management'},{id:'playbook',icon:'&#128214;',label:'Playbook'},{id:'itprojects',icon:'&#9881;',label:'IT Projects'}]},
   finance:{label:'Finance',pages:[{id:'findash',icon:'&#128176;',label:'Dashboard'},{id:'finincome',icon:'&#128181;',label:'Income'},{id:'finspend',icon:'&#128200;',label:'Where Money Goes'},{id:'fintxns',icon:'&#128203;',label:'Transactions'}]}
@@ -1074,8 +1094,10 @@ function renderThqDash(){
   </div>`;
 
   const activeTrials=thqTrials.filter(t=>t.status==='Active'||t.status==='Extended').length;
+  const newIntake=intakeSubmissions.filter(s=>s.status==='New').length;
   html+=`<div class="dash-cards">
     <div class="dash-card" onclick="navTo('thrivehq')" style="cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'"><div class="dc-icon blue">&#128101;</div><div class="dc-info"><h4>${total}</h4><p>Total Members</p></div></div>
+    <div class="dash-card" onclick="navTo('thqintake')" style="cursor:pointer;${newIntake?'box-shadow:0 0 0 2px #3b82f6;':''}" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='${newIntake?'0 0 0 2px #3b82f6':'0 1px 3px rgba(0,0,0,.04)'}'""><div class="dc-icon" style="background:${newIntake?'#dbeafe':'#f1f5f9'};color:${newIntake?'#2563eb':'#64748b'};">&#128221;</div><div class="dc-info"><h4>${newIntake}</h4><p>New Intake Forms</p></div></div>
     <div class="dash-card" onclick="navTo('thqtrials')" style="cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'"><div class="dc-icon" style="background:#eff6ff;color:#2563eb;">&#127793;</div><div class="dc-info"><h4>${activeTrials}</h4><p>Active Trials</p></div></div>
     <div class="dash-card" onclick="navTo('strengths')" style="cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'"><div class="dc-icon green">&#127919;</div><div class="dc-info"><h4>${withStrengths}</h4><p>Strengths Complete</p></div></div>
     <div class="dash-card" onclick="navTo('strengths')" style="cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'"><div class="dc-icon amber">&#9888;</div><div class="dc-info"><h4>${withoutStrengths}</h4><p>Awaiting Strengths</p></div></div>
@@ -2213,6 +2235,230 @@ function renderStrengths(){
   document.getElementById('shCards').innerHTML=filtered.length?html:'<div style="padding:20px;text-align:center;color:#94a3b8;">No contacts with strengths found.</div>';
 }
 window.filterStrengths=function(){renderStrengths();};
+
+// ── THRIVEHQ INTAKE SUBMISSIONS ──
+let intakeSubmissions=[];
+async function loadIntakeSubmissions(){
+  const {data,error}=await supabase.from('intake_submissions').select('*').order('submitted_at',{ascending:false});
+  if(data) intakeSubmissions=data;
+  if(error&&error.code!=='42P01') console.error('Load intake error:',error);
+}
+
+window.copyIntakeLink=function(){
+  const url=window.location.origin+window.location.pathname.replace('index.html','')+'intake.html';
+  navigator.clipboard.writeText(url).then(()=>toast('Intake form link copied!','success')).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=url;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+    toast('Intake form link copied!','success');
+  });
+};
+
+function renderIntakeSubmissions(){
+  const q=(document.getElementById('intakeSearch')?.value||'').toLowerCase();
+  const statusFilter=document.getElementById('intakeFilter')?.value||'';
+  let filtered=intakeSubmissions;
+  if(statusFilter) filtered=filtered.filter(s=>s.status===statusFilter);
+  if(q) filtered=filtered.filter(s=>(s.first_name+' '+s.last_name+' '+s.email+' '+(s.adhd_diagnosis||'')).toLowerCase().includes(q));
+
+  const newCount=intakeSubmissions.filter(s=>s.status==='New').length;
+  const reviewedCount=intakeSubmissions.filter(s=>s.status==='Reviewed').length;
+  const convertedCount=intakeSubmissions.filter(s=>s.status==='Converted').length;
+
+  const statusColors={New:'#3b82f6',Reviewed:'#d97706',Converted:'#16a34a',Archived:'#94a3b8'};
+  const statusBg={New:'#dbeafe',Reviewed:'#fef3c7',Converted:'#dcfce7',Archived:'#f1f5f9'};
+
+  let html=`<div class="dash-cards" style="margin-bottom:16px;">
+    <div class="dash-card" style="cursor:pointer;${newCount?'box-shadow:0 0 0 2px #3b82f6;':''}" onclick="document.getElementById('intakeFilter').value='New';renderIntakeSubmissions();">
+      <div class="dc-icon" style="background:#dbeafe;color:#2563eb;">&#128221;</div>
+      <div class="dc-info"><h4>${newCount}</h4><p>New Submissions</p></div>
+    </div>
+    <div class="dash-card" style="cursor:pointer;" onclick="document.getElementById('intakeFilter').value='Reviewed';renderIntakeSubmissions();">
+      <div class="dc-icon" style="background:#fef3c7;color:#d97706;">&#128270;</div>
+      <div class="dc-info"><h4>${reviewedCount}</h4><p>Reviewed</p></div>
+    </div>
+    <div class="dash-card" style="cursor:pointer;" onclick="document.getElementById('intakeFilter').value='Converted';renderIntakeSubmissions();">
+      <div class="dc-icon green">&#10004;</div>
+      <div class="dc-info"><h4>${convertedCount}</h4><p>Converted</p></div>
+    </div>
+    <div class="dash-card" style="cursor:pointer;" onclick="document.getElementById('intakeFilter').value='';renderIntakeSubmissions();">
+      <div class="dc-icon" style="background:#f1f5f9;color:#64748b;">&#128101;</div>
+      <div class="dc-info"><h4>${intakeSubmissions.length}</h4><p>Total</p></div>
+    </div>
+  </div>`;
+
+  if(!filtered.length){
+    html+='<div style="padding:30px;text-align:center;color:#94a3b8;">No intake submissions found.</div>';
+    document.getElementById('intakeContent').innerHTML=html;
+    return;
+  }
+
+  const isMobile=window.innerWidth<=768;
+
+  if(isMobile){
+    filtered.forEach(s=>{
+      const st=s.status||'New';
+      const date=s.submitted_at?new Date(s.submitted_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}):'';
+      html+=`<div onclick="openIntakeDetail('${s.id}')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid ${statusColors[st]||'#64748b'};border-radius:8px;padding:14px 16px;margin-bottom:8px;cursor:pointer;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+          <span style="font-weight:600;font-size:14px;color:#1e293b;">${s.preferred_name||s.first_name} ${s.last_name}</span>
+          <span style="background:${statusBg[st]||'#f1f5f9'};color:${statusColors[st]||'#64748b'};padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;">${st}</span>
+        </div>
+        <div style="font-size:12px;color:#64748b;">${s.email||''}</div>
+        <div style="display:flex;gap:8px;margin-top:6px;font-size:11px;color:#94a3b8;flex-wrap:wrap;">
+          ${s.adhd_diagnosis?'<span style="background:#f5f3ff;color:#7c3aed;padding:2px 6px;border-radius:4px;font-weight:500;">'+s.adhd_diagnosis+'</span>':''}
+          <span>${date}</span>
+        </div>
+      </div>`;
+    });
+  } else {
+    html+=`<table><thead><tr><th>Name</th><th>Email</th><th>ADHD Status</th><th>Submitted</th><th>Status</th><th>Actions</th></tr></thead><tbody>`;
+    filtered.forEach(s=>{
+      const st=s.status||'New';
+      const date=s.submitted_at?new Date(s.submitted_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}):'';
+      html+=`<tr>
+        <td style="font-weight:600;">${s.preferred_name||s.first_name} ${s.last_name}</td>
+        <td>${s.email||''}</td>
+        <td>${s.adhd_diagnosis?'<span style="background:#f5f3ff;color:#7c3aed;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;">'+s.adhd_diagnosis+'</span>':''}</td>
+        <td style="font-size:12px;color:#64748b;">${date}</td>
+        <td><span style="background:${statusBg[st]||'#f1f5f9'};color:${statusColors[st]||'#64748b'};padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;">${st}</span></td>
+        <td><div class="actions"><button class="btn btn-gray" onclick="openIntakeDetail('${s.id}')">View</button>${st==='New'?'<button class="btn btn-blue" onclick="markIntakeReviewed(\''+s.id+'\')">Reviewed</button>':''}</div></td>
+      </tr>`;
+    });
+    html+=`</tbody></table>`;
+  }
+
+  document.getElementById('intakeContent').innerHTML=html;
+}
+
+window.openIntakeDetail=function(id){
+  const s=intakeSubmissions.find(x=>x.id===id);
+  if(!s) return;
+  const st=s.status||'New';
+  const date=s.submitted_at?new Date(s.submitted_at).toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric'}):'';
+
+  function field(label,val){return val?`<div style="margin-bottom:10px;"><div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.3px;margin-bottom:2px;">${label}</div><div style="font-size:13px;color:#1e293b;">${val}</div></div>`:'';}
+  function chips(label,val){
+    if(!val)return '';
+    return `<div style="margin-bottom:10px;"><div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px;">${label}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;">${val.split(', ').map(c=>'<span style="background:#f0f6ff;color:#2563eb;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:500;">'+c+'</span>').join('')}</div></div>`;
+  }
+
+  let html=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+    <h3 style="font-family:'Quicksand',sans-serif;font-size:18px;color:#1e3a5f;">${s.preferred_name||s.first_name} ${s.last_name}</h3>
+    <span style="background:${({New:'#dbeafe',Reviewed:'#fef3c7',Converted:'#dcfce7',Archived:'#f1f5f9'})[st]||'#f1f5f9'};color:${({New:'#2563eb',Reviewed:'#d97706',Converted:'#16a34a',Archived:'#94a3b8'})[st]||'#64748b'};padding:4px 12px;border-radius:99px;font-size:12px;font-weight:600;">${st}</span>
+  </div>
+  <div style="font-size:12px;color:#94a3b8;margin-bottom:16px;">Submitted ${date}</div>`;
+
+  html+=`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:12px;">
+    <div style="font-weight:700;font-size:13px;color:#1e3a5f;margin-bottom:10px;">Personal Details</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px;">
+    ${field('Name',s.first_name+' '+s.last_name)}
+    ${field('Preferred Name',s.preferred_name)}
+    ${field('Email',s.email)}
+    ${field('Phone',s.phone)}
+    ${field('Date of Birth',s.date_of_birth)}
+    ${field('Suburb',s.suburb)}
+    ${field('Occupation',s.occupation)}
+    </div></div>`;
+
+  html+=`<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px;padding:16px;margin-bottom:12px;">
+    <div style="font-weight:700;font-size:13px;color:#7c3aed;margin-bottom:10px;">ADHD Profile</div>
+    ${field('Diagnosis Status',s.adhd_diagnosis)}
+    ${field('Diagnosis Details',s.diagnosis_details)}
+    ${field('Current Medication',s.current_medication)}
+    ${chips('Current Support Team',s.current_support)}
+    ${field('Biggest Challenges',s.current_challenges)}
+    ${field('Goals for ThriveHQ',s.wellbeing_goals)}
+    ${chips('Areas to Work On',s.areas_of_interest)}
+  </div>`;
+
+  html+=`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:12px;">
+    <div style="font-weight:700;font-size:13px;color:#1e3a5f;margin-bottom:10px;">Health & Safety</div>
+    ${field('Other Health Conditions',s.health_conditions)}
+    ${field('Previous Coaching/Group',s.previous_coaching?'Yes'+(s.previous_coaching_details?' — '+s.previous_coaching_details:''):'No')}
+    ${field('Emergency Contact',s.emergency_contact_name+(s.emergency_contact_relationship?' ('+s.emergency_contact_relationship+')':''))}
+    ${field('Emergency Phone',s.emergency_contact_phone)}
+  </div>`;
+
+  html+=`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:12px;">
+    <div style="font-weight:700;font-size:13px;color:#1e3a5f;margin-bottom:10px;">Referral & Consent</div>
+    ${field('How They Heard',s.how_heard)}
+    ${field('Referred By',s.referrer_name)}
+    ${field('Data Consent',s.consent_data?'Yes':'No')}
+    ${field('Communications',s.consent_comms?'Yes':'No')}
+    ${field('Group Participation',s.consent_group?'Yes':'No')}
+    ${field('Photo/Video',s.consent_photo?'Yes':'No')}
+    ${field('Agreed Terms',s.agreed_terms?'Yes':'No')}
+    ${field('Signed As',s.signature_name)}
+  </div>`;
+
+  // Actions
+  html+=`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;">`;
+  if(st==='New') html+=`<button class="btn btn-blue" onclick="markIntakeReviewed('${s.id}')">Mark Reviewed</button>`;
+  if(st!=='Converted') html+=`<button class="btn btn-green" onclick="convertIntakeToTrial('${s.id}')">Convert to Trial</button>`;
+  if(st!=='Archived') html+=`<button class="btn btn-gray" onclick="archiveIntake('${s.id}')">Archive</button>`;
+  html+=`<button class="btn btn-gray" onclick="closeModal('intakeDetailModal')">Close</button>`;
+  html+=`</div>`;
+
+  document.getElementById('intakeDetailBody').innerHTML=html;
+  openModal('intakeDetailModal');
+};
+
+window.markIntakeReviewed=async function(id){
+  const {error}=await supabase.from('intake_submissions').update({status:'Reviewed',reviewed_at:new Date().toISOString()}).eq('id',id);
+  if(error){toast('Error: '+error.message,'error');return;}
+  await loadIntakeSubmissions();
+  renderIntakeSubmissions();
+  toast('Marked as reviewed','success');
+  closeModal('intakeDetailModal');
+};
+
+window.archiveIntake=async function(id){
+  const {error}=await supabase.from('intake_submissions').update({status:'Archived'}).eq('id',id);
+  if(error){toast('Error: '+error.message,'error');return;}
+  await loadIntakeSubmissions();
+  renderIntakeSubmissions();
+  toast('Archived','success');
+  closeModal('intakeDetailModal');
+};
+
+window.convertIntakeToTrial=async function(id){
+  const s=intakeSubmissions.find(x=>x.id===id);
+  if(!s) return;
+
+  // Create contact
+  const names={first_name:s.first_name,last_name:s.last_name,email:s.email,phone:s.phone,contact_type:'Prospect'};
+  const existing=contacts.find(c=>c.email&&s.email&&c.email.toLowerCase()===s.email.toLowerCase());
+  let contactId;
+  if(existing){
+    contactId=existing.id;
+  } else {
+    const {data:inserted,error:cErr}=await supabase.from('contacts').insert(names).select();
+    if(cErr){toast('Error creating contact: '+cErr.message,'error');return;}
+    contactId=inserted[0].id;
+  }
+
+  // Create trial
+  const trialData={
+    name:s.first_name+' '+s.last_name,
+    email:s.email,
+    phone:s.phone,
+    trial_start:new Date().toISOString().split('T')[0],
+    status:'Active',
+    source:s.how_heard||'Intake Form',
+    notes:'ADHD: '+( s.adhd_diagnosis||'')+(s.current_challenges?'\\nChallenges: '+s.current_challenges:'')+(s.wellbeing_goals?'\\nGoals: '+s.wellbeing_goals:''),
+    contact_id:contactId
+  };
+  const {error:tErr}=await supabase.from('thrivehq_trials').insert(trialData);
+  if(tErr){toast('Error creating trial: '+tErr.message,'error');return;}
+
+  // Update intake status
+  await supabase.from('intake_submissions').update({status:'Converted',contact_id:contactId}).eq('id',id);
+
+  await Promise.all([loadContacts(),loadTrials(),loadIntakeSubmissions()]);
+  renderIntakeSubmissions();
+  toast('Converted to trial member!','success');
+  closeModal('intakeDetailModal');
+};
 
 // ── THRIVEHQ TRIALS ──
 let thqTrials=[];
