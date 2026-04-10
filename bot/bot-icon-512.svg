@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#003366"/>
+      <stop offset="100%" stop-color="#004d99"/>
+    </linearGradient>
+    <clipPath id="bubbleClip">
+      <path d="M106 138 C106 106 132 80 164 80 L348 80 C380 80 406 106 406 138 L406 290 C406 322 380 348 348 348 L192 348 L133 407 L133 348 L164 348 C132 348 106 322 106 290 Z"/>
+    </clipPath>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <path d="M106 138 C106 106 132 80 164 80 L348 80 C380 80 406 106 406 138 L406 290 C406 322 380 348 348 348 L192 348 L133 407 L133 348 L164 348 C132 348 106 322 106 290 Z" fill="#fff"/>
+  <image x="138" y="100" width="240" height="230" clip-path="url(#bubbleClip)" href="C4U.png"/>
+</svg>

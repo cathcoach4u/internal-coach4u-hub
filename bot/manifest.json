@@ -1,0 +1,24 @@
+{
+  "name": "C4U Bot",
+  "short_name": "C4U Bot",
+  "description": "Coach4U CRM Assistant",
+  "start_url": "/internal-coach4u-hub/bot/",
+  "scope": "/internal-coach4u-hub/bot/",
+  "display": "standalone",
+  "background_color": "#003366",
+  "theme_color": "#003366",
+  "icons": [
+    {
+      "src": "bot-icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "bot-icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

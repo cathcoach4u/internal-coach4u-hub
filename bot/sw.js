@@ -1,11 +1,10 @@
-const CACHE_NAME = 'coach4u-crm-v85';
+const CACHE_NAME = 'c4u-bot-v2';
 const ASSETS = [
-  '/internal-coach4u-hub/',
-  '/internal-coach4u-hub/index.html',
-  '/internal-coach4u-hub/intake.html',
-  '/internal-coach4u-hub/icon-192.png',
-  '/internal-coach4u-hub/icon-512.png',
-  '/internal-coach4u-hub/manifest.json'
+  '/internal-coach4u-hub/bot/',
+  '/internal-coach4u-hub/bot/index.html',
+  '/internal-coach4u-hub/bot/bot-icon-192.svg',
+  '/internal-coach4u-hub/bot/bot-icon-512.svg',
+  '/internal-coach4u-hub/bot/manifest.json'
 ];
 
 self.addEventListener('install', e => {
