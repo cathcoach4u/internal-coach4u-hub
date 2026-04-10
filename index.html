@@ -276,6 +276,16 @@ td .actions button{padding:8px 14px;font-size:12px;}
     <div class="screen" id="screen-prospects">
       <div class="toolbar">
         <input class="search-input" id="prospSearch" placeholder="Search prospects..." oninput="filterProspects()">
+        <select id="prospFilterStatus" onchange="filterProspects()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;font-weight:600;">
+          <option value="active">Active</option>
+          <option value="">All</option>
+          <option value="New">New</option>
+          <option value="Hot">Hot</option>
+          <option value="Warm">Warm</option>
+          <option value="Cold">Cold</option>
+          <option value="Converted">Converted</option>
+          <option value="Lost">Lost</option>
+        </select>
         <button class="btn btn-blue" onclick="openProspectModal()">+ Add Prospect</button>
       </div>
       <div id="prospCards"></div>
@@ -471,8 +481,28 @@ td .actions button{padding:8px 14px;font-size:12px;}
     <div class="form-group"><label>Status</label>
       <select id="prospStatus"><option>New</option><option>Hot</option><option>Warm</option><option>Cold</option><option>Converted</option><option>Lost</option></select>
     </div>
-    <div class="form-group"><label>Source / Referrer</label><input id="prospSource"></div>
-    <div class="form-group"><label>Notes</label><textarea id="prospNotes"></textarea></div>
+    <div class="mob-grid-2">
+      <div class="form-group"><label>Source / Referrer</label><input id="prospSource"></div>
+      <div class="form-group"><label>Interested In</label>
+        <select id="prospInterest"><option value="">Not specified</option><option>ThriveHQ (ADHD Group)</option><option>1:1 Coaching</option><option>Couples Coaching</option><option>Strengths Assessment</option><option>Corporate / Org</option><option>NDIS</option><option>Other</option></select>
+      </div>
+    </div>
+    <div class="form-group"><label>Follow-Up Date</label><input id="prospFollowUp" type="date"></div>
+    <div class="form-group"><label>Notes</label><textarea id="prospNotes" style="height:60px;"></textarea></div>
+    <div id="prospLogSection" style="display:none;">
+      <div style="font-weight:700;font-size:13px;color:#1e3a5f;margin:12px 0 8px;">Activity Log</div>
+      <div id="prospLogEntries" style="max-height:200px;overflow-y:auto;margin-bottom:8px;"></div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div style="display:flex;gap:6px;">
+          <select id="prospLogType" style="padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;flex:1;">
+            <option>Called</option><option>Emailed</option><option>Messaged</option><option>Met</option><option>Follow-up</option><option>Note</option>
+          </select>
+          <button class="btn btn-blue" onclick="addProspNote()" style="padding:8px 14px;font-size:12px;">Post</button>
+        </div>
+        <input id="prospLogMsg" placeholder="Add note..." style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;">
+      </div>
+    </div>
+    <div id="prospCreatedInfo" style="display:none;margin-top:12px;font-size:11px;color:#94a3b8;"></div>
     <div class="modal-actions">
       <button class="btn btn-gray" onclick="closeModal('prospModal')">Cancel</button>
       <button class="btn btn-red" onclick="deleteProspect(document.getElementById('prospId').value)" id="prospDelBtn" style="display:none;">Delete</button>
@@ -879,7 +909,7 @@ async function loadTasks(){
 }
 
 async function loadAll(){
-  await Promise.all([loadContacts(), loadClients(), loadTasks(), loadProspects(), loadReferrers(), loadRefPayments(), loadRenewals(), loadContactReports(), loadTrials(), loadTaskLogs(), loadFinanceTransactions(), loadIntakeSubmissions()]);
+  await Promise.all([loadContacts(), loadClients(), loadTasks(), loadProspects(), loadProspectNotes(), loadReferrers(), loadRefPayments(), loadRenewals(), loadContactReports(), loadTrials(), loadTaskLogs(), loadFinanceTransactions(), loadIntakeSubmissions()]);
   renderSidebarNav('home');
   renderDashboard();
   document.getElementById('appLoader').style.display='none';
@@ -1553,41 +1583,104 @@ window.linkClientToReferrer=async function(referrerId,clientId){
 
 // ── PROSPECTS DASHBOARD ──
 let prospects=[];
+let prospectNotes=[];
 async function loadProspects(){
   const {data,error}=await supabase.from('prospects').select('*').order('created_at',{ascending:false});
   if(data) prospects=data;
   if(error&&error.code!=='42P01') console.error('Load prospects error:',error);
 }
+async function loadProspectNotes(){
+  const {data,error}=await supabase.from('prospect_notes').select('*').order('created_at',{ascending:false});
+  if(data) prospectNotes=data;
+  if(error&&error.code!=='42P01') console.error('Load prospect notes error:',error);
+}
 
 function renderProspDash(){
-  const total=prospects.length;
+  const active=prospects.filter(p=>p.status!=='Lost'&&p.status!=='Converted');
   const hot=prospects.filter(p=>p.status==='Hot').length;
   const warm=prospects.filter(p=>p.status==='Warm').length;
-  const cold=prospects.filter(p=>p.status==='Cold').length;
+  const newCount=prospects.filter(p=>p.status==='New'||!p.status).length;
   const converted=prospects.filter(p=>p.status==='Converted').length;
 
+  const now=new Date();
+  const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  const overdue=active.filter(p=>p.follow_up_date&&new Date(p.follow_up_date)<today);
+  const dueToday=active.filter(p=>{if(!p.follow_up_date)return false;const d=new Date(p.follow_up_date);return d>=today&&d<new Date(today.getTime()+86400000);});
+  const dueWeek=active.filter(p=>{if(!p.follow_up_date)return false;const d=new Date(p.follow_up_date);return d>today&&d<=new Date(today.getTime()+7*86400000);});
+  const noFollowUp=active.filter(p=>!p.follow_up_date);
+
   let html=`<div class="dash-cards">
-    <div class="dash-card"><div class="dc-icon blue">&#127793;</div><div class="dc-info"><h4>${total}</h4><p>Total Prospects</p></div></div>
+    <div class="dash-card"><div class="dc-icon blue">&#127793;</div><div class="dc-info"><h4>${active.length}</h4><p>Active Prospects</p></div></div>
     <div class="dash-card"><div class="dc-icon" style="background:#fef2f2;color:#dc2626;">&#128293;</div><div class="dc-info"><h4>${hot}</h4><p>Hot</p></div></div>
     <div class="dash-card"><div class="dc-icon amber">&#9728;</div><div class="dc-info"><h4>${warm}</h4><p>Warm</p></div></div>
-    <div class="dash-card"><div class="dc-icon" style="background:#f1f5f9;color:#64748b;">&#10052;</div><div class="dc-info"><h4>${cold}</h4><p>Cold</p></div></div>
+    <div class="dash-card"><div class="dc-icon" style="background:#dcfce7;color:#15803d;">&#10003;</div><div class="dc-info"><h4>${converted}</h4><p>Converted</p></div></div>
   </div>`;
 
-  if(prospects.length){
-    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;">
-      <div style="font-family:'Quicksand','Inter',sans-serif;font-size:16px;font-weight:700;color:#1e3a5f;margin-bottom:14px;">Recent Prospects</div>
-      <div style="display:flex;flex-direction:column;gap:6px;">
-        ${prospects.slice(0,10).map(p=>{
-          const statusCol=p.status==='Hot'?'background:#fef2f2;color:#dc2626;':p.status==='Warm'?'background:#fef3c7;color:#d97706;':p.status==='Converted'?'background:#dcfce7;color:#15803d;':'background:#f1f5f9;color:#64748b;';
-          return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border:1px solid #f1f5f9;border-radius:8px;">
-            <div><span style="font-weight:600;font-size:13px;color:#1e293b;">${p.name||'—'}</span>${p.email?'<span style="font-size:12px;color:#94a3b8;margin-left:8px;">'+p.email+'</span>':''}</div>
-            <span style="padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600;${statusCol}">${p.status||'New'}</span>
-          </div>`;
-        }).join('')}
-      </div>
-    </div>`;
+  // Follow-ups section
+  const followUps=[...overdue,...dueToday,...dueWeek].sort((a,b)=>new Date(a.follow_up_date)-new Date(b.follow_up_date));
+  html+=`<div class="mob-grid-2">`;
+
+  html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;">
+    <div style="font-family:'Quicksand','Inter',sans-serif;font-size:16px;font-weight:700;color:#1e3a5f;margin-bottom:14px;display:flex;align-items:center;gap:8px;">&#128197; Follow-Ups${overdue.length?'<span style="background:#fef2f2;color:#dc2626;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;">'+overdue.length+' overdue</span>':''}</div>`;
+  if(followUps.length){
+    html+=`<div style="display:flex;flex-direction:column;gap:6px;">${followUps.slice(0,8).map(p=>{
+      const d=new Date(p.follow_up_date);
+      const isOD=d<today;
+      const isToday=d>=today&&d<new Date(today.getTime()+86400000);
+      const dateLabel=isOD?'OVERDUE':isToday?'TODAY':d.toLocaleDateString('en-AU',{day:'numeric',month:'short'});
+      const dateColor=isOD?'#dc2626':isToday?'#d97706':'#64748b';
+      return `<div onclick="openProspectModal('${p.id}')" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border:1px solid ${isOD?'#fecaca':'#f1f5f9'};border-radius:8px;cursor:pointer;${isOD?'background:#fffbfb;':''}" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background='${isOD?'#fffbfb':'#fff'}'">
+        <div><span style="font-weight:600;font-size:13px;color:#1e293b;">${p.name||'—'}</span>${p.interest?'<span style="font-size:10px;margin-left:6px;color:#7c3aed;">'+p.interest+'</span>':''}</div>
+        <span style="font-size:11px;font-weight:700;color:${dateColor};">${dateLabel}</span>
+      </div>`;
+    }).join('')}</div>`;
   } else {
-    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:30px;text-align:center;color:#94a3b8;">No prospects yet. Add your first prospect from the Prospect List.</div>`;
+    html+=`<div style="font-size:13px;color:#94a3b8;padding:8px 0;">No follow-ups scheduled.</div>`;
+  }
+  if(noFollowUp.length){
+    html+=`<div style="margin-top:12px;font-size:12px;color:#d97706;background:#fef3c7;padding:8px 12px;border-radius:8px;">&#9888; ${noFollowUp.length} active prospect${noFollowUp.length>1?'s':''} with no follow-up date set</div>`;
+  }
+  html+=`</div>`;
+
+  // Recent activity
+  html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;">
+    <div style="font-family:'Quicksand','Inter',sans-serif;font-size:16px;font-weight:700;color:#1e3a5f;margin-bottom:14px;">&#128172; Recent Activity</div>`;
+  if(prospectNotes.length){
+    const typeColors={Called:'#2563eb',Emailed:'#7c3aed',Messaged:'#16a34a',Met:'#d97706','Follow-up':'#dc2626',Note:'#64748b'};
+    html+=`<div style="display:flex;flex-direction:column;gap:6px;">${prospectNotes.slice(0,8).map(n=>{
+      const p=prospects.find(x=>x.id===n.prospect_id);
+      const d=n.created_at?new Date(n.created_at).toLocaleDateString('en-AU',{day:'numeric',month:'short'}):'';
+      return `<div onclick="openProspectModal('${n.prospect_id}')" style="padding:8px 12px;border-left:3px solid ${typeColors[n.note_type]||'#64748b'};border-radius:0 8px 8px 0;cursor:pointer;border:1px solid #f1f5f9;border-left:3px solid ${typeColors[n.note_type]||'#64748b'};" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
+        <div style="display:flex;justify-content:space-between;margin-bottom:2px;">
+          <span style="font-weight:600;font-size:12px;color:#1e293b;">${p?p.name:'—'} <span style="font-weight:500;color:${typeColors[n.note_type]||'#64748b'};">· ${n.note_type||'Note'}</span></span>
+          <span style="font-size:10px;color:#94a3b8;">${d}</span>
+        </div>
+        <div style="font-size:12px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${n.note}</div>
+      </div>`;
+    }).join('')}</div>`;
+  } else {
+    html+=`<div style="font-size:13px;color:#94a3b8;padding:8px 0;">No activity logged yet.</div>`;
+  }
+  html+=`</div></div>`;
+
+  // Pipeline
+  html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-top:16px;">
+    <div style="font-family:'Quicksand','Inter',sans-serif;font-size:16px;font-weight:700;color:#1e3a5f;margin-bottom:14px;">&#127919; Pipeline</div>
+    <div style="display:flex;gap:0;border-radius:8px;overflow:hidden;height:28px;margin-bottom:12px;">
+      ${[{l:'New',c:'#3b82f6',n:newCount},{l:'Warm',c:'#f59e0b',n:warm},{l:'Hot',c:'#dc2626',n:hot},{l:'Converted',c:'#16a34a',n:converted}].map(s=>{
+        const pct=prospects.length?Math.max((s.n/prospects.length)*100,s.n?8:0):0;
+        return s.n?`<div style="width:${pct}%;background:${s.c};display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:600;min-width:30px;" title="${s.l}: ${s.n}">${s.n}</div>`:'';
+      }).join('')}
+    </div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:#64748b;">
+      ${[{l:'New',c:'#3b82f6',n:newCount},{l:'Warm',c:'#f59e0b',n:warm},{l:'Hot',c:'#dc2626',n:hot},{l:'Converted',c:'#16a34a',n:converted},{l:'Lost',c:'#94a3b8',n:prospects.filter(p=>p.status==='Lost').length}].map(s=>
+        `<span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${s.c};margin-right:4px;vertical-align:middle;"></span>${s.l}: ${s.n}</span>`
+      ).join('')}
+    </div>
+  </div>`;
+
+  if(!prospects.length){
+    html=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:30px;text-align:center;color:#94a3b8;">No prospects yet. Add your first prospect from the Prospect List.</div>`;
   }
 
   document.getElementById('prospDashContent').innerHTML=html;
@@ -1596,12 +1689,16 @@ function renderProspDash(){
 // ── PROSPECTS LIST ──
 function renderProspects(){
   const q=(document.getElementById('prospSearch').value||'').toLowerCase();
+  const statusFilter=document.getElementById('prospFilterStatus')?.value||'active';
   let filtered=prospects;
-  if(q) filtered=prospects.filter(p=>(p.name+' '+(p.email||'')+' '+(p.phone||'')+' '+(p.notes||'')+' '+(p.status||'')).toLowerCase().includes(q));
+  if(statusFilter==='active') filtered=filtered.filter(p=>p.status!=='Lost'&&p.status!=='Converted');
+  else if(statusFilter) filtered=filtered.filter(p=>p.status===statusFilter);
+  if(q) filtered=filtered.filter(p=>(p.name+' '+(p.email||'')+' '+(p.phone||'')+' '+(p.notes||'')+' '+(p.status||'')+' '+(p.interest||'')).toLowerCase().includes(q));
 
+  const now=new Date();
   let html='';
   if(!filtered.length){
-    html='<div style="padding:20px;text-align:center;color:#94a3b8;">No prospects found. Click "+ Add Prospect" to get started.</div>';
+    html='<div style="padding:20px;text-align:center;color:#94a3b8;">No prospects found.</div>';
   } else {
     html=`<div style="display:flex;flex-direction:column;gap:8px;">`;
     filtered.forEach(p=>{
@@ -1609,20 +1706,29 @@ function renderProspects(){
       const statusBg=p.status==='Hot'?'#fef2f2':p.status==='Warm'?'#fef3c7':p.status==='Converted'?'#dcfce7':p.status==='Lost'?'#f8fafc':p.status==='New'?'#eff6ff':'#f1f5f9';
       const isClosedProspect=p.status==='Lost'||p.status==='Converted';
       const cardOpacity=isClosedProspect?'opacity:.6;':'';
+      const created=p.created_at?new Date(p.created_at).toLocaleDateString('en-AU',{day:'numeric',month:'short'}):'';
+      const lastNote=prospectNotes.find(n=>n.prospect_id===p.id);
+      const lastActivity=lastNote?new Date(lastNote.created_at).toLocaleDateString('en-AU',{day:'numeric',month:'short'}):'';
+      const noteCount=prospectNotes.filter(n=>n.prospect_id===p.id).length;
+      const followUp=p.follow_up_date;
+      const isOverdue=followUp&&new Date(followUp)<now&&!isClosedProspect;
 
-      html+=`<div onclick="openProspectModal('${p.id}')" style="background:#fff;border:1px solid #e2e8f0;border-left:3px solid ${statusCol};border-radius:8px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;${cardOpacity}" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
-        <div>
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-            <span style="font-weight:600;font-size:14px;color:#1e293b;">${p.name||'—'}</span>
-            ${p.role&&p.role!=='Individual'?'<span style="font-size:11px;padding:2px 8px;border-radius:99px;background:#f0fdf4;color:#15803d;font-weight:500;">'+p.role+'</span>':''}
-            ${p.contact_id?'<span style="font-size:11px;padding:2px 8px;border-radius:99px;background:#dbeafe;color:#2563eb;font-weight:500;">Linked</span>':''}
+      html+=`<div onclick="openProspectModal('${p.id}')" style="background:#fff;border:1px solid #e2e8f0;border-left:3px solid ${statusCol};border-radius:8px;padding:14px 16px;cursor:pointer;${cardOpacity}${isOverdue?'box-shadow:0 0 0 2px #fbbf24;':''}" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:3px;">
+              <span style="font-weight:600;font-size:14px;color:#1e293b;">${p.name||'—'}</span>
+              <span style="background:${statusBg};color:${statusCol};padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;">${p.status||'New'}</span>
+              ${p.interest?'<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:#f5f3ff;color:#7c3aed;font-weight:500;">'+p.interest+'</span>':''}
+            </div>
+            <div style="font-size:12px;color:#94a3b8;">${[p.email,p.phone].filter(Boolean).join(' · ')||'No contact info'}</div>
+            ${lastNote?'<div style="font-size:12px;color:#64748b;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><span style="color:#94a3b8;font-weight:500;">'+lastNote.note_type+':</span> '+lastNote.note+'</div>':''}
           </div>
-          <div style="font-size:12px;color:#94a3b8;margin-top:2px;">${[p.email,p.phone].filter(Boolean).join(' · ')||'No contact info'}</div>
-          ${p.notes?'<div style="font-size:12px;color:#64748b;margin-top:4px;">'+p.notes+'</div>':''}
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <span style="background:${statusBg};color:${statusCol};padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600;">${p.status||'New'}</span>
-          ${p.source?'<span style="font-size:11px;color:#94a3b8;">via '+p.source+'</span>':''}
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0;">
+            <span style="font-size:10px;color:#94a3b8;">Added ${created}</span>
+            ${noteCount?'<span style="font-size:10px;color:#64748b;">'+noteCount+' note'+(noteCount>1?'s':'')+'</span>':''}
+            ${followUp?'<span style="font-size:10px;font-weight:600;color:'+(isOverdue?'#dc2626':'#64748b')+';">Follow-up: '+new Date(followUp).toLocaleDateString('en-AU',{day:'numeric',month:'short'})+'</span>':''}
+          </div>
         </div>
       </div>`;
     });
@@ -1631,6 +1737,20 @@ function renderProspects(){
   document.getElementById('prospCards').innerHTML=html;
 }
 window.filterProspects=function(){renderProspects();};
+
+window.addProspNote=async function(){
+  const id=document.getElementById('prospId').value;
+  if(!id) return;
+  const msg=document.getElementById('prospLogMsg').value.trim();
+  const noteType=document.getElementById('prospLogType').value;
+  if(!msg){toast('Enter a note','error');return;}
+  const {error}=await supabase.from('prospect_notes').insert({prospect_id:id,note:msg,note_type:noteType});
+  if(error){toast('Error: '+error.message,'error');return;}
+  document.getElementById('prospLogMsg').value='';
+  await loadProspectNotes();
+  openProspectModal(id);
+  toast('Note added','success');
+};
 
 // ── PROSPECT MODAL ──
 window.openProspectModal=function(id){
@@ -1651,7 +1771,39 @@ window.openProspectModal=function(id){
   document.getElementById('prospContact').value=p&&p.contact_id?p.contact_id:'';
   const badge=document.getElementById('prospContactBadge');
   if(p&&p.contact_id){badge.style.display='inline';} else {badge.style.display='none';}
+  document.getElementById('prospInterest').value=p?p.interest||'':'';
+  document.getElementById('prospFollowUp').value=p?p.follow_up_date||'':'';
   document.getElementById('prospSuggestions').style.display='none';
+  // Activity log
+  const logSection=document.getElementById('prospLogSection');
+  const logEntries=document.getElementById('prospLogEntries');
+  const createdInfo=document.getElementById('prospCreatedInfo');
+  if(p){
+    logSection.style.display='block';
+    const notes=prospectNotes.filter(n=>n.prospect_id===p.id);
+    if(notes.length){
+      logEntries.innerHTML=notes.map(n=>{
+        const d=n.created_at?new Date(n.created_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'';
+        const typeColors={Called:'#2563eb',Emailed:'#7c3aed',Messaged:'#16a34a',Met:'#d97706','Follow-up':'#dc2626',Note:'#64748b'};
+        return `<div style="padding:8px 10px;border-left:3px solid ${typeColors[n.note_type]||'#64748b'};background:#f8fafc;border-radius:0 6px 6px 0;margin-bottom:6px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
+            <span style="font-size:11px;font-weight:600;color:${typeColors[n.note_type]||'#64748b'};">${n.note_type||'Note'}</span>
+            <span style="font-size:10px;color:#94a3b8;">${d}</span>
+          </div>
+          <div style="font-size:13px;color:#1e293b;">${n.note}</div>
+        </div>`;
+      }).join('');
+    } else {
+      logEntries.innerHTML='<div style="font-size:12px;color:#94a3b8;padding:8px 0;">No activity logged yet.</div>';
+    }
+    const created=p.created_at?new Date(p.created_at).toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'}):'';
+    createdInfo.textContent=created?'Added to system: '+created:'';
+    createdInfo.style.display='block';
+  } else {
+    logSection.style.display='none';
+    createdInfo.style.display='none';
+  }
+  document.getElementById('prospLogMsg').value='';
   document.getElementById('prospModal').classList.add('open');
 };
 
@@ -1694,6 +1846,8 @@ window.saveProspect=async function(){
     role:document.getElementById('prospRole').value,
     status:document.getElementById('prospStatus').value,
     source:document.getElementById('prospSource').value.trim()||null,
+    interest:document.getElementById('prospInterest').value||null,
+    follow_up_date:document.getElementById('prospFollowUp').value||null,
     notes:document.getElementById('prospNotes').value.trim()||null,
     contact_id:document.getElementById('prospContact').value||null
   };
