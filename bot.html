@@ -212,8 +212,14 @@ async function sendMessage(){
     if(!res.ok){
       const errBody=await res.text();
       console.error('API error:',res.status,errBody);
-      addMessage('bot','Sorry, something went wrong. Please try again.');
-      conversationHistory.pop(); // remove failed user message from history
+      let errMsg='Sorry, something went wrong. ';
+      if(res.status===401) errMsg+='API key is invalid — check your key in the bot_config table.';
+      else if(res.status===402) errMsg+='No credits on your OpenRouter account.';
+      else if(res.status===403) errMsg+='Access denied by the API.';
+      else if(res.status===429) errMsg+='Rate limited — wait a moment and try again.';
+      else{try{const j=JSON.parse(errBody);errMsg+=(j.error?.message||j.message||'Error '+res.status);}catch(_){errMsg+='Error '+res.status;}}
+      addMessage('bot',errMsg);
+      conversationHistory.pop();
     } else {
       const data=await res.json();
       const reply=data.choices?.[0]?.message?.content||'Sorry, I didn\'t get a response. Please try again.';
