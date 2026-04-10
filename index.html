@@ -1721,7 +1721,7 @@ function renderProspects(){
               <span style="background:${statusBg};color:${statusCol};padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;">${p.status||'New'}</span>
               ${p.interest?'<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:#f5f3ff;color:#7c3aed;font-weight:500;">'+p.interest+'</span>':''}
             </div>
-            <div style="font-size:12px;color:#94a3b8;">${[p.email,p.phone].filter(Boolean).join(' · ')||'No contact info'}</div>
+            <div style="font-size:12px;color:#94a3b8;">${p.email||''}${p.email&&p.phone?' · ':''}${p.phone?'<a href="sms:'+p.phone+'" onclick="event.stopPropagation();" style="color:#2563eb;text-decoration:none;font-weight:500;" title="Text '+p.phone+'">&#128172; '+p.phone+'</a>':(!p.email?'No contact info':'')}</div>
             ${lastNote?'<div style="font-size:12px;color:#64748b;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><span style="color:#94a3b8;font-weight:500;">'+lastNote.note_type+':</span> '+lastNote.note+'</div>':''}
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0;">
