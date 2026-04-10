@@ -397,6 +397,10 @@ function autoGrow(el){
 
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init);
 else init();
+
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('bot-sw.js',{scope:'/internal-coach4u-hub/bot.html'}).catch(()=>{});
+}
 </script>
 </body>
 </html>

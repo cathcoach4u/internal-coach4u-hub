@@ -2,6 +2,7 @@
   "name": "Coach4U CRM",
   "short_name": "Coach4U",
   "start_url": "/internal-coach4u-hub/",
+  "scope": "/internal-coach4u-hub/",
   "display": "standalone",
   "background_color": "#f8fafc",
   "theme_color": "#1e293b",
