@@ -3,6 +3,7 @@
   "short_name": "C4U Bot",
   "description": "Coach4U CRM Assistant",
   "start_url": "/internal-coach4u-hub/bot.html",
+  "scope": "/internal-coach4u-hub/bot.html",
   "display": "standalone",
   "background_color": "#003366",
   "theme_color": "#003366",
