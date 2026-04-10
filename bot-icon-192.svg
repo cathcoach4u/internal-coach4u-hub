@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#003366"/>
+      <stop offset="100%" stop-color="#004d99"/>
+    </linearGradient>
+  </defs>
+  <rect width="192" height="192" rx="42" fill="url(#bg)"/>
+  <path d="M40 58 C40 46 50 36 62 36 L130 36 C142 36 152 46 152 58 L152 106 C152 118 142 128 130 128 L72 128 L52 148 L52 128 L62 128 C50 128 40 118 40 106 Z" fill="#fff"/>
+  <text x="96" y="92" text-anchor="middle" dominant-baseline="central" font-family="'Quicksand','Inter',Arial,sans-serif" font-size="36" font-weight="700" fill="#003366">C4U</text>
+</svg>
