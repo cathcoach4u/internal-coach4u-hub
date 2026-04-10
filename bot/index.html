@@ -47,6 +47,10 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f6ff;color:#1e293b;d
 .msg strong{font-weight:600;}
 .msg a{color:#2563eb;text-decoration:underline;}
 .msg.bot a{color:#2563eb;}.msg.user a{color:#bfdbfe;}
+.prompt-chips{display:flex;flex-wrap:wrap;gap:8px;padding:0 20px 12px;align-self:flex-start;}
+.prompt-chip{background:#fff;border:1px solid #cbd5e1;border-radius:20px;padding:8px 14px;font-size:12px;font-weight:500;color:#334155;cursor:pointer;transition:all .15s;white-space:nowrap;font-family:inherit;}
+.prompt-chip:hover{background:#3b82f6;color:#fff;border-color:#3b82f6;}
+.prompt-section{font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;width:100%;margin-top:4px;}
 </style>
 </head>
 <body>
@@ -93,7 +97,13 @@ const crmTools=[
   {type:'function',function:{name:'add_prospect_note',description:'Add an activity note to an existing prospect. Use when the user wants to log a call, email, message, meeting, or follow-up note for a prospect.',parameters:{type:'object',properties:{prospect_name:{type:'string',description:'Name of the prospect to add the note to'},note:{type:'string',description:'The note content'},note_type:{type:'string',description:'Type of activity',enum:['Called','Emailed','Messaged','Met','Follow-up','Note'],default:'Note'}},required:['prospect_name','note']}}},
   {type:'function',function:{name:'add_contact',description:'Add a new contact to the master contact list. Use when the user wants to add someone as a contact (not a prospect).',parameters:{type:'object',properties:{first_name:{type:'string',description:'First name'},last_name:{type:'string',description:'Last name'},email:{type:'string',description:'Email address'},phone:{type:'string',description:'Phone number'},type:{type:'string',description:'Contact type',enum:['Individual','Organisation'],default:'Individual'}},required:['first_name','last_name']}}},
   {type:'function',function:{name:'search_contacts',description:'Search the master contact list by name, email, or phone.',parameters:{type:'object',properties:{query:{type:'string',description:'Search term'}},required:['query']}}},
-  {type:'function',function:{name:'add_task',description:'Create a new task in the task management system.',parameters:{type:'object',properties:{title:{type:'string',description:'Task title/description'},priority:{type:'string',description:'Priority level',enum:['Low','Medium','High','Urgent'],default:'Medium'},due_date:{type:'string',description:'Due date in YYYY-MM-DD format'},category:{type:'string',description:'Task category',enum:['Admin','Client Work','Marketing','Finance','ThriveHQ','IT','Other'],default:'Admin'}},required:['title']}}}
+  {type:'function',function:{name:'add_task',description:'Create a new task in the task management system.',parameters:{type:'object',properties:{title:{type:'string',description:'Task title/description'},priority:{type:'string',description:'Priority level',enum:['Low','Medium','High','Urgent'],default:'Medium'},due_date:{type:'string',description:'Due date in YYYY-MM-DD format'},category:{type:'string',description:'Task category',enum:['Admin','Client Work','Marketing','Finance','ThriveHQ','IT','Other'],default:'Admin'}},required:['title']}}},
+  {type:'function',function:{name:'get_prospect_summary',description:'Get a summary of all prospects including counts by status, overdue follow-ups, and recent activity. Use when the user asks about prospect pipeline, overview, or status.',parameters:{type:'object',properties:{}}}},
+  {type:'function',function:{name:'get_tasks_summary',description:'Get a summary of open tasks, overdue tasks, and tasks by priority. Use when the user asks about tasks, to-do list, or what needs to be done.',parameters:{type:'object',properties:{}}}},
+  {type:'function',function:{name:'search_clients',description:'Search active clients/relationships by name.',parameters:{type:'object',properties:{query:{type:'string',description:'Search term'}},required:['query']}}},
+  {type:'function',function:{name:'get_thrivehq_summary',description:'Get a summary of ThriveHQ members, trials, and recent intake submissions.',parameters:{type:'object',properties:{}}}},
+  {type:'function',function:{name:'update_prospect_status',description:'Update the status of an existing prospect. Use when the user wants to change a prospect to Hot, Warm, Cold, etc.',parameters:{type:'object',properties:{prospect_name:{type:'string',description:'Name of the prospect'},status:{type:'string',description:'New status',enum:['New','Warm','Hot','Cold','Converted','Lost']}},required:['prospect_name','status']}}},
+  {type:'function',function:{name:'set_prospect_followup',description:'Set or update the follow-up date for a prospect.',parameters:{type:'object',properties:{prospect_name:{type:'string',description:'Name of the prospect'},follow_up_date:{type:'string',description:'Follow-up date in YYYY-MM-DD format'}},required:['prospect_name','follow_up_date']}}}
 ];
 
 // ── EXECUTE TOOL CALLS ──
@@ -153,6 +163,70 @@ async function executeTool(name,args){
       }).select().single();
       if(error) return {success:false,error:error.message};
       return {success:true,message:'Task "'+args.title+'" created.'};
+    }
+    case 'get_prospect_summary':{
+      const {data:prx}=await client.from('prospects').select('*').order('created_at',{ascending:false});
+      const {data:notes}=await client.from('prospect_notes').select('*').order('created_at',{ascending:false}).limit(10);
+      if(!prx) return {success:false,error:'Could not load prospects.'};
+      const active=prx.filter(p=>p.status!=='Lost'&&p.status!=='Converted');
+      const now=new Date();const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+      const overdue=active.filter(p=>p.follow_up_date&&new Date(p.follow_up_date)<today);
+      const noFollowUp=active.filter(p=>!p.follow_up_date);
+      return {success:true,total:prx.length,active:active.length,
+        byStatus:{hot:prx.filter(p=>p.status==='Hot').length,warm:prx.filter(p=>p.status==='Warm').length,new:prx.filter(p=>p.status==='New'||!p.status).length,converted:prx.filter(p=>p.status==='Converted').length,lost:prx.filter(p=>p.status==='Lost').length},
+        overdueFollowUps:overdue.map(p=>({name:p.name,date:p.follow_up_date})),
+        noFollowUpSet:noFollowUp.length,
+        recentActivity:(notes||[]).slice(0,5).map(n=>{const p=prx.find(x=>x.id===n.prospect_id);return {prospect:p?p.name:'Unknown',type:n.note_type,note:n.note,date:n.created_at};})
+      };
+    }
+    case 'get_tasks_summary':{
+      const {data:tasks}=await client.from('tasks').select('*').order('created_at',{ascending:false});
+      if(!tasks) return {success:false,error:'Could not load tasks.'};
+      const open=tasks.filter(t=>t.status!=='Complete');
+      const now=new Date();const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+      const overdue=open.filter(t=>t.due_date&&new Date(t.due_date)<today);
+      return {success:true,total:tasks.length,open:open.length,
+        byPriority:{urgent:open.filter(t=>t.priority==='Urgent').length,high:open.filter(t=>t.priority==='High').length,medium:open.filter(t=>t.priority==='Medium').length,low:open.filter(t=>t.priority==='Low').length},
+        byStatus:{notStarted:open.filter(t=>t.status==='Not Started'||t.status==='To Do').length,inProgress:open.filter(t=>t.status==='In Progress').length,blocked:open.filter(t=>t.status==='Blocked').length},
+        overdueTasks:overdue.slice(0,5).map(t=>({title:t.title,due:t.due_date,priority:t.priority})),
+        recentTasks:open.slice(0,5).map(t=>({title:t.title,status:t.status,priority:t.priority,due:t.due_date}))
+      };
+    }
+    case 'search_clients':{
+      const q=args.query.toLowerCase();
+      const {data,error}=await client.from('clients').select('*').order('created_at',{ascending:false});
+      if(error) return {success:false,error:error.message};
+      const matches=data.filter(c=>(c.relationship_name||'').toLowerCase().includes(q));
+      if(!matches.length) return {success:true,message:'No clients found matching "'+args.query+'".',results:[]};
+      return {success:true,message:'Found '+matches.length+' client(s).',results:matches.slice(0,10).map(c=>({id:c.id,name:c.relationship_name,role:c.role,status:c.status,practitioner:c.practitioner}))};
+    }
+    case 'get_thrivehq_summary':{
+      const {data:contacts}=await client.from('contacts').select('id,first_name,last_name,membership_start_date,renewal_date').not('membership_start_date','is',null);
+      const {data:trials}=await client.from('thrivehq_trials').select('*').order('created_at',{ascending:false});
+      const {data:intakes}=await client.from('intake_submissions').select('*').eq('status','new').order('submitted_at',{ascending:false});
+      return {success:true,
+        members:(contacts||[]).length,
+        activeTrials:(trials||[]).filter(t=>t.status==='Active').length,
+        totalTrials:(trials||[]).length,
+        pendingIntakes:(intakes||[]).length,
+        recentIntakes:(intakes||[]).slice(0,5).map(i=>({name:i.first_name+' '+i.last_name,email:i.email,submitted:i.submitted_at}))
+      };
+    }
+    case 'update_prospect_status':{
+      const {data:prospects}=await client.from('prospects').select('id,name').ilike('name','%'+args.prospect_name+'%');
+      if(!prospects||!prospects.length) return {success:false,error:'No prospect found with name "'+args.prospect_name+'".'};
+      const p=prospects[0];
+      const {error}=await client.from('prospects').update({status:args.status}).eq('id',p.id);
+      if(error) return {success:false,error:error.message};
+      return {success:true,message:p.name+' updated to '+args.status+'.'};
+    }
+    case 'set_prospect_followup':{
+      const {data:prospects}=await client.from('prospects').select('id,name').ilike('name','%'+args.prospect_name+'%');
+      if(!prospects||!prospects.length) return {success:false,error:'No prospect found with name "'+args.prospect_name+'".'};
+      const p=prospects[0];
+      const {error}=await client.from('prospects').update({follow_up_date:args.follow_up_date}).eq('id',p.id);
+      if(error) return {success:false,error:error.message};
+      return {success:true,message:'Follow-up for '+p.name+' set to '+args.follow_up_date+'.'};
     }
     default:
       return {success:false,error:'Unknown tool: '+name};
@@ -219,7 +293,64 @@ async function init(){
     addMessage('bot',data.welcome_message);
   }
 
+  showPromptChips();
   document.getElementById('userInput').focus();
+}
+
+function showPromptChips(){
+  const area=document.getElementById('chatArea');
+  const container=document.createElement('div');
+  container.className='prompt-chips';
+  container.id='promptChips';
+  const chips=[
+    {section:'Quick Actions'},
+    {label:'Add a prospect',prompt:'Add a new prospect'},
+    {label:'Add a task',prompt:'Create a new task'},
+    {label:'Add a contact',prompt:'Add a new contact to the master list'},
+    {section:'Dashboards'},
+    {label:'Prospect pipeline',prompt:'Show me a summary of all prospects — how many are hot, warm, new, and any overdue follow-ups'},
+    {label:'Open tasks',prompt:'What tasks are open? Show me overdue and high priority ones'},
+    {label:'ThriveHQ overview',prompt:'Give me a ThriveHQ summary — members, active trials, and pending intake forms'},
+    {section:'Search'},
+    {label:'Find a prospect',prompt:'Search for a prospect named '},
+    {label:'Find a contact',prompt:'Search for a contact named '},
+    {label:'Find a client',prompt:'Search for a client named '},
+    {section:'Prospect Actions'},
+    {label:'Log a call',prompt:'Log that I called '},
+    {label:'Log an email',prompt:'Log that I emailed '},
+    {label:'Set follow-up',prompt:'Set a follow-up date for '},
+    {label:'Mark prospect hot',prompt:'Mark prospect as Hot: '},
+  ];
+  chips.forEach(c=>{
+    if(c.section){
+      const sec=document.createElement('div');
+      sec.className='prompt-section';
+      sec.textContent=c.section;
+      container.appendChild(sec);
+    } else {
+      const btn=document.createElement('button');
+      btn.className='prompt-chip';
+      btn.textContent=c.label;
+      btn.onclick=()=>usePromptChip(c.prompt,c.label);
+      container.appendChild(btn);
+    }
+  });
+  area.appendChild(container);
+  area.scrollTop=area.scrollHeight;
+}
+
+function usePromptChip(prompt,label){
+  const chips=document.getElementById('promptChips');
+  if(chips)chips.remove();
+  const input=document.getElementById('userInput');
+  // If prompt ends with space, put in input for user to finish
+  if(prompt.endsWith(' ')){
+    input.value=prompt;
+    input.focus();
+    return;
+  }
+  input.value=prompt;
+  sendMessage();
 }
 
 function showError(msg){
@@ -350,7 +481,7 @@ async function sendMessage(){
 
           // Show action indicator
           if(toolResult.success){
-            const actionLabels={add_prospect:'Added prospect',search_prospects:'Searched prospects',add_prospect_note:'Added note',add_contact:'Added contact',search_contacts:'Searched contacts',add_task:'Created task'};
+            const actionLabels={add_prospect:'Added prospect',search_prospects:'Searched prospects',add_prospect_note:'Added note',add_contact:'Added contact',search_contacts:'Searched contacts',add_task:'Created task',get_prospect_summary:'Loaded prospect pipeline',get_tasks_summary:'Loaded task summary',search_clients:'Searched clients',get_thrivehq_summary:'Loaded ThriveHQ data',update_prospect_status:'Updated prospect status',set_prospect_followup:'Set follow-up date'};
             addActionMessage('✓ '+(actionLabels[fnName]||fnName));
           }
 

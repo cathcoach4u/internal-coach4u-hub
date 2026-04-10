@@ -1,4 +1,4 @@
-const CACHE_NAME = 'c4u-bot-v2';
+const CACHE_NAME = 'c4u-bot-v3';
 const ASSETS = [
   '/internal-coach4u-hub/bot/',
   '/internal-coach4u-hub/bot/index.html',
