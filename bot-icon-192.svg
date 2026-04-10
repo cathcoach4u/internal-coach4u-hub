@@ -1,19 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 192 192" width="192" height="192">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#003366"/>
       <stop offset="100%" stop-color="#004d99"/>
     </linearGradient>
+    <clipPath id="bubbleClip">
+      <path d="M40 52 C40 40 50 30 62 30 L130 30 C142 30 152 40 152 52 L152 108 C152 120 142 130 130 130 L72 130 L50 152 L50 130 L62 130 C50 130 40 120 40 108 Z"/>
+    </clipPath>
   </defs>
   <rect width="192" height="192" rx="42" fill="url(#bg)"/>
-  <!-- Chat bubble -->
-  <path d="M32 50 C32 38 42 28 54 28 L138 28 C150 28 160 38 160 50 L160 110 C160 122 150 132 138 132 L68 132 L44 156 L44 132 L54 132 C42 132 32 122 32 110 Z" fill="#fff"/>
-  <!-- 4U logo mark - handwritten style -->
-  <g transform="translate(96,78)" fill="none" stroke-linecap="round" stroke-linejoin="round">
-    <!-- "4" stroke in dark navy -->
-    <path d="M-30,-28 C-28,-26 -38,2 -40,10 C-40,10 -22,10 -14,10" stroke="#1a3a5c" stroke-width="7" fill="none"/>
-    <path d="M-20,-14 L-20,22" stroke="#1a3a5c" stroke-width="7" fill="none"/>
-    <!-- "U" stroke in medium blue -->
-    <path d="M2,-20 C2,-18 -2,12 4,20 C10,28 22,22 26,8 C30,-6 36,-24 38,-28" stroke="#4a7eb5" stroke-width="7" fill="none"/>
-  </g>
+  <path d="M40 52 C40 40 50 30 62 30 L130 30 C142 30 152 40 152 52 L152 108 C152 120 142 130 130 130 L72 130 L50 152 L50 130 L62 130 C50 130 40 120 40 108 Z" fill="#fff"/>
+  <image x="52" y="38" width="90" height="86" clip-path="url(#bubbleClip)" href="C4U.png"/>
 </svg>
