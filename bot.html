@@ -21,6 +21,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f6ff;color:#1e293b;d
 .msg.bot{background:#fff;color:#1e293b;border:1px solid #e2e8f0;border-bottom-left-radius:4px;align-self:flex-start;box-shadow:0 1px 3px rgba(0,0,0,.04);}
 .msg.user{background:#3b82f6;color:#fff;border-bottom-right-radius:4px;align-self:flex-end;}
 .msg.typing{color:#94a3b8;font-style:italic;border:1px solid #e2e8f0;background:#fff;}
+.msg.action{background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;border-bottom-left-radius:4px;align-self:flex-start;font-size:12px;font-weight:500;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
 .input-area{flex-shrink:0;background:#fff;border-top:1px solid #e2e8f0;padding:12px 16px;display:flex;gap:10px;align-items:flex-end;}
 .input-area textarea{flex:1;padding:12px 16px;border:1px solid #e2e8f0;border-radius:24px;font-size:14px;font-family:inherit;resize:none;max-height:120px;line-height:1.4;outline:none;transition:border-color .2s;}
@@ -79,6 +80,117 @@ function getSB(){if(!sb&&window.supabase)sb=window.supabase.createClient(SB_URL,
 let botConfig=null;
 let conversationHistory=[];
 
+// ── CRM TOOLS ──
+const crmTools=[
+  {type:'function',function:{name:'add_prospect',description:'Add a new prospect to the CRM. Use when the user wants to add/create a prospect or lead.',parameters:{type:'object',properties:{name:{type:'string',description:'Full name of the prospect'},email:{type:'string',description:'Email address'},phone:{type:'string',description:'Phone number'},source:{type:'string',description:'How they found Coach4U (e.g. referral, social media, website)'},interest:{type:'string',description:'What they are interested in',enum:['ThriveHQ (ADHD Group)','1:1 Coaching','Workshops','Not specified']},status:{type:'string',description:'Prospect status',enum:['New','Warm','Hot'],default:'New'},notes:{type:'string',description:'Any additional notes'}},required:['name']}}},
+  {type:'function',function:{name:'search_prospects',description:'Search existing prospects by name, email, or phone. Use to check if someone already exists or to look up prospect details.',parameters:{type:'object',properties:{query:{type:'string',description:'Search term — name, email, or phone number'}},required:['query']}}},
+  {type:'function',function:{name:'add_prospect_note',description:'Add an activity note to an existing prospect. Use when the user wants to log a call, email, message, meeting, or follow-up note for a prospect.',parameters:{type:'object',properties:{prospect_name:{type:'string',description:'Name of the prospect to add the note to'},note:{type:'string',description:'The note content'},note_type:{type:'string',description:'Type of activity',enum:['Called','Emailed','Messaged','Met','Follow-up','Note'],default:'Note'}},required:['prospect_name','note']}}},
+  {type:'function',function:{name:'add_contact',description:'Add a new contact to the master contact list. Use when the user wants to add someone as a contact (not a prospect).',parameters:{type:'object',properties:{first_name:{type:'string',description:'First name'},last_name:{type:'string',description:'Last name'},email:{type:'string',description:'Email address'},phone:{type:'string',description:'Phone number'},type:{type:'string',description:'Contact type',enum:['Individual','Organisation'],default:'Individual'}},required:['first_name','last_name']}}},
+  {type:'function',function:{name:'search_contacts',description:'Search the master contact list by name, email, or phone.',parameters:{type:'object',properties:{query:{type:'string',description:'Search term'}},required:['query']}}},
+  {type:'function',function:{name:'add_task',description:'Create a new task in the task management system.',parameters:{type:'object',properties:{title:{type:'string',description:'Task title/description'},priority:{type:'string',description:'Priority level',enum:['Low','Medium','High','Urgent'],default:'Medium'},due_date:{type:'string',description:'Due date in YYYY-MM-DD format'},category:{type:'string',description:'Task category',enum:['Admin','Client Work','Marketing','Finance','ThriveHQ','IT','Other'],default:'Admin'}},required:['title']}}}
+];
+
+// ── EXECUTE TOOL CALLS ──
+async function executeTool(name,args){
+  const client=getSB();
+  switch(name){
+    case 'add_prospect':{
+      const {data,error}=await client.from('prospects').insert({
+        name:args.name,email:args.email||null,phone:args.phone||null,
+        source:args.source||null,interest:args.interest||null,
+        status:args.status||'New',notes:args.notes||null
+      }).select().single();
+      if(error) return {success:false,error:error.message};
+      return {success:true,message:'Prospect "'+args.name+'" added successfully.',id:data.id};
+    }
+    case 'search_prospects':{
+      const q=args.query.toLowerCase();
+      const {data,error}=await client.from('prospects').select('*').order('created_at',{ascending:false});
+      if(error) return {success:false,error:error.message};
+      const matches=data.filter(p=>(p.name+' '+(p.email||'')+' '+(p.phone||'')+' '+(p.notes||'')).toLowerCase().includes(q));
+      if(!matches.length) return {success:true,message:'No prospects found matching "'+args.query+'".',results:[]};
+      return {success:true,message:'Found '+matches.length+' prospect(s).',results:matches.slice(0,10).map(p=>({id:p.id,name:p.name,email:p.email,phone:p.phone,status:p.status,interest:p.interest,source:p.source,created:p.created_at}))};
+    }
+    case 'add_prospect_note':{
+      // Find prospect by name
+      const {data:prospects}=await client.from('prospects').select('id,name').ilike('name','%'+args.prospect_name+'%');
+      if(!prospects||!prospects.length) return {success:false,error:'No prospect found with name "'+args.prospect_name+'".'};
+      const prospect=prospects[0];
+      const {error}=await client.from('prospect_notes').insert({
+        prospect_id:prospect.id,note:args.note,note_type:args.note_type||'Note'
+      });
+      if(error) return {success:false,error:error.message};
+      return {success:true,message:args.note_type+' note added to '+prospect.name+'.'};
+    }
+    case 'add_contact':{
+      const {data,error}=await client.from('contacts').insert({
+        first_name:args.first_name,last_name:args.last_name,
+        email:args.email||null,phone:args.phone||null,
+        type:args.type||'Individual'
+      }).select().single();
+      if(error) return {success:false,error:error.message};
+      return {success:true,message:'Contact "'+args.first_name+' '+args.last_name+'" added to master list.',id:data.id};
+    }
+    case 'search_contacts':{
+      const q=args.query.toLowerCase();
+      const {data,error}=await client.from('contacts').select('*').order('created_at',{ascending:false});
+      if(error) return {success:false,error:error.message};
+      const matches=data.filter(c=>((c.first_name||'')+' '+(c.last_name||'')+' '+(c.email||'')+' '+(c.phone||'')).toLowerCase().includes(q));
+      if(!matches.length) return {success:true,message:'No contacts found matching "'+args.query+'".',results:[]};
+      return {success:true,message:'Found '+matches.length+' contact(s).',results:matches.slice(0,10).map(c=>({id:c.id,name:(c.first_name||'')+' '+(c.last_name||''),email:c.email,phone:c.phone,type:c.type}))};
+    }
+    case 'add_task':{
+      const {data,error}=await client.from('tasks').insert({
+        title:args.title,priority:args.priority||'Medium',
+        due_date:args.due_date||null,category:args.category||'Admin',
+        status:'To Do'
+      }).select().single();
+      if(error) return {success:false,error:error.message};
+      return {success:true,message:'Task "'+args.title+'" created.'};
+    }
+    default:
+      return {success:false,error:'Unknown tool: '+name};
+  }
+}
+
+// ── CALL AI API (with tool loop) ──
+async function callAPI(messages){
+  const headers={
+    'Content-Type':'application/json',
+    'Authorization':'Bearer '+botConfig.api_key
+  };
+  if(botConfig.api_endpoint&&botConfig.api_endpoint.includes('openrouter')){
+    headers['HTTP-Referer']=window.location.origin;
+    headers['X-Title']=botConfig.bot_name||'Coach4U';
+  }
+
+  const res=await fetch(botConfig.api_endpoint,{
+    method:'POST',
+    headers:headers,
+    body:JSON.stringify({
+      model:botConfig.model,
+      messages:messages,
+      tools:crmTools,
+      max_tokens:botConfig.max_tokens||1024,
+      temperature:botConfig.temperature!=null?botConfig.temperature:0.7
+    })
+  });
+
+  if(!res.ok){
+    const errBody=await res.text();
+    console.error('API error:',res.status,errBody);
+    let errMsg='Sorry, something went wrong. ';
+    if(res.status===401) errMsg+='API key is invalid — check your key in the bot_config table.';
+    else if(res.status===402) errMsg+='No credits on your OpenRouter account.';
+    else if(res.status===403) errMsg+='Access denied by the API.';
+    else if(res.status===429) errMsg+='Rate limited — wait a moment and try again.';
+    else{try{const j=JSON.parse(errBody);errMsg+=(j.error?.message||j.message||'Error '+res.status);}catch(_){errMsg+='Error '+res.status;}}
+    return {error:errMsg};
+  }
+
+  return await res.json();
+}
+
 async function init(){
   const client=getSB();
   if(!client){showError('Failed to connect. Please refresh.');return;}
@@ -120,6 +232,15 @@ function addMessage(role,content){
   return div;
 }
 
+function addActionMessage(text){
+  const area=document.getElementById('chatArea');
+  const div=document.createElement('div');
+  div.className='msg action';
+  div.textContent=text;
+  area.appendChild(div);
+  area.scrollTop=area.scrollHeight;
+}
+
 function showTyping(){
   const area=document.getElementById('chatArea');
   const div=document.createElement('div');
@@ -129,6 +250,10 @@ function showTyping(){
   area.appendChild(div);
   area.scrollTop=area.scrollHeight;
 }
+function updateTyping(text){
+  const el=document.getElementById('typingIndicator');
+  if(el)el.textContent=text;
+}
 function removeTyping(){
   const el=document.getElementById('typingIndicator');
   if(el)el.remove();
@@ -137,19 +262,12 @@ function removeTyping(){
 function escapeHtml(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 function formatMarkdown(text){
-  // Simple markdown: bold, italic, code blocks, inline code, links, lists, paragraphs
   let html=text;
-  // Code blocks
   html=html.replace(/```(\w*)\n?([\s\S]*?)```/g,function(_,lang,code){return '<pre><code>'+escapeHtml(code.trim())+'</code></pre>';});
-  // Inline code
   html=html.replace(/`([^`]+)`/g,'<code>$1</code>');
-  // Bold
   html=html.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
-  // Italic
   html=html.replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g,'<em>$1</em>');
-  // Links
   html=html.replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
-  // Line breaks into paragraphs
   html=html.split(/\n{2,}/).map(block=>{
     block=block.trim();
     if(block.startsWith('<pre'))return block;
@@ -181,50 +299,72 @@ async function sendMessage(){
   showTyping();
 
   try{
-    const messages=[
+    let messages=[
       {role:'system',content:botConfig.system_prompt},
       ...conversationHistory
     ];
 
-    const headers={
-      'Content-Type':'application/json',
-      'Authorization':'Bearer '+botConfig.api_key
-    };
-    // OpenRouter requires these headers
-    if(botConfig.api_endpoint&&botConfig.api_endpoint.includes('openrouter')){
-      headers['HTTP-Referer']=window.location.origin;
-      headers['X-Title']=botConfig.bot_name||'Coach4U';
-    }
+    // Tool call loop — keep going until we get a text response
+    let maxLoops=5;
+    while(maxLoops-->0){
+      const result=await callAPI(messages);
 
-    const res=await fetch(botConfig.api_endpoint,{
-      method:'POST',
-      headers:headers,
-      body:JSON.stringify({
-        model:botConfig.model,
-        messages:messages,
-        max_tokens:botConfig.max_tokens||1024,
-        temperature:botConfig.temperature!=null?botConfig.temperature:0.7
-      })
-    });
+      if(result.error){
+        removeTyping();
+        addMessage('bot',result.error);
+        conversationHistory.pop();
+        break;
+      }
 
-    removeTyping();
+      const choice=result.choices?.[0];
+      if(!choice){
+        removeTyping();
+        addMessage('bot','Sorry, I didn\'t get a response. Please try again.');
+        conversationHistory.pop();
+        break;
+      }
 
-    if(!res.ok){
-      const errBody=await res.text();
-      console.error('API error:',res.status,errBody);
-      let errMsg='Sorry, something went wrong. ';
-      if(res.status===401) errMsg+='API key is invalid — check your key in the bot_config table.';
-      else if(res.status===402) errMsg+='No credits on your OpenRouter account.';
-      else if(res.status===403) errMsg+='Access denied by the API.';
-      else if(res.status===429) errMsg+='Rate limited — wait a moment and try again.';
-      else{try{const j=JSON.parse(errBody);errMsg+=(j.error?.message||j.message||'Error '+res.status);}catch(_){errMsg+='Error '+res.status;}}
-      addMessage('bot',errMsg);
-      conversationHistory.pop();
-    } else {
-      const data=await res.json();
-      const reply=data.choices?.[0]?.message?.content||'Sorry, I didn\'t get a response. Please try again.';
+      const assistantMsg=choice.message;
+
+      // Check for tool calls
+      if(assistantMsg.tool_calls&&assistantMsg.tool_calls.length>0){
+        // Add assistant message with tool calls to history
+        conversationHistory.push(assistantMsg);
+        messages=[{role:'system',content:botConfig.system_prompt},...conversationHistory];
+
+        // Execute each tool call
+        for(const tc of assistantMsg.tool_calls){
+          const fnName=tc.function.name;
+          let fnArgs={};
+          try{fnArgs=JSON.parse(tc.function.arguments);}catch(_){}
+
+          updateTyping('Working on it...');
+
+          const toolResult=await executeTool(fnName,fnArgs);
+
+          // Show action indicator
+          if(toolResult.success){
+            const actionLabels={add_prospect:'Added prospect',search_prospects:'Searched prospects',add_prospect_note:'Added note',add_contact:'Added contact',search_contacts:'Searched contacts',add_task:'Created task'};
+            addActionMessage('✓ '+(actionLabels[fnName]||fnName));
+          }
+
+          // Add tool result to conversation
+          const toolMsg={role:'tool',tool_call_id:tc.id,content:JSON.stringify(toolResult)};
+          conversationHistory.push(toolMsg);
+          messages=[{role:'system',content:botConfig.system_prompt},...conversationHistory];
+        }
+
+        updateTyping('Thinking...');
+        // Loop back to get the final text response
+        continue;
+      }
+
+      // Normal text response — done
+      removeTyping();
+      const reply=assistantMsg.content||'Done.';
       addMessage('bot',reply);
       conversationHistory.push({role:'assistant',content:reply});
+      break;
     }
   }catch(e){
     removeTyping();
@@ -234,7 +374,7 @@ async function sendMessage(){
   }
 
   document.getElementById('sendBtn').disabled=false;
-  input.focus();
+  document.getElementById('userInput').focus();
 }
 
 function handleKey(e){
@@ -249,7 +389,6 @@ function autoGrow(el){
   el.style.height=Math.min(el.scrollHeight,120)+'px';
 }
 
-// Init when DOM ready
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init);
 else init();
 </script>
