@@ -6,6 +6,14 @@
     </linearGradient>
   </defs>
   <rect width="192" height="192" rx="42" fill="url(#bg)"/>
-  <path d="M40 58 C40 46 50 36 62 36 L130 36 C142 36 152 46 152 58 L152 106 C152 118 142 128 130 128 L72 128 L52 148 L52 128 L62 128 C50 128 40 118 40 106 Z" fill="#fff"/>
-  <text x="96" y="92" text-anchor="middle" dominant-baseline="central" font-family="'Quicksand','Inter',Arial,sans-serif" font-size="36" font-weight="700" fill="#003366">C4U</text>
+  <!-- Chat bubble -->
+  <path d="M32 50 C32 38 42 28 54 28 L138 28 C150 28 160 38 160 50 L160 110 C160 122 150 132 138 132 L68 132 L44 156 L44 132 L54 132 C42 132 32 122 32 110 Z" fill="#fff"/>
+  <!-- 4U logo mark - handwritten style -->
+  <g transform="translate(96,78)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- "4" stroke in dark navy -->
+    <path d="M-30,-28 C-28,-26 -38,2 -40,10 C-40,10 -22,10 -14,10" stroke="#1a3a5c" stroke-width="7" fill="none"/>
+    <path d="M-20,-14 L-20,22" stroke="#1a3a5c" stroke-width="7" fill="none"/>
+    <!-- "U" stroke in medium blue -->
+    <path d="M2,-20 C2,-18 -2,12 4,20 C10,28 22,22 26,8 C30,-6 36,-24 38,-28" stroke="#4a7eb5" stroke-width="7" fill="none"/>
+  </g>
 </svg>
