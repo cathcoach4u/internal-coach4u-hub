@@ -451,6 +451,10 @@ td .actions button{padding:8px 14px;font-size:12px;}
       <div id="finTxnList"></div>
     </div>
 
+    <div class="screen" id="screen-about">
+      <div id="aboutContent"></div>
+    </div>
+
   </div>
 </div>
 
@@ -965,6 +969,7 @@ window.navTo = function(tab,btn){
   if(tab==='finincome') renderFinIncome();
   if(tab==='finspend') renderFinSpend();
   if(tab==='fintxns') renderFinTransactions();
+  if(tab==='about') renderAbout();
   closeMobile();
 };
 
@@ -992,7 +997,8 @@ const areaConfig={
   thrivehq:{label:'ThriveHQ',pages:[{id:'thqdash',icon:'&#128170;',label:'Dashboard'},{id:'thqintake',icon:'&#128221;',label:'Intake Forms'},{id:'thqtrials',icon:'&#127793;',label:'Trials'},{id:'thrivehq',icon:'&#128101;',label:'Members'},{id:'thqrenewals',icon:'&#128260;',label:'Renewals'},{id:'thqcalls',icon:'&#128222;',label:'Coaching Calls'}]},
   strengths:{label:'Strengths',pages:[{id:'strdash',icon:'&#127919;',label:'Dashboard'},{id:'strengths',icon:'&#128161;',label:'Strengths Hub'}]},
   operations:{label:'Operations',pages:[{id:'opsdash',icon:'&#128736;',label:'Dashboard'},{id:'tasks',icon:'&#9989;',label:'Task Management'},{id:'playbook',icon:'&#128214;',label:'Playbook'},{id:'itprojects',icon:'&#9881;',label:'IT Projects'}]},
-  finance:{label:'Finance',pages:[{id:'findash',icon:'&#128176;',label:'Dashboard'},{id:'finincome',icon:'&#128181;',label:'Income'},{id:'finspend',icon:'&#128200;',label:'Where Money Goes'},{id:'fintxns',icon:'&#128203;',label:'Transactions'}]}
+  finance:{label:'Finance',pages:[{id:'findash',icon:'&#128176;',label:'Dashboard'},{id:'finincome',icon:'&#128181;',label:'Income'},{id:'finspend',icon:'&#128200;',label:'Where Money Goes'},{id:'fintxns',icon:'&#128203;',label:'Transactions'}]},
+  about:{label:'About',pages:[{id:'about',icon:'&#8505;',label:'About'}]}
 };
 let currentArea='home';
 
@@ -4660,6 +4666,84 @@ if(window.innerWidth<=768) document.getElementById('mobileToggle').style.display
 window.addEventListener('resize',()=>{
   document.getElementById('mobileToggle').style.display=window.innerWidth<=768?'inline-block':'none';
 });
+
+// ── ABOUT ──
+function renderAbout(){
+  const card=(title,items)=>`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:24px;margin-bottom:16px;">
+    <div style="font-family:'Quicksand','Inter',sans-serif;font-size:16px;font-weight:700;color:#1e3a5f;margin-bottom:14px;">${title}</div>
+    ${items}
+  </div>`;
+
+  const techItem=(icon,name,desc)=>`<div style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:#f8fafc;border:1px solid #f1f5f9;border-radius:10px;margin-bottom:8px;">
+    <span style="font-size:24px;width:36px;text-align:center;">${icon}</span>
+    <div><div style="font-weight:600;font-size:14px;color:#1e293b;">${name}</div><div style="font-size:12px;color:#64748b;">${desc}</div></div>
+  </div>`;
+
+  const listItem=(label,desc)=>`<li style="margin:6px 0;font-size:14px;color:#334155;"><strong style="color:#1e3a5f;">${label}</strong> — <span style="color:#64748b;">${desc}</span></li>`;
+
+  const tableItem=(name,desc)=>`<li style="margin:6px 0;font-size:14px;"><code style="background:#f1f5f9;padding:2px 8px;border-radius:4px;font-size:13px;color:#1e3a5f;font-weight:600;">${name}</code> — <span style="color:#64748b;">${desc}</span></li>`;
+
+  let html=`<div style="font-family:'Quicksand','Inter',sans-serif;font-size:22px;font-weight:700;color:#1e3a5f;margin-bottom:20px;">About Coach4U CRM</div>`;
+
+  html+=card('','<div style="font-weight:700;font-size:15px;color:#1e293b;margin-bottom:4px;">cathcoach4u/internal-coach4u-hub</div><div style="font-size:13px;color:#64748b;">Coaching business CRM for managing contacts, prospects, clients, ThriveHQ members, referrers, finances, and operations.</div>');
+
+  html+=card('Built With',
+    techItem('&#128187;','GitHub Pages','Hosting & deployment')+
+    techItem('&#9889;','Supabase','Backend database & storage')+
+    techItem('&#129302;','Claude Code (Anthropic)','AI-assisted coder — does not own the code')+
+    techItem('&#128172;','Claude via OpenRouter','AI provider powering C4U Bot chat')
+  );
+
+  html+=card('Features','<ul style="list-style:disc;padding-left:20px;margin:0;">'+
+    listItem('Dashboard','Overview with total contacts, active clients, ThriveHQ trials')+
+    listItem('CRM Master List','Contact management with search, grouped alphabetically')+
+    listItem('Prospects','Sales pipeline with status tracking, dated activity logs, follow-up dates, overdue highlighting')+
+    listItem('Clients','Client relationship management with linked members, referrers, Xero & SharePoint links')+
+    listItem('ThriveHQ','ADHD group program management — intake forms, trials, members, renewals, coaching calls')+
+    listItem('Intake Forms','Public intake form for new ThriveHQ members with consent, flows into CRM')+
+    listItem('Strengths','CliftonStrengths tracking with top 10 per contact, PDF report uploads')+
+    listItem('Referrers','Referral partner management with linked contacts and payment tracking')+
+    listItem('Operations','Task management with priority/status, playbook, IT projects')+
+    listItem('Finance','Xero CSV import, income/expense analysis, transaction search')+
+    listItem('C4U Bot','AI chat assistant that can add prospects, contacts, tasks, search CRM, and view dashboards')+
+  '</ul>');
+
+  html+=card('Stack','<ul style="list-style:disc;padding-left:20px;margin:0;">'+
+    '<li style="margin:6px 0;font-size:14px;color:#334155;">Vanilla HTML / CSS / JavaScript (no frameworks)</li>'+
+    '<li style="margin:6px 0;font-size:14px;color:#334155;">Supabase for database & storage</li>'+
+    '<li style="margin:6px 0;font-size:14px;color:#334155;">GitHub Pages for hosting</li>'+
+    '<li style="margin:6px 0;font-size:14px;color:#334155;">Claude Code for AI-assisted development</li>'+
+    '<li style="margin:6px 0;font-size:14px;color:#334155;">OpenRouter for AI chat gateway</li>'+
+    '<li style="margin:6px 0;font-size:14px;color:#334155;">PWA manifest for home screen install</li>'+
+  '</ul>');
+
+  html+=card('Supabase Tables','<ul style="list-style:disc;padding-left:20px;margin:0;">'+
+    tableItem('contacts','Master contact list with names, email, phone, strengths, membership dates')+
+    tableItem('prospects','Sales pipeline with status, source, interest, follow-up dates')+
+    tableItem('prospect_notes','Dated activity log for prospects (calls, emails, meetings, notes)')+
+    tableItem('clients','Client relationships with role, status, practitioner, links')+
+    tableItem('client_members','Link table connecting clients to contacts')+
+    tableItem('intake_submissions','ThriveHQ intake form data with consent and ADHD info')+
+    tableItem('thrivehq_trials','Trial memberships with dates and conversion tracking')+
+    tableItem('membership_renewals','Renewal history with period dates and amounts')+
+    tableItem('contact_reports','CliftonStrengths PDF report uploads (Gallup, Personal Insights, Bring Need)')+
+    tableItem('referrers','Referral partners with meeting links and status')+
+    tableItem('referrer_members','Link table connecting referrers to contacts')+
+    tableItem('referrer_payments','Referrer payment tracking with dates, amounts, status')+
+    tableItem('tasks','Task management with priority, status, owner, due dates, categories')+
+    tableItem('task_logs','Activity log for tasks (status updates, notes, actions)')+
+    tableItem('finance_transactions','Financial data imported from Xero CSV')+
+    tableItem('bot_config','AI bot system prompt, model, and API configuration')+
+  '</ul>');
+
+  html+=card('Pages','<ul style="list-style:disc;padding-left:20px;margin:0;">'+
+    '<li style="margin:6px 0;font-size:14px;color:#334155;"><strong style="color:#1e3a5f;">index.html</strong> — Main CRM app (single-page)</li>'+
+    '<li style="margin:6px 0;font-size:14px;color:#334155;"><strong style="color:#1e3a5f;">intake.html</strong> — Public ThriveHQ intake form</li>'+
+    '<li style="margin:6px 0;font-size:14px;color:#334155;"><strong style="color:#1e3a5f;">bot/</strong> — C4U Bot AI assistant (separate PWA)</li>'+
+  '</ul>');
+
+  document.getElementById('aboutContent').innerHTML=html;
+}
 
 // ── AI CHAT ASSISTANT ──
 // API key stored in browser localStorage for security (not in code)
