@@ -429,6 +429,20 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
 
     <!-- FINANCE TRANSACTIONS -->
+    <div class="screen" id="screen-finbills">
+      <div class="toolbar">
+        <input class="search-input" id="billSearch" placeholder="Search bills..." oninput="renderBills()" style="flex:1;">
+        <select id="billStatusFilter" onchange="renderBills()" style="padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;background:#fff;">
+          <option value="">All</option>
+          <option value="Upcoming">Upcoming</option>
+          <option value="Paid">Paid</option>
+          <option value="Overdue">Overdue</option>
+        </select>
+        <button class="btn btn-blue" onclick="openBillModal()">+ Add Bill</button>
+      </div>
+      <div id="billList"></div>
+    </div>
+
     <div class="screen" id="screen-fintxns">
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;">
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
@@ -829,6 +843,59 @@ td .actions button{padding:8px 14px;font-size:12px;}
   </div>
 </div>
 
+<!-- BILL MODAL -->
+<div class="modal-overlay" id="billModal">
+  <div class="modal">
+    <h3 id="billModalTitle">Add Bill</h3>
+    <input type="hidden" id="billId" value="">
+    <div class="form-group"><label>Biller / Payee</label><input id="billName" placeholder="e.g. Telstra, ATO, Xero..."></div>
+    <div class="mob-grid-2">
+      <div class="form-group"><label>Amount ($)</label><input id="billAmount" type="number" step="0.01" placeholder="0.00"></div>
+      <div class="form-group"><label>Due Date</label><input id="billDue" type="date"></div>
+    </div>
+    <div class="mob-grid-2">
+      <div class="form-group"><label>Frequency</label>
+        <select id="billFrequency">
+          <option value="One-off">One-off</option>
+          <option value="Weekly">Weekly</option>
+          <option value="Fortnightly">Fortnightly</option>
+          <option value="Monthly">Monthly</option>
+          <option value="Quarterly">Quarterly</option>
+          <option value="Annually">Annually</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Category</label>
+        <select id="billCategory">
+          <option value="">Select...</option>
+          <option value="Software">Software</option>
+          <option value="Insurance">Insurance</option>
+          <option value="Rent">Rent</option>
+          <option value="Utilities">Utilities</option>
+          <option value="Phone/Internet">Phone/Internet</option>
+          <option value="Subscriptions">Subscriptions</option>
+          <option value="Tax">Tax</option>
+          <option value="Professional Services">Professional Services</option>
+          <option value="Marketing">Marketing</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group"><label>Status</label>
+      <select id="billStatus">
+        <option value="Upcoming">Upcoming</option>
+        <option value="Paid">Paid</option>
+        <option value="Overdue">Overdue</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Notes</label><textarea id="billNotes" placeholder="Optional notes..."></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-red" id="billDeleteBtn" style="margin-right:auto;display:none;" onclick="deleteBill()">Delete</button>
+      <button class="btn btn-gray" onclick="closeModal('billModal')">Cancel</button>
+      <button class="btn btn-blue" onclick="saveBill()">Save Bill</button>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
@@ -913,7 +980,7 @@ async function loadTasks(){
 }
 
 async function loadAll(){
-  await Promise.all([loadContacts(), loadClients(), loadTasks(), loadProspects(), loadProspectNotes(), loadReferrers(), loadRefPayments(), loadRenewals(), loadContactReports(), loadTrials(), loadTaskLogs(), loadFinanceTransactions(), loadIntakeSubmissions()]);
+  await Promise.all([loadContacts(), loadClients(), loadTasks(), loadProspects(), loadProspectNotes(), loadReferrers(), loadRefPayments(), loadRenewals(), loadContactReports(), loadTrials(), loadTaskLogs(), loadFinanceTransactions(), loadBills(), loadIntakeSubmissions()]);
   renderSidebarNav('home');
   renderDashboard();
   document.getElementById('appLoader').style.display='none';
@@ -926,7 +993,7 @@ document.getElementById('headerDate').textContent = new Date().toLocaleDateStrin
 window.navTo = function(tab,btn){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+tab).classList.add('active');
-  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ',thqintake:'Intake Forms',strdash:'Strengths',opsdash:'Operations',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Strengths Hub',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Task Management',playbook:'Lou\'s Playbook',itprojects:'IT Projects',findash:'Finance',finincome:'Income',finspend:'Where Money Goes',fintxns:'Transactions'};
+  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ',thqintake:'Intake Forms',strdash:'Strengths',opsdash:'Operations',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Strengths Hub',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Task Management',playbook:'Lou\'s Playbook',itprojects:'IT Projects',findash:'Finance',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fintxns:'Transactions'};
   document.getElementById('pageTitle').textContent=titles[tab]||'Coach4U';
   // Sync area tab
   const area=pageToArea[tab]||'home';
@@ -968,6 +1035,7 @@ window.navTo = function(tab,btn){
   if(tab==='findash') renderFinDash();
   if(tab==='finincome') renderFinIncome();
   if(tab==='finspend') renderFinSpend();
+  if(tab==='finbills') renderBills();
   if(tab==='fintxns') renderFinTransactions();
   if(tab==='about') renderAbout();
   closeMobile();
@@ -997,7 +1065,7 @@ const areaConfig={
   thrivehq:{label:'ThriveHQ',pages:[{id:'thqdash',icon:'&#128170;',label:'Dashboard'},{id:'thqintake',icon:'&#128221;',label:'Intake Forms'},{id:'thqtrials',icon:'&#127793;',label:'Trials'},{id:'thrivehq',icon:'&#128101;',label:'Members'},{id:'thqrenewals',icon:'&#128260;',label:'Renewals'},{id:'thqcalls',icon:'&#128222;',label:'Coaching Calls'}]},
   strengths:{label:'Strengths',pages:[{id:'strdash',icon:'&#127919;',label:'Dashboard'},{id:'strengths',icon:'&#128161;',label:'Strengths Hub'}]},
   operations:{label:'Operations',pages:[{id:'opsdash',icon:'&#128736;',label:'Dashboard'},{id:'tasks',icon:'&#9989;',label:'Task Management'},{id:'playbook',icon:'&#128214;',label:'Playbook'},{id:'itprojects',icon:'&#9881;',label:'IT Projects'}]},
-  finance:{label:'Finance',pages:[{id:'findash',icon:'&#128176;',label:'Dashboard'},{id:'finincome',icon:'&#128181;',label:'Income'},{id:'finspend',icon:'&#128200;',label:'Where Money Goes'},{id:'fintxns',icon:'&#128203;',label:'Transactions'}]},
+  finance:{label:'Finance',pages:[{id:'findash',icon:'&#128176;',label:'Dashboard'},{id:'finincome',icon:'&#128181;',label:'Income'},{id:'finspend',icon:'&#128200;',label:'Where Money Goes'},{id:'finbills',icon:'&#128196;',label:'Bills'},{id:'fintxns',icon:'&#128203;',label:'Transactions'}]},
   about:{label:'About',pages:[{id:'about',icon:'&#8505;',label:'About'}]}
 };
 let currentArea='home';
@@ -4516,6 +4584,164 @@ function renderFinTransactions(){
   el.innerHTML=html;
 }
 
+// ── BILLS ──
+let bills=[];
+
+async function loadBills(){
+  const {data,error}=await supabase.from('bills').select('*').order('due_date',{ascending:true});
+  if(!error&&data) bills=data;
+}
+
+function renderBills(){
+  const el=document.getElementById('billList');
+  const search=(document.getElementById('billSearch').value||'').toLowerCase();
+  const statusFilter=document.getElementById('billStatusFilter').value;
+
+  let filtered=[...bills];
+
+  // Auto-mark overdue: if due_date < today and status is Upcoming
+  const today=new Date().toISOString().split('T')[0];
+  filtered.forEach(b=>{
+    if(b.status==='Upcoming'&&b.due_date&&b.due_date<today) b._autoOverdue=true;
+  });
+
+  if(statusFilter==='Overdue') filtered=filtered.filter(b=>b.status==='Overdue'||b._autoOverdue);
+  else if(statusFilter) filtered=filtered.filter(b=>b.status===statusFilter&&!b._autoOverdue);
+  if(search) filtered=filtered.filter(b=>(b.name+' '+b.category+' '+(b.notes||'')).toLowerCase().includes(search));
+
+  if(!filtered.length){
+    el.innerHTML='<div style="text-align:center;padding:60px 20px;color:#64748b;"><div style="font-size:48px;margin-bottom:16px;">&#128196;</div><h3 style="margin:0 0 8px;color:#1e3a5f;">No Bills</h3><p>Click <strong>+ Add Bill</strong> to track your recurring bills and payments.</p></div>';
+    return;
+  }
+
+  // Summary cards
+  const upcoming=bills.filter(b=>b.status==='Upcoming'&&!b._autoOverdue);
+  const overdue=bills.filter(b=>b.status==='Overdue'||b._autoOverdue);
+  const paid=bills.filter(b=>b.status==='Paid');
+  const totalUpcoming=upcoming.reduce((s,b)=>s+(b.amount||0),0);
+  const totalOverdue=overdue.reduce((s,b)=>s+(b.amount||0),0);
+
+  let html='<div class="dash-cards" style="margin-bottom:20px;">';
+  html+=`<div class="dash-card"><div class="dc-icon amber">&#128196;</div><div class="dc-info"><h4>${upcoming.length}</h4><p>Upcoming &middot; $${totalUpcoming.toLocaleString('en-AU',{minimumFractionDigits:2})}</p></div></div>`;
+  html+=`<div class="dash-card"><div class="dc-icon" style="background:#fef2f2;color:#ef4444;">&#9888;</div><div class="dc-info"><h4>${overdue.length}</h4><p>Overdue &middot; $${totalOverdue.toLocaleString('en-AU',{minimumFractionDigits:2})}</p></div></div>`;
+  html+=`<div class="dash-card"><div class="dc-icon green">&#9989;</div><div class="dc-info"><h4>${paid.length}</h4><p>Paid</p></div></div>`;
+  html+='</div>';
+
+  const isMob=window.innerWidth<=768;
+
+  if(isMob){
+    filtered.forEach(b=>{
+      const isOverdue=b.status==='Overdue'||b._autoOverdue;
+      const isPaid=b.status==='Paid';
+      const statusBadge=isOverdue?'badge-red':isPaid?'badge-green':'badge-amber';
+      const statusLabel=isOverdue?'Overdue':b.status;
+      const dueDate=b.due_date?new Date(b.due_date).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}):'—';
+      html+=`<div onclick="openBillModal('${b.id}')" style="background:#fff;border:1px solid ${isOverdue?'#fecaca':'#e2e8f0'};border-radius:10px;padding:14px;margin-bottom:8px;cursor:pointer;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <strong style="font-size:14px;color:#1e3a5f;">${b.name||'Unnamed'}</strong>
+          <span style="font-weight:700;font-size:15px;color:#1e3a5f;">$${(b.amount||0).toLocaleString('en-AU',{minimumFractionDigits:2})}</span>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:12px;">
+          <span class="badge ${statusBadge}">${statusLabel}</span>
+          ${b.category?`<span class="badge badge-blue">${b.category}</span>`:''}
+          ${b.frequency&&b.frequency!=='One-off'?`<span class="badge badge-gray">&#128260; ${b.frequency}</span>`:''}
+          <span style="color:#94a3b8;margin-left:auto;">Due: ${dueDate}</span>
+        </div>
+        ${b.notes?`<div style="font-size:12px;color:#64748b;margin-top:6px;line-height:1.4;">${b.notes.length>80?b.notes.substring(0,80)+'...':b.notes}</div>`:''}
+      </div>`;
+    });
+  } else {
+    html+='<div style="overflow-x:auto;"><table><tr><th>Biller</th><th>Amount</th><th>Due Date</th><th>Frequency</th><th>Category</th><th>Status</th><th>Notes</th></tr>';
+    filtered.forEach(b=>{
+      const isOverdue=b.status==='Overdue'||b._autoOverdue;
+      const isPaid=b.status==='Paid';
+      const statusBadge=isOverdue?'badge-red':isPaid?'badge-green':'badge-amber';
+      const statusLabel=isOverdue?'Overdue':b.status;
+      const dueDate=b.due_date?new Date(b.due_date).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}):'—';
+      html+=`<tr onclick="openBillModal('${b.id}')" style="cursor:pointer;${isOverdue?'background:#fff5f5;':''}">
+        <td style="font-weight:600;">${b.name||'Unnamed'}</td>
+        <td style="font-weight:600;">$${(b.amount||0).toLocaleString('en-AU',{minimumFractionDigits:2})}</td>
+        <td>${dueDate}</td>
+        <td>${b.frequency||'One-off'}</td>
+        <td>${b.category?`<span class="badge badge-blue">${b.category}</span>`:''}</td>
+        <td><span class="badge ${statusBadge}">${statusLabel}</span></td>
+        <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${b.notes||''}</td>
+      </tr>`;
+    });
+    html+='</table></div>';
+  }
+  el.innerHTML=html;
+}
+
+window.openBillModal=function(id){
+  const m=document.getElementById('billModal');
+  document.getElementById('billId').value='';
+  document.getElementById('billName').value='';
+  document.getElementById('billAmount').value='';
+  document.getElementById('billDue').value='';
+  document.getElementById('billFrequency').value='One-off';
+  document.getElementById('billCategory').value='';
+  document.getElementById('billStatus').value='Upcoming';
+  document.getElementById('billNotes').value='';
+  document.getElementById('billDeleteBtn').style.display='none';
+  document.getElementById('billModalTitle').textContent='Add Bill';
+
+  if(id){
+    const b=bills.find(x=>x.id===id);
+    if(b){
+      document.getElementById('billModalTitle').textContent='Edit Bill';
+      document.getElementById('billId').value=b.id;
+      document.getElementById('billName').value=b.name||'';
+      document.getElementById('billAmount').value=b.amount||'';
+      document.getElementById('billDue').value=b.due_date||'';
+      document.getElementById('billFrequency').value=b.frequency||'One-off';
+      document.getElementById('billCategory').value=b.category||'';
+      document.getElementById('billStatus').value=b.status||'Upcoming';
+      document.getElementById('billNotes').value=b.notes||'';
+      document.getElementById('billDeleteBtn').style.display='';
+    }
+  }
+  m.classList.add('open');
+};
+
+window.saveBill=async function(){
+  const id=document.getElementById('billId').value;
+  const row={
+    name:document.getElementById('billName').value.trim(),
+    amount:parseFloat(document.getElementById('billAmount').value)||0,
+    due_date:document.getElementById('billDue').value||null,
+    frequency:document.getElementById('billFrequency').value,
+    category:document.getElementById('billCategory').value,
+    status:document.getElementById('billStatus').value,
+    notes:document.getElementById('billNotes').value.trim()
+  };
+  if(!row.name){toast('Please enter a biller name','error');return;}
+
+  let error;
+  if(id){
+    ({error}=await supabase.from('bills').update(row).eq('id',id));
+  } else {
+    ({error}=await supabase.from('bills').insert(row));
+  }
+  if(error){toast('Error saving bill: '+error.message,'error');return;}
+  closeModal('billModal');
+  await loadBills();
+  renderBills();
+  toast(id?'Bill updated':'Bill added','success');
+};
+
+window.deleteBill=async function(){
+  const id=document.getElementById('billId').value;
+  if(!id) return;
+  if(!confirm('Delete this bill?')) return;
+  const {error}=await supabase.from('bills').delete().eq('id',id);
+  if(error){toast('Error deleting bill: '+error.message,'error');return;}
+  closeModal('billModal');
+  await loadBills();
+  renderBills();
+  toast('Bill deleted','success');
+};
+
 // ── AUTH ──
 function showLogin(){
   document.getElementById('loginScreen').style.display='flex';
@@ -4733,6 +4959,7 @@ function renderAbout(){
     tableItem('tasks','Task management with priority, status, owner, due dates, categories')+
     tableItem('task_logs','Activity log for tasks (status updates, notes, actions)')+
     tableItem('finance_transactions','Financial data imported from Xero CSV')+
+    tableItem('bills','Recurring and one-off bills with due dates, amounts, status')+
     tableItem('bot_config','AI bot system prompt, model, and API configuration')+
   '</ul>');
 
