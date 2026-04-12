@@ -183,7 +183,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
   <div class="sidebar-footer">
     <div id="loggedInUser" style="margin-bottom:8px;color:rgba(255,255,255,.6);"></div>
     <button onclick="handleLogout()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.6);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:11px;font-family:inherit;width:100%;transition:all .15s;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.6)'">Sign Out</button>
-    <div style="margin-top:8px;text-align:center;font-size:10px;color:rgba(255,255,255,.25);">v2.4.0</div>
+    <div style="margin-top:8px;text-align:center;font-size:10px;color:rgba(255,255,255,.25);">v2.5.0</div>
   </div>
 </nav>
 
@@ -643,6 +643,18 @@ td .actions button{padding:8px 14px;font-size:12px;}
       <select id="refPayStatus"><option>Paid</option><option>Pending</option><option>Overdue</option></select>
     </div>
     <div class="form-group"><label>Notes</label><textarea id="refPayNotes"></textarea></div>
+    <div class="form-group"><label>Statement</label>
+      <div id="refPayStatementArea">
+        <div id="refPayStatementExisting" style="display:none;margin-bottom:8px;">
+          <a id="refPayStatementLink" href="#" target="_blank" style="display:inline-flex;align-items:center;gap:6px;color:#3b82f6;font-size:13px;font-weight:600;text-decoration:none;">&#128206; View Statement</a>
+          <button onclick="removeRefStatement()" style="margin-left:8px;background:none;border:none;color:#dc2626;font-size:12px;cursor:pointer;font-weight:600;">Remove</button>
+        </div>
+        <label style="display:inline-flex;align-items:center;gap:8px;padding:8px 14px;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:8px;cursor:pointer;font-size:12px;color:#64748b;font-weight:500;transition:all .15s;" onmouseover="this.style.borderColor='#3b82f6';this.style.color='#3b82f6'" onmouseout="this.style.borderColor='#cbd5e1';this.style.color='#64748b'">
+          <span id="refPayUploadLabel">&#128228; Upload PDF or image</span>
+          <input type="file" id="refPayFileInput" accept=".pdf,.png,.jpg,.jpeg" style="display:none;" onchange="uploadRefStatement(this.files[0])">
+        </label>
+      </div>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-gray" onclick="closeModal('refPayModal')">Cancel</button>
       <button class="btn btn-red" id="refPayDelBtn" onclick="deleteRefPayment(document.getElementById('refPayId').value)" style="display:none;">Delete</button>
@@ -4008,10 +4020,11 @@ function renderRefPayments(){
   const totalPending=refPayments.filter(p=>p.status==='Pending').reduce((s,p)=>s+(parseFloat(p.amount)||0),0);
   const overdueCount=refPayments.filter(p=>p.status==='Overdue').length;
 
+  const fmtAmt=v=>'$'+v.toLocaleString('en-AU',{minimumFractionDigits:2});
   let html=`<div class="dash-cards" style="margin-bottom:14px;">
-    <div class="dash-card"><div class="dc-icon green">&#128176;</div><div class="dc-info"><h4>$${totalPaid.toFixed(2)}</h4><p>Total Paid</p></div></div>
-    <div class="dash-card"><div class="dc-icon amber">&#9203;</div><div class="dc-info"><h4>$${totalPending.toFixed(2)}</h4><p>Pending</p></div></div>
-    <div class="dash-card"><div class="dc-icon red">&#9888;</div><div class="dc-info"><h4>${overdueCount}</h4><p>Overdue</p></div></div>
+    <div class="dash-card"><div class="dc-icon green">&#128176;</div><div class="dc-info"><h4 style="font-size:clamp(16px,4vw,26px);word-break:break-all;">${fmtAmt(totalPaid)}</h4><p>Total Paid</p></div></div>
+    <div class="dash-card"><div class="dc-icon amber">&#9203;</div><div class="dc-info"><h4 style="font-size:clamp(16px,4vw,26px);word-break:break-all;">${fmtAmt(totalPending)}</h4><p>Pending</p></div></div>
+    <div class="dash-card"><div class="dc-icon" style="background:#fef2f2;color:#ef4444;">&#9888;</div><div class="dc-info"><h4>${overdueCount}</h4><p>Overdue</p></div></div>
   </div>`;
 
   if(!filtered.length){
@@ -4030,6 +4043,7 @@ function renderRefPayments(){
           <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:12px;">
             <span style="font-size:11px;padding:2px 10px;border-radius:99px;font-weight:600;${statusColors[p.status]||''}">${p.status||'Pending'}</span>
             ${p.period?`<span class="badge badge-blue">${p.period}</span>`:''}
+            ${p.statement_url?'<span style="font-size:13px;" title="Statement attached">&#128206;</span>':''}
             <span style="color:#94a3b8;margin-left:auto;">${p.payment_date?new Date(p.payment_date).toLocaleDateString('en-AU'):'No date'}</span>
           </div>
           ${p.notes?`<div style="font-size:12px;color:#64748b;margin-top:6px;">${p.notes.length>80?p.notes.substring(0,80)+'...':p.notes}</div>`:''}
@@ -4044,6 +4058,7 @@ function renderRefPayments(){
             <th style="text-align:right;padding:10px 14px;font-weight:600;color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Amount</th>
             <th style="text-align:left;padding:10px 14px;font-weight:600;color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Date</th>
             <th style="text-align:center;padding:10px 14px;font-weight:600;color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Status</th>
+            <th style="text-align:center;padding:10px 14px;font-weight:600;color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:.5px;width:30px;">&#128206;</th>
           </tr></thead>
           <tbody>`;
       filtered.forEach(p=>{
@@ -4054,6 +4069,7 @@ function renderRefPayments(){
           <td style="padding:10px 14px;text-align:right;font-weight:600;color:#1e293b;">$${(parseFloat(p.amount)||0).toFixed(2)}</td>
           <td style="padding:10px 14px;color:#475569;">${p.payment_date?new Date(p.payment_date).toLocaleDateString('en-AU'):'—'}</td>
           <td style="padding:10px 14px;text-align:center;"><span style="font-size:11px;padding:2px 10px;border-radius:99px;font-weight:500;${statusColors[p.status]||''}">${p.status||'Pending'}</span></td>
+          <td style="padding:10px 14px;text-align:center;">${p.statement_url?'<a href="'+p.statement_url+'" target="_blank" onclick="event.stopPropagation()" style="font-size:16px;text-decoration:none;" title="View statement">&#128206;</a>':''}</td>
         </tr>`;
       });
       html+=`</tbody></table></div>`;
@@ -4072,6 +4088,18 @@ window.openRefPaymentModal=function(id){
   document.getElementById('refPayStatus').value=p?p.status||'Pending':'Pending';
   document.getElementById('refPayNotes').value=p?p.notes||'':'';
   document.getElementById('refPayDelBtn').style.display=p?'inline-block':'none';
+  // Statement
+  const stmtExist=document.getElementById('refPayStatementExisting');
+  const stmtLink=document.getElementById('refPayStatementLink');
+  document.getElementById('refPayFileInput').value='';
+  document.getElementById('refPayUploadLabel').textContent='\u{1F4E8} Upload PDF or image';
+  if(p&&p.statement_url){
+    stmtExist.style.display='block';
+    stmtLink.href=p.statement_url;
+  } else {
+    stmtExist.style.display='none';
+    stmtLink.href='#';
+  }
   // Populate referrer dropdown
   const sel=document.getElementById('refPayReferrer');
   sel.innerHTML='<option value="">-- Select referrer --</option>'+referrals.map(r=>'<option value="'+r.id+'"'+(p&&p.referrer_id===r.id?' selected':'')+'>'+r.name+'</option>').join('');
@@ -4110,6 +4138,48 @@ window.deleteRefPayment=async function(id){
   await loadRefPayments();
   renderRefPayments();
   toast('Payment deleted','success');
+};
+
+window.uploadRefStatement=async function(file){
+  if(!file) return;
+  const allowed=['.pdf','.png','.jpg','.jpeg'];
+  const ext=file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+  if(!allowed.includes(ext)){toast('Please select a PDF or image file','error');return;}
+  const label=document.getElementById('refPayUploadLabel');
+  label.textContent='Uploading...';
+  const payId=document.getElementById('refPayId').value;
+  const path='referrer-statements/'+(payId||'new')+'_'+Date.now()+ext;
+  const {error:upErr}=await supabase.storage.from('referrer-statements').upload(path,file,{upsert:true});
+  if(upErr){
+    toast('Upload error: '+upErr.message,'error');
+    label.textContent='\u{1F4E8} Upload PDF or image';
+    return;
+  }
+  const {data:urlData}=supabase.storage.from('referrer-statements').getPublicUrl(path);
+  const url=urlData.publicUrl;
+  // If editing existing payment, save immediately
+  if(payId){
+    await supabase.from('referrer_payments').update({statement_url:url}).eq('id',payId);
+    await loadRefPayments();
+  }
+  // Update modal UI
+  document.getElementById('refPayStatementExisting').style.display='block';
+  document.getElementById('refPayStatementLink').href=url;
+  document.getElementById('refPayStatementLink').dataset.url=url;
+  label.textContent='\u{2705} Uploaded — replace?';
+  toast('Statement uploaded','success');
+};
+
+window.removeRefStatement=async function(){
+  const payId=document.getElementById('refPayId').value;
+  if(payId){
+    await supabase.from('referrer_payments').update({statement_url:null}).eq('id',payId);
+    await loadRefPayments();
+  }
+  document.getElementById('refPayStatementExisting').style.display='none';
+  document.getElementById('refPayStatementLink').href='#';
+  document.getElementById('refPayUploadLabel').textContent='\u{1F4E8} Upload PDF or image';
+  toast('Statement removed','success');
 };
 
 // ── IT PROJECTS ──
