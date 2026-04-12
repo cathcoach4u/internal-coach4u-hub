@@ -395,6 +395,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
           <option value="">All Types</option><option>Admin</option><option>Finance</option><option>Client</option><option>Tech</option><option>Personal</option><option>System</option>
         </select>
         <button class="btn btn-blue" onclick="openTaskModal()">+ Add Task</button>
+        <button class="btn btn-gray" onclick="copyMorningList()" title="Copy morning list to clipboard" style="white-space:nowrap;">&#128203; Copy List</button>
       </div>
       <div id="tkCards"></div>
     </div>
@@ -3632,6 +3633,48 @@ function renderTasks(){
   document.getElementById('tkCards').innerHTML=html||'<div style="padding:20px;text-align:center;color:#94a3b8;">No tasks found.</div>';
 }
 window.filterTasks=function(){renderTasks();};
+
+window.copyMorningList=function(){
+  const todayStr=new Date().toISOString().split('T')[0];
+  const dateLabel=new Date().toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'});
+  const active=tasks.filter(t=>t.status!=='Complete');
+  const priorities=active.filter(t=>t.focus_date===todayStr).sort(taskSorter);
+  const pendings=active.filter(t=>t.focus_date!==todayStr&&(t.work_category||'Task')==='Task').sort(taskSorter);
+  const actionPlan=active.filter(t=>(t.work_category)==='Action Plan').sort(taskSorter);
+  const bau=active.filter(t=>(t.work_category)==='BAU').sort(taskSorter);
+
+  let text=dateLabel+'\n\nGood morning, Cath.\nThese are the things I will work today:\n';
+
+  if(priorities.length){
+    text+='\nPRIORITIES:\n';
+    priorities.forEach(t=>{text+=t.title+'\n';});
+  }
+  if(pendings.length){
+    text+='\nPENDINGS:\n';
+    pendings.forEach(t=>{text+=t.title+'\n';});
+  }
+  if(actionPlan.length){
+    text+='\n2026 Action Plan:\n';
+    actionPlan.forEach(t=>{text+=t.title+'\n';});
+  }
+  if(bau.length){
+    text+='\nBusiness as Usual:\n';
+    bau.forEach(t=>{text+=t.title+'\n';});
+  }
+
+  text+='\nI will keep you updated of my progress.\nThanks, Cath!';
+
+  navigator.clipboard.writeText(text).then(()=>{
+    toast('Morning list copied to clipboard!','success');
+  }).catch(()=>{
+    // Fallback for older browsers
+    const ta=document.createElement('textarea');
+    ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.select();document.execCommand('copy');
+    document.body.removeChild(ta);
+    toast('Morning list copied to clipboard!','success');
+  });
+};
 
 window.openTaskModal=function(id){
   const t=id?tasks.find(x=>x.id===id):null;
