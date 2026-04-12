@@ -183,7 +183,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
   <div class="sidebar-footer">
     <div id="loggedInUser" style="margin-bottom:8px;color:rgba(255,255,255,.6);"></div>
     <button onclick="handleLogout()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.6);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:11px;font-family:inherit;width:100%;transition:all .15s;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.6)'">Sign Out</button>
-    <div style="margin-top:8px;text-align:center;font-size:10px;color:rgba(255,255,255,.25);">v2.5.1</div>
+    <div style="margin-top:8px;text-align:center;font-size:10px;color:rgba(255,255,255,.25);">v2.5.2</div>
   </div>
 </nav>
 
@@ -4050,10 +4050,16 @@ function renderRefPayments(){
           <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:12px;">
             <span style="font-size:11px;padding:2px 10px;border-radius:99px;font-weight:600;${statusColors[p.status]||''}">${p.status||'Pending'}</span>
             ${p.period?`<span class="badge badge-blue">${p.period}</span>`:''}
-            ${p.statement_url?'<span style="font-size:13px;" title="Statement attached">&#128206;</span>':''}
             <span style="color:#94a3b8;margin-left:auto;">${p.payment_date?new Date(p.payment_date).toLocaleDateString('en-AU'):'No date'}</span>
           </div>
           ${p.notes?`<div style="font-size:12px;color:#64748b;margin-top:6px;">${p.notes.length>80?p.notes.substring(0,80)+'...':p.notes}</div>`:''}
+          <div style="display:flex;gap:8px;margin-top:8px;border-top:1px solid #f1f5f9;padding-top:8px;" onclick="event.stopPropagation()">
+            ${p.statement_url?`<a href="${p.statement_url}" target="_blank" style="display:inline-flex;align-items:center;gap:4px;padding:6px 12px;background:#dbeafe;color:#2563eb;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;">&#128206; View Statement</a>`:''}
+            <label style="display:inline-flex;align-items:center;gap:4px;padding:6px 12px;background:#f1f5f9;color:#64748b;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
+              &#128228; ${p.statement_url?'Replace':'Upload'} Statement
+              <input type="file" accept=".pdf,.png,.jpg,.jpeg" style="display:none;" onchange="uploadRefStatementDirect('${p.id}',this.files[0],this)">
+            </label>
+          </div>
         </div>`;
       });
     } else {
@@ -4076,7 +4082,7 @@ function renderRefPayments(){
           <td style="padding:10px 14px;text-align:right;font-weight:600;color:#1e293b;">$${(parseFloat(p.amount)||0).toFixed(2)}</td>
           <td style="padding:10px 14px;color:#475569;">${p.payment_date?new Date(p.payment_date).toLocaleDateString('en-AU'):'—'}</td>
           <td style="padding:10px 14px;text-align:center;"><span style="font-size:11px;padding:2px 10px;border-radius:99px;font-weight:500;${statusColors[p.status]||''}">${p.status||'Pending'}</span></td>
-          <td style="padding:10px 14px;text-align:center;">${p.statement_url?'<a href="'+p.statement_url+'" target="_blank" onclick="event.stopPropagation()" style="font-size:16px;text-decoration:none;" title="View statement">&#128206;</a>':''}</td>
+          <td style="padding:10px 14px;text-align:center;" onclick="event.stopPropagation();">${p.statement_url?'<a href="'+p.statement_url+'" target="_blank" style="font-size:16px;text-decoration:none;" title="View statement">&#128206;</a> ':'<label style="cursor:pointer;font-size:12px;color:#94a3b8;" title="Upload statement" onmouseover="this.style.color=\'#3b82f6\'" onmouseout="this.style.color=\'#94a3b8\'">&#128228;<input type="file" accept=".pdf,.png,.jpg,.jpeg" style="display:none;" onchange="uploadRefStatementDirect(\''+p.id+'\',this.files[0],this)"></label>'}</td>
         </tr>`;
       });
       html+=`</tbody></table></div>`;
@@ -4187,6 +4193,24 @@ window.removeRefStatement=async function(){
   document.getElementById('refPayStatementLink').href='#';
   document.getElementById('refPayUploadLabel').textContent='\u{1F4E8} Upload PDF or image';
   toast('Statement removed','success');
+};
+
+window.uploadRefStatementDirect=async function(payId,file,input){
+  if(!file) return;
+  const allowed=['.pdf','.png','.jpg','.jpeg'];
+  const ext=file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+  if(!allowed.includes(ext)){toast('Please select a PDF or image file','error');return;}
+  const label=input.parentElement;
+  const origText=label.innerHTML;
+  label.childNodes[0].textContent='Uploading...';
+  const path='referrer-statements/'+payId+'_'+Date.now()+ext;
+  const {error:upErr}=await supabase.storage.from('referrer-statements').upload(path,file,{upsert:true});
+  if(upErr){toast('Upload error: '+upErr.message,'error');label.innerHTML=origText;return;}
+  const {data:urlData}=supabase.storage.from('referrer-statements').getPublicUrl(path);
+  await supabase.from('referrer_payments').update({statement_url:urlData.publicUrl}).eq('id',payId);
+  await loadRefPayments();
+  renderRefPayments();
+  toast('Statement uploaded','success');
 };
 
 // ── IT PROJECTS ──
