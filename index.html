@@ -183,7 +183,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
   <div class="sidebar-footer">
     <div id="loggedInUser" style="margin-bottom:8px;color:rgba(255,255,255,.6);"></div>
     <button onclick="handleLogout()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.6);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:11px;font-family:inherit;width:100%;transition:all .15s;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.6)'">Sign Out</button>
-    <div style="margin-top:8px;text-align:center;font-size:10px;color:rgba(255,255,255,.25);">v2.6.0</div>
+    <div style="margin-top:8px;text-align:center;font-size:10px;color:rgba(255,255,255,.25);">v2.6.1</div>
   </div>
 </nav>
 
@@ -396,12 +396,12 @@ td .actions button{padding:8px 14px;font-size:12px;}
           <option value="">All Types</option><option>Admin</option><option>Finance</option><option>Client</option><option>Tech</option><option>Personal</option><option>System</option>
         </select>
         <button class="btn btn-blue" onclick="openTaskModal()">+ Add Task</button>
-        <div style="position:relative;display:inline-block;">
-          <button class="btn btn-gray" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block'" style="white-space:nowrap;">&#128203; Copy List &#9662;</button>
-          <div id="copyListMenu" style="display:none;position:absolute;top:100%;right:0;margin-top:4px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:50;min-width:180px;overflow:hidden;">
-            <button onclick="copyMorningList();this.parentElement.style.display='none'" style="display:flex;align-items:center;gap:8px;width:100%;padding:12px 16px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:600;color:#1e3a5f;font-family:inherit;text-align:left;" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background='none'">&#9728;&#65039; AM — Morning Plan</button>
+        <div style="position:relative;display:inline-block;" id="copyListWrap">
+          <button class="btn btn-gray" onclick="toggleCopyMenu()" style="white-space:nowrap;">&#128203; Copy List &#9662;</button>
+          <div id="copyListMenu" style="display:none;position:absolute;top:100%;right:0;margin-top:4px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:50;min-width:200px;overflow:hidden;">
+            <button onclick="copyMorningList()" style="display:flex;align-items:center;gap:8px;width:100%;padding:14px 16px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:600;color:#1e3a5f;font-family:inherit;text-align:left;" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background='none'">&#9728;&#65039; AM — Morning Plan</button>
             <div style="border-top:1px solid #f1f5f9;"></div>
-            <button onclick="copyAfternoonUpdate();this.parentElement.style.display='none'" style="display:flex;align-items:center;gap:8px;width:100%;padding:12px 16px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:600;color:#1e3a5f;font-family:inherit;text-align:left;" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background='none'">&#127749; PM — End of Day Update</button>
+            <button onclick="copyAfternoonUpdate()" style="display:flex;align-items:center;gap:8px;width:100%;padding:14px 16px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:600;color:#1e3a5f;font-family:inherit;text-align:left;" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background='none'">&#127749; PM — End of Day Update</button>
           </div>
         </div>
       </div>
@@ -3654,7 +3654,33 @@ function renderTasks(){
 }
 window.filterTasks=function(){renderTasks();};
 
+// Clipboard helper that works reliably on iOS Safari
+function copyText(text,label){
+  const ta=document.createElement('textarea');
+  ta.value=text;
+  ta.setAttribute('readonly','');
+  ta.style.cssText='position:fixed;left:-9999px;top:0;opacity:0;';
+  document.body.appendChild(ta);
+  ta.select();
+  ta.setSelectionRange(0,ta.value.length);
+  let ok=false;
+  try{ok=document.execCommand('copy');}catch(e){}
+  document.body.removeChild(ta);
+  if(ok){toast(label+' copied to clipboard!','success');}
+  else{
+    navigator.clipboard.writeText(text).then(()=>{
+      toast(label+' copied to clipboard!','success');
+    }).catch(()=>{toast('Copy failed — try again','error');});
+  }
+}
+
+window.toggleCopyMenu=function(){
+  const m=document.getElementById('copyListMenu');
+  m.style.display=m.style.display==='block'?'none':'block';
+};
+
 window.copyMorningList=function(){
+  document.getElementById('copyListMenu').style.display='none';
   const todayStr=new Date().toISOString().split('T')[0];
   const dateLabel=new Date().toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'});
   const active=tasks.filter(t=>t.status!=='Complete');
@@ -3664,92 +3690,42 @@ window.copyMorningList=function(){
   const bau=active.filter(t=>(t.work_category)==='BAU').sort(taskSorter);
 
   let text=dateLabel+'\n\nGood morning, Cath.\nThese are the things I will work today:\n';
-
-  if(priorities.length){
-    text+='\nPRIORITIES:\n';
-    priorities.forEach(t=>{text+=t.title+'\n';});
-  }
-  if(pendings.length){
-    text+='\nPENDINGS:\n';
-    pendings.forEach(t=>{text+=t.title+'\n';});
-  }
-  if(actionPlan.length){
-    text+='\n2026 Action Plan:\n';
-    actionPlan.forEach(t=>{text+=t.title+'\n';});
-  }
-  if(bau.length){
-    text+='\nBusiness as Usual:\n';
-    bau.forEach(t=>{text+=t.title+'\n';});
-  }
-
+  if(priorities.length){text+='\nPRIORITIES:\n';priorities.forEach(t=>{text+=t.title+'\n';});}
+  if(pendings.length){text+='\nPENDINGS:\n';pendings.forEach(t=>{text+=t.title+'\n';});}
+  if(actionPlan.length){text+='\n2026 Action Plan:\n';actionPlan.forEach(t=>{text+=t.title+'\n';});}
+  if(bau.length){text+='\nBusiness as Usual:\n';bau.forEach(t=>{text+=t.title+'\n';});}
   text+='\nI will keep you updated of my progress.\nThanks, Cath!';
-
-  navigator.clipboard.writeText(text).then(()=>{
-    toast('Morning list copied to clipboard!','success');
-  }).catch(()=>{
-    // Fallback for older browsers
-    const ta=document.createElement('textarea');
-    ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
-    document.body.appendChild(ta);ta.select();document.execCommand('copy');
-    document.body.removeChild(ta);
-    toast('Morning list copied to clipboard!','success');
-  });
+  copyText(text,'Morning list');
 };
 
 window.copyAfternoonUpdate=function(){
+  document.getElementById('copyListMenu').style.display='none';
   const todayStr=new Date().toISOString().split('T')[0];
   const dateLabel=new Date().toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'});
   const active=tasks.filter(t=>t.status!=='Complete');
   const completedToday=tasks.filter(t=>t.status==='Complete'&&t.updated_at&&t.updated_at.startsWith(todayStr));
   const inProgress=active.filter(t=>t.status==='In Progress').sort(taskSorter);
   const blocked=active.filter(t=>t.status==='Blocked'||t.status==='Waiting on Cath'||t.status==='Waiting on CoachVA').sort(taskSorter);
-  const priorities=active.filter(t=>t.focus_date===todayStr&&t.status!=='In Progress'&&t.status!=='Blocked'&&t.status!=='Waiting on Cath'&&t.status!=='Waiting on CoachVA').sort(taskSorter);
+  const carried=active.filter(t=>t.focus_date===todayStr&&t.status!=='In Progress'&&t.status!=='Blocked'&&t.status!=='Waiting on Cath'&&t.status!=='Waiting on CoachVA').sort(taskSorter);
 
   let text=dateLabel+'\n\nGood afternoon, Cath.\nHere is my end of day update:\n';
-
-  if(completedToday.length){
-    text+='\nCOMPLETED TODAY:\n';
-    completedToday.forEach(t=>{text+='\u2705 '+t.title+'\n';});
-  }
-  if(inProgress.length){
-    text+='\nIN PROGRESS:\n';
-    inProgress.forEach(t=>{text+='\u{1F504} '+t.title+'\n';});
-  }
-  if(blocked.length){
-    text+='\nWAITING / BLOCKED:\n';
-    blocked.forEach(t=>{
-      const label=t.status==='Waiting on Cath'?'Waiting on Cath':t.status==='Waiting on CoachVA'?'Waiting on VA':'Blocked';
-      text+='\u{26A0}\u{FE0F} '+t.title+' ('+label+')\n';
-    });
-  }
-  if(priorities.length){
-    text+='\nCARRIED TO TOMORROW:\n';
-    priorities.forEach(t=>{text+='\u{27A1}\u{FE0F} '+t.title+'\n';});
-  }
-
-  if(!completedToday.length&&!inProgress.length&&!blocked.length&&!priorities.length){
-    text+='\nNo task updates for today.\n';
-  }
-
+  if(completedToday.length){text+='\nCOMPLETED TODAY:\n';completedToday.forEach(t=>{text+='\u2705 '+t.title+'\n';});}
+  if(inProgress.length){text+='\nIN PROGRESS:\n';inProgress.forEach(t=>{text+='\u{1F504} '+t.title+'\n';});}
+  if(blocked.length){text+='\nWAITING / BLOCKED:\n';blocked.forEach(t=>{const l=t.status==='Waiting on Cath'?'Waiting on Cath':t.status==='Waiting on CoachVA'?'Waiting on VA':'Blocked';text+='\u{26A0}\u{FE0F} '+t.title+' ('+l+')\n';});}
+  if(carried.length){text+='\nCARRIED TO TOMORROW:\n';carried.forEach(t=>{text+='\u{27A1}\u{FE0F} '+t.title+'\n';});}
+  if(!completedToday.length&&!inProgress.length&&!blocked.length&&!carried.length){text+='\nNo task updates for today.\n';}
   text+='\nThanks, Cath!';
-
-  navigator.clipboard.writeText(text).then(()=>{
-    toast('PM update copied to clipboard!','success');
-  }).catch(()=>{
-    const ta=document.createElement('textarea');
-    ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
-    document.body.appendChild(ta);ta.select();document.execCommand('copy');
-    document.body.removeChild(ta);
-    toast('PM update copied to clipboard!','success');
-  });
+  copyText(text,'PM update');
 };
 
-// Close copy list dropdown when clicking elsewhere
+// Close copy menu when tapping elsewhere
+document.addEventListener('touchstart',function(e){
+  const menu=document.getElementById('copyListMenu');
+  if(menu&&menu.style.display==='block'&&!e.target.closest('#copyListWrap')) menu.style.display='none';
+});
 document.addEventListener('click',function(e){
   const menu=document.getElementById('copyListMenu');
-  if(menu&&menu.style.display==='block'&&!e.target.closest('#copyListMenu')&&!e.target.closest('[onclick*="copyListMenu"]')){
-    menu.style.display='none';
-  }
+  if(menu&&menu.style.display==='block'&&!e.target.closest('#copyListWrap')) menu.style.display='none';
 });
 
 window.openTaskModal=function(id){
