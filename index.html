@@ -183,7 +183,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
   <div class="sidebar-footer">
     <div id="loggedInUser" style="margin-bottom:8px;color:rgba(255,255,255,.6);"></div>
     <button onclick="handleLogout()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.6);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:11px;font-family:inherit;width:100%;transition:all .15s;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.6)'">Sign Out</button>
-    <div style="margin-top:8px;text-align:center;font-size:10px;color:rgba(255,255,255,.25);">v2.7.0</div>
+    <div style="margin-top:8px;text-align:center;font-size:10px;color:rgba(255,255,255,.25);">v3.0.0</div>
   </div>
 </nav>
 
@@ -333,8 +333,11 @@ td .actions button{padding:8px 14px;font-size:12px;}
     <div class="screen" id="screen-thqintake">
       <div class="toolbar">
         <input class="search-input" id="intakeSearch" placeholder="Search submissions..." oninput="renderIntakeSubmissions()">
+        <select id="intakeFormType" onchange="renderIntakeSubmissions()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
+          <option value="">All Programs</option><option value="thrivehq">ThriveHQ</option><option value="couples">Couples</option><option value="individual">Individual</option>
+        </select>
         <select id="intakeFilter" onchange="renderIntakeSubmissions()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
-          <option value="">All</option><option value="New">New</option><option value="Reviewed">Reviewed</option><option value="Converted">Converted</option>
+          <option value="">All Status</option><option value="New">New</option><option value="Reviewed">Reviewed</option><option value="Converted">Converted</option>
         </select>
         <button class="btn btn-blue" onclick="copyIntakeLink()">&#128279; Copy Intake Link</button>
       </div>
@@ -1082,8 +1085,8 @@ const areaConfig={
   crm:{label:'CRM',pages:[{id:'masterlist',icon:'&#128209;',label:'Master List'}]},
   referrers:{label:'Referrers',pages:[{id:'referrals',icon:'&#128101;',label:'Referral Hub'},{id:'refpayments',icon:'&#128176;',label:'Payments'}]},
   prospects:{label:'Prospects',pages:[{id:'prospects',icon:'&#128203;',label:'Prospect List'}]},
-  clients:{label:'Clients',pages:[{id:'clidash',icon:'&#129309;',label:'Dashboard'},{id:'clients',icon:'&#128101;',label:'Client List'},{id:'clinvoices',icon:'&#128206;',label:'Invoices'}]},
-  thrivehq:{label:'ThriveHQ',pages:[{id:'thqdash',icon:'&#128170;',label:'Dashboard'},{id:'thqintake',icon:'&#128221;',label:'Intake Forms'},{id:'thqtrials',icon:'&#127793;',label:'Trials'},{id:'thrivehq',icon:'&#128101;',label:'Members'},{id:'thqrenewals',icon:'&#128260;',label:'Renewals'},{id:'thqcalls',icon:'&#128222;',label:'Coaching Calls'}]},
+  clients:{label:'Clients',pages:[{id:'clidash',icon:'&#129309;',label:'Dashboard'},{id:'clients',icon:'&#128101;',label:'Client List'},{id:'thqintake',icon:'&#128221;',label:'Intake Forms'},{id:'clinvoices',icon:'&#128206;',label:'Invoices'}]},
+  thrivehq:{label:'ThriveHQ',pages:[{id:'thqdash',icon:'&#128170;',label:'Dashboard'},{id:'thqtrials',icon:'&#127793;',label:'Trials'},{id:'thrivehq',icon:'&#128101;',label:'Members'},{id:'thqrenewals',icon:'&#128260;',label:'Renewals'},{id:'thqcalls',icon:'&#128222;',label:'Coaching Calls'}]},
   strengths:{label:'Strengths',pages:[{id:'strdash',icon:'&#127919;',label:'Dashboard'},{id:'strengths',icon:'&#128161;',label:'Strengths Hub'}]},
   operations:{label:'Operations',pages:[{id:'opsdash',icon:'&#128736;',label:'Dashboard'},{id:'tasks',icon:'&#9989;',label:'Task Management'},{id:'playbook',icon:'&#128214;',label:'Playbook'},{id:'itprojects',icon:'&#9881;',label:'IT Projects'}]},
   finance:{label:'Finance',pages:[{id:'findash',icon:'&#128176;',label:'Dashboard'},{id:'finincome',icon:'&#128181;',label:'Income'},{id:'finspend',icon:'&#128200;',label:'Where Money Goes'},{id:'finbills',icon:'&#128196;',label:'Bills'},{id:'fintxns',icon:'&#128203;',label:'Transactions'}]},
@@ -2443,26 +2446,32 @@ async function loadIntakeSubmissions(){
 }
 
 window.copyIntakeLink=function(){
-  const url=window.location.origin+window.location.pathname.replace('index.html','')+'intake.html';
-  navigator.clipboard.writeText(url).then(()=>toast('Intake form link copied!','success')).catch(()=>{
-    const ta=document.createElement('textarea');ta.value=url;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
-    toast('Intake form link copied!','success');
-  });
+  const formType=document.getElementById('intakeFormType')?.value||'thrivehq';
+  const formFiles={thrivehq:'intake.html',couples:'couples-intake.html',individual:'individual-intake.html'};
+  const file=formFiles[formType]||'intake.html';
+  const url=window.location.origin+window.location.pathname.replace('index.html','')+file;
+  copyText(url,'Intake link');
 };
 
 function renderIntakeSubmissions(){
   const q=(document.getElementById('intakeSearch')?.value||'').toLowerCase();
   const statusFilter=document.getElementById('intakeFilter')?.value||'';
+  const formTypeFilter=document.getElementById('intakeFormType')?.value||'';
   let filtered=intakeSubmissions;
+  if(formTypeFilter) filtered=filtered.filter(s=>(s.form_type||'thrivehq')===formTypeFilter);
   if(statusFilter) filtered=filtered.filter(s=>s.status===statusFilter);
-  if(q) filtered=filtered.filter(s=>(s.first_name+' '+s.last_name+' '+s.email+' '+(s.adhd_diagnosis||'')).toLowerCase().includes(q));
+  if(q) filtered=filtered.filter(s=>(s.first_name+' '+s.last_name+' '+s.email+' '+(s.adhd_diagnosis||'')+(s.form_type||'')).toLowerCase().includes(q));
 
-  const newCount=intakeSubmissions.filter(s=>s.status==='New').length;
-  const reviewedCount=intakeSubmissions.filter(s=>s.status==='Reviewed').length;
-  const convertedCount=intakeSubmissions.filter(s=>s.status==='Converted').length;
+  const base=formTypeFilter?intakeSubmissions.filter(s=>(s.form_type||'thrivehq')===formTypeFilter):intakeSubmissions;
+  const newCount=base.filter(s=>s.status==='New').length;
+  const reviewedCount=base.filter(s=>s.status==='Reviewed').length;
+  const convertedCount=base.filter(s=>s.status==='Converted').length;
 
   const statusColors={New:'#3b82f6',Reviewed:'#d97706',Converted:'#16a34a',Archived:'#94a3b8'};
   const statusBg={New:'#dbeafe',Reviewed:'#fef3c7',Converted:'#dcfce7',Archived:'#f1f5f9'};
+  const formTypeLabels={thrivehq:'ThriveHQ',couples:'Couples',individual:'Individual'};
+  const formTypeColors={thrivehq:'#7c3aed',couples:'#e11d48',individual:'#0891b2'};
+  const formTypeBg={thrivehq:'#f5f3ff',couples:'#fff1f2',individual:'#ecfeff'};
 
   let html=`<div class="dash-cards" style="margin-bottom:16px;">
     <div class="dash-card" style="cursor:pointer;${newCount?'box-shadow:0 0 0 2px #3b82f6;':''}" onclick="document.getElementById('intakeFilter').value='New';renderIntakeSubmissions();">
@@ -2479,7 +2488,7 @@ function renderIntakeSubmissions(){
     </div>
     <div class="dash-card" style="cursor:pointer;" onclick="document.getElementById('intakeFilter').value='';renderIntakeSubmissions();">
       <div class="dc-icon" style="background:#f1f5f9;color:#64748b;">&#128101;</div>
-      <div class="dc-info"><h4>${intakeSubmissions.length}</h4><p>Total</p></div>
+      <div class="dc-info"><h4>${base.length}</h4><p>Total</p></div>
     </div>
   </div>`;
 
@@ -2490,10 +2499,12 @@ function renderIntakeSubmissions(){
   }
 
   const isMobile=window.innerWidth<=768;
+  const showFormType=!formTypeFilter;
 
   if(isMobile){
     filtered.forEach(s=>{
       const st=s.status||'New';
+      const ft=s.form_type||'thrivehq';
       const date=s.submitted_at?new Date(s.submitted_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}):'';
       html+=`<div onclick="openIntakeDetail('${s.id}')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid ${statusColors[st]||'#64748b'};border-radius:8px;padding:14px 16px;margin-bottom:8px;cursor:pointer;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
@@ -2502,20 +2513,30 @@ function renderIntakeSubmissions(){
         </div>
         <div style="font-size:12px;color:#64748b;">${s.email||''}</div>
         <div style="display:flex;gap:8px;margin-top:6px;font-size:11px;color:#94a3b8;flex-wrap:wrap;">
-          ${s.adhd_diagnosis?'<span style="background:#f5f3ff;color:#7c3aed;padding:2px 6px;border-radius:4px;font-weight:500;">'+s.adhd_diagnosis+'</span>':''}
+          ${showFormType?'<span style="background:'+(formTypeBg[ft]||'#f1f5f9')+';color:'+(formTypeColors[ft]||'#64748b')+';padding:2px 6px;border-radius:4px;font-weight:600;">'+(formTypeLabels[ft]||ft)+'</span>':''}
+          ${ft==='thrivehq'&&s.adhd_diagnosis?'<span style="background:#f5f3ff;color:#7c3aed;padding:2px 6px;border-radius:4px;font-weight:500;">'+s.adhd_diagnosis+'</span>':''}
+          ${ft==='couples'&&s.secondary_name?'<span style="background:#fff1f2;color:#e11d48;padding:2px 6px;border-radius:4px;font-weight:500;">Partner: '+s.secondary_name+'</span>':''}
+          ${ft==='individual'&&s.service_focus?'<span style="background:#ecfeff;color:#0891b2;padding:2px 6px;border-radius:4px;font-weight:500;">'+s.service_focus+'</span>':''}
           <span>${date}</span>
         </div>
       </div>`;
     });
   } else {
-    html+=`<table><thead><tr><th>Name</th><th>Email</th><th>ADHD Status</th><th>Submitted</th><th>Status</th><th>Actions</th></tr></thead><tbody>`;
+    const progCol=formTypeFilter==='couples'?'Partner':formTypeFilter==='individual'?'Service Focus':'ADHD Status';
+    html+=`<table><thead><tr><th>Name</th><th>Email</th>${showFormType?'<th>Program</th>':''}<th>${progCol}</th><th>Submitted</th><th>Status</th><th>Actions</th></tr></thead><tbody>`;
     filtered.forEach(s=>{
       const st=s.status||'New';
+      const ft=s.form_type||'thrivehq';
       const date=s.submitted_at?new Date(s.submitted_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}):'';
+      let progVal='';
+      if(ft==='thrivehq'&&s.adhd_diagnosis) progVal='<span style="background:#f5f3ff;color:#7c3aed;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;">'+s.adhd_diagnosis+'</span>';
+      else if(ft==='couples') progVal=s.secondary_name||'';
+      else if(ft==='individual') progVal=s.service_focus||'';
       html+=`<tr>
         <td style="font-weight:600;">${s.preferred_name||s.first_name} ${s.last_name}</td>
         <td>${s.email||''}</td>
-        <td>${s.adhd_diagnosis?'<span style="background:#f5f3ff;color:#7c3aed;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;">'+s.adhd_diagnosis+'</span>':''}</td>
+        ${showFormType?'<td><span style="background:'+(formTypeBg[ft]||'#f1f5f9')+';color:'+(formTypeColors[ft]||'#64748b')+';padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;">'+(formTypeLabels[ft]||ft)+'</span></td>':''}
+        <td>${progVal}</td>
         <td style="font-size:12px;color:#64748b;">${date}</td>
         <td><span style="background:${statusBg[st]||'#f1f5f9'};color:${statusColors[st]||'#64748b'};padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;">${st}</span></td>
         <td><div class="actions"><button class="btn btn-gray" onclick="openIntakeDetail('${s.id}')">View</button>${st==='New'?'<button class="btn btn-blue" onclick="markIntakeReviewed(\''+s.id+'\')">Reviewed</button>':''}</div></td>
@@ -2531,6 +2552,10 @@ window.openIntakeDetail=function(id){
   const s=intakeSubmissions.find(x=>x.id===id);
   if(!s) return;
   const st=s.status||'New';
+  const ft=s.form_type||'thrivehq';
+  const formTypeLabels={thrivehq:'ThriveHQ',couples:'Couples',individual:'Individual'};
+  const formTypeColors={thrivehq:'#7c3aed',couples:'#e11d48',individual:'#0891b2'};
+  const formTypeBg={thrivehq:'#f5f3ff',couples:'#fff1f2',individual:'#ecfeff'};
   const date=s.submitted_at?new Date(s.submitted_at).toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric'}):'';
 
   function field(label,val){return val?`<div style="margin-bottom:10px;"><div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.3px;margin-bottom:2px;">${label}</div><div style="font-size:13px;color:#1e293b;">${val}</div></div>`:'';}
@@ -2541,11 +2566,15 @@ window.openIntakeDetail=function(id){
   }
 
   let html=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
-    <h3 style="font-family:'Quicksand',sans-serif;font-size:18px;color:#1e3a5f;">${s.preferred_name||s.first_name} ${s.last_name}</h3>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <h3 style="font-family:'Quicksand',sans-serif;font-size:18px;color:#1e3a5f;">${s.preferred_name||s.first_name} ${s.last_name}</h3>
+      <span style="background:${formTypeBg[ft]||'#f1f5f9'};color:${formTypeColors[ft]||'#64748b'};padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600;">${formTypeLabels[ft]||ft}</span>
+    </div>
     <span style="background:${({New:'#dbeafe',Reviewed:'#fef3c7',Converted:'#dcfce7',Archived:'#f1f5f9'})[st]||'#f1f5f9'};color:${({New:'#2563eb',Reviewed:'#d97706',Converted:'#16a34a',Archived:'#94a3b8'})[st]||'#64748b'};padding:4px 12px;border-radius:99px;font-size:12px;font-weight:600;">${st}</span>
   </div>
   <div style="font-size:12px;color:#94a3b8;margin-bottom:16px;">Submitted ${date}</div>`;
 
+  // Personal Details
   html+=`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:12px;">
     <div style="font-weight:700;font-size:13px;color:#1e3a5f;margin-bottom:10px;">Personal Details</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px;">
@@ -2556,18 +2585,40 @@ window.openIntakeDetail=function(id){
     ${field('Date of Birth',s.date_of_birth)}
     ${field('Suburb',s.suburb)}
     ${field('Occupation',s.occupation)}
+    ${ft==='couples'?field('Partner Name',s.secondary_name):''}
+    ${ft==='couples'?field('Partner Email',s.secondary_email):''}
     </div></div>`;
 
-  html+=`<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px;padding:16px;margin-bottom:12px;">
-    <div style="font-weight:700;font-size:13px;color:#7c3aed;margin-bottom:10px;">ADHD Profile</div>
-    ${field('Diagnosis Status',s.adhd_diagnosis)}
-    ${field('Diagnosis Details',s.diagnosis_details)}
-    ${field('Current Medication',s.current_medication)}
-    ${chips('Current Support Team',s.current_support)}
-    ${field('Biggest Challenges',s.current_challenges)}
-    ${field('Goals for ThriveHQ',s.wellbeing_goals)}
-    ${chips('Areas to Work On',s.areas_of_interest)}
-  </div>`;
+  // Program-specific section
+  if(ft==='thrivehq'){
+    html+=`<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px;padding:16px;margin-bottom:12px;">
+      <div style="font-weight:700;font-size:13px;color:#7c3aed;margin-bottom:10px;">ADHD Profile</div>
+      ${field('Diagnosis Status',s.adhd_diagnosis)}
+      ${field('Diagnosis Details',s.diagnosis_details)}
+      ${field('Current Medication',s.current_medication)}
+      ${chips('Current Support Team',s.current_support)}
+      ${field('Biggest Challenges',s.current_challenges)}
+      ${field('Goals for ThriveHQ',s.wellbeing_goals)}
+      ${chips('Areas to Work On',s.areas_of_interest)}
+    </div>`;
+  } else if(ft==='couples'){
+    html+=`<div style="background:#fff1f2;border:1px solid #fecdd3;border-radius:10px;padding:16px;margin-bottom:12px;">
+      <div style="font-weight:700;font-size:13px;color:#e11d48;margin-bottom:10px;">Relationship Profile</div>
+      ${field('Relationship Status',s.relationship_status)}
+      ${field('Length of Relationship',s.relationship_length)}
+      ${field('Main Challenges',s.current_challenges)}
+      ${field('Goals for Coaching',s.wellbeing_goals)}
+      ${chips('Areas to Work On',s.areas_of_interest)}
+    </div>`;
+  } else if(ft==='individual'){
+    html+=`<div style="background:#ecfeff;border:1px solid #a5f3fc;border-radius:10px;padding:16px;margin-bottom:12px;">
+      <div style="font-weight:700;font-size:13px;color:#0891b2;margin-bottom:10px;">Coaching Profile</div>
+      ${field('Service Focus',s.service_focus)}
+      ${field('Current Situation',s.current_challenges)}
+      ${field('Goals for Coaching',s.wellbeing_goals)}
+      ${chips('Areas to Work On',s.areas_of_interest)}
+    </div>`;
+  }
 
   html+=`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:12px;">
     <div style="font-weight:700;font-size:13px;color:#1e3a5f;margin-bottom:10px;">Health & Safety</div>
@@ -2577,22 +2628,28 @@ window.openIntakeDetail=function(id){
     ${field('Emergency Phone',s.emergency_contact_phone)}
   </div>`;
 
+  // Consent — backwards compatible with old 5-field + new single consent
   html+=`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:12px;">
     <div style="font-weight:700;font-size:13px;color:#1e3a5f;margin-bottom:10px;">Referral & Consent</div>
     ${field('How They Heard',s.how_heard)}
-    ${field('Referred By',s.referrer_name)}
-    ${field('Data Consent',s.consent_data?'Yes':'No')}
-    ${field('Communications',s.consent_comms?'Yes':'No')}
-    ${field('Group Participation',s.consent_group?'Yes':'No')}
-    ${field('Photo/Video',s.consent_photo?'Yes':'No')}
-    ${field('Agreed Terms',s.agreed_terms?'Yes':'No')}
-    ${field('Signed As',s.signature_name)}
-  </div>`;
+    ${field('Referred By',s.referrer_name)}`;
+  if(s.consent_accepted!==undefined){
+    html+=field('Consent Accepted',s.consent_accepted?'Yes':'No');
+    if(s.consent_version) html+=field('Consent Version',s.consent_version);
+  } else {
+    html+=field('Data Consent',s.consent_data?'Yes':'No');
+    html+=field('Communications',s.consent_comms?'Yes':'No');
+    html+=field('Group Participation',s.consent_group?'Yes':'No');
+    html+=field('Photo/Video',s.consent_photo?'Yes':'No');
+    html+=field('Agreed Terms',s.agreed_terms?'Yes':'No');
+  }
+  html+=field('Signed As',s.signature_name);
+  html+=`</div>`;
 
   // Actions
   html+=`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;">`;
   if(st==='New') html+=`<button class="btn btn-blue" onclick="markIntakeReviewed('${s.id}')">Mark Reviewed</button>`;
-  if(st!=='Converted') html+=`<button class="btn btn-green" onclick="convertIntakeToTrial('${s.id}')">Convert to Trial</button>`;
+  if(st!=='Converted'&&ft==='thrivehq') html+=`<button class="btn btn-green" onclick="convertIntakeToTrial('${s.id}')">Convert to Trial</button>`;
   if(st!=='Archived') html+=`<button class="btn btn-gray" onclick="archiveIntake('${s.id}')">Archive</button>`;
   html+=`<button class="btn btn-gray" onclick="closeModal('intakeDetailModal')">Close</button>`;
   html+=`</div>`;
