@@ -198,7 +198,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate"></span>
-      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.1.1</span>
+      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.1.2</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -1435,16 +1435,9 @@ window.copyPlaybookSection=function(key){
 function buildPlaybookSections(todayStr){
   const active=tasks.filter(t=>t.status!=='Complete');
   const priorities=active.filter(t=>t.focus_date===todayStr).sort(taskSorter);
-  const priorityIds=new Set(priorities.map(t=>t.id));
-  const taskCat=active.filter(t=>!priorityIds.has(t.id)&&(t.work_category||'Task')==='Task').sort(taskSorter);
-  const actionPlan=active.filter(t=>!priorityIds.has(t.id)&&t.work_category==='Action Plan').sort(taskSorter);
-  const bau=active.filter(t=>!priorityIds.has(t.id)&&t.work_category==='BAU').sort(taskSorter);
   const completedToday=tasks.filter(t=>t.status==='Complete'&&t.updated_at&&t.updated_at.startsWith(todayStr));
   return [
     {key:'priorities',label:"Today's Priorities",icon:'&#9733;',color:'#f59e0b',items:priorities},
-    {key:'tasks',label:'Tasks',icon:'&#128203;',color:'#64748b',items:taskCat},
-    {key:'actionplan',label:'2026 Action Plan',icon:'&#127919;',color:'#7c3aed',items:actionPlan},
-    {key:'bau',label:'Business as Usual',icon:'&#128260;',color:'#2563eb',items:bau},
     {key:'completed',label:'Completed Today',icon:'&#10004;',color:'#16a34a',items:completedToday}
   ];
 }
