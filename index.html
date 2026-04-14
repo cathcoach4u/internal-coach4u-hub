@@ -183,7 +183,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
   <div class="sidebar-footer">
     <div id="loggedInUser" style="margin-bottom:8px;color:rgba(255,255,255,.6);"></div>
     <button onclick="handleLogout()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.6);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:11px;font-family:inherit;width:100%;transition:all .15s;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.6)'">Sign Out</button>
-    <div style="margin-top:8px;text-align:center;font-size:10px;color:rgba(255,255,255,.25);">v2.6.1</div>
+    <div style="margin-top:8px;text-align:center;font-size:10px;color:rgba(255,255,255,.25);">v2.7.0</div>
   </div>
 </nav>
 
@@ -1418,80 +1418,53 @@ function renderOpsDash(){
 window.copyDailySummary=function(){
   const now=new Date();
   const today=now.toISOString().split('T')[0];
-  const active=tasks.filter(t=>t.status!=='Complete');
-  const completedToday=tasks.filter(t=>t.status==='Complete'&&t.updated_at&&t.updated_at.startsWith(today));
-
-  // Lou's Day categories
-  const priorities=active.filter(t=>t.focus_date===today).sort(taskSorter);
-  const pendings=active.filter(t=>t.focus_date!==today&&(t.work_category||'Task')==='Task').sort(taskSorter);
-  const actionPlan=active.filter(t=>(t.work_category)==='Action Plan').sort(taskSorter);
-  const bau=active.filter(t=>(t.work_category)==='BAU').sort(taskSorter);
-
-  // Alerts
-  const needsDecision=active.filter(t=>t.decision_required==='Yes'||t.status==='Waiting on Cath');
-  const blocked=active.filter(t=>t.status==='Blocked');
-
   const dateStr=now.toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const sections=buildPlaybookSections(today);
   let summary='Hi Cath,\n\nProgress update for '+dateStr+':\n\n';
-
-  // Alerts first
-  if(needsDecision.length){
-    summary+='⚠️ NEEDS CATH\'S DECISION:\n';
-    summary+=needsDecision.map(t=>'• '+t.title+(t.due_date?' — Due: '+t.due_date:'')).join('\n');
-    summary+='\n\n';
-  }
-  if(blocked.length){
-    summary+='🚫 BLOCKED:\n';
-    summary+=blocked.map(t=>'• '+t.title+(t.blocked_reason?' — '+t.blocked_reason:'')).join('\n');
-    summary+='\n\n';
-  }
-
-  // Main sections matching Lou's format
-  if(priorities.length){
-    summary+='PRIORITIES:\n';
-    summary+=priorities.map(t=>'• '+t.title).join('\n');
-    summary+='\n\n';
-  }
-
-  if(pendings.length){
-    summary+='PENDINGS:\n';
-    summary+=pendings.map(t=>'• '+t.title).join('\n');
-    summary+='\n\n';
-  }
-
-  if(actionPlan.length){
-    summary+='2026 ACTION PLAN:\n';
-    summary+=actionPlan.map(t=>'• '+t.title).join('\n');
-    summary+='\n\n';
-  }
-
-  if(bau.length){
-    summary+='BUSINESS AS USUAL:\n';
-    summary+=bau.map(t=>'• '+t.title).join('\n');
-    summary+='\n\n';
-  }
-
-  if(completedToday.length){
-    summary+='COMPLETED TODAY:\n';
-    summary+=completedToday.map(t=>'• '+t.title).join('\n');
-    summary+='\n\n';
-  }
-
-  summary+='I will keep you updated of my progress.\nThanks, Cath!';
-
-  navigator.clipboard.writeText(summary).then(()=>{
-    toast('Daily summary copied — paste into Teams!','success');
-  }).catch(()=>{
-    // Fallback: select text from a temporary textarea
-    const ta=document.createElement('textarea');
-    ta.value=summary;
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand('copy');
-    document.body.removeChild(ta);
-    toast('Daily summary copied — paste into Teams!','success');
+  sections.forEach(s=>{
+    if(!s.items.length) return;
+    summary+=s.label.toUpperCase()+':\n';
+    s.items.forEach(t=>{
+      const st=t.status||'Not Started';
+      const tag=(st==='In Progress'||st==='Waiting on Cath'||st==='Waiting on CoachVA'||st==='Blocked')?' ['+st+']':'';
+      summary+=(s.key==='completed'?'\u2705 ':'\u2022 ')+t.title+tag+'\n';
+    });
+    summary+='\n';
   });
+  summary+='I will keep you updated of my progress.\nThanks, Cath!';
+  copyText(summary,'Daily summary');
 };
+
+window.copyPlaybookSection=function(key){
+  const today=new Date().toISOString().split('T')[0];
+  const sections=buildPlaybookSections(today);
+  const s=sections.find(x=>x.key===key);
+  if(!s||!s.items.length){toast('No items in this section','error');return;}
+  let text=s.label.toUpperCase()+':\n';
+  s.items.forEach(t=>{
+    const st=t.status||'Not Started';
+    const tag=(st==='In Progress'||st==='Waiting on Cath'||st==='Waiting on CoachVA'||st==='Blocked')?' ['+st+']':'';
+    text+=(s.key==='completed'?'\u2705 ':'\u2022 ')+t.title+tag+'\n';
+  });
+  copyText(text,s.label);
+};
+
+function buildPlaybookSections(todayStr){
+  const active=tasks.filter(t=>t.status!=='Complete');
+  const priorities=active.filter(t=>t.focus_date===todayStr).sort(taskSorter);
+  const priorityIds=new Set(priorities.map(t=>t.id));
+  const taskCat=active.filter(t=>!priorityIds.has(t.id)&&(t.work_category||'Task')==='Task').sort(taskSorter);
+  const actionPlan=active.filter(t=>!priorityIds.has(t.id)&&t.work_category==='Action Plan').sort(taskSorter);
+  const bau=active.filter(t=>!priorityIds.has(t.id)&&t.work_category==='BAU').sort(taskSorter);
+  const completedToday=tasks.filter(t=>t.status==='Complete'&&t.updated_at&&t.updated_at.startsWith(todayStr));
+  return [
+    {key:'priorities',label:"Today's Priorities",icon:'&#9733;',color:'#f59e0b',items:priorities},
+    {key:'tasks',label:'Tasks',icon:'&#128203;',color:'#64748b',items:taskCat},
+    {key:'actionplan',label:'2026 Action Plan',icon:'&#127919;',color:'#7c3aed',items:actionPlan},
+    {key:'bau',label:'Business as Usual',icon:'&#128260;',color:'#2563eb',items:bau},
+    {key:'completed',label:'Completed Today',icon:'&#10004;',color:'#16a34a',items:completedToday}
+  ];
+}
 
 // ── LOU'S PLAYBOOK ──
 let playbookLinks=[
@@ -1554,63 +1527,39 @@ function renderPlaybook(){
   const now=new Date();
   const todayStr=now.toISOString().split('T')[0];
   const dateStr=now.toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  const active=tasks.filter(t=>t.status!=='Complete');
-  const priorities=active.filter(t=>t.focus_date===todayStr).sort(taskSorter);
-  const pendings=active.filter(t=>t.focus_date!==todayStr&&(t.work_category||'Task')==='Task').sort(taskSorter);
-  const actionPlan=active.filter(t=>(t.work_category)==='Action Plan').sort(taskSorter);
-  const bau=active.filter(t=>(t.work_category)==='BAU').sort(taskSorter);
-  const completedToday=tasks.filter(t=>t.status==='Complete'&&t.updated_at&&t.updated_at.startsWith(todayStr));
-  const needsDecision=active.filter(t=>t.decision_required==='Yes'||t.status==='Waiting on Cath');
-  const blocked=active.filter(t=>t.status==='Blocked');
+  const sections=buildPlaybookSections(todayStr);
+  const statusColors={'Not Started':'#94a3b8','In Progress':'#2563eb','Waiting on Cath':'#d97706','Waiting on CoachVA':'#7c3aed','Blocked':'#dc2626','Complete':'#16a34a'};
 
   let html='';
 
-  // ── Section 1: Live Daily Update ──
+  // Header
   html+=`<div style="margin-bottom:24px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
       <div>
         <h3 style="font-family:'Quicksand',sans-serif;font-size:20px;color:#1e3a5f;margin-bottom:2px;">&#128214; Lou's Playbook</h3>
         <div style="font-size:13px;color:#64748b;">${dateStr}</div>
       </div>
-      <button class="btn btn-blue" onclick="copyDailySummary()" style="font-size:13px;">&#128203; Copy Update for Teams</button>
+      <button class="btn btn-blue" onclick="copyDailySummary()" style="font-size:13px;">&#128203; Copy All</button>
     </div>`;
 
-  // Alerts
-  if(needsDecision.length){
-    html+=`<div style="background:#fef3c7;border:1px solid #fbbf24;border-radius:10px;padding:14px 16px;margin-bottom:10px;">
-      <div style="font-weight:700;font-size:13px;color:#92400e;margin-bottom:6px;">&#9888; Needs Cath's Decision (${needsDecision.length})</div>
-      ${needsDecision.map(t=>`<div onclick="openTaskModal('${t.id}')" style="padding:6px 0;cursor:pointer;font-size:13px;color:#1e293b;">&#8226; ${t.title}${t.due_date?' <span style="color:#94a3b8;font-size:11px;">Due: '+t.due_date+'</span>':''}</div>`).join('')}
-    </div>`;
-  }
-  if(blocked.length){
-    html+=`<div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:14px 16px;margin-bottom:10px;">
-      <div style="font-weight:700;font-size:13px;color:#dc2626;margin-bottom:6px;">&#128683; Blocked (${blocked.length})</div>
-      ${blocked.map(t=>`<div onclick="openTaskModal('${t.id}')" style="padding:6px 0;cursor:pointer;font-size:13px;color:#1e293b;">&#8226; ${t.title}${t.blocked_reason?' — <span style="color:#dc2626;font-size:11px;">'+t.blocked_reason+'</span>':''}</div>`).join('')}
-    </div>`;
-  }
-
-  // Task sections as cards
-  function pbSection(title,icon,color,items){
-    if(!items.length) return '';
-    return `<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid ${color};border-radius:10px;padding:14px 16px;margin-bottom:10px;">
-      <div style="font-weight:700;font-size:13px;color:${color};margin-bottom:8px;">${icon} ${title} (${items.length})</div>
-      ${items.map(t=>{
+  // Category sections
+  sections.forEach(s=>{
+    if(!s.items.length) return;
+    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid ${s.color};border-radius:10px;padding:14px 16px;margin-bottom:10px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <span style="font-weight:700;font-size:14px;color:${s.color};">${s.icon} ${s.label} <span style="font-weight:500;font-size:12px;color:#94a3b8;">(${s.items.length})</span></span>
+        <button onclick="copyPlaybookSection('${s.key}')" style="background:none;border:1px solid #e2e8f0;border-radius:6px;padding:4px 10px;font-size:11px;color:#64748b;cursor:pointer;font-family:inherit;font-weight:600;white-space:nowrap;" onmouseover="this.style.background='#f0f6ff';this.style.color='#2563eb'" onmouseout="this.style.background='none';this.style.color='#64748b'">&#128203; Copy</button>
+      </div>
+      ${s.items.map(t=>{
         const st=t.status||'Not Started';
-        const statusColors={'Not Started':'#94a3b8','In Progress':'#2563eb','Waiting on Cath':'#d97706','Waiting on CoachVA':'#7c3aed','Blocked':'#dc2626','Complete':'#16a34a'};
-        return `<div onclick="openTaskModal('${t.id}')" style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;cursor:pointer;gap:8px;flex-wrap:wrap;">
+        return `<div onclick="openTaskModal('${t.id}')" style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;cursor:pointer;gap:8px;">
           <span style="font-size:13px;color:#1e293b;flex:1;min-width:0;">&#8226; ${t.title}</span>
           <span style="font-size:10px;padding:2px 8px;border-radius:99px;background:#f1f5f9;color:${statusColors[st]||'#64748b'};font-weight:600;white-space:nowrap;">${st}</span>
         </div>`;
       }).join('')}
     </div>`;
-  }
+  });
 
-  html+=pbSection("Today's Priorities",'&#9733;','#f59e0b',priorities);
-  html+=pbSection('Pending Tasks','&#128203;','#64748b',pendings.slice(0,15));
-  if(pendings.length>15) html+=`<div style="text-align:center;margin-bottom:10px;"><button class="btn btn-gray" onclick="navTo('tasks')" style="font-size:12px;">View all ${pendings.length} pending tasks</button></div>`;
-  html+=pbSection('Action Plan','&#127919;','#7c3aed',actionPlan);
-  html+=pbSection('BAU (Daily Monitoring)','&#128260;','#2563eb',bau);
-  if(completedToday.length) html+=pbSection('Completed Today','&#10004;','#16a34a',completedToday);
   html+=`</div>`;
 
   // ── Section 2: Daily Procedures ──
