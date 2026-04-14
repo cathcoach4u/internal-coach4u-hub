@@ -198,7 +198,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate"></span>
-      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.0.5</span>
+      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.0.6</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -339,9 +339,9 @@ td .actions button{padding:8px 14px;font-size:12px;}
         <select id="intakeFilter" onchange="renderIntakeSubmissions()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
           <option value="">All Status</option><option value="New">New</option><option value="Reviewed">Reviewed</option><option value="Converted">Converted</option>
         </select>
-        <button onclick="copyIntakeLink('thrivehq')" style="padding:6px 12px;border:1px solid #ddd6fe;border-radius:99px;font-size:11px;font-weight:600;color:#7c3aed;background:#f5f3ff;cursor:pointer;font-family:inherit;white-space:nowrap;" onmouseover="this.style.background='#ede9fe'" onmouseout="this.style.background='#f5f3ff'">&#128279; ThriveHQ</button>
-        <button onclick="copyIntakeLink('couples')" style="padding:6px 12px;border:1px solid #fecdd3;border-radius:99px;font-size:11px;font-weight:600;color:#e11d48;background:#fff1f2;cursor:pointer;font-family:inherit;white-space:nowrap;" onmouseover="this.style.background='#ffe4e6'" onmouseout="this.style.background='#fff1f2'">&#128279; Couples</button>
-        <button onclick="copyIntakeLink('individual')" style="padding:6px 12px;border:1px solid #a5f3fc;border-radius:99px;font-size:11px;font-weight:600;color:#0891b2;background:#ecfeff;cursor:pointer;font-family:inherit;white-space:nowrap;" onmouseover="this.style.background='#cffafe'" onmouseout="this.style.background='#ecfeff'">&#128279; Individual</button>
+        <button onclick="copyIntakeLink('thrivehq')" style="padding:6px 12px;border:1px solid #bfdbfe;border-radius:99px;font-size:11px;font-weight:600;color:#1e3a5f;background:#dbeafe;cursor:pointer;font-family:inherit;white-space:nowrap;" onmouseover="this.style.background='#bfdbfe'" onmouseout="this.style.background='#dbeafe'">&#128279; ThriveHQ</button>
+        <button onclick="copyIntakeLink('couples')" style="padding:6px 12px;border:1px solid #bfdbfe;border-radius:99px;font-size:11px;font-weight:600;color:#1e3a5f;background:#dbeafe;cursor:pointer;font-family:inherit;white-space:nowrap;" onmouseover="this.style.background='#bfdbfe'" onmouseout="this.style.background='#dbeafe'">&#128279; Couples</button>
+        <button onclick="copyIntakeLink('individual')" style="padding:6px 12px;border:1px solid #bfdbfe;border-radius:99px;font-size:11px;font-weight:600;color:#1e3a5f;background:#dbeafe;cursor:pointer;font-family:inherit;white-space:nowrap;" onmouseover="this.style.background='#bfdbfe'" onmouseout="this.style.background='#dbeafe'">&#128279; Individual</button>
       </div>
       <div id="intakeContent"></div>
     </div>
@@ -2472,8 +2472,8 @@ function renderIntakeSubmissions(){
   const statusColors={New:'#3b82f6',Reviewed:'#d97706',Converted:'#16a34a',Archived:'#94a3b8'};
   const statusBg={New:'#dbeafe',Reviewed:'#fef3c7',Converted:'#dcfce7',Archived:'#f1f5f9'};
   const formTypeLabels={thrivehq:'ThriveHQ',couples:'Couples',individual:'Individual'};
-  const formTypeColors={thrivehq:'#7c3aed',couples:'#e11d48',individual:'#0891b2'};
-  const formTypeBg={thrivehq:'#f5f3ff',couples:'#fff1f2',individual:'#ecfeff'};
+  const formTypeColors={thrivehq:'#1e3a5f',couples:'#1e3a5f',individual:'#1e3a5f'};
+  const formTypeBg={thrivehq:'#dbeafe',couples:'#dbeafe',individual:'#dbeafe'};
 
   let html=`<div class="dash-cards" style="margin-bottom:16px;">
     <div class="dash-card" style="cursor:pointer;${newCount?'box-shadow:0 0 0 2px #3b82f6;':''}" onclick="document.getElementById('intakeFilter').value='New';renderIntakeSubmissions();">
@@ -2556,8 +2556,8 @@ window.openIntakeDetail=function(id){
   const st=s.status||'New';
   const ft=s.form_type||'thrivehq';
   const formTypeLabels={thrivehq:'ThriveHQ',couples:'Couples',individual:'Individual'};
-  const formTypeColors={thrivehq:'#7c3aed',couples:'#e11d48',individual:'#0891b2'};
-  const formTypeBg={thrivehq:'#f5f3ff',couples:'#fff1f2',individual:'#ecfeff'};
+  const formTypeColors={thrivehq:'#1e3a5f',couples:'#1e3a5f',individual:'#1e3a5f'};
+  const formTypeBg={thrivehq:'#dbeafe',couples:'#dbeafe',individual:'#dbeafe'};
   const date=s.submitted_at?new Date(s.submitted_at).toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric'}):'';
 
   function field(label,val){return val?`<div style="margin-bottom:10px;"><div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.3px;margin-bottom:2px;">${label}</div><div style="font-size:13px;color:#1e293b;">${val}</div></div>`:'';}
