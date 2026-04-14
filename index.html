@@ -183,7 +183,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
   <div class="sidebar-footer">
     <div id="loggedInUser" style="margin-bottom:8px;color:rgba(255,255,255,.6);"></div>
     <button onclick="handleLogout()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.6);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:11px;font-family:inherit;width:100%;transition:all .15s;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.6)'">Sign Out</button>
-    <div style="margin-top:8px;text-align:center;font-size:10px;color:rgba(255,255,255,.25);">v3.0.0</div>
+    <div style="margin-top:8px;text-align:center;font-size:10px;color:rgba(255,255,255,.25);">v3.0.1</div>
   </div>
 </nav>
 
@@ -339,7 +339,14 @@ td .actions button{padding:8px 14px;font-size:12px;}
         <select id="intakeFilter" onchange="renderIntakeSubmissions()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
           <option value="">All Status</option><option value="New">New</option><option value="Reviewed">Reviewed</option><option value="Converted">Converted</option>
         </select>
-        <button class="btn btn-blue" onclick="copyIntakeLink()">&#128279; Copy Intake Link</button>
+        <div style="position:relative;display:inline-block;" id="intakeLinkMenu">
+          <button class="btn btn-blue" onclick="document.getElementById('intakeLinkDropdown').style.display=document.getElementById('intakeLinkDropdown').style.display==='block'?'none':'block'" style="white-space:nowrap;">&#128279; Copy Intake Link &#9662;</button>
+          <div id="intakeLinkDropdown" style="display:none;position:absolute;right:0;top:100%;margin-top:4px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.1);min-width:200px;z-index:100;overflow:hidden;">
+            <div onclick="copyIntakeLink('thrivehq')" style="padding:10px 16px;cursor:pointer;font-size:13px;font-weight:500;color:#1e293b;border-bottom:1px solid #f1f5f9;" onmouseover="this.style.background='#f5f3ff'" onmouseout="this.style.background='#fff'"><span style="color:#7c3aed;font-weight:700;">&#128170;</span> ThriveHQ</div>
+            <div onclick="copyIntakeLink('couples')" style="padding:10px 16px;cursor:pointer;font-size:13px;font-weight:500;color:#1e293b;border-bottom:1px solid #f1f5f9;" onmouseover="this.style.background='#fff1f2'" onmouseout="this.style.background='#fff'"><span style="color:#e11d48;font-weight:700;">&#128149;</span> Couples</div>
+            <div onclick="copyIntakeLink('individual')" style="padding:10px 16px;cursor:pointer;font-size:13px;font-weight:500;color:#1e293b;" onmouseover="this.style.background='#ecfeff'" onmouseout="this.style.background='#fff'"><span style="color:#0891b2;font-weight:700;">&#127775;</span> Individual</div>
+          </div>
+        </div>
       </div>
       <div id="intakeContent"></div>
     </div>
@@ -2445,12 +2452,13 @@ async function loadIntakeSubmissions(){
   if(error&&error.code!=='42P01') console.error('Load intake error:',error);
 }
 
-window.copyIntakeLink=function(){
-  const formType=document.getElementById('intakeFormType')?.value||'thrivehq';
+window.copyIntakeLink=function(formType){
+  document.getElementById('intakeLinkDropdown').style.display='none';
   const formFiles={thrivehq:'intake.html',couples:'couples-intake.html',individual:'individual-intake.html'};
+  const labels={thrivehq:'ThriveHQ intake link',couples:'Couples intake link',individual:'Individual intake link'};
   const file=formFiles[formType]||'intake.html';
   const url=window.location.origin+window.location.pathname.replace('index.html','')+file;
-  copyText(url,'Intake link');
+  copyText(url,labels[formType]||'Intake link');
 };
 
 function renderIntakeSubmissions(){
@@ -3732,6 +3740,8 @@ document.addEventListener('touchstart',function(e){
 document.addEventListener('click',function(e){
   const menu=document.getElementById('copyListMenu');
   if(menu&&menu.style.display==='block'&&!e.target.closest('#copyListWrap')) menu.style.display='none';
+  const ilMenu=document.getElementById('intakeLinkDropdown');
+  if(ilMenu&&ilMenu.style.display==='block'&&!e.target.closest('#intakeLinkMenu')) ilMenu.style.display='none';
 });
 
 window.openTaskModal=function(id){
