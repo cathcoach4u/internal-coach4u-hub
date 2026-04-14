@@ -198,7 +198,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate"></span>
-      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.1.0</span>
+      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.1.1</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -1349,40 +1349,16 @@ function renderOpsDash(){
   const now=new Date();
   const todayStr=now.toISOString().split('T')[0];
   const active=tasks.filter(t=>t.status!=='Complete');
-  const needsDecision=active.filter(t=>t.decision_required==='Yes'||t.status==='Waiting on Cath');
   const blocked=active.filter(t=>t.status==='Blocked');
   const waitingVA=active.filter(t=>t.status==='Waiting on CoachVA');
-  const inProgress=active.filter(t=>t.status==='In Progress');
   const overdue=active.filter(t=>t.due_date&&new Date(t.due_date)<now);
-  const urgent=active.filter(t=>t.priority==='Urgent');
   const completedToday=tasks.filter(t=>t.status==='Complete'&&t.updated_at&&t.updated_at.startsWith(todayStr));
   const focusToday=active.filter(t=>t.focus_date===todayStr);
 
-  function briefingSection(title,icon,color,items,emptyMsg){
-    if(!items.length) return '';
-    return `<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid ${color};border-radius:12px;padding:16px 20px;margin-bottom:12px;">
-      <div style="font-weight:700;font-size:14px;color:${color};margin-bottom:10px;">${icon} ${title} (${items.length})</div>
-      <div style="display:flex;flex-direction:column;gap:6px;">
-        ${items.map(t=>`<div onclick="openTaskModal('${t.id}')" style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid #f1f5f9;border-radius:8px;cursor:pointer;gap:8px;flex-wrap:wrap;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
-          <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">
-            <span style="font-weight:600;font-size:13px;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${t.title}</span>
-            ${t.task_type?'<span style="font-size:10px;padding:2px 6px;border-radius:99px;background:#f1f5f9;color:#64748b;">'+t.task_type+'</span>':''}
-          </div>
-          <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
-            <span style="font-size:10px;color:#94a3b8;">${t.owner||''}</span>
-            ${t.blocked_reason?'<span style="font-size:10px;color:#dc2626;">'+t.blocked_reason+'</span>':''}
-            ${t.due_date?'<span style="font-size:10px;color:'+(overdue.includes(t)?'#dc2626':'#64748b')+';font-weight:600;">'+t.due_date+'</span>':''}
-          </div>
-        </div>`).join('')}
-      </div>
-    </div>`;
-  }
-
-  // Stats cards
   let html=`<div class="dash-cards">
-    <div class="dash-card" onclick="navTo('tasks');document.getElementById('tkFilterView').value='my-decisions';filterTasks();" style="cursor:pointer;${needsDecision.length?'box-shadow:0 0 0 2px #fbbf24;':''}">
-      <div class="dc-icon" style="background:${needsDecision.length?'#fef3c7':'#f1f5f9'};color:${needsDecision.length?'#d97706':'#64748b'};">&#9888;</div>
-      <div class="dc-info"><h4>${needsDecision.length}</h4><p>Needs Cath's Decision</p></div>
+    <div class="dash-card" onclick="navTo('playbook')" style="cursor:pointer;${focusToday.length?'box-shadow:0 0 0 2px #f59e0b;':''}">
+      <div class="dc-icon" style="background:#fef3c7;color:#d97706;">&#9733;</div>
+      <div class="dc-info"><h4>${focusToday.length}</h4><p>Today's Focus</p></div>
     </div>
     <div class="dash-card" onclick="navTo('tasks');document.getElementById('tkFilterView').value='waiting';filterTasks();" style="cursor:pointer;">
       <div class="dc-icon" style="background:${blocked.length?'#fef2f2':'#eff6ff'};color:${blocked.length?'#dc2626':'#2563eb'};">&#128683;</div>
@@ -1398,23 +1374,25 @@ function renderOpsDash(){
     </div>
   </div>`;
 
-  // Lou's Focus Today
-  if(focusToday.length){
-    html+=briefingSection('Lou\'s Focus Today','&#9733;','#f59e0b',focusToday);
+  // Overdue alert
+  if(overdue.length){
+    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #ef4444;border-radius:12px;padding:16px 20px;margin-bottom:12px;">
+      <div style="font-weight:700;font-size:14px;color:#ef4444;margin-bottom:10px;">&#128344; Overdue (${overdue.length})</div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        ${overdue.map(t=>`<div onclick="openTaskModal('${t.id}')" style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid #f1f5f9;border-radius:8px;cursor:pointer;gap:8px;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
+          <span style="font-weight:600;font-size:13px;color:#1e293b;">${t.title}</span>
+          <span style="font-size:10px;color:#dc2626;font-weight:600;">${t.due_date}</span>
+        </div>`).join('')}
+      </div>
+    </div>`;
   }
-  // Sections in priority order — what Cath needs to see first
-  html+=briefingSection('Needs Cath\'s Decision','&#9888;','#d97706',needsDecision);
-  html+=briefingSection('Blocked','&#128683;','#dc2626',blocked);
-  html+=briefingSection('Overdue','&#128344;','#ef4444',overdue.filter(t=>!needsDecision.includes(t)&&!blocked.includes(t)));
-  html+=briefingSection('Urgent','&#9889;','#dc2626',urgent.filter(t=>!needsDecision.includes(t)&&!blocked.includes(t)&&!overdue.includes(t)));
-  html+=briefingSection('In Progress','&#9654;','#2563eb',inProgress.filter(t=>!needsDecision.includes(t)&&!blocked.includes(t)));
-  html+=briefingSection('Waiting on CoachVA','&#9203;','#7c3aed',waitingVA);
 
   if(!active.length) html+='<div style="padding:30px;text-align:center;color:#94a3b8;">All clear — no active tasks.</div>';
 
-  // Daily Summary button — always available
-  html+=`<div style="margin-top:16px;text-align:center;">
-    <button class="btn" onclick="copyDailySummary()" style="background:#1e3a5f;color:#fff;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;">&#128203; Copy Daily Summary</button>
+  // Quick links
+  html+=`<div style="display:flex;gap:10px;margin-top:16px;justify-content:center;flex-wrap:wrap;">
+    <button class="btn btn-blue" onclick="navTo('playbook')" style="font-size:13px;">&#128214; Open Playbook</button>
+    <button class="btn" onclick="copyDailySummary()" style="background:#1e3a5f;color:#fff;padding:12px 24px;border-radius:8px;font-size:13px;font-weight:600;">&#128203; Copy Daily Summary</button>
   </div>`;
 
   document.getElementById('opsDashContent').innerHTML=html;
