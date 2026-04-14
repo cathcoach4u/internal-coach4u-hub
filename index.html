@@ -198,7 +198,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate"></span>
-      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.1.3</span>
+      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.1.4</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -3610,9 +3610,17 @@ function renderTasks(){
     // Lou's Day view: 4 sections matching her Teams format
     const active=filtered.filter(t=>t.status!=='Complete');
     const priorities=active.filter(t=>t.focus_date===todayStr).sort(taskSorter);
-    const pendings=active.filter(t=>t.focus_date!==todayStr&&(t.work_category||'Task')==='Task').sort(taskSorter);
-    const actionPlan=active.filter(t=>(t.work_category)==='Action Plan').sort(taskSorter);
-    const bau=active.filter(t=>(t.work_category)==='BAU').sort(taskSorter);
+    const priorityIds=new Set(priorities.map(t=>t.id));
+    const needsDecision=active.filter(t=>!priorityIds.has(t.id)&&(t.decision_required==='Yes'||t.status==='Waiting on Cath')).sort(taskSorter);
+    const decisionIds=new Set(needsDecision.map(t=>t.id));
+    const blocked=active.filter(t=>!priorityIds.has(t.id)&&!decisionIds.has(t.id)&&t.status==='Blocked').sort(taskSorter);
+    const blockedIds=new Set(blocked.map(t=>t.id));
+    const inProgress=active.filter(t=>!priorityIds.has(t.id)&&!decisionIds.has(t.id)&&!blockedIds.has(t.id)&&t.status==='In Progress').sort(taskSorter);
+    const inProgressIds=new Set(inProgress.map(t=>t.id));
+    const exclude=new Set([...priorityIds,...decisionIds,...blockedIds,...inProgressIds]);
+    const taskCat=active.filter(t=>!exclude.has(t.id)&&(t.work_category||'Task')==='Task').sort(taskSorter);
+    const actionPlan=active.filter(t=>!exclude.has(t.id)&&t.work_category==='Action Plan').sort(taskSorter);
+    const bau=active.filter(t=>!exclude.has(t.id)&&t.work_category==='BAU').sort(taskSorter);
     const completedToday=filtered.filter(t=>t.status==='Complete'&&t.updated_at&&t.updated_at.startsWith(todayStr));
 
     if(!priorities.length){
@@ -3621,9 +3629,12 @@ function renderTasks(){
       </div>`;
     }
     html+=renderTaskSection("Today's Priorities",'&#9733;','#f59e0b',priorities,true);
-    html+=renderTaskSection('Pending','&#128203;','#64748b',pendings,true);
-    html+=renderTaskSection('Action Plan','&#127919;','#7c3aed',actionPlan,true);
-    html+=renderTaskSection('BAU (Daily Monitoring)','&#128260;','#2563eb',bau,false);
+    html+=renderTaskSection('Needs Decision','&#9888;','#d97706',needsDecision,true);
+    html+=renderTaskSection('Blocked','&#128683;','#dc2626',blocked,true);
+    html+=renderTaskSection('In Progress','&#9654;','#2563eb',inProgress,true);
+    html+=renderTaskSection('Tasks','&#128203;','#64748b',taskCat,true);
+    html+=renderTaskSection('2026 Action Plan','&#127919;','#7c3aed',actionPlan,true);
+    html+=renderTaskSection('Business as Usual','&#128260;','#0891b2',bau,true);
     if(completedToday.length) html+=renderTaskSection('Completed Today','&#10004;','#16a34a',completedToday,false);
 
   } else {
