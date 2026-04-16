@@ -198,7 +198,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate"></span>
-      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.1.5</span>
+      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.1.6</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -3947,7 +3947,7 @@ function renderReferrals(){
               ${clients.filter(cl=>cl.referred_by!==r.id).map(cl=>'<option value="'+cl.id+'">'+cl.relationship_name+'</option>').join('')}
             </select>
           </div>
-          ${r.notes?'<div style="font-size:12px;color:#64748b;padding-top:8px;border-top:1px solid #f1f5f9;">'+r.notes+'</div>':''}
+          ${r.notes?'<div style="font-size:12px;color:#64748b;padding-top:8px;border-top:1px solid #f1f5f9;">'+r.notes.replace(/(https?:\/\/[^\s<,|]+)/g,'<a href="$1" target="_blank" onclick="event.stopPropagation()" style="color:#3b82f6;text-decoration:none;font-weight:600;word-break:break-all;">$1</a>')+'</div>':''}
         </div>`}
       </div>`;
     });
