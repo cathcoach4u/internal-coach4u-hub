@@ -198,7 +198,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate"></span>
-      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.1.4</span>
+      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.1.5</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -388,17 +388,9 @@ td .actions button{padding:8px 14px;font-size:12px;}
       <div class="toolbar" style="flex-wrap:wrap;gap:8px;">
         <input class="search-input" id="tkSearch" placeholder="Search tasks..." oninput="filterTasks()" style="min-width:140px;">
         <select id="tkFilterView" onchange="filterTasks()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;font-weight:600;">
-          <option value="lousday">Lou's Day</option>
-          <option value="active">Active Tasks</option>
-          <option value="my-decisions">Needs Decision</option>
-          <option value="waiting">Waiting / Blocked</option>
-          <option value="cath">Cath's Tasks</option>
-          <option value="va">CoachVA Tasks</option>
+          <option value="active">Active</option>
           <option value="complete">Completed</option>
-          <option value="all">All Tasks</option>
-        </select>
-        <select id="tkFilterType" onchange="filterTasks()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
-          <option value="">All Types</option><option>Admin</option><option>Finance</option><option>Client</option><option>Tech</option><option>Personal</option><option>System</option>
+          <option value="all">All</option>
         </select>
         <button class="btn btn-blue" onclick="openTaskModal()">+ Add Task</button>
         <div style="position:relative;display:inline-block;" id="copyListWrap">
@@ -737,6 +729,8 @@ td .actions button{padding:8px 14px;font-size:12px;}
     <div class="form-group"><label>ThriveHQ Membership Start</label><input id="cMemberStart" type="date" onchange="autoRenewalDate()"></div>
     <div class="form-group"><label>ThriveHQ Renewal Date</label><input id="cRenewal" type="date"></div>
     <div class="form-group"><label>Referrer</label><input id="cReferrer" placeholder="Who referred this contact?"></div>
+    <div class="form-group"><label>Link 1</label><div style="display:flex;gap:6px;"><input id="cLink1" placeholder="https://..." style="flex:1;"><a id="cLink1Open" href="#" target="_blank" onclick="event.preventDefault();const u=document.getElementById('cLink1').value.trim();if(u)window.open(u,'_blank');" style="display:flex;align-items:center;padding:0 10px;font-size:12px;color:#3b82f6;text-decoration:none;font-weight:600;white-space:nowrap;">Open &#8599;</a></div></div>
+    <div class="form-group"><label>Link 2</label><div style="display:flex;gap:6px;"><input id="cLink2" placeholder="https://..." style="flex:1;"><a id="cLink2Open" href="#" target="_blank" onclick="event.preventDefault();const u=document.getElementById('cLink2').value.trim();if(u)window.open(u,'_blank');" style="display:flex;align-items:center;padding:0 10px;font-size:12px;color:#3b82f6;text-decoration:none;font-weight:600;white-space:nowrap;">Open &#8599;</a></div></div>
     <div class="form-group"><label>Notes</label><textarea id="cNotes"></textarea></div>
     <div class="modal-actions">
       <button class="btn btn-gray" onclick="closeModal('contactModal')">Cancel</button>
@@ -2041,6 +2035,8 @@ window.openContactModal=function(id){
   document.getElementById('cMemberStart').value=c?c.membership_start_date||'':'';
   document.getElementById('cRenewal').value=c?c.renewal_date||'':'';
   document.getElementById('cReferrer').value=c?c.referrer||'':'';
+  document.getElementById('cLink1').value=c?c.link_1||'':'';
+  document.getElementById('cLink2').value=c?c.link_2||'':'';
   document.getElementById('cNotes').value=c?c.notes:'';
   // Build 10 strength dropdowns
   const grid=document.getElementById('cStrengthsGrid');
@@ -2079,6 +2075,8 @@ window.saveContact=async function(){
     membership_start_date:document.getElementById('cMemberStart').value||null,
     renewal_date:document.getElementById('cRenewal').value||null,
     referrer:document.getElementById('cReferrer').value.trim()||null,
+    link_1:document.getElementById('cLink1').value.trim()||null,
+    link_2:document.getElementById('cLink2').value.trim()||null,
     notes:document.getElementById('cNotes').value.trim()
   };
   for(let i=1;i<=10;i++){
@@ -3595,32 +3593,31 @@ function renderTaskSection(title,icon,color,items,showStar){
 function renderTasks(){
   const q=document.getElementById('tkSearch').value.toLowerCase();
   const view=document.getElementById('tkFilterView').value;
-  const typeFilter=document.getElementById('tkFilterType').value;
   const todayStr=new Date().toISOString().split('T')[0];
   let filtered=tasks;
-
-  // Apply type filter
-  if(typeFilter) filtered=filtered.filter(t=>t.task_type===typeFilter);
-  // Apply search
   if(q) filtered=filtered.filter(t=>(t.title+' '+(t.owner||'')+' '+(t.description||'')+' '+(t.task_type||'')).toLowerCase().includes(q));
 
   let html='';
 
-  if(view==='lousday'){
-    // Lou's Day view: 4 sections matching her Teams format
+  if(view==='complete'){
+    const completed=filtered.filter(t=>t.status==='Complete').sort((a,b)=>(b.updated_at||'').localeCompare(a.updated_at||''));
+    html+=renderTaskSection('Completed','&#10004;','#16a34a',completed,false);
+  } else {
+    if(view==='active') filtered=filtered.filter(t=>t.status!=='Complete');
     const active=filtered.filter(t=>t.status!=='Complete');
     const priorities=active.filter(t=>t.focus_date===todayStr).sort(taskSorter);
     const priorityIds=new Set(priorities.map(t=>t.id));
-    const needsDecision=active.filter(t=>!priorityIds.has(t.id)&&(t.decision_required==='Yes'||t.status==='Waiting on Cath')).sort(taskSorter);
+    const rest=active.filter(t=>!priorityIds.has(t.id));
+    const needsDecision=rest.filter(t=>t.decision_required==='Yes'||t.status==='Waiting on Cath').sort(taskSorter);
     const decisionIds=new Set(needsDecision.map(t=>t.id));
-    const blocked=active.filter(t=>!priorityIds.has(t.id)&&!decisionIds.has(t.id)&&t.status==='Blocked').sort(taskSorter);
+    const blocked=rest.filter(t=>!decisionIds.has(t.id)&&t.status==='Blocked').sort(taskSorter);
     const blockedIds=new Set(blocked.map(t=>t.id));
-    const inProgress=active.filter(t=>!priorityIds.has(t.id)&&!decisionIds.has(t.id)&&!blockedIds.has(t.id)&&t.status==='In Progress').sort(taskSorter);
+    const inProgress=rest.filter(t=>!decisionIds.has(t.id)&&!blockedIds.has(t.id)&&t.status==='In Progress').sort(taskSorter);
     const inProgressIds=new Set(inProgress.map(t=>t.id));
     const exclude=new Set([...priorityIds,...decisionIds,...blockedIds,...inProgressIds]);
-    const taskCat=active.filter(t=>!exclude.has(t.id)&&(t.work_category||'Task')==='Task').sort(taskSorter);
-    const actionPlan=active.filter(t=>!exclude.has(t.id)&&t.work_category==='Action Plan').sort(taskSorter);
-    const bau=active.filter(t=>!exclude.has(t.id)&&t.work_category==='BAU').sort(taskSorter);
+    const taskCat=rest.filter(t=>!exclude.has(t.id)&&(t.work_category||'Task')==='Task').sort(taskSorter);
+    const actionPlan=rest.filter(t=>!exclude.has(t.id)&&t.work_category==='Action Plan').sort(taskSorter);
+    const bau=rest.filter(t=>!exclude.has(t.id)&&t.work_category==='BAU').sort(taskSorter);
     const completedToday=filtered.filter(t=>t.status==='Complete'&&t.updated_at&&t.updated_at.startsWith(todayStr));
 
     if(!priorities.length){
@@ -3636,26 +3633,6 @@ function renderTasks(){
     html+=renderTaskSection('2026 Action Plan','&#127919;','#7c3aed',actionPlan,true);
     html+=renderTaskSection('Business as Usual','&#128260;','#0891b2',bau,true);
     if(completedToday.length) html+=renderTaskSection('Completed Today','&#10004;','#16a34a',completedToday,false);
-
-  } else {
-    // Standard status-based views
-    if(view==='active') filtered=filtered.filter(t=>t.status!=='Complete');
-    else if(view==='my-decisions') filtered=filtered.filter(t=>(t.decision_required==='Yes'||t.status==='Waiting on Cath')&&t.status!=='Complete');
-    else if(view==='waiting') filtered=filtered.filter(t=>['Waiting on Cath','Waiting on CoachVA','Blocked'].includes(t.status));
-    else if(view==='cath') filtered=filtered.filter(t=>t.owner==='Cath Baker'&&t.status!=='Complete');
-    else if(view==='va') filtered=filtered.filter(t=>t.owner==='CoachVA (Lou)'&&t.status!=='Complete');
-    else if(view==='complete') filtered=filtered.filter(t=>t.status==='Complete');
-
-    const statusOrder=['Waiting on Cath','Blocked','In Progress','Not Started','Waiting on CoachVA','Complete'];
-    const statusColors={'Not Started':'#64748b','In Progress':'#2563eb','Waiting on Cath':'#d97706','Waiting on CoachVA':'#7c3aed','Blocked':'#dc2626','Complete':'#16a34a'};
-    const grouped={};
-    filtered.forEach(t=>{const s=t.status||'Not Started';if(!grouped[s])grouped[s]=[];grouped[s].push(t);});
-    Object.values(grouped).forEach(arr=>arr.sort(taskSorter));
-
-    statusOrder.forEach(s=>{
-      if(!grouped[s]||!grouped[s].length)return;
-      html+=renderTaskSection(s,'',statusColors[s]||'#64748b',grouped[s],true);
-    });
   }
 
   document.getElementById('tkCards').innerHTML=html||'<div style="padding:20px;text-align:center;color:#94a3b8;">No tasks found.</div>';
@@ -3951,11 +3928,11 @@ function renderReferrals(){
           ${memberContacts.length?`<div style="margin-bottom:12px;">
             <div style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Contacts</div>
             <div style="display:flex;flex-direction:column;gap:6px;">
-              ${memberContacts.map(c=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border:1px solid #f1f5f9;border-radius:8px;">
-                <span style="font-weight:600;font-size:13px;color:#1e293b;">${c.first_name} ${c.last_name}</span>
+              ${memberContacts.map(c=>`<div onclick="event.stopPropagation();openContactModal('${c.id}')" style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border:1px solid #f1f5f9;border-radius:8px;cursor:pointer;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+                <span style="font-weight:600;font-size:13px;color:#1e3a5f;">${c.first_name} ${c.last_name}</span>
                 <div style="display:flex;gap:12px;align-items:center;font-size:12px;color:#64748b;">
-                  ${c.phone?'<a href="tel:'+c.phone.replace(/\\s/g,'')+'" style="color:#1e293b;text-decoration:none;font-weight:600;">'+c.phone+'</a>':''}
-                  ${c.email?'<a href="mailto:'+c.email+'" style="color:#3b82f6;text-decoration:none;">'+c.email+'</a>':''}
+                  ${c.phone?'<a href="tel:'+c.phone.replace(/\\s/g,'')+'" onclick="event.stopPropagation()" style="color:#1e293b;text-decoration:none;font-weight:600;">'+c.phone+'</a>':''}
+                  ${c.email?'<a href="mailto:'+c.email+'" onclick="event.stopPropagation()" style="color:#3b82f6;text-decoration:none;">'+c.email+'</a>':''}
                 </div>
               </div>`).join('')}
             </div>
