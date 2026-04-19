@@ -157,25 +157,32 @@ let currentView='form';
 let viewingResult=null;
 
 async function init(){
+  const app=document.getElementById('app');
   try{
   const params=new URLSearchParams(window.location.search);
   const cid=params.get('c');
   if(!cid){
-    document.getElementById('app').innerHTML='<div class="error-card">No client link provided. Please use the link sent to you by your coach.</div>';
+    app.innerHTML='<div class="error-card">No client link provided. Please use the link sent to you by your coach.</div>';
     return;
   }
+  app.innerHTML='<div class="loading">Connecting...</div>';
   const {data,error}=await supabase.from('contacts').select('id,first_name,last_name').eq('id',cid).single();
-  if(error||!data){
-    document.getElementById('app').innerHTML='<div class="error-card">Client not found. Please check your link or contact your coach.</div>';
+  if(error){
+    app.innerHTML='<div class="error-card">Error loading contact: '+error.message+'<br><br><small>Code: '+error.code+'</small></div>';
+    return;
+  }
+  if(!data){
+    app.innerHTML='<div class="error-card">Client not found. Please check your link or contact your coach.</div>';
     return;
   }
   contact=data;
+  app.innerHTML='<div class="loading">Loading results...</div>';
   const {data:res,error:resErr}=await supabase.from('pulse_results').select('*').eq('contact_id',cid).order('created_at',{ascending:false});
   if(!resErr) results=res||[];
   render();
   }catch(e){
     console.error(e);
-    document.getElementById('app').innerHTML='<div class="error-card">Something went wrong loading your portal. Please try again or contact your coach.</div>';
+    app.innerHTML='<div class="error-card">Error: '+(e.message||e)+'</div>';
   }
 }
 
