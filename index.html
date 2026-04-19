@@ -198,7 +198,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate"></span>
-      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.2.1</span>
+      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.3.0</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -376,6 +376,14 @@ td .actions button{padding:8px 14px;font-size:12px;}
       </div>
       <div id="thqCallSummary"></div>
       <div id="thqCallContent"></div>
+    </div>
+
+    <!-- SAFETY PULSE -->
+    <div class="screen" id="screen-thqpulse">
+      <div class="toolbar">
+        <input class="search-input" id="pulseSearch" placeholder="Search members..." oninput="renderPulseResults()">
+      </div>
+      <div id="pulseContent"></div>
     </div>
 
     <!-- OPERATIONS DASHBOARD -->
@@ -732,11 +740,12 @@ td .actions button{padding:8px 14px;font-size:12px;}
     <div class="form-group"><label>Link 1</label><div style="display:flex;gap:6px;"><input id="cLink1" placeholder="https://..." style="flex:1;"><a id="cLink1Open" href="#" target="_blank" onclick="event.preventDefault();const u=document.getElementById('cLink1').value.trim();if(u)window.open(u,'_blank');" style="display:flex;align-items:center;padding:0 10px;font-size:12px;color:#3b82f6;text-decoration:none;font-weight:600;white-space:nowrap;">Open &#8599;</a></div></div>
     <div class="form-group"><label>Link 2</label><div style="display:flex;gap:6px;"><input id="cLink2" placeholder="https://..." style="flex:1;"><a id="cLink2Open" href="#" target="_blank" onclick="event.preventDefault();const u=document.getElementById('cLink2').value.trim();if(u)window.open(u,'_blank');" style="display:flex;align-items:center;padding:0 10px;font-size:12px;color:#3b82f6;text-decoration:none;font-weight:600;white-space:nowrap;">Open &#8599;</a></div></div>
     <div class="form-group"><label>Notes</label><textarea id="cNotes"></textarea></div>
-    <div id="cPulseLink" style="display:none;" class="form-group">
-      <label>SAFEty Pulse</label>
-      <div style="display:flex;gap:6px;">
-        <button type="button" onclick="copyPulseLink()" style="background:#003366;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">Copy Pulse Link</button>
-        <button type="button" onclick="window.open(getPulseUrl(),'_blank')" style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">Preview</button>
+    <div id="cPulseLinkSection" style="display:none;" class="form-group">
+      <label>SAFEty Pulse Portal</label>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <input id="cPulseLink" readonly style="flex:1;background:#f8fafc;color:#64748b;font-size:11px;cursor:text;">
+        <button type="button" onclick="copyPulseLink(document.getElementById('contactId').value)" style="background:#003366;color:#fff;border:none;padding:8px 12px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">Copy</button>
+        <button type="button" onclick="openPulseLink(document.getElementById('contactId').value)" style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;padding:8px 12px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">Open</button>
       </div>
     </div>
     <div class="modal-actions">
@@ -978,6 +987,7 @@ let contacts = [];
 let clients = [];
 let tasks = [];
 let referrals = [];
+let pulseResults = [];
 let itprojects = [];
 let tempMembers = [];
 
@@ -1006,8 +1016,13 @@ async function loadTasks(){
   if(error) console.error('Load tasks error:', error);
 }
 
+async function loadPulseResults(){
+  const {data,error}=await supabase.from('pulse_results').select('*').order('created_at',{ascending:false});
+  if(data) pulseResults=data;
+  if(error) console.error('Load pulse results error:',error);
+}
 async function loadAll(){
-  await Promise.all([loadContacts(), loadClients(), loadTasks(), loadProspects(), loadProspectNotes(), loadReferrers(), loadRefPayments(), loadRenewals(), loadContactReports(), loadTrials(), loadTaskLogs(), loadFinanceTransactions(), loadBills(), loadIntakeSubmissions()]);
+  await Promise.all([loadContacts(), loadClients(), loadTasks(), loadProspects(), loadProspectNotes(), loadReferrers(), loadRefPayments(), loadRenewals(), loadContactReports(), loadTrials(), loadTaskLogs(), loadFinanceTransactions(), loadBills(), loadIntakeSubmissions(), loadPulseResults()]);
   renderSidebarNav('home');
   renderDashboard();
   document.getElementById('appLoader').style.display='none';
@@ -1054,6 +1069,7 @@ window.navTo = function(tab,btn){
   if(tab==='strengths') renderStrengths();
   if(tab==='thqrenewals') renderThqRenewals();
   if(tab==='thqcalls') renderCoachingCalls();
+  if(tab==='thqpulse') renderPulseResults();
   if(tab==='thqintake') renderIntakeSubmissions();
   if(tab==='tasks') renderTasks();
   if(tab==='refpayments') renderRefPayments();
@@ -1089,7 +1105,7 @@ const areaConfig={
   referrers:{label:'Referrers',pages:[{id:'referrals',icon:'&#128101;',label:'Referral Hub'},{id:'refpayments',icon:'&#128176;',label:'Payments'}]},
   prospects:{label:'Prospects',pages:[{id:'prospects',icon:'&#128203;',label:'Prospect List'}]},
   clients:{label:'Clients',pages:[{id:'clidash',icon:'&#129309;',label:'Dashboard'},{id:'clients',icon:'&#128101;',label:'Client List'},{id:'thqintake',icon:'&#128221;',label:'Intake Forms'},{id:'clinvoices',icon:'&#128206;',label:'Invoices'}]},
-  thrivehq:{label:'ThriveHQ',pages:[{id:'thqdash',icon:'&#128170;',label:'Dashboard'},{id:'thqtrials',icon:'&#127793;',label:'Trials'},{id:'thrivehq',icon:'&#128101;',label:'Members'},{id:'thqrenewals',icon:'&#128260;',label:'Renewals'},{id:'thqcalls',icon:'&#128222;',label:'Coaching Calls'}]},
+  thrivehq:{label:'ThriveHQ',pages:[{id:'thqdash',icon:'&#128170;',label:'Dashboard'},{id:'thqtrials',icon:'&#127793;',label:'Trials'},{id:'thrivehq',icon:'&#128101;',label:'Members'},{id:'thqrenewals',icon:'&#128260;',label:'Renewals'},{id:'thqcalls',icon:'&#128222;',label:'Coaching Calls'},{id:'thqpulse',icon:'&#128147;',label:'SAFEty Pulse'}]},
   strengths:{label:'Strengths',pages:[{id:'strdash',icon:'&#127919;',label:'Dashboard'},{id:'strengths',icon:'&#128161;',label:'Strengths Hub'}]},
   operations:{label:'Operations',pages:[{id:'opsdash',icon:'&#128736;',label:'Dashboard'},{id:'tasks',icon:'&#9989;',label:'Task Management'},{id:'playbook',icon:'&#128214;',label:'Playbook'},{id:'itprojects',icon:'&#9881;',label:'IT Projects'}]},
   finance:{label:'Finance',pages:[{id:'findash',icon:'&#128176;',label:'Dashboard'},{id:'finincome',icon:'&#128181;',label:'Income'},{id:'finspend',icon:'&#128200;',label:'Where Money Goes'},{id:'finbills',icon:'&#128196;',label:'Bills'},{id:'fintxns',icon:'&#128203;',label:'Transactions'}]},
@@ -2067,16 +2083,14 @@ window.openContactModal=function(id){
   } else {
     reportsSection.style.display='none';
   }
-  document.getElementById('cPulseLink').style.display=c?'block':'none';
+  const pulseSection=document.getElementById('cPulseLinkSection');
+  if(c){
+    pulseSection.style.display='block';
+    document.getElementById('cPulseLink').value=getPulsePortalUrl(c.id);
+  } else {
+    pulseSection.style.display='none';
+  }
   document.getElementById('contactModal').classList.add('open');
-};
-
-window.getPulseUrl=function(){
-  const id=document.getElementById('contactId').value;
-  return window.location.origin+window.location.pathname.replace('index.html','')+'portal/?c='+id;
-};
-window.copyPulseLink=function(){
-  copyText(getPulseUrl(),'SAFEty Pulse link');
 };
 
 window.saveContact=async function(){
@@ -3539,6 +3553,144 @@ function renderCoachingCalls(){
   html+=`</div>`;
   if(!members.length) html='<div style="padding:20px;text-align:center;color:#94a3b8;">No linked members found.</div>';
   document.getElementById('thqCallContent').innerHTML=html;
+}
+
+// ── SAFETY PULSE ──
+const PULSE_BANDS=[
+  {name:'Overwhelmed',min:20,max:55,color:'#003366'},
+  {name:'Stretched',min:56,max:91,color:'#1a4d80'},
+  {name:'Stabilising',min:92,max:127,color:'#336699'},
+  {name:'In Control',min:128,max:163,color:'#4d80b3'},
+  {name:'In Flow',min:164,max:200,color:'#80aacc'}
+];
+
+function getPulsePortalUrl(contactId){
+  return window.location.origin+window.location.pathname.replace('index.html','')+'portal/?c='+contactId;
+}
+
+window.copyPulseLink=function(contactId){
+  copyText(getPulsePortalUrl(contactId),'SAFEty Pulse link');
+};
+
+window.openPulseLink=function(contactId){
+  window.open(getPulsePortalUrl(contactId),'_blank');
+};
+
+let pulseDetailContactId=null;
+
+function renderPulseResults(){
+  const q=(document.getElementById('pulseSearch').value||'').toLowerCase();
+  const members=getThqMembers(q);
+  let html='';
+
+  if(pulseDetailContactId){
+    const c=contacts.find(x=>x.id===pulseDetailContactId);
+    if(!c){pulseDetailContactId=null;}
+    else{
+      const myResults=pulseResults.filter(r=>r.contact_id===pulseDetailContactId);
+      html+=`<div onclick="pulseDetailContactId=null;renderPulseResults();" style="font-size:13px;color:#003366;font-weight:600;cursor:pointer;margin-bottom:16px;">&larr; Back to all members</div>`;
+      html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #003366;border-radius:12px;padding:16px 20px;margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-weight:700;font-size:16px;color:#1e3a5f;">${c.first_name} ${c.last_name}</div>
+            <div style="font-size:12px;color:#64748b;margin-top:2px;">${myResults.length} check-in${myResults.length!==1?'s':''}</div>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <button onclick="copyPulseLink('${c.id}')" style="background:#003366;color:#fff;border:none;padding:6px 14px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;">Copy Link</button>
+            <button onclick="openPulseLink('${c.id}')" style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;padding:6px 14px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;">Open Portal</button>
+          </div>
+        </div>
+      </div>`;
+      if(!myResults.length){
+        html+='<div style="padding:30px;text-align:center;color:#94a3b8;font-size:13px;">No Pulse results yet. Send the client their portal link to complete a check-in.</div>';
+      } else {
+        myResults.forEach(r=>{
+          const d=new Date(r.created_at);
+          const dateStr=d.toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+          const bandColor=(PULSE_BANDS.find(b=>b.name===r.band)||{}).color||'#333';
+          const lowestLabel={self_awareness:'Self Awareness',aim:'Aim',foundation:'Foundation',emotion:'Emotion'}[r.lowest_pillar]||'';
+          html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 20px;margin-bottom:10px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+              <span style="font-size:12px;color:#64748b;">${dateStr}</span>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="font-weight:700;color:${bandColor};font-size:14px;">${r.band}</span>
+                <span style="font-size:22px;font-weight:800;color:${bandColor};">${r.total}<span style="font-size:13px;color:#94a3b8;font-weight:400;">/200</span></span>
+              </div>
+            </div>
+            <div style="display:flex;gap:6px;margin-bottom:${lowestLabel?'8':'0'}px;">
+              <div style="flex:1;background:#f0faf8;border-radius:8px;padding:8px;text-align:center;">
+                <div style="font-size:10px;color:#117f79;font-weight:600;">S</div>
+                <div style="font-size:16px;font-weight:700;color:#117f79;">${r.self_awareness}</div>
+              </div>
+              <div style="flex:1;background:#fdf5ee;border-radius:8px;padding:8px;text-align:center;">
+                <div style="font-size:10px;color:#cf5a17;font-weight:600;">A</div>
+                <div style="font-size:16px;font-weight:700;color:#cf5a17;">${r.aim}</div>
+              </div>
+              <div style="flex:1;background:#eef4fc;border-radius:8px;padding:8px;text-align:center;">
+                <div style="font-size:10px;color:#2a7fc4;font-weight:600;">F</div>
+                <div style="font-size:16px;font-weight:700;color:#2a7fc4;">${r.foundation}</div>
+              </div>
+              <div style="flex:1;background:#f5f0fc;border-radius:8px;padding:8px;text-align:center;">
+                <div style="font-size:10px;color:#6a3aa8;font-weight:600;">E</div>
+                <div style="font-size:16px;font-weight:700;color:#6a3aa8;">${r.emotion}</div>
+              </div>
+            </div>
+            ${lowestLabel?'<div style="font-size:11px;color:#64748b;">Focus area: <strong>'+lowestLabel+'</strong></div>':''}
+          </div>`;
+        });
+      }
+      document.getElementById('pulseContent').innerHTML=html;
+      return;
+    }
+  }
+
+  const stats={total:members.length,withResults:0,totalCheckins:0};
+  const memberRows=members.map(m=>{
+    const c=m.contact;
+    const myResults=pulseResults.filter(r=>r.contact_id===c.id);
+    if(myResults.length) stats.withResults++;
+    stats.totalCheckins+=myResults.length;
+    const latest=myResults[0];
+    return {contact:c,results:myResults,latest};
+  });
+
+  html+=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px;">
+    <div style="background:#fff;border-radius:10px;padding:14px;border:1px solid #e2e8f0;text-align:center;">
+      <div style="font-size:24px;font-weight:800;color:#003366;">${stats.total}</div>
+      <div style="font-size:11px;color:#64748b;">Members</div>
+    </div>
+    <div style="background:#fff;border-radius:10px;padding:14px;border:1px solid #e2e8f0;text-align:center;">
+      <div style="font-size:24px;font-weight:800;color:#003366;">${stats.withResults}</div>
+      <div style="font-size:11px;color:#64748b;">With Results</div>
+    </div>
+    <div style="background:#fff;border-radius:10px;padding:14px;border:1px solid #e2e8f0;text-align:center;">
+      <div style="font-size:24px;font-weight:800;color:#003366;">${stats.totalCheckins}</div>
+      <div style="font-size:11px;color:#64748b;">Total Check-ins</div>
+    </div>
+  </div>`;
+
+  memberRows.forEach(({contact:c,results:res,latest})=>{
+    const bandColor=latest?(PULSE_BANDS.find(b=>b.name===latest.band)||{}).color||'#333':'';
+    const d=latest?new Date(latest.created_at):'';
+    const dateStr=d?d.toLocaleDateString('en-AU',{day:'numeric',month:'short'}):'';
+    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 16px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+      <div onclick="pulseDetailContactId='${c.id}';renderPulseResults();" style="flex:1;cursor:pointer;min-width:0;" onmouseover="this.querySelector('.pname').style.color='#3b82f6'" onmouseout="this.querySelector('.pname').style.color='#1e3a5f'">
+        <div class="pname" style="font-weight:600;font-size:14px;color:#1e3a5f;transition:color .15s;">${c.first_name} ${c.last_name}</div>
+        ${latest?`<div style="display:flex;align-items:center;gap:6px;margin-top:3px;">
+          <span style="font-size:12px;font-weight:700;color:${bandColor};">${latest.band}</span>
+          <span style="font-size:12px;color:#94a3b8;">${latest.total}/200</span>
+          <span style="font-size:11px;color:#cbd5e1;">&middot; ${dateStr}</span>
+          <span style="font-size:11px;color:#cbd5e1;">(${res.length})</span>
+        </div>`:'<div style="font-size:11px;color:#94a3b8;margin-top:2px;">No check-ins yet</div>'}
+      </div>
+      <div style="display:flex;gap:4px;flex-shrink:0;">
+        <button onclick="copyPulseLink('${c.id}')" style="background:#003366;color:#fff;border:none;padding:6px 10px;border-radius:6px;font-size:10px;font-weight:600;cursor:pointer;" title="Copy portal link">Link</button>
+      </div>
+    </div>`;
+  });
+
+  if(!members.length) html='<div style="padding:30px;text-align:center;color:#94a3b8;">No ThriveHQ members found.</div>';
+  document.getElementById('pulseContent').innerHTML=html;
 }
 
 // ── TASKS ──
