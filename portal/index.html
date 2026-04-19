@@ -83,11 +83,11 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#f0f4f
 
 <div class="footer">Coach4U &middot; Strengths-Based Coaching &amp; Counselling &middot; www.coach4u.com.au</div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="document.getElementById('app').innerHTML='<div class=error-card>Failed to load. Please check your internet connection and refresh.</div>'"></script>
 <script>
-const SUPA_URL='https://uoixetfvboevjxlkfyqy.supabase.co';
-const SUPA_KEY='sb_publishable_m3qgSGvWF0n2TePf6vhqMw_9obUvJEJ';
-const supabase=window.supabase.createClient(SUPA_URL,SUPA_KEY);
+window.onerror=function(msg){document.getElementById('app').innerHTML='<div class="error-card">Error: '+msg+'</div>';};
+var supabase;
+try{supabase=window.supabase.createClient('https://uoixetfvboevjxlkfyqy.supabase.co','sb_publishable_m3qgSGvWF0n2TePf6vhqMw_9obUvJEJ');}catch(e){document.getElementById('app').innerHTML='<div class="error-card">Connection error: '+e.message+'</div>';}
 
 const QUESTIONS={
   self_awareness:[
