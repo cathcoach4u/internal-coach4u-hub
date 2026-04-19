@@ -86,7 +86,7 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#f0f4f
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const SUPA_URL='https://uoixetfvboevjxlkfyqy.supabase.co';
-const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVvaXhldGZ2Ym9ldmp4bGtmeXF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ1MTYyODMsImV4cCI6MjA2MDA5MjI4M30.sb_publishable_m3qgSGvWF0n2TePf6vhqMw_9obUvJEJ';
+const SUPA_KEY='sb_publishable_m3qgSGvWF0n2TePf6vhqMw_9obUvJEJ';
 const supabase=window.supabase.createClient(SUPA_URL,SUPA_KEY);
 
 const QUESTIONS={
@@ -157,6 +157,7 @@ let currentView='form';
 let viewingResult=null;
 
 async function init(){
+  try{
   const params=new URLSearchParams(window.location.search);
   const cid=params.get('c');
   if(!cid){
@@ -169,9 +170,13 @@ async function init(){
     return;
   }
   contact=data;
-  const {data:res}=await supabase.from('pulse_results').select('*').eq('contact_id',cid).order('created_at',{ascending:false});
-  results=res||[];
+  const {data:res,error:resErr}=await supabase.from('pulse_results').select('*').eq('contact_id',cid).order('created_at',{ascending:false});
+  if(!resErr) results=res||[];
   render();
+  }catch(e){
+    console.error(e);
+    document.getElementById('app').innerHTML='<div class="error-card">Something went wrong loading your portal. Please try again or contact your coach.</div>';
+  }
 }
 
 function render(){
