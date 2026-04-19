@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Coach4U – SAFEty Pulse</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#f0f4f8;color:#1e293b;min-height:100vh}
+.header{background:#003366;color:#fff;padding:20px 24px;text-align:center;border-bottom:4px solid #c9a646}
+.header h1{font-size:22px;font-weight:700;margin-bottom:2px}
+.header .sub{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#8aaac8}
+.container{max-width:640px;margin:0 auto;padding:20px 16px 40px}
+.welcome{background:#fff;border-radius:12px;padding:20px 24px;margin-bottom:20px;border-left:4px solid #003366}
+.welcome h2{font-size:18px;color:#003366;margin-bottom:4px}
+.welcome p{font-size:13px;color:#64748b}
+.error-card{background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:24px;text-align:center;color:#dc2626;font-size:14px}
+.tab-bar{display:flex;gap:0;margin-bottom:20px;background:#fff;border-radius:10px;overflow:hidden;border:1px solid #e2e8f0}
+.tab{flex:1;padding:12px;text-align:center;font-size:13px;font-weight:600;cursor:pointer;color:#64748b;transition:all .2s}
+.tab.active{background:#003366;color:#fff}
+.tab:not(.active):hover{background:#f8fafc}
+
+/* Form */
+.pillar-section{background:#fff;border-radius:12px;margin-bottom:16px;overflow:hidden;border:1px solid #e2e8f0}
+.pillar-header{padding:14px 20px;font-weight:700;font-size:14px;display:flex;align-items:center;gap:10px}
+.pillar-header .letter{font-size:20px;font-weight:800;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0}
+.pillar-header .desc{font-size:11px;font-weight:400;color:#64748b;font-style:italic}
+.question{padding:12px 20px;border-top:1px solid #f1f5f9;display:flex;align-items:center;gap:12px}
+.question .q-text{flex:1;font-size:13px;line-height:1.5;color:#334155}
+.question .q-num{font-size:11px;color:#94a3b8;font-weight:600;flex-shrink:0;width:28px}
+.rating-group{display:flex;gap:3px;flex-shrink:0}
+.rating-btn{width:30px;height:30px;border:1px solid #e2e8f0;border-radius:6px;background:#fff;font-size:12px;font-weight:600;color:#64748b;cursor:pointer;transition:all .15s}
+.rating-btn:hover{border-color:#003366;color:#003366}
+.rating-btn.selected{background:#003366;color:#fff;border-color:#003366}
+.submit-bar{text-align:center;padding:8px 0 20px}
+.submit-btn{background:#003366;color:#fff;border:none;padding:14px 48px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:background .2s}
+.submit-btn:hover{background:#1a4d80}
+.submit-btn:disabled{background:#94a3b8;cursor:not-allowed}
+
+/* Results */
+.result-card{background:#fff;border-radius:16px;padding:24px;margin-bottom:16px;border:1px solid #e2e8f0}
+.overall-result{border-left:6px solid #003366;background:#f8fafc}
+.overall-result .band-name{font-size:24px;font-weight:800}
+.overall-result .score{font-size:48px;font-weight:800;line-height:1}
+.overall-result .score span{font-size:18px;color:#94a3b8;font-weight:500}
+.band-track{display:flex;gap:3px;margin-bottom:20px}
+.band-step{flex:1;text-align:center;border-radius:6px;padding:8px 2px;font-size:10px;font-weight:700;line-height:1.3;color:#94a3b8;background:#ededed}
+.band-step.active{color:#fff}
+.band-step small{font-weight:400;display:block;margin-top:2px}
+.pillar-result{border-radius:14px;overflow:hidden;border:1px solid #e2e8f0;margin-bottom:12px}
+.pillar-result-inner{display:flex}
+.pillar-score-col{width:22%;text-align:center;padding:20px 8px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.pillar-score-col .big-letter{font-size:48px;font-weight:800;line-height:1;margin-bottom:6px}
+.pillar-score-col .big-num{font-size:32px;font-weight:800;line-height:1}
+.pillar-score-col .of{font-size:12px;color:#94a3b8;margin-top:2px}
+.pillar-detail-col{flex:1;display:flex;flex-direction:column}
+.pillar-detail-top{padding:14px 20px 12px;border-bottom:1px solid}
+.pillar-detail-top h3{font-size:15px;font-weight:700;color:#0b3a6e;margin-bottom:2px}
+.pillar-detail-top .tag{display:inline-block;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:#f0f0f0;color:#555;border:1px solid #ccc;border-radius:4px;padding:2px 8px;margin-left:8px;vertical-align:middle}
+.pillar-detail-top p{font-size:11px;color:#7c7c7c;font-style:italic}
+.pillar-detail-body{padding:14px 20px;font-size:13px;line-height:1.7;color:#4d4d4d}
+.history-item{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px 18px;margin-bottom:8px;cursor:pointer;transition:background .15s}
+.history-item:hover{background:#f8fafc}
+.history-item .date{font-size:12px;color:#64748b}
+.history-item .band{font-weight:700;font-size:14px}
+.history-item .scores{font-size:12px;color:#94a3b8;margin-top:4px}
+.no-results{text-align:center;padding:40px 20px;color:#94a3b8;font-size:14px}
+.footer{text-align:center;padding:20px;font-size:11px;color:#94a3b8}
+.back-btn{display:inline-block;margin-bottom:16px;font-size:13px;color:#003366;cursor:pointer;font-weight:600}
+.back-btn:hover{text-decoration:underline}
+.loading{text-align:center;padding:40px;color:#64748b;font-size:14px}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="sub">Coach4U &middot; Capacity Check-In</div>
+  <h1>The SAFEty Pulse</h1>
+</div>
+
+<div class="container" id="app">
+  <div class="loading">Loading...</div>
+</div>
+
+<div class="footer">Coach4U &middot; Strengths-Based Coaching &amp; Counselling &middot; www.coach4u.com.au</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPA_URL='https://uoixetfvboevjxlkfyqy.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVvaXhldGZ2Ym9ldmp4bGtmeXF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ1MTYyODMsImV4cCI6MjA2MDA5MjI4M30.sb_publishable_m3qgSGvWF0n2TePf6vhqMw_9obUvJEJ';
+const supabase=window.supabase.createClient(SUPA_URL,SUPA_KEY);
+
+const QUESTIONS={
+  self_awareness:[
+    {id:'s1',text:'I know what gives me energy and I keep doing what works for me.'},
+    {id:'s2',text:'I notice what drains my energy and I limit those drains.'},
+    {id:'s3',text:'When my tank is running low, I notice it and refill it.'},
+    {id:'s4',text:'I understand the patterns that drain my energy and work around them.'},
+    {id:'s5',text:'When something is not working for me, I adjust rather than repeating the same pattern.'}
+  ],
+  aim:[
+    {id:'a1',text:'I know what matters most to me and I direct my energy toward it.'},
+    {id:'a2',text:'Even when my energy is lower, I take small steps forward.'},
+    {id:'a3',text:'When life takes me off track, I bring my focus back to what matters.'},
+    {id:'a4',text:'I use strategies that help me stay focused and on track.'},
+    {id:'a5',text:'I keep directing my time and energy toward my priorities.'}
+  ],
+  foundation:[
+    {id:'f1',text:'I have routines that help keep my tank steady during the day.'},
+    {id:'f2',text:'When my routines slip, I reset them.'},
+    {id:'f3',text:'I use tools or systems that make life easier to manage.'},
+    {id:'f4',text:'When life becomes busy or stressful, I simplify where I can.'},
+    {id:'f5',text:'I have structures that help protect my energy.'}
+  ],
+  emotion:[
+    {id:'e1',text:'I notice when my emotions are rising and pause before reacting.'},
+    {id:'e2',text:'When I feel overwhelmed, I slow down and steady myself.'},
+    {id:'e3',text:'After a strong emotional reaction, I settle and regain balance.'},
+    {id:'e4',text:'When something upsetting happens, I regain perspective.'},
+    {id:'e5',text:'In difficult moments, I choose responses that support my long term wellbeing.'}
+  ]
+};
+
+const PILLAR_META={
+  self_awareness:{letter:'S',label:'Self Awareness',desc:'Understanding your patterns and protecting your energy',color:'#117f79',lightBg:'#f0faf8',borderColor:'#c0e4de',headerBg:'#dfe9e6'},
+  aim:{letter:'A',label:'Aim',desc:'Moving toward what matters and staying on track',color:'#cf5a17',lightBg:'#fdf5ee',borderColor:'#f0c8a0',headerBg:'#eee5e1'},
+  foundation:{letter:'F',label:'Foundation',desc:'Routines and structures that keep life steady',color:'#2a7fc4',lightBg:'#eef4fc',borderColor:'#b0cce8',headerBg:'#dce8f5'},
+  emotion:{letter:'E',label:'Emotion',desc:'Recognising, pausing, and responding rather than reacting',color:'#6a3aa8',lightBg:'#f5f0fc',borderColor:'#c8b0e8',headerBg:'#e8e0ec'}
+};
+
+const BANDS=[
+  {name:'Overwhelmed',min:20,max:55,bg:'#003366'},
+  {name:'Stretched',min:56,max:91,bg:'#1a4d80'},
+  {name:'Stabilising',min:92,max:127,bg:'#336699'},
+  {name:'In Control',min:128,max:163,bg:'#4d80b3'},
+  {name:'In Flow',min:164,max:200,bg:'#80aacc'}
+];
+
+const BAND_DESC={
+  'Overwhelmed':'Your reserves are running very low right now. Life is demanding more than your current capacity can hold. This is important information, not a judgement. Small steps and self-protection matter most here.',
+  'Stretched':'You are managing, but it is costing you. Your reserves are low and consistency is hard to maintain. Awareness is growing, which is the first real shift.',
+  'Stabilising':'You are finding your footing. Some things are working and your capacity is building. This is the stage where patterns become visible and small consistent actions create real momentum.',
+  'In Control':'Your supports are working and you are handling most of what life asks of you with growing steadiness. The focus now is consolidating what is already working rather than adding more.',
+  'In Flow':'You are operating with intention and self-trust. Your capacity is strong and you are directing your energy toward what matters most. Protect what is working and keep noticing what sustains this.'
+};
+
+const PILLAR_DESC={
+  self_awareness:'You are building a clearer picture of what gives you energy, what drains it, and what patterns are at play. That awareness is the foundation for every other change \u2014 you can only work with what you can see.',
+  aim:'This score reflects how consistently your attention and energy are moving toward what matters most. Direction improves when priorities are visible and the next step is clear and doable.',
+  foundation:'Foundation reflects the routines, structures and supports that help life feel stable. When this is strong, you recover faster when things wobble and you have more reserve for what matters.',
+  emotion:'Emotion reflects your capacity to notice rising emotional signals, pause before reacting, and return to balance after difficult moments. Recovery speed is the skill that grows over time.'
+};
+
+let contact=null;
+let answers={};
+let results=[];
+let currentView='form';
+let viewingResult=null;
+
+async function init(){
+  const params=new URLSearchParams(window.location.search);
+  const cid=params.get('c');
+  if(!cid){
+    document.getElementById('app').innerHTML='<div class="error-card">No client link provided. Please use the link sent to you by your coach.</div>';
+    return;
+  }
+  const {data,error}=await supabase.from('contacts').select('id,first_name,last_name').eq('id',cid).single();
+  if(error||!data){
+    document.getElementById('app').innerHTML='<div class="error-card">Client not found. Please check your link or contact your coach.</div>';
+    return;
+  }
+  contact=data;
+  const {data:res}=await supabase.from('pulse_results').select('*').eq('contact_id',cid).order('created_at',{ascending:false});
+  results=res||[];
+  render();
+}
+
+function render(){
+  if(viewingResult) return renderResultDetail(viewingResult);
+  const app=document.getElementById('app');
+  let html=`<div class="welcome"><h2>Welcome, ${contact.first_name}</h2><p>Your SAFEty Pulse check-in. Answer honestly \u2014 there are no right or wrong answers.</p></div>`;
+  html+=`<div class="tab-bar">
+    <div class="tab ${currentView==='form'?'active':''}" onclick="switchTab('form')">New Check-In</div>
+    <div class="tab ${currentView==='history'?'active':''}" onclick="switchTab('history')">My Results (${results.length})</div>
+  </div>`;
+  if(currentView==='form') html+=renderForm();
+  else html+=renderHistory();
+  app.innerHTML=html;
+}
+
+function switchTab(tab){currentView=tab;render();}
+
+function renderForm(){
+  let html='<form id="pulseForm" onsubmit="submitPulse(event)">';
+  let qNum=1;
+  for(const [key,meta] of Object.entries(PILLAR_META)){
+    html+=`<div class="pillar-section">
+      <div class="pillar-header" style="background:${meta.lightBg};border-bottom:1px solid ${meta.borderColor};">
+        <div class="letter" style="background:${meta.color};">${meta.letter}</div>
+        <div><div style="color:${meta.color};">${meta.label}</div><div class="desc">${meta.desc}</div></div>
+      </div>`;
+    QUESTIONS[key].forEach(q=>{
+      html+=`<div class="question">
+        <span class="q-num">Q${qNum}</span>
+        <span class="q-text">${q.text}</span>
+        <div class="rating-group" id="rg_${q.id}">`;
+      for(let i=1;i<=10;i++){
+        const sel=answers[q.id]===i?'selected':'';
+        html+=`<button type="button" class="rating-btn ${sel}" onclick="rate('${q.id}',${i})">${i}</button>`;
+      }
+      html+=`</div></div>`;
+      qNum++;
+    });
+    html+=`</div>`;
+  }
+  const answered=Object.keys(answers).length;
+  html+=`<div class="submit-bar"><button type="submit" class="submit-btn" ${answered<20?'disabled':''}>${answered<20?answered+'/20 answered':'Submit My Pulse'}</button></div></form>`;
+  return html;
+}
+
+function rate(qid,val){
+  answers[qid]=val;
+  const grp=document.getElementById('rg_'+qid);
+  if(grp){
+    grp.querySelectorAll('.rating-btn').forEach((btn,i)=>{
+      btn.classList.toggle('selected',i+1===val);
+    });
+  }
+  const answered=Object.keys(answers).length;
+  const btn=document.querySelector('.submit-btn');
+  if(btn){
+    btn.disabled=answered<20;
+    btn.textContent=answered<20?answered+'/20 answered':'Submit My Pulse';
+  }
+}
+
+function calcScores(){
+  const pillars={};
+  for(const [key,qs] of Object.entries(QUESTIONS)){
+    pillars[key]=qs.reduce((sum,q)=>sum+(answers[q.id]||0),0);
+  }
+  const total=Object.values(pillars).reduce((a,b)=>a+b,0);
+  let band='Overwhelmed';
+  for(const b of BANDS){if(total>=b.min&&total<=b.max)band=b.name;}
+  let lowest=null,lowestVal=999;
+  for(const [k,v] of Object.entries(pillars)){if(v<lowestVal){lowestVal=v;lowest=k;}}
+  return{pillars,total,band,lowest};
+}
+
+async function submitPulse(e){
+  e.preventDefault();
+  const btn=document.querySelector('.submit-btn');
+  btn.disabled=true;
+  btn.textContent='Submitting...';
+  const scores=calcScores();
+  const row={
+    contact_id:contact.id,
+    self_awareness:scores.pillars.self_awareness,
+    aim:scores.pillars.aim,
+    foundation:scores.pillars.foundation,
+    emotion:scores.pillars.emotion,
+    total:scores.total,
+    band:scores.band,
+    lowest_pillar:scores.lowest,
+    answers:JSON.stringify(answers)
+  };
+  const {data,error}=await supabase.from('pulse_results').insert(row).select();
+  if(error){
+    btn.disabled=false;
+    btn.textContent='Error \u2014 try again';
+    console.error(error);
+    return;
+  }
+  answers={};
+  results.unshift(data[0]);
+  viewingResult=data[0];
+  render();
+}
+
+function renderHistory(){
+  if(!results.length) return '<div class="no-results">No results yet. Complete your first check-in above.</div>';
+  return results.map(r=>{
+    const d=new Date(r.created_at);
+    const dateStr=d.toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'});
+    const bandColor=BANDS.find(b=>b.name===r.band)?.bg||'#333';
+    return `<div class="history-item" onclick="viewResult('${r.id}')">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div><span class="band" style="color:${bandColor};">${r.band}</span> <span style="font-size:20px;font-weight:800;color:${bandColor};margin-left:8px;">${r.total}<span style="font-size:13px;color:#94a3b8;font-weight:400;">/200</span></span></div>
+        <div class="date">${dateStr}</div>
+      </div>
+      <div class="scores">S: ${r.self_awareness}/50 &middot; A: ${r.aim}/50 &middot; F: ${r.foundation}/50 &middot; E: ${r.emotion}/50</div>
+    </div>`;
+  }).join('');
+}
+
+function viewResult(id){
+  viewingResult=results.find(r=>r.id===id);
+  render();
+}
+
+function renderResultDetail(r){
+  const d=new Date(r.created_at);
+  const dateStr=d.toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const bandColor=BANDS.find(b=>b.name===r.band)?.bg||'#333';
+  let html=`<div class="back-btn" onclick="viewingResult=null;currentView='history';render();">&larr; Back to results</div>`;
+  html+=`<div class="result-card overall-result">
+    <div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#8a8a8a;font-weight:700;margin-bottom:12px;">Overall Result &middot; ${dateStr}</div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+      <div style="flex:1;">
+        <div class="band-name" style="color:${bandColor};margin-bottom:10px;">${r.band}</div>
+        <div style="font-size:13px;line-height:1.7;color:#4a4a4a;">${BAND_DESC[r.band]||''}</div>
+      </div>
+      <div style="text-align:right;padding-left:20px;">
+        <div class="score" style="color:${bandColor};">${r.total}<span>/200</span></div>
+      </div>
+    </div>
+  </div>`;
+
+  html+=`<div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#8a8a8a;font-weight:700;margin-bottom:12px;text-align:center;">Capacity Journey</div>`;
+  html+=`<div class="band-track">`;
+  BANDS.forEach(b=>{
+    const active=b.name===r.band;
+    html+=`<div class="band-step ${active?'active':''}" style="${active?'background:'+b.bg+';':''}">
+      ${b.name}<small>${b.min}\u2013${b.max}</small></div>`;
+  });
+  html+=`</div>`;
+
+  html+=`<div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#8a8a8a;font-weight:700;margin-bottom:16px;text-align:center;">Your SAFE Results</div>`;
+  const pillarScores={self_awareness:r.self_awareness,aim:r.aim,foundation:r.foundation,emotion:r.emotion};
+  for(const [key,meta] of Object.entries(PILLAR_META)){
+    const score=pillarScores[key];
+    const isLowest=r.lowest_pillar===key;
+    html+=`<div class="pillar-result" style="border-color:${meta.borderColor};">
+      <div class="pillar-result-inner">
+        <div class="pillar-score-col" style="background:${meta.lightBg};border-right:1px solid ${meta.borderColor};">
+          <div class="big-letter" style="color:${meta.borderColor};">${meta.letter}</div>
+          <div class="big-num" style="color:${meta.color};">${score}</div>
+          <div class="of">/50</div>
+        </div>
+        <div class="pillar-detail-col">
+          <div class="pillar-detail-top" style="background:${meta.headerBg};border-color:${meta.borderColor};">
+            <h3>${meta.label}${isLowest?'<span class="tag">Focus area</span>':''}</h3>
+            <p>${meta.desc}</p>
+          </div>
+          <div class="pillar-detail-body">${PILLAR_DESC[key]}</div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  html+=`<div class="footer" style="margin-top:16px;font-size:11px;color:#999;text-align:center;">Coach4U &middot; SAFEty Pulse &middot; ${dateStr}</div>`;
+  document.getElementById('app').innerHTML=html;
+}
+
+init();
+</script>
+</body>
+</html>

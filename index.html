@@ -198,7 +198,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate"></span>
-      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.1.6</span>
+      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.2.0</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -732,6 +732,13 @@ td .actions button{padding:8px 14px;font-size:12px;}
     <div class="form-group"><label>Link 1</label><div style="display:flex;gap:6px;"><input id="cLink1" placeholder="https://..." style="flex:1;"><a id="cLink1Open" href="#" target="_blank" onclick="event.preventDefault();const u=document.getElementById('cLink1').value.trim();if(u)window.open(u,'_blank');" style="display:flex;align-items:center;padding:0 10px;font-size:12px;color:#3b82f6;text-decoration:none;font-weight:600;white-space:nowrap;">Open &#8599;</a></div></div>
     <div class="form-group"><label>Link 2</label><div style="display:flex;gap:6px;"><input id="cLink2" placeholder="https://..." style="flex:1;"><a id="cLink2Open" href="#" target="_blank" onclick="event.preventDefault();const u=document.getElementById('cLink2').value.trim();if(u)window.open(u,'_blank');" style="display:flex;align-items:center;padding:0 10px;font-size:12px;color:#3b82f6;text-decoration:none;font-weight:600;white-space:nowrap;">Open &#8599;</a></div></div>
     <div class="form-group"><label>Notes</label><textarea id="cNotes"></textarea></div>
+    <div id="cPulseLink" style="display:none;" class="form-group">
+      <label>SAFEty Pulse</label>
+      <div style="display:flex;gap:6px;">
+        <button type="button" onclick="copyPulseLink()" style="background:#003366;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">Copy Pulse Link</button>
+        <button type="button" onclick="window.open(getPulseUrl(),'_blank')" style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">Preview</button>
+      </div>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-gray" onclick="closeModal('contactModal')">Cancel</button>
       <button class="btn btn-green" onclick="saveContact()">Save</button>
@@ -2060,7 +2067,16 @@ window.openContactModal=function(id){
   } else {
     reportsSection.style.display='none';
   }
+  document.getElementById('cPulseLink').style.display=c?'block':'none';
   document.getElementById('contactModal').classList.add('open');
+};
+
+window.getPulseUrl=function(){
+  const id=document.getElementById('contactId').value;
+  return window.location.origin+window.location.pathname.replace('index.html','')+'portal/?c='+id;
+};
+window.copyPulseLink=function(){
+  copyText(getPulseUrl(),'SAFEty Pulse link');
 };
 
 window.saveContact=async function(){
