@@ -198,7 +198,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate"></span>
-      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.3.1</span>
+      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.3.2</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -3690,6 +3690,7 @@ function renderPulseResults(){
   });
 
   if(!members.length) html='<div style="padding:30px;text-align:center;color:#94a3b8;">No ThriveHQ members found.</div>';
+  html+='<div style="height:80px;"></div>';
   document.getElementById('pulseContent').innerHTML=html;
 }
 
