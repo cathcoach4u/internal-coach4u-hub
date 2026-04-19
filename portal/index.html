@@ -25,15 +25,16 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#f0f4f
 .pillar-header{padding:14px 20px;font-weight:700;font-size:14px;display:flex;align-items:center;gap:10px}
 .pillar-header .letter{font-size:20px;font-weight:800;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0}
 .pillar-header .desc{font-size:11px;font-weight:400;color:#64748b;font-style:italic}
-.question{padding:12px 20px;border-top:1px solid #f1f5f9;display:flex;align-items:center;gap:12px}
-.question .q-text{flex:1;font-size:13px;line-height:1.5;color:#334155}
-.question .q-num{font-size:11px;color:#94a3b8;font-weight:600;flex-shrink:0;width:28px}
-.rating-group{display:flex;gap:3px;flex-shrink:0}
-.rating-btn{width:30px;height:30px;border:1px solid #e2e8f0;border-radius:6px;background:#fff;font-size:12px;font-weight:600;color:#64748b;cursor:pointer;transition:all .15s}
+.question{padding:14px 20px;border-top:1px solid #f1f5f9}
+.q-row{display:flex;align-items:baseline;gap:8px;margin-bottom:10px}
+.question .q-text{font-size:13px;line-height:1.5;color:#334155}
+.question .q-num{font-size:11px;color:#94a3b8;font-weight:600;flex-shrink:0}
+.rating-group{display:flex;gap:4px;justify-content:space-between}
+.rating-btn{flex:1;height:36px;max-width:36px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;font-size:13px;font-weight:600;color:#64748b;cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent}
 .rating-btn:hover{border-color:#003366;color:#003366}
 .rating-btn.selected{background:#003366;color:#fff;border-color:#003366}
 .submit-bar{text-align:center;padding:8px 0 20px}
-.submit-btn{background:#003366;color:#fff;border:none;padding:14px 48px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:background .2s}
+.submit-btn{background:#003366;color:#fff;border:none;padding:14px 48px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:background .2s;width:100%;max-width:320px}
 .submit-btn:hover{background:#1a4d80}
 .submit-btn:disabled{background:#94a3b8;cursor:not-allowed}
 
@@ -48,15 +49,15 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#f0f4f
 .band-step.active{color:#fff}
 .band-step small{font-weight:400;display:block;margin-top:2px}
 .pillar-result{border-radius:14px;overflow:hidden;border:1px solid #e2e8f0;margin-bottom:12px}
-.pillar-result-inner{display:flex}
-.pillar-score-col{width:22%;text-align:center;padding:20px 8px;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.pillar-score-col .big-letter{font-size:48px;font-weight:800;line-height:1;margin-bottom:6px}
-.pillar-score-col .big-num{font-size:32px;font-weight:800;line-height:1}
-.pillar-score-col .of{font-size:12px;color:#94a3b8;margin-top:2px}
-.pillar-detail-col{flex:1;display:flex;flex-direction:column}
-.pillar-detail-top{padding:14px 20px 12px;border-bottom:1px solid}
-.pillar-detail-top h3{font-size:15px;font-weight:700;color:#0b3a6e;margin-bottom:2px}
-.pillar-detail-top .tag{display:inline-block;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:#f0f0f0;color:#555;border:1px solid #ccc;border-radius:4px;padding:2px 8px;margin-left:8px;vertical-align:middle}
+.pillar-result-inner{display:flex;flex-direction:column}
+.pillar-score-row{display:flex;align-items:center;gap:14px;padding:16px 20px}
+.pillar-score-row .big-letter{font-size:40px;font-weight:800;line-height:1}
+.pillar-score-row .score-wrap{display:flex;align-items:baseline;gap:4px}
+.pillar-score-row .big-num{font-size:28px;font-weight:800;line-height:1}
+.pillar-score-row .of{font-size:13px;color:#94a3b8}
+.pillar-score-row .pillar-name{font-size:15px;font-weight:700;color:#0b3a6e;flex:1}
+.pillar-score-row .tag{display:inline-block;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:#f0f0f0;color:#555;border:1px solid #ccc;border-radius:4px;padding:2px 8px;margin-left:8px;vertical-align:middle}
+.pillar-detail-body{padding:0 20px 16px;font-size:13px;line-height:1.7;color:#4d4d4d}
 .pillar-detail-top p{font-size:11px;color:#7c7c7c;font-style:italic}
 .pillar-detail-body{padding:14px 20px;font-size:13px;line-height:1.7;color:#4d4d4d}
 .history-item{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px 18px;margin-bottom:8px;cursor:pointer;transition:background .15s}
@@ -212,8 +213,7 @@ function renderForm(){
       </div>`;
     QUESTIONS[key].forEach(q=>{
       html+=`<div class="question">
-        <span class="q-num">Q${qNum}</span>
-        <span class="q-text">${q.text}</span>
+        <div class="q-row"><span class="q-num">Q${qNum}</span><span class="q-text">${q.text}</span></div>
         <div class="rating-group" id="rg_${q.id}">`;
       for(let i=1;i<=10;i++){
         const sel=answers[q.id]===i?'selected':'';
@@ -316,15 +316,11 @@ function renderResultDetail(r){
   let html=`<div class="back-btn" onclick="viewingResult=null;currentView='history';render();">&larr; Back to results</div>`;
   html+=`<div class="result-card overall-result">
     <div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#8a8a8a;font-weight:700;margin-bottom:12px;">Overall Result &middot; ${dateStr}</div>
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-      <div style="flex:1;">
-        <div class="band-name" style="color:${bandColor};margin-bottom:10px;">${r.band}</div>
-        <div style="font-size:13px;line-height:1.7;color:#4a4a4a;">${BAND_DESC[r.band]||''}</div>
-      </div>
-      <div style="text-align:right;padding-left:20px;">
-        <div class="score" style="color:${bandColor};">${r.total}<span>/200</span></div>
-      </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div class="band-name" style="color:${bandColor};">${r.band}</div>
+      <div class="score" style="color:${bandColor};">${r.total}<span>/200</span></div>
     </div>
+    <div style="font-size:13px;line-height:1.7;color:#4a4a4a;">${BAND_DESC[r.band]||''}</div>
   </div>`;
 
   html+=`<div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#8a8a8a;font-weight:700;margin-bottom:12px;text-align:center;">Capacity Journey</div>`;
@@ -343,18 +339,13 @@ function renderResultDetail(r){
     const isLowest=r.lowest_pillar===key;
     html+=`<div class="pillar-result" style="border-color:${meta.borderColor};">
       <div class="pillar-result-inner">
-        <div class="pillar-score-col" style="background:${meta.lightBg};border-right:1px solid ${meta.borderColor};">
+        <div class="pillar-score-row" style="background:${meta.lightBg};border-bottom:1px solid ${meta.borderColor};">
           <div class="big-letter" style="color:${meta.borderColor};">${meta.letter}</div>
-          <div class="big-num" style="color:${meta.color};">${score}</div>
-          <div class="of">/50</div>
+          <span class="pillar-name">${meta.label}${isLowest?'<span class="tag">Focus area</span>':''}</span>
+          <div class="score-wrap"><span class="big-num" style="color:${meta.color};">${score}</span><span class="of">/50</span></div>
         </div>
-        <div class="pillar-detail-col">
-          <div class="pillar-detail-top" style="background:${meta.headerBg};border-color:${meta.borderColor};">
-            <h3>${meta.label}${isLowest?'<span class="tag">Focus area</span>':''}</h3>
-            <p>${meta.desc}</p>
-          </div>
-          <div class="pillar-detail-body">${PILLAR_DESC[key]}</div>
-        </div>
+        <div style="padding:12px 20px 4px;font-size:11px;color:#7c7c7c;font-style:italic;">${meta.desc}</div>
+        <div class="pillar-detail-body">${PILLAR_DESC[key]}</div>
       </div>
     </div>`;
   }
