@@ -215,7 +215,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate"></span>
-      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.9.0</span>
+      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.9.1</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -5259,7 +5259,7 @@ function renderAgentDetail(){
       <button class="btn btn-blue" onclick="openStageForm('${a.id}')" style="flex-shrink:0;margin-left:12px;">+ Add Recipe</button>
     </div>`;
     if(!myStages.length){
-      html+='<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:20px;text-align:center;color:#94a3b8;font-size:13px;">No recipes yet. Add your first recipe (e.g. "Initial Enquiry") to start building this agent''s message library.</div>';
+      html+='<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:20px;text-align:center;color:#94a3b8;font-size:13px;">No recipes yet. Add your first recipe (e.g. "Initial Enquiry") to start building this agent\'s message library.</div>';
     } else {
       myStages.forEach(s=>{
         const ingredients=agentTemplates.filter(t=>t.stage_id===s.id);
