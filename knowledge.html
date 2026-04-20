@@ -98,10 +98,6 @@ async function load(){
     html+='</div>';
   }
 
-  if(a.system_prompt){
-    html+=`<h2>System Prompt</h2><div class="prompt"><pre class="body">${esc(a.system_prompt)}</pre></div>`;
-  }
-
   if(myStages.length){
     html+='<h2>Recipes &amp; Ingredients</h2>';
     myStages.forEach(s=>{
