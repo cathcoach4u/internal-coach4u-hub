@@ -206,7 +206,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate"></span>
-      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.6.0</span>
+      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.6.1</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -397,7 +397,14 @@ td .actions button{padding:8px 14px;font-size:12px;}
     <!-- CLIENT PULSES -->
     <div class="screen" id="screen-clipulse">
       <div class="toolbar">
-        <input class="search-input" id="cliPulseSearch" placeholder="Search clients..." oninput="renderClientPulses()">
+        <input class="search-input" id="cliPulseSearch" placeholder="Search check-ins..." oninput="renderClientPulses()">
+        <select id="cliPulseTypeFilter" onchange="renderClientPulses()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
+          <option value="">All Pulses</option><option value="safe">SAFE Pulse</option>
+        </select>
+        <select id="cliPulseTimeFilter" onchange="renderClientPulses()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
+          <option value="">All Time</option><option value="week">This Week</option><option value="month">This Month</option>
+        </select>
+        <button onclick="copyPublicPulseLink()" style="padding:6px 12px;border:1px solid #bfdbfe;border-radius:99px;font-size:11px;font-weight:600;color:#1e3a5f;background:#dbeafe;cursor:pointer;font-family:inherit;white-space:nowrap;" onmouseover="this.style.background='#bfdbfe'" onmouseout="this.style.background='#dbeafe'">&#128279; SAFE (public)</button>
       </div>
       <div id="cliPulseContent"></div>
     </div>
@@ -3954,6 +3961,11 @@ function getAllClientContacts(q){
   return members;
 }
 
+window.copyPublicPulseLink=function(){
+  const url=window.location.origin+window.location.pathname.replace('index.html','')+'portal/';
+  copyText(url,'Public SAFE Pulse link copied');
+};
+
 function renderClientPulses(){
   const contentEl=document.getElementById('cliPulseContent');
   if(!contentEl) return;
@@ -3970,53 +3982,73 @@ function renderClientPulses(){
     cliPulseDetailResultId=null;
   }
 
-  const q=(document.getElementById('cliPulseSearch').value||'').toLowerCase();
-  const clientContacts=getAllClientContacts(q);
+  const q=(document.getElementById('cliPulseSearch')?.value||'').toLowerCase();
+  const typeFilter=document.getElementById('cliPulseTypeFilter')?.value||'';
+  const timeFilter=document.getElementById('cliPulseTimeFilter')?.value||'';
+  const clientContacts=getAllClientContacts('');
+  const validContactIds=new Set(clientContacts.map(m=>m.contact.id));
 
-  const weekStart=new Date();
+  const now=new Date();
+  const weekStart=new Date(now);
   const dayOfWeek=(weekStart.getDay()+6)%7;
   weekStart.setDate(weekStart.getDate()-dayOfWeek);
   weekStart.setHours(0,0,0,0);
-  const thisWeek=pulseResults.filter(r=>new Date(r.created_at)>=weekStart).length;
+  const monthStart=new Date(now.getFullYear(),now.getMonth(),1);
 
-  let html='';
-  html+=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px;">
-    <div style="background:#fff;border-radius:10px;padding:14px;border:1px solid #e2e8f0;text-align:center;">
-      <div style="font-size:24px;font-weight:800;color:#003366;">${clientContacts.length}</div>
-      <div style="font-size:11px;color:#64748b;">Clients</div>
+  const allCheckIns=pulseResults.filter(r=>validContactIds.has(r.contact_id));
+  const weekCount=allCheckIns.filter(r=>new Date(r.created_at)>=weekStart).length;
+  const monthCount=allCheckIns.filter(r=>new Date(r.created_at)>=monthStart).length;
+  const uniqueClients=new Set(allCheckIns.map(r=>r.contact_id)).size;
+
+  let filtered=allCheckIns;
+  if(timeFilter==='week') filtered=filtered.filter(r=>new Date(r.created_at)>=weekStart);
+  if(timeFilter==='month') filtered=filtered.filter(r=>new Date(r.created_at)>=monthStart);
+  if(q) filtered=filtered.filter(r=>{
+    const c=contacts.find(x=>x.id===r.contact_id);
+    if(!c) return false;
+    return (c.first_name+' '+c.last_name+' '+(c.email||'')+' '+(r.band||'')).toLowerCase().includes(q);
+  });
+
+  let html=`<div class="dash-cards" style="margin-bottom:16px;">
+    <div class="dash-card" style="cursor:pointer;${weekCount?'box-shadow:0 0 0 2px #3b82f6;':''}" onclick="document.getElementById('cliPulseTimeFilter').value='week';renderClientPulses();">
+      <div class="dc-icon" style="background:#dbeafe;color:#2563eb;">&#128197;</div>
+      <div class="dc-info"><h4>${weekCount}</h4><p>This Week</p></div>
     </div>
-    <div style="background:#fff;border-radius:10px;padding:14px;border:1px solid #e2e8f0;text-align:center;">
-      <div style="font-size:24px;font-weight:800;color:#003366;">${thisWeek}</div>
-      <div style="font-size:11px;color:#64748b;">Check-ins This Week</div>
+    <div class="dash-card" style="cursor:pointer;" onclick="document.getElementById('cliPulseTimeFilter').value='month';renderClientPulses();">
+      <div class="dc-icon" style="background:#fef3c7;color:#d97706;">&#128198;</div>
+      <div class="dc-info"><h4>${monthCount}</h4><p>This Month</p></div>
+    </div>
+    <div class="dash-card" style="cursor:pointer;" onclick="document.getElementById('cliPulseTimeFilter').value='';renderClientPulses();">
+      <div class="dc-icon" style="background:#dcfce7;color:#16a34a;">&#128101;</div>
+      <div class="dc-info"><h4>${uniqueClients}</h4><p>Clients</p></div>
+    </div>
+    <div class="dash-card" style="cursor:pointer;" onclick="document.getElementById('cliPulseTimeFilter').value='';renderClientPulses();">
+      <div class="dc-icon" style="background:#f1f5f9;color:#64748b;">&#128147;</div>
+      <div class="dc-info"><h4>${allCheckIns.length}</h4><p>Total</p></div>
     </div>
   </div>`;
 
   const selectedContact=cliPulseSelectedId?contacts.find(c=>c.id===cliPulseSelectedId):null;
   html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;margin-bottom:16px;">
-    <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:10px;">Generate Pulse Link</div>
+    <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:10px;">Generate Pulse Link for a Client</div>
     <select onchange="setCliPulseClient(this.value)" style="width:100%;padding:10px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#f8fafc;color:#1e3a5f;margin-bottom:${selectedContact?'10':'0'}px;">
       <option value="">\u2014 Select a client \u2014</option>
       ${clientContacts.map(m=>`<option value="${m.contact.id}" ${m.contact.id===cliPulseSelectedId?'selected':''}>${m.contact.first_name} ${m.contact.last_name}</option>`).join('')}
     </select>`;
   if(selectedContact){
     const url=getPulsePortalUrl(selectedContact.id);
-    html+=`<div style="display:flex;gap:6px;align-items:center;margin-top:6px;">
-      <input readonly value="${url}" style="flex:1;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;background:#f8fafc;color:#64748b;font-size:11px;">
+    html+=`<div style="display:flex;gap:6px;align-items:center;margin-top:6px;flex-wrap:wrap;">
+      <input readonly value="${url}" style="flex:1;min-width:200px;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;background:#f8fafc;color:#64748b;font-size:11px;">
       <button onclick="copyPulseLink('${selectedContact.id}')" style="background:#003366;color:#fff;border:none;padding:8px 14px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">Copy</button>
       <button onclick="openPulseLink('${selectedContact.id}')" style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;padding:8px 14px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">Open</button>
     </div>`;
   }
   html+=`</div>`;
 
-  const validContactIds=new Set(clientContacts.map(m=>m.contact.id));
-  const checkIns=pulseResults.filter(r=>validContactIds.has(r.contact_id));
-
-  html+=`<div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:10px;">Check-ins${checkIns.length?' ('+checkIns.length+')':''}</div>`;
-
-  if(!checkIns.length){
-    html+='<div style="padding:30px;text-align:center;color:#94a3b8;font-size:13px;background:#fff;border:1px dashed #cbd5e1;border-radius:12px;">No check-ins yet. Share a link with a client to get started.</div>';
+  if(!filtered.length){
+    html+='<div style="padding:30px;text-align:center;color:#94a3b8;font-size:13px;background:#fff;border:1px dashed #cbd5e1;border-radius:12px;">No check-ins found.</div>';
   } else {
-    checkIns.forEach(r=>{
+    filtered.forEach(r=>{
       const c=contacts.find(x=>x.id===r.contact_id);
       if(!c) return;
       const d=new Date(r.created_at);
@@ -4025,7 +4057,10 @@ function renderClientPulses(){
       html+=`<div onclick="viewCliPulseResult('${r.id}')" style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 16px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;">
         <div style="flex:1;min-width:0;">
           <div style="font-weight:600;font-size:14px;color:#1e3a5f;">${c.first_name} ${c.last_name}</div>
-          <div style="font-size:11px;color:#94a3b8;margin-top:2px;">${dateStr}</div>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:3px;">
+            <span style="font-size:10px;letter-spacing:1px;text-transform:uppercase;background:#e0e7ff;color:#4338ca;padding:1px 6px;border-radius:4px;font-weight:700;">SAFE</span>
+            <span style="font-size:11px;color:#94a3b8;">${dateStr}</span>
+          </div>
         </div>
         <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
           <span style="font-size:12px;font-weight:700;color:${bandColor};">${r.band}</span>
