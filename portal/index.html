@@ -48,18 +48,21 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#f0f4f
 .band-step{flex:1;text-align:center;border-radius:6px;padding:8px 2px;font-size:10px;font-weight:700;line-height:1.3;color:#94a3b8;background:#ededed}
 .band-step.active{color:#fff}
 .band-step small{font-weight:400;display:block;margin-top:2px}
-.pillar-result{border-radius:14px;overflow:hidden;border:1px solid #e2e8f0;margin-bottom:12px}
-.pillar-result-inner{display:flex;flex-direction:column}
-.pillar-score-row{display:flex;align-items:center;gap:14px;padding:16px 20px}
-.pillar-score-row .big-letter{font-size:40px;font-weight:800;line-height:1}
-.pillar-score-row .score-wrap{display:flex;align-items:baseline;gap:4px}
-.pillar-score-row .big-num{font-size:28px;font-weight:800;line-height:1}
-.pillar-score-row .of{font-size:13px;color:#94a3b8}
-.pillar-score-row .pillar-name{font-size:15px;font-weight:700;color:#0b3a6e;flex:1}
-.pillar-score-row .tag{display:inline-block;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:#f0f0f0;color:#555;border:1px solid #ccc;border-radius:4px;padding:2px 8px;margin-left:8px;vertical-align:middle}
-.pillar-detail-body{padding:0 20px 16px;font-size:13px;line-height:1.7;color:#4d4d4d}
-.pillar-detail-top p{font-size:11px;color:#7c7c7c;font-style:italic}
-.pillar-detail-body{padding:14px 20px;font-size:13px;line-height:1.7;color:#4d4d4d}
+.pillar-result{border-radius:14px;overflow:hidden;border:1px solid #e2e8f0;margin-bottom:14px;display:flex}
+.pillar-score-side{width:28%;min-width:100px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px 8px;flex-shrink:0}
+.pillar-score-side .big-letter{font-size:52px;font-weight:800;line-height:1;margin-bottom:8px}
+.pillar-score-side .big-num{font-size:34px;font-weight:800;line-height:1}
+.pillar-score-side .of{font-size:12px;color:#94a3b8;margin-top:2px}
+.pillar-content{flex:1;display:flex;flex-direction:column;background:#fff}
+.pillar-header-row{padding:14px 18px 10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pillar-header-row h3{font-size:16px;font-weight:700;color:#0b3a6e;margin:0}
+.pillar-header-row .tag{display:inline-block;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:#f3f4f6;color:#555;border:1px solid #d1d5db;border-radius:4px;padding:2px 8px}
+.pillar-header-row .desc{width:100%;font-size:11px;color:#7c7c7c;font-style:italic;margin-top:2px}
+.pillar-body{padding:8px 18px 14px;font-size:13px;line-height:1.7;color:#4d4d4d}
+.coaching-focus{margin-top:12px;padding-top:12px;border-top:1px solid #eee}
+.coaching-focus .cf-label{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#8a8a8a;font-weight:700;margin-bottom:8px}
+.coaching-focus ul{margin:0;padding-left:20px}
+.coaching-focus li{font-size:12.5px;line-height:1.6;color:#4d4d4d;margin-bottom:6px}
 .history-item{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px 18px;margin-bottom:8px;cursor:pointer;transition:background .15s}
 .history-item:hover{background:#f8fafc}
 .history-item .date{font-size:12px;color:#64748b}
@@ -149,6 +152,29 @@ const PILLAR_DESC={
   aim:'This score reflects how consistently your attention and energy are moving toward what matters most. Direction improves when priorities are visible and the next step is clear and doable.',
   foundation:'Foundation reflects the routines, structures and supports that help life feel stable. When this is strong, you recover faster when things wobble and you have more reserve for what matters.',
   emotion:'Emotion reflects your capacity to notice rising emotional signals, pause before reacting, and return to balance after difficult moments. Recovery speed is the skill that grows over time.'
+};
+
+const COACHING_FOCUS={
+  self_awareness:[
+    'Name one pattern this week that cost you energy unnecessarily.',
+    'Track one thing you did that actively restored your reserves.',
+    'Notice the gap between what you know and what you actually do \u2014 without judgement.'
+  ],
+  aim:[
+    'Keep your one most important priority visible this week.',
+    'Use small steps to reduce friction at the start of tasks.',
+    'When you drift, return to what matters without self-judgement.'
+  ],
+  foundation:[
+    'Protect the one routine that most stabilises your week.',
+    'When routines slip, reset one at a time rather than all at once.',
+    'Notice early signs that your structure is starting to loosen.'
+  ],
+  emotion:[
+    'Notice rising emotion one step earlier than you normally would.',
+    'Use one settling strategy before reactivity builds, not only after.',
+    'Practise recovery after hard moments rather than aiming for perfection.'
+  ]
 };
 
 let contact=null;
@@ -337,15 +363,26 @@ function renderResultDetail(r){
   for(const [key,meta] of Object.entries(PILLAR_META)){
     const score=pillarScores[key];
     const isLowest=r.lowest_pillar===key;
+    const focusItems=COACHING_FOCUS[key]||[];
     html+=`<div class="pillar-result" style="border-color:${meta.borderColor};">
-      <div class="pillar-result-inner">
-        <div class="pillar-score-row" style="background:${meta.lightBg};border-bottom:1px solid ${meta.borderColor};">
-          <div class="big-letter" style="color:${meta.borderColor};">${meta.letter}</div>
-          <span class="pillar-name">${meta.label}${isLowest?'<span class="tag">Focus area</span>':''}</span>
-          <div class="score-wrap"><span class="big-num" style="color:${meta.color};">${score}</span><span class="of">/50</span></div>
+      <div class="pillar-score-side" style="background:${meta.lightBg};border-right:1px solid ${meta.borderColor};">
+        <div class="big-letter" style="color:${meta.borderColor};">${meta.letter}</div>
+        <div class="big-num" style="color:${meta.color};">${score}</div>
+        <div class="of">/50</div>
+      </div>
+      <div class="pillar-content">
+        <div class="pillar-header-row" style="background:${meta.headerBg};">
+          <h3>${meta.label}</h3>
+          ${isLowest?'<span class="tag">Focus area</span>':''}
+          <div class="desc">${meta.desc}</div>
         </div>
-        <div style="padding:12px 20px 4px;font-size:11px;color:#7c7c7c;font-style:italic;">${meta.desc}</div>
-        <div class="pillar-detail-body">${PILLAR_DESC[key]}</div>
+        <div class="pillar-body">
+          ${PILLAR_DESC[key]}
+          <div class="coaching-focus">
+            <div class="cf-label">Coaching Focus</div>
+            <ul>${focusItems.map(item=>'<li>'+item+'</li>').join('')}</ul>
+          </div>
+        </div>
       </div>
     </div>`;
   }
