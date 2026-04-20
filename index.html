@@ -198,7 +198,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate"></span>
-      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.4.8</span>
+      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.4.9</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -3825,12 +3825,15 @@ function renderPulseResults(){
     }
   }
 
-  const stats={total:members.length,withResults:0,totalCheckins:0};
+  const weekStart=new Date();
+  const dayOfWeek=(weekStart.getDay()+6)%7;
+  weekStart.setDate(weekStart.getDate()-dayOfWeek);
+  weekStart.setHours(0,0,0,0);
+  const stats={total:members.length,thisWeek:0};
   const memberRows=members.map(m=>{
     const c=m.contact;
     const myResults=pulseResults.filter(r=>r.contact_id===c.id);
-    if(myResults.length) stats.withResults++;
-    stats.totalCheckins+=myResults.length;
+    stats.thisWeek+=myResults.filter(r=>new Date(r.created_at)>=weekStart).length;
     const latest=myResults[0];
     return {contact:c,results:myResults,latest};
   });
@@ -3841,12 +3844,8 @@ function renderPulseResults(){
       <div style="font-size:11px;color:#64748b;">Members</div>
     </div>
     <div style="background:#fff;border-radius:10px;padding:14px;border:1px solid #e2e8f0;text-align:center;">
-      <div style="font-size:24px;font-weight:800;color:#003366;">${stats.withResults}</div>
-      <div style="font-size:11px;color:#64748b;">With Results</div>
-    </div>
-    <div style="background:#fff;border-radius:10px;padding:14px;border:1px solid #e2e8f0;text-align:center;">
-      <div style="font-size:24px;font-weight:800;color:#003366;">${stats.totalCheckins}</div>
-      <div style="font-size:11px;color:#64748b;">Total Check-ins</div>
+      <div style="font-size:24px;font-weight:800;color:#003366;">${stats.thisWeek}</div>
+      <div style="font-size:11px;color:#64748b;">Check-ins This Week</div>
     </div>
   </div>`;
 
