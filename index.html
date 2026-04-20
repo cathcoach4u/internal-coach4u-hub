@@ -142,6 +142,13 @@ td .actions button{padding:8px 14px;font-size:12px;}
 .login-box .login-btn:hover{background:#2d5283;}
 .login-box .login-btn:disabled{opacity:.6;cursor:not-allowed;}
 .login-error{color:#ef4444;font-size:12px;margin-bottom:12px;min-height:16px;}
+@media print{
+  body{background:#fff !important}
+  .sidebar,.topbar,.area-tabs,.toolbar,.mobile-nav,.no-print,#aiFab,#aiChat,header{display:none !important}
+  .main,.content,.screen{margin:0 !important;padding:0 !important;width:100% !important;max-width:100% !important}
+  a{color:inherit;text-decoration:none}
+  *{break-inside:avoid;page-break-inside:avoid}
+}
 </style>
 </head>
 <body>
@@ -198,7 +205,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate"></span>
-      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.5.0</span>
+      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.5.1</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -3693,7 +3700,10 @@ function renderPulseResultDetail(r,c){
   try{answers=r.answers?(typeof r.answers==='string'?JSON.parse(r.answers):r.answers):{};}catch(e){answers={};}
   const band=PULSE_BANDS.find(b=>b.name===r.band)||{};
   const bandColor=band.color||'#333';
-  let html=`<div onclick="backToPulseHistory()" style="font-size:13px;color:#003366;font-weight:600;cursor:pointer;margin-bottom:16px;">&larr; Back to ${c.first_name}&rsquo;s check-ins</div>`;
+  let html=`<div class="no-print" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:10px;flex-wrap:wrap;">
+    <div onclick="backToPulseHistory()" style="font-size:13px;color:#003366;font-weight:600;cursor:pointer;">&larr; Back to ${c.first_name}&rsquo;s check-ins</div>
+    <button onclick="window.print()" style="background:#003366;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">&#128424; Print</button>
+  </div>`;
   html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;margin-bottom:14px;">
     <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;">${c.first_name} ${c.last_name}</div>
     <div style="font-size:13px;color:#94a3b8;margin-top:2px;">${dateStr}</div>
