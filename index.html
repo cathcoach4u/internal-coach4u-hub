@@ -206,7 +206,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate"></span>
-      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.6.1</span>
+      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.6.2</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -3985,8 +3985,7 @@ function renderClientPulses(){
   const q=(document.getElementById('cliPulseSearch')?.value||'').toLowerCase();
   const typeFilter=document.getElementById('cliPulseTypeFilter')?.value||'';
   const timeFilter=document.getElementById('cliPulseTimeFilter')?.value||'';
-  const clientContacts=getAllClientContacts('');
-  const validContactIds=new Set(clientContacts.map(m=>m.contact.id));
+  const allContacts=[...contacts].sort((a,b)=>(a.first_name+' '+a.last_name).localeCompare(b.first_name+' '+b.last_name));
 
   const now=new Date();
   const weekStart=new Date(now);
@@ -3995,7 +3994,7 @@ function renderClientPulses(){
   weekStart.setHours(0,0,0,0);
   const monthStart=new Date(now.getFullYear(),now.getMonth(),1);
 
-  const allCheckIns=pulseResults.filter(r=>validContactIds.has(r.contact_id));
+  const allCheckIns=[...pulseResults];
   const weekCount=allCheckIns.filter(r=>new Date(r.created_at)>=weekStart).length;
   const monthCount=allCheckIns.filter(r=>new Date(r.created_at)>=monthStart).length;
   const uniqueClients=new Set(allCheckIns.map(r=>r.contact_id)).size;
@@ -4020,7 +4019,7 @@ function renderClientPulses(){
     </div>
     <div class="dash-card" style="cursor:pointer;" onclick="document.getElementById('cliPulseTimeFilter').value='';renderClientPulses();">
       <div class="dc-icon" style="background:#dcfce7;color:#16a34a;">&#128101;</div>
-      <div class="dc-info"><h4>${uniqueClients}</h4><p>Clients</p></div>
+      <div class="dc-info"><h4>${uniqueClients}</h4><p>Members</p></div>
     </div>
     <div class="dash-card" style="cursor:pointer;" onclick="document.getElementById('cliPulseTimeFilter').value='';renderClientPulses();">
       <div class="dc-icon" style="background:#f1f5f9;color:#64748b;">&#128147;</div>
@@ -4030,10 +4029,10 @@ function renderClientPulses(){
 
   const selectedContact=cliPulseSelectedId?contacts.find(c=>c.id===cliPulseSelectedId):null;
   html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;margin-bottom:16px;">
-    <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:10px;">Generate Pulse Link for a Client</div>
+    <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:10px;">Generate Pulse Link</div>
     <select onchange="setCliPulseClient(this.value)" style="width:100%;padding:10px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#f8fafc;color:#1e3a5f;margin-bottom:${selectedContact?'10':'0'}px;">
-      <option value="">\u2014 Select a client \u2014</option>
-      ${clientContacts.map(m=>`<option value="${m.contact.id}" ${m.contact.id===cliPulseSelectedId?'selected':''}>${m.contact.first_name} ${m.contact.last_name}</option>`).join('')}
+      <option value="">\u2014 Select a contact \u2014</option>
+      ${allContacts.map(c=>`<option value="${c.id}" ${c.id===cliPulseSelectedId?'selected':''}>${c.first_name} ${c.last_name}</option>`).join('')}
     </select>`;
   if(selectedContact){
     const url=getPulsePortalUrl(selectedContact.id);
