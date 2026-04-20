@@ -215,7 +215,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate"></span>
-      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.7.0</span>
+      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.7.1</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -3777,13 +3777,14 @@ function buildPulseReportHTML(r,c,opts){
   });
   html+=`</div>`;
 
-  html+=`<div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#8a8a8a;font-weight:700;margin-bottom:10px;text-align:center;">Your SAFE Results</div>
+  html+=`<div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#8a8a8a;font-weight:700;margin-bottom:10px;text-align:center;">Your SAFE Results &amp; Focus</div>
     <div class="pulse-quad">`;
   pillarKeys.forEach(key=>{
     const meta=PULSE_PILLAR_META[key];
     const score=scores[key];
     const isLowest=r.lowest_pillar===key;
-    html+=`<div class="pulse-card" style="border-radius:12px;border:1px solid ${meta.borderColor};background:#fff;overflow:hidden;">
+    const focusItems=PULSE_COACHING_FOCUS[key]||[];
+    html+=`<div class="pulse-card" style="border-radius:12px;border:1px solid ${meta.borderColor};background:#fff;overflow:hidden;display:flex;flex-direction:column;">
       <div style="background:${meta.headerBg};padding:10px 12px;display:flex;align-items:center;gap:10px;">
         <div style="width:34px;height:34px;border-radius:8px;background:${meta.color};color:#fff;font-weight:800;font-size:17px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${meta.letter}</div>
         <div style="flex:1;min-width:0;">
@@ -3795,7 +3796,13 @@ function buildPulseReportHTML(r,c,opts){
           <div style="font-size:10px;color:#94a3b8;">/50</div>
         </div>
       </div>
-      <div style="padding:10px 12px;font-size:11.5px;line-height:1.55;color:#4d4d4d;">${PULSE_PILLAR_DESC[key]}</div>
+      <div style="padding:10px 12px 6px;font-size:11.5px;line-height:1.55;color:#4d4d4d;">${PULSE_PILLAR_DESC[key]}</div>
+      <div style="padding:8px 12px 12px;border-top:1px dashed #eee;margin-top:auto;">
+        <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#8a8a8a;font-weight:700;margin-bottom:6px;">Coaching Focus</div>
+        <ul style="margin:0;padding-left:16px;">
+          ${focusItems.map(item=>'<li style="font-size:11px;line-height:1.5;color:#4d4d4d;margin-bottom:3px;">'+item+'</li>').join('')}
+        </ul>
+      </div>
     </div>`;
   });
   html+=`</div></div>`;
@@ -3806,14 +3813,21 @@ function buildPulseReportHTML(r,c,opts){
       <div style="font-size:10px;color:#64748b;letter-spacing:2px;text-transform:uppercase;margin-top:2px;">${clientName?clientName+' &middot; ':''}${dateStr}</div>
     </div>
     <div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#8a8a8a;font-weight:700;margin-bottom:10px;text-align:center;">Question Scores</div>
-    <div style="text-align:center;font-size:10px;color:#94a3b8;margin-bottom:12px;">
-      <span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#dc2626;vertical-align:middle;margin-right:3px;"></span>1\u20134
-      <span style="margin:0 8px;">&middot;</span>
-      <span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#d97706;vertical-align:middle;margin-right:3px;"></span>5\u20136
-      <span style="margin:0 8px;">&middot;</span>
-      <span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#16a34a;vertical-align:middle;margin-right:3px;"></span>7\u201310
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;margin-bottom:14px;display:flex;justify-content:center;gap:18px;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#475569;">
+        <span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#dc2626;color:#fff;font-weight:800;font-size:11px;display:inline-flex;align-items:center;justify-content:center;">1</span>
+        <span><strong>1\u20134</strong> Reserves running low</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#475569;">
+        <span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#d97706;color:#fff;font-weight:800;font-size:11px;display:inline-flex;align-items:center;justify-content:center;">5</span>
+        <span><strong>5\u20136</strong> Building capacity</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#475569;">
+        <span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#16a34a;color:#fff;font-weight:800;font-size:11px;display:inline-flex;align-items:center;justify-content:center;">7</span>
+        <span><strong>7\u201310</strong> Strong reserves</span>
+      </div>
     </div>
-    <div class="pulse-quad" style="margin-bottom:18px;">`;
+    <div class="pulse-quad">`;
   pillarKeys.forEach(key=>{
     const meta=PULSE_PILLAR_META[key];
     html+=`<div class="pulse-card" style="border-radius:12px;border:1px solid ${meta.borderColor};background:#fff;overflow:hidden;">
@@ -3832,22 +3846,6 @@ function buildPulseReportHTML(r,c,opts){
       </div>`;
     });
     html+=`</div></div>`;
-  });
-  html+=`</div>
-    <div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#8a8a8a;font-weight:700;margin-bottom:10px;text-align:center;">Coaching Focus</div>
-    <div class="pulse-quad">`;
-  pillarKeys.forEach(key=>{
-    const meta=PULSE_PILLAR_META[key];
-    const focusItems=PULSE_COACHING_FOCUS[key]||[];
-    html+=`<div class="pulse-card" style="border-radius:12px;border:1px solid ${meta.borderColor};background:#fff;overflow:hidden;">
-      <div style="background:${meta.headerBg};padding:8px 12px;display:flex;align-items:center;gap:8px;">
-        <div style="width:24px;height:24px;border-radius:6px;background:${meta.color};color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${meta.letter}</div>
-        <div style="font-size:12px;font-weight:700;color:#0b3a6e;">${meta.label}</div>
-      </div>
-      <ul style="margin:0;padding:8px 12px 12px 28px;">
-        ${focusItems.map(item=>'<li style="font-size:11px;line-height:1.5;color:#4d4d4d;margin-bottom:4px;">'+item+'</li>').join('')}
-      </ul>
-    </div>`;
   });
   html+=`</div></div>
     <div class="no-print" style="height:80px;"></div>`;
