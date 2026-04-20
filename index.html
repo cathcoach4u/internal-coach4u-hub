@@ -215,7 +215,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate"></span>
-      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.8.0</span>
+      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.8.1</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -1148,14 +1148,21 @@ async function loadPulseResults(){
   if(error) console.error('Load pulse results error:',error);
 }
 async function loadAgents(){
-  const [a,av,ai]=await Promise.all([
-    supabase.from('agents').select('*').order('name'),
-    supabase.from('agent_versions').select('*').order('created_at',{ascending:false}),
-    supabase.from('agent_issues').select('*').order('occurred_at',{ascending:false})
-  ]);
-  if(a.data) agents=a.data;
-  if(av.data) agentVersions=av.data;
-  if(ai.data) agentIssues=ai.data;
+  try{
+    const [a,av,ai]=await Promise.all([
+      supabase.from('agents').select('*').order('name'),
+      supabase.from('agent_versions').select('*').order('created_at',{ascending:false}),
+      supabase.from('agent_issues').select('*').order('occurred_at',{ascending:false})
+    ]);
+    if(a&&a.data) agents=a.data;
+    if(a&&a.error) console.warn('Load agents error:',a.error);
+    if(av&&av.data) agentVersions=av.data;
+    if(av&&av.error) console.warn('Load agent_versions error:',av.error);
+    if(ai&&ai.data) agentIssues=ai.data;
+    if(ai&&ai.error) console.warn('Load agent_issues error:',ai.error);
+  }catch(e){
+    console.warn('loadAgents failed:',e);
+  }
 }
 async function loadAll(){
   await Promise.all([loadContacts(), loadClients(), loadTasks(), loadProspects(), loadProspectNotes(), loadReferrers(), loadRefPayments(), loadRenewals(), loadContactReports(), loadTrials(), loadTaskLogs(), loadFinanceTransactions(), loadBills(), loadIntakeSubmissions(), loadPulseResults(), loadAgents()]);
