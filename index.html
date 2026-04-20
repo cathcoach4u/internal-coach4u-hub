@@ -142,13 +142,21 @@ td .actions button{padding:8px 14px;font-size:12px;}
 .login-box .login-btn:hover{background:#2d5283;}
 .login-box .login-btn:disabled{opacity:.6;cursor:not-allowed;}
 .login-error{color:#ef4444;font-size:12px;margin-bottom:12px;min-height:16px;}
+.print-only{display:none}
+.pulse-quad{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:640px){.pulse-quad{grid-template-columns:1fr}}
+@page{size:A4;margin:12mm}
 @media print{
   body{background:#fff !important;margin:0 !important;padding:0 !important;-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;color-adjust:exact !important}
   *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;color-adjust:exact !important}
   .sidebar,.header,.area-tabs,.toolbar,.mobile-nav,.mobile-toggle,.no-print,#aiFab,#aiChat,.mobile-overlay{display:none !important}
   .main{margin-left:0 !important;min-height:auto !important}
-  .content{padding:10px !important}
+  .content{padding:0 !important}
   .screen:not(.active){display:none !important}
+  .print-only{display:block !important}
+  .pulse-quad{grid-template-columns:1fr 1fr !important;gap:8px !important}
+  .report-page-break{page-break-before:always;break-before:page}
+  .report-page,.pulse-card{page-break-inside:avoid;break-inside:avoid}
   a{color:inherit;text-decoration:none}
 }
 </style>
@@ -207,7 +215,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate"></span>
-      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.6.4</span>
+      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.7.0</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -3714,76 +3722,135 @@ function pulseScoreColor(v){
 function renderPulseResultDetail(r,c,backHandler,backLabel){
   backHandler=backHandler||'backToPulseHistory()';
   backLabel=backLabel||`Back to ${c.first_name}&rsquo;s check-ins`;
+  return buildPulseReportHTML(r,c,{backHandler,backLabel,showBackBar:true});
+}
+
+function buildPulseReportHTML(r,c,opts){
+  opts=opts||{};
   const d=new Date(r.created_at);
   const dateStr=d.toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   let answers={};
   try{answers=r.answers?(typeof r.answers==='string'?JSON.parse(r.answers):r.answers):{};}catch(e){answers={};}
   const band=PULSE_BANDS.find(b=>b.name===r.band)||{};
   const bandColor=band.color||'#333';
-  let html=`<div class="no-print" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:10px;flex-wrap:wrap;">
-    <div onclick="${backHandler}" style="font-size:13px;color:#003366;font-weight:600;cursor:pointer;">&larr; ${backLabel}</div>
-    <button onclick="window.print()" style="background:#003366;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">&#128424; Print</button>
+  const scores={self_awareness:r.self_awareness,aim:r.aim,foundation:r.foundation,emotion:r.emotion};
+  const pillarKeys=['self_awareness','aim','foundation','emotion'];
+  const clientName=c?`${c.first_name||''} ${c.last_name||''}`.trim():'';
+
+  let html='';
+  if(opts.showBackBar){
+    html+=`<div class="no-print" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:10px;flex-wrap:wrap;">
+      <div onclick="${opts.backHandler}" style="font-size:13px;color:#003366;font-weight:600;cursor:pointer;">&larr; ${opts.backLabel}</div>
+      <button onclick="window.print()" style="background:#003366;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">&#128424; Print</button>
+    </div>`;
+  }
+
+  html+=`<div class="print-only" style="text-align:center;padding-bottom:10px;border-bottom:2px solid #003366;margin-bottom:14px;">
+    <div style="font-size:14px;font-weight:700;color:#003366;letter-spacing:1px;">Coach4U &middot; SAFEty Pulse</div>
+    <div style="font-size:10px;color:#64748b;letter-spacing:2px;text-transform:uppercase;margin-top:2px;">Capacity Check-In Report</div>
   </div>`;
-  html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;margin-bottom:14px;">
-    <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;">${c.first_name} ${c.last_name}</div>
-    <div style="font-size:13px;color:#94a3b8;margin-top:2px;">${dateStr}</div>
-  </div>`;
-  html+=`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-left:6px solid ${bandColor};border-radius:12px;padding:18px 20px;margin-bottom:16px;">
-    <div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#8a8a8a;font-weight:700;margin-bottom:10px;">Overall Result</div>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+
+  html+=`<div class="report-page">`;
+  if(clientName){
+    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:12px 18px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
+      <div style="font-size:14px;font-weight:700;color:#1e3a5f;">${clientName}</div>
+      <div style="font-size:12px;color:#64748b;">${dateStr}</div>
+    </div>`;
+  } else {
+    html+=`<div style="text-align:center;font-size:12px;color:#64748b;margin-bottom:12px;">${dateStr}</div>`;
+  }
+
+  html+=`<div class="pulse-card" style="background:#f8fafc;border:1px solid #e2e8f0;border-left:6px solid ${bandColor};border-radius:12px;padding:16px 20px;margin-bottom:14px;">
+    <div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#8a8a8a;font-weight:700;margin-bottom:8px;">Overall Result</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
       <div style="font-size:22px;font-weight:800;color:${bandColor};">${r.band}</div>
       <div style="font-size:36px;font-weight:800;color:${bandColor};line-height:1;">${r.total}<span style="font-size:14px;color:#94a3b8;font-weight:500;">/200</span></div>
     </div>
-    <div style="font-size:12px;line-height:1.6;color:#4a4a4a;">${PULSE_BAND_DESC[r.band]||''}</div>
+    <div style="font-size:12px;line-height:1.55;color:#4a4a4a;">${PULSE_BAND_DESC[r.band]||''}</div>
   </div>`;
-  html+=`<div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#8a8a8a;font-weight:700;margin-bottom:10px;text-align:center;">Capacity Journey</div>`;
-  html+=`<div style="display:flex;gap:3px;margin-bottom:20px;">`;
+
+  html+=`<div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#8a8a8a;font-weight:700;margin-bottom:8px;text-align:center;">Capacity Journey</div>
+    <div style="display:flex;gap:3px;margin-bottom:16px;">`;
   PULSE_BANDS.forEach(b=>{
     const active=b.name===r.band;
-    html+=`<div style="flex:1;text-align:center;border-radius:6px;padding:8px 2px;font-size:9px;font-weight:700;line-height:1.3;${active?'background:'+b.color+';color:#fff;':'background:#ededed;color:#8a8a8a;'}">${b.name}<br><span style="font-weight:400;">${b.min}\u2013${b.max}</span></div>`;
+    html+=`<div style="flex:1;text-align:center;border-radius:6px;padding:7px 2px;font-size:9px;font-weight:700;line-height:1.3;border:1px solid ${active?'transparent':'#cbd5e1'};${active?'background:'+b.color+';color:#fff;':'background:#ededed;color:#8a8a8a;'}">${b.name}<br><span style="font-weight:400;">${b.min}\u2013${b.max}</span></div>`;
   });
   html+=`</div>`;
-  html+=`<div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#8a8a8a;font-weight:700;margin-bottom:14px;text-align:center;">SAFE Results</div>`;
-  const scores={self_awareness:r.self_awareness,aim:r.aim,foundation:r.foundation,emotion:r.emotion};
-  for(const [key,meta] of Object.entries(PULSE_PILLAR_META)){
+
+  html+=`<div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#8a8a8a;font-weight:700;margin-bottom:10px;text-align:center;">Your SAFE Results</div>
+    <div class="pulse-quad">`;
+  pillarKeys.forEach(key=>{
+    const meta=PULSE_PILLAR_META[key];
     const score=scores[key];
     const isLowest=r.lowest_pillar===key;
-    const focusItems=PULSE_COACHING_FOCUS[key]||[];
-    html+=`<div style="border-radius:14px;overflow:hidden;border:1px solid ${meta.borderColor};margin-bottom:14px;display:flex;background:#fff;">
-      <div style="width:28%;min-width:90px;background:${meta.lightBg};border-right:1px solid ${meta.borderColor};display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px 6px;flex-shrink:0;">
-        <div style="font-size:46px;font-weight:800;line-height:1;color:${meta.borderColor};margin-bottom:6px;">${meta.letter}</div>
-        <div style="font-size:30px;font-weight:800;line-height:1;color:${meta.color};">${score}</div>
-        <div style="font-size:11px;color:#94a3b8;margin-top:2px;">/50</div>
-      </div>
-      <div style="flex:1;display:flex;flex-direction:column;min-width:0;">
-        <div style="padding:12px 16px 8px;background:${meta.headerBg};">
-          <div style="font-size:15px;font-weight:700;color:#0b3a6e;">${meta.label}${isLowest?' <span style="display:inline-block;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:#f3f4f6;color:#555;border:1px solid #d1d5db;border-radius:4px;padding:2px 8px;margin-left:4px;vertical-align:middle;">Focus area</span>':''}</div>
-          <div style="font-size:11px;color:#7c7c7c;font-style:italic;margin-top:2px;">${meta.desc}</div>
+    html+=`<div class="pulse-card" style="border-radius:12px;border:1px solid ${meta.borderColor};background:#fff;overflow:hidden;">
+      <div style="background:${meta.headerBg};padding:10px 12px;display:flex;align-items:center;gap:10px;">
+        <div style="width:34px;height:34px;border-radius:8px;background:${meta.color};color:#fff;font-weight:800;font-size:17px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${meta.letter}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:700;color:#0b3a6e;">${meta.label}${isLowest?' <span style="display:inline-block;font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:#fff;color:#555;border:1px solid #d1d5db;border-radius:4px;padding:1px 5px;margin-left:4px;vertical-align:middle;">Focus</span>':''}</div>
+          <div style="font-size:10px;color:#7c7c7c;font-style:italic;margin-top:1px;line-height:1.3;">${meta.desc}</div>
         </div>
-        <div style="padding:10px 16px 14px;font-size:12.5px;line-height:1.6;color:#4d4d4d;">
-          ${PULSE_PILLAR_DESC[key]}
-          ${(PULSE_QUESTIONS[key]||[]).length?`<div style="margin-top:10px;padding-top:10px;border-top:1px solid #eee;">
-            <div style="font-size:9.5px;letter-spacing:2px;text-transform:uppercase;color:#8a8a8a;font-weight:700;margin-bottom:8px;">Question Scores</div>
-            ${(PULSE_QUESTIONS[key]||[]).map(q=>{
-              const v=answers[q.id];
-              const col=pulseScoreColor(v);
-              return `<div style="display:flex;gap:10px;align-items:flex-start;padding:5px 0;border-bottom:1px dashed #f1f5f9;">
-                <div style="flex-shrink:0;min-width:34px;height:26px;border-radius:6px;background:${col};color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;">${v||'—'}</div>
-                <div style="font-size:11.5px;line-height:1.4;color:#475569;">${q.text}</div>
-              </div>`;
-            }).join('')}
-          </div>`:''}
-          <div style="margin-top:10px;padding-top:10px;border-top:1px solid #eee;">
-            <div style="font-size:9.5px;letter-spacing:2px;text-transform:uppercase;color:#8a8a8a;font-weight:700;margin-bottom:6px;">Coaching Focus</div>
-            <ul style="margin:0;padding-left:18px;">
-              ${focusItems.map(item=>'<li style="font-size:12px;line-height:1.5;color:#4d4d4d;margin-bottom:4px;">'+item+'</li>').join('')}
-            </ul>
-          </div>
+        <div style="text-align:right;flex-shrink:0;">
+          <div style="font-size:24px;font-weight:800;color:${meta.color};line-height:1;">${score}</div>
+          <div style="font-size:10px;color:#94a3b8;">/50</div>
         </div>
       </div>
+      <div style="padding:10px 12px;font-size:11.5px;line-height:1.55;color:#4d4d4d;">${PULSE_PILLAR_DESC[key]}</div>
     </div>`;
-  }
-  html+='<div style="height:80px;"></div>';
+  });
+  html+=`</div></div>`;
+
+  html+=`<div class="report-page report-page-break" style="margin-top:24px;">
+    <div class="print-only" style="text-align:center;padding-bottom:10px;border-bottom:2px solid #003366;margin-bottom:14px;">
+      <div style="font-size:14px;font-weight:700;color:#003366;letter-spacing:1px;">Coach4U &middot; SAFEty Pulse</div>
+      <div style="font-size:10px;color:#64748b;letter-spacing:2px;text-transform:uppercase;margin-top:2px;">${clientName?clientName+' &middot; ':''}${dateStr}</div>
+    </div>
+    <div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#8a8a8a;font-weight:700;margin-bottom:10px;text-align:center;">Question Scores</div>
+    <div style="text-align:center;font-size:10px;color:#94a3b8;margin-bottom:12px;">
+      <span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#dc2626;vertical-align:middle;margin-right:3px;"></span>1\u20134
+      <span style="margin:0 8px;">&middot;</span>
+      <span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#d97706;vertical-align:middle;margin-right:3px;"></span>5\u20136
+      <span style="margin:0 8px;">&middot;</span>
+      <span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#16a34a;vertical-align:middle;margin-right:3px;"></span>7\u201310
+    </div>
+    <div class="pulse-quad" style="margin-bottom:18px;">`;
+  pillarKeys.forEach(key=>{
+    const meta=PULSE_PILLAR_META[key];
+    html+=`<div class="pulse-card" style="border-radius:12px;border:1px solid ${meta.borderColor};background:#fff;overflow:hidden;">
+      <div style="background:${meta.headerBg};padding:8px 12px;display:flex;align-items:center;gap:8px;">
+        <div style="width:24px;height:24px;border-radius:6px;background:${meta.color};color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${meta.letter}</div>
+        <div style="font-size:12px;font-weight:700;color:#0b3a6e;">${meta.label}</div>
+        <div style="margin-left:auto;font-size:11px;font-weight:700;color:${meta.color};">${scores[key]}/50</div>
+      </div>
+      <div style="padding:6px 12px 10px;">`;
+    (PULSE_QUESTIONS[key]||[]).forEach(q=>{
+      const v=answers[q.id];
+      const col=pulseScoreColor(v);
+      html+=`<div style="display:flex;gap:8px;align-items:flex-start;padding:4px 0;border-bottom:1px dashed #f1f5f9;">
+        <div style="flex-shrink:0;min-width:24px;height:22px;border-radius:5px;background:${col};color:#fff;font-weight:800;font-size:11px;display:flex;align-items:center;justify-content:center;">${v||'—'}</div>
+        <div style="font-size:10.5px;line-height:1.4;color:#475569;">${q.text}</div>
+      </div>`;
+    });
+    html+=`</div></div>`;
+  });
+  html+=`</div>
+    <div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#8a8a8a;font-weight:700;margin-bottom:10px;text-align:center;">Coaching Focus</div>
+    <div class="pulse-quad">`;
+  pillarKeys.forEach(key=>{
+    const meta=PULSE_PILLAR_META[key];
+    const focusItems=PULSE_COACHING_FOCUS[key]||[];
+    html+=`<div class="pulse-card" style="border-radius:12px;border:1px solid ${meta.borderColor};background:#fff;overflow:hidden;">
+      <div style="background:${meta.headerBg};padding:8px 12px;display:flex;align-items:center;gap:8px;">
+        <div style="width:24px;height:24px;border-radius:6px;background:${meta.color};color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${meta.letter}</div>
+        <div style="font-size:12px;font-weight:700;color:#0b3a6e;">${meta.label}</div>
+      </div>
+      <ul style="margin:0;padding:8px 12px 12px 28px;">
+        ${focusItems.map(item=>'<li style="font-size:11px;line-height:1.5;color:#4d4d4d;margin-bottom:4px;">'+item+'</li>').join('')}
+      </ul>
+    </div>`;
+  });
+  html+=`</div></div>
+    <div class="no-print" style="height:80px;"></div>`;
   return html;
 }
 
