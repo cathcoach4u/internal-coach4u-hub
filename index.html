@@ -215,7 +215,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate"></span>
-      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.11.0</span>
+      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.12.0</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -5179,27 +5179,39 @@ function renderAgents(){
       </div></div>`;
     };
     const knowledgeBase=location.origin+location.pathname.replace(/[^/]+$/,'');
-    const renderKnowledgeRow=(agent,depth)=>{
+    const renderStagesBox=(agent,depth)=>{
       const url=knowledgeBase+'knowledge.html?agent='+agent.id;
+      const stagesCount=agentStages.filter(s=>s.agent_id===agent.id).length;
+      const stageIds=agentStages.filter(s=>s.agent_id===agent.id).map(s=>s.id);
+      const msgCount=agentTemplates.filter(t=>stageIds.includes(t.stage_id)).length;
       const indent=depth===0?'margin-left:24px;':'margin-left:56px;';
-      return `<div style="${indent}margin-top:-4px;margin-bottom:10px;padding:10px 14px;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:8px;display:flex;justify-content:space-between;align-items:center;gap:12px;">
-        <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1;">
-          <span style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.5px;">Knowledge page</span>
-          <span style="font-size:11px;color:#64748b;font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${url}</span>
-        </div>
-        <div style="display:flex;gap:6px;flex-shrink:0;">
-          <button onclick="navigator.clipboard.writeText('${url}');toast('URL copied','success')" style="background:#f0f4f8;border:1px solid #e2e8f0;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;color:#475569;">Copy URL</button>
-          <a href="${url}" target="_blank" style="background:#003366;color:#fff;text-decoration:none;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:600;">Open &rarr;</a>
+      const connector=depth===0?'':'<div style="position:absolute;left:-22px;top:-8px;bottom:50%;width:2px;background:#cbd5e1;"></div><div style="position:absolute;left:-22px;top:50%;width:18px;height:2px;background:#cbd5e1;"></div>';
+      return `<div style="${indent}margin-top:-4px;margin-bottom:12px;position:relative;">
+        ${connector}
+        <div onclick="viewAgentStages('${agent.id}')" style="background:#fff;border:1px solid #e2e8f0;border-left:3px solid #7e22ce;border-radius:10px;padding:14px 18px;cursor:pointer;transition:border-color .15s;" onmouseover="this.style.borderColor='#7e22ce'" onmouseout="this.style.borderColor='#e2e8f0'">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0;flex:1;">
+              <span style="font-size:11px;padding:3px 9px;border-radius:99px;font-weight:700;background:#f3e8ff;color:#7e22ce;text-transform:uppercase;letter-spacing:.5px;">Stages</span>
+              <span style="font-weight:700;font-size:14px;color:#1e3a5f;">${stagesCount} stage${stagesCount!==1?'s':''}</span>
+              <span style="font-size:12px;color:#94a3b8;">&middot;</span>
+              <span style="font-size:13px;color:#475569;">${msgCount} message${msgCount!==1?'s':''} inside</span>
+            </div>
+            <div style="display:flex;gap:6px;flex-shrink:0;" onclick="event.stopPropagation()">
+              <button onclick="navigator.clipboard.writeText('${url}');toast('Knowledge URL copied','success')" style="background:#f0f4f8;border:1px solid #e2e8f0;border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;color:#475569;font-weight:600;">Copy URL</button>
+              <a href="${url}" target="_blank" style="background:#003366;color:#fff;text-decoration:none;border-radius:6px;padding:6px 12px;font-size:11px;font-weight:600;">Knowledge page &rarr;</a>
+            </div>
+          </div>
+          <div style="margin-top:8px;padding-top:8px;border-top:1px dashed #f1f5f9;font-size:11px;color:#94a3b8;font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${url}</div>
         </div>
       </div>`;
     };
     const hasStages=id=>agentStages.some(s=>s.agent_id===id);
     topLevel.forEach(a=>{
       html+=renderCard(a,false);
-      if(hasStages(a.id)) html+=renderKnowledgeRow(a,0);
+      if(hasStages(a.id)) html+=renderStagesBox(a,0);
       (childrenOf[a.id]||[]).forEach(c=>{
         html+=renderCard(c,true);
-        if(hasStages(c.id)) html+=renderKnowledgeRow(c,1);
+        if(hasStages(c.id)) html+=renderStagesBox(c,1);
       });
     });
   }
@@ -5211,6 +5223,12 @@ window.renderAgents=renderAgents;
 window.viewAgentDetail=function(id){
   agentDetailId=id;
   agentDetailTab='overview';
+  renderAgentDetail();
+};
+
+window.viewAgentStages=function(id){
+  agentDetailId=id;
+  agentDetailTab='stages';
   renderAgentDetail();
 };
 
