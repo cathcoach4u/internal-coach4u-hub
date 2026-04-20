@@ -156,7 +156,7 @@ const QUESTIONS={
 
 const PILLAR_META={
   self_awareness:{letter:'S',label:'Self Awareness',desc:'Understanding your patterns and protecting your energy',color:'#5c8a7a',lightBg:'#eff4f1',borderColor:'#bfd3c9',headerBg:'#d7e2dc'},
-  aim:{letter:'A',label:'Aim',desc:'Moving toward what matters and staying on track',color:'#c9824b',lightBg:'#fbf3ea',borderColor:'#ead2b4',headerBg:'#f0dfc6'},
+  aim:{letter:'A',label:'Aim',desc:'Moving toward what matters and staying on track',color:'#0891b2',lightBg:'#ecfeff',borderColor:'#a5d8de',headerBg:'#c5e6eb'},
   foundation:{letter:'F',label:'Foundation',desc:'Routines and structures that keep life steady',color:'#4f6269',lightBg:'#eef1f2',borderColor:'#bcc6ca',headerBg:'#d0d7da'},
   emotion:{letter:'E',label:'Emotion',desc:'Recognising, pausing, and responding rather than reacting',color:'#8c6e9f',lightBg:'#f3eef7',borderColor:'#cfc1db',headerBg:'#ddd2e5'}
 };
@@ -428,7 +428,7 @@ function viewResult(id){
 function pulseScoreColor(v){
   if(!v) return '#cbd5e1';
   if(v<=4) return '#dc2626';
-  if(v<=6) return '#0891b2';
+  if(v<=6) return '#d97706';
   return '#16a34a';
 }
 function renderResultDetail(r){
@@ -522,7 +522,7 @@ function renderResultDetail(r){
         <span><strong>1\u20134</strong> Reserves running low</span>
       </div>
       <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#475569;">
-        <span style="display:inline-flex;width:18px;height:18px;border-radius:4px;background:#0891b2;color:#fff;font-weight:800;font-size:11px;align-items:center;justify-content:center;">5</span>
+        <span style="display:inline-flex;width:18px;height:18px;border-radius:4px;background:#d97706;color:#fff;font-weight:800;font-size:11px;align-items:center;justify-content:center;">5</span>
         <span><strong>5\u20136</strong> Building capacity</span>
       </div>
       <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#475569;">
