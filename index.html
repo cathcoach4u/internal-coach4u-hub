@@ -459,6 +459,28 @@ td .actions button{padding:8px 14px;font-size:12px;}
       <div id="itCards"></div>
     </div>
 
+    <!-- AGENTS -->
+    <div class="screen" id="screen-agents">
+      <div class="toolbar">
+        <input class="search-input" id="agentSearch" placeholder="Search agents..." oninput="renderAgents()">
+        <select id="agentStatusFilter" onchange="renderAgents()" style="padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;background:#fff;">
+          <option value="">All Status</option>
+          <option value="active">Active</option>
+          <option value="draft">Draft</option>
+          <option value="disabled">Disabled</option>
+        </select>
+        <select id="agentPlatformFilter" onchange="renderAgents()" style="padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;background:#fff;">
+          <option value="">All Platforms</option>
+          <option value="copilot_studio">Copilot Studio</option>
+          <option value="claude">Claude</option>
+          <option value="chatgpt">ChatGPT</option>
+          <option value="custom">Custom</option>
+        </select>
+        <button class="btn btn-blue" onclick="openAgentForm()">+ Add Agent</button>
+      </div>
+      <div id="agentContent"></div>
+    </div>
+
     <!-- FINANCE DASHBOARD -->
     <div class="screen" id="screen-findash">
       <div id="finDashContent"></div>
@@ -1054,7 +1076,7 @@ async function loadPulseResults(){
   if(error) console.error('Load pulse results error:',error);
 }
 async function loadAll(){
-  await Promise.all([loadContacts(), loadClients(), loadTasks(), loadProspects(), loadProspectNotes(), loadReferrers(), loadRefPayments(), loadRenewals(), loadContactReports(), loadTrials(), loadTaskLogs(), loadFinanceTransactions(), loadBills(), loadIntakeSubmissions(), loadPulseResults()]);
+  await Promise.all([loadContacts(), loadClients(), loadTasks(), loadProspects(), loadProspectNotes(), loadReferrers(), loadRefPayments(), loadRenewals(), loadContactReports(), loadTrials(), loadTaskLogs(), loadFinanceTransactions(), loadBills(), loadIntakeSubmissions(), loadPulseResults(), loadAgents()]);
   renderSidebarNav('home');
   renderDashboard();
   document.getElementById('appLoader').style.display='none';
@@ -1067,7 +1089,7 @@ document.getElementById('headerDate').textContent = new Date().toLocaleDateStrin
 window.navTo = function(tab,btn){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+tab).classList.add('active');
-  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ',thqintake:'Intake Forms',strdash:'Strengths',opsdash:'Operations',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Strengths Hub',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Task Management',playbook:'Lou\'s Playbook',itprojects:'IT Projects',findash:'Finance',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fintxns:'Transactions'};
+  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ',thqintake:'Intake Forms',strdash:'Strengths',opsdash:'Operations',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Strengths Hub',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Task Management',playbook:'Lou\'s Playbook',itprojects:'IT Projects',agents:'Agents',findash:'Finance',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fintxns:'Transactions'};
   document.getElementById('pageTitle').textContent=titles[tab]||'Coach4U';
   // Sync area tab
   const area=pageToArea[tab]||'home';
@@ -1108,6 +1130,7 @@ window.navTo = function(tab,btn){
   if(tab==='refpayments') renderRefPayments();
   if(tab==='playbook') renderPlaybook();
   if(tab==='itprojects') renderITProjects();
+  if(tab==='agents') renderAgents();
   if(tab==='findash') renderFinDash();
   if(tab==='finincome') renderFinIncome();
   if(tab==='finspend') renderFinSpend();
@@ -1140,7 +1163,7 @@ const areaConfig={
   clients:{label:'Clients',pages:[{id:'clidash',icon:'&#129309;',label:'Dashboard'},{id:'clients',icon:'&#128101;',label:'Client List'},{id:'thqintake',icon:'&#128221;',label:'Intake Forms'},{id:'clipulse',icon:'&#128147;',label:'Pulses'},{id:'clinvoices',icon:'&#128206;',label:'Invoices'}]},
   thrivehq:{label:'ThriveHQ',pages:[{id:'thqdash',icon:'&#128170;',label:'Dashboard'},{id:'thqtrials',icon:'&#127793;',label:'Trials'},{id:'thrivehq',icon:'&#128101;',label:'Members'},{id:'thqrenewals',icon:'&#128260;',label:'Renewals'},{id:'thqcalls',icon:'&#128222;',label:'Coaching Calls'},{id:'thqpulse',icon:'&#128147;',label:'SAFEty Pulse'}]},
   strengths:{label:'Strengths',pages:[{id:'strdash',icon:'&#127919;',label:'Dashboard'},{id:'strengths',icon:'&#128161;',label:'Strengths Hub'}]},
-  operations:{label:'Operations',pages:[{id:'opsdash',icon:'&#128736;',label:'Dashboard'},{id:'tasks',icon:'&#9989;',label:'Task Management'},{id:'playbook',icon:'&#128214;',label:'Playbook'},{id:'itprojects',icon:'&#9881;',label:'IT Projects'}]},
+  operations:{label:'Operations',pages:[{id:'opsdash',icon:'&#128736;',label:'Dashboard'},{id:'tasks',icon:'&#9989;',label:'Task Management'},{id:'playbook',icon:'&#128214;',label:'Playbook'},{id:'itprojects',icon:'&#9881;',label:'IT Projects'},{id:'agents',icon:'&#129302;',label:'Agents'}]},
   finance:{label:'Finance',pages:[{id:'findash',icon:'&#128176;',label:'Dashboard'},{id:'finincome',icon:'&#128181;',label:'Income'},{id:'finspend',icon:'&#128200;',label:'Where Money Goes'},{id:'finbills',icon:'&#128196;',label:'Bills'},{id:'fintxns',icon:'&#128203;',label:'Transactions'}]},
   about:{label:'About',pages:[{id:'about',icon:'&#8505;',label:'About'}]}
 };
