@@ -198,7 +198,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate"></span>
-      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.4.5</span>
+      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.4.6</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -3557,11 +3557,11 @@ function renderCoachingCalls(){
 
 // ── SAFETY PULSE ──
 const PULSE_BANDS=[
-  {name:'Overwhelmed',min:20,max:55,color:'#dc2626'},
-  {name:'Stretched',min:56,max:91,color:'#ea580c'},
-  {name:'Stabilising',min:92,max:127,color:'#d97706'},
-  {name:'In Control',min:128,max:163,color:'#16a34a'},
-  {name:'In Flow',min:164,max:200,color:'#059669'}
+  {name:'Overwhelmed',min:20,max:55,color:'#003366'},
+  {name:'Stretched',min:56,max:91,color:'#1a4d80'},
+  {name:'Stabilising',min:92,max:127,color:'#336699'},
+  {name:'In Control',min:128,max:163,color:'#4d80b3'},
+  {name:'In Flow',min:164,max:200,color:'#80aacc'}
 ];
 
 const PULSE_BAND_DESC={
@@ -3573,10 +3573,10 @@ const PULSE_BAND_DESC={
 };
 
 const PULSE_PILLAR_META={
-  self_awareness:{letter:'S',label:'Self Awareness',desc:'Understanding patterns and protecting energy',color:'#117f79',lightBg:'#f0faf8',borderColor:'#c0e4de',headerBg:'#dfe9e6'},
-  aim:{letter:'A',label:'Aim',desc:'Moving toward what matters and staying on track',color:'#cf5a17',lightBg:'#fdf5ee',borderColor:'#f0c8a0',headerBg:'#eee5e1'},
-  foundation:{letter:'F',label:'Foundation',desc:'Routines and structures that keep life steady',color:'#475569',lightBg:'#f8fafc',borderColor:'#cbd5e1',headerBg:'#e2e8f0'},
-  emotion:{letter:'E',label:'Emotion',desc:'Recognising, pausing, responding rather than reacting',color:'#6a3aa8',lightBg:'#f5f0fc',borderColor:'#c8b0e8',headerBg:'#e8e0ec'}
+  self_awareness:{letter:'S',label:'Self Awareness',desc:'Understanding patterns and protecting energy',color:'#5c8a7a',lightBg:'#eff4f1',borderColor:'#bfd3c9',headerBg:'#d7e2dc'},
+  aim:{letter:'A',label:'Aim',desc:'Moving toward what matters and staying on track',color:'#c9824b',lightBg:'#fbf3ea',borderColor:'#ead2b4',headerBg:'#f0dfc6'},
+  foundation:{letter:'F',label:'Foundation',desc:'Routines and structures that keep life steady',color:'#a85e43',lightBg:'#f8ede7',borderColor:'#e3c0ae',headerBg:'#ecd0bf'},
+  emotion:{letter:'E',label:'Emotion',desc:'Recognising, pausing, responding rather than reacting',color:'#8c6e9f',lightBg:'#f3eef7',borderColor:'#cfc1db',headerBg:'#ddd2e5'}
 };
 
 const PULSE_PILLAR_DESC={
@@ -3810,22 +3810,10 @@ function renderPulseResults(){
               </div>
             </div>
             <div style="display:flex;gap:6px;margin-bottom:${lowestLabel?'8':'0'}px;">
-              <div style="flex:1;background:#f0faf8;border-radius:8px;padding:8px;text-align:center;">
-                <div style="font-size:10px;color:#117f79;font-weight:600;">S</div>
-                <div style="font-size:16px;font-weight:700;color:#117f79;">${r.self_awareness}</div>
-              </div>
-              <div style="flex:1;background:#fdf5ee;border-radius:8px;padding:8px;text-align:center;">
-                <div style="font-size:10px;color:#cf5a17;font-weight:600;">A</div>
-                <div style="font-size:16px;font-weight:700;color:#cf5a17;">${r.aim}</div>
-              </div>
-              <div style="flex:1;background:#f1f5f9;border-radius:8px;padding:8px;text-align:center;">
-                <div style="font-size:10px;color:#475569;font-weight:600;">F</div>
-                <div style="font-size:16px;font-weight:700;color:#475569;">${r.foundation}</div>
-              </div>
-              <div style="flex:1;background:#f5f0fc;border-radius:8px;padding:8px;text-align:center;">
-                <div style="font-size:10px;color:#6a3aa8;font-weight:600;">E</div>
-                <div style="font-size:16px;font-weight:700;color:#6a3aa8;">${r.emotion}</div>
-              </div>
+              ${Object.entries(PULSE_PILLAR_META).map(([k,m])=>`<div style="flex:1;background:${m.lightBg};border-radius:8px;padding:8px;text-align:center;">
+                <div style="font-size:10px;color:${m.color};font-weight:600;">${m.letter}</div>
+                <div style="font-size:16px;font-weight:700;color:${m.color};">${r[k]}</div>
+              </div>`).join('')}
             </div>
             ${lowestLabel?'<div style="font-size:11px;color:#64748b;">Focus area: <strong>'+lowestLabel+'</strong></div>':''}
           </div>`;
