@@ -185,6 +185,7 @@ const COACHING_FOCUS={
 };
 
 let contact=null;
+let isPublicMode=false;
 let answers={};
 let results=[];
 let currentView='form';
@@ -192,13 +193,17 @@ let viewingResult=null;
 
 async function init(){
   const app=document.getElementById('app');
-  try{
   const params=new URLSearchParams(window.location.search);
   const cid=params.get('c');
+
   if(!cid){
-    app.innerHTML='<div class="error-card">No client link provided. Please use the link sent to you by your coach.</div>';
+    isPublicMode=true;
+    contact={first_name:'there'};
+    render();
     return;
   }
+
+  try{
   app.innerHTML='<div class="loading">Connecting...</div>';
   const {data,error}=await supabase.from('contacts').select('id,first_name,last_name').eq('id',cid).single();
   if(error){
@@ -223,6 +228,13 @@ async function init(){
 function render(){
   if(viewingResult) return renderResultDetail(viewingResult);
   const app=document.getElementById('app');
+  if(isPublicMode){
+    let html=`<div class="welcome"><h2>SAFEty Pulse</h2><p>A free capacity check-in based on the SAFE framework. Answer honestly \u2014 there are no right or wrong answers.</p>
+      <p style="font-size:11px;color:#94a3b8;margin-top:8px;">Your results are private and are not stored. Print or screenshot your results before closing this page.</p></div>`;
+    html+=renderForm();
+    app.innerHTML=html;
+    return;
+  }
   let html=`<div class="welcome"><h2>Welcome, ${contact.first_name}</h2><p>Your SAFEty Pulse check-in. Answer honestly \u2014 there are no right or wrong answers.</p></div>`;
   html+=`<div class="tab-bar">
     <div class="tab ${currentView==='form'?'active':''}" onclick="switchTab('form')">Complete Check-In</div>
@@ -297,6 +309,26 @@ async function submitPulse(e){
   btn.disabled=true;
   btn.textContent='Submitting...';
   const scores=calcScores();
+
+  if(isPublicMode){
+    const localResult={
+      id:'local-'+Date.now(),
+      created_at:new Date().toISOString(),
+      self_awareness:scores.pillars.self_awareness,
+      aim:scores.pillars.aim,
+      foundation:scores.pillars.foundation,
+      emotion:scores.pillars.emotion,
+      total:scores.total,
+      band:scores.band,
+      lowest_pillar:scores.lowest,
+      answers:JSON.stringify(answers)
+    };
+    answers={};
+    viewingResult=localResult;
+    render();
+    return;
+  }
+
   const row={
     contact_id:contact.id,
     self_awareness:scores.pillars.self_awareness,
@@ -356,8 +388,10 @@ function renderResultDetail(r){
   const d=new Date(r.created_at);
   const dateStr=d.toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   const bandColor=BANDS.find(b=>b.name===r.band)?.bg||'#333';
+  const backLabel=isPublicMode?'Start again':'Back to results';
+  const backAction=isPublicMode?'viewingResult=null;answers={};currentView="form";render();':'viewingResult=null;currentView="history";render();';
   let html=`<div class="no-print" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:10px;flex-wrap:wrap;">
-    <div class="back-btn" style="margin:0;" onclick="viewingResult=null;currentView='history';render();">&larr; Back to results</div>
+    <div class="back-btn" style="margin:0;" onclick="${backAction}">&larr; ${backLabel}</div>
     <button onclick="window.print()" style="background:#003366;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">&#128424; Print results</button>
   </div>`;
   html+=`<div class="result-card overall-result">
