@@ -328,13 +328,23 @@ function renderHistory(){
     const dateStr=d.toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'});
     const bandColor=BANDS.find(b=>b.name===r.band)?.bg||'#333';
     return `<div class="history-item" onclick="viewResult('${r.id}')">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <div><span class="band" style="color:${bandColor};">${r.band}</span> <span style="font-size:20px;font-weight:800;color:${bandColor};margin-left:8px;">${r.total}<span style="font-size:13px;color:#94a3b8;font-weight:400;">/200</span></span></div>
-        <div class="date">${dateStr}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+        <div style="flex:1;min-width:0;">
+          <div><span class="band" style="color:${bandColor};">${r.band}</span> <span style="font-size:20px;font-weight:800;color:${bandColor};margin-left:8px;">${r.total}<span style="font-size:13px;color:#94a3b8;font-weight:400;">/200</span></span></div>
+          <div class="date" style="margin-top:2px;">${dateStr}</div>
+        </div>
+        <button class="no-print" onclick="event.stopPropagation();printResult('${r.id}')" style="background:#003366;color:#fff;border:none;padding:6px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;flex-shrink:0;">&#128424; Print</button>
       </div>
       <div class="scores">S: ${r.self_awareness}/50 &middot; A: ${r.aim}/50 &middot; F: ${r.foundation}/50 &middot; E: ${r.emotion}/50</div>
     </div>`;
   }).join('');
+}
+function printResult(id){
+  const r=results.find(x=>x.id===id);
+  if(!r) return;
+  viewingResult=r;
+  render();
+  setTimeout(()=>window.print(),100);
 }
 
 function viewResult(id){
