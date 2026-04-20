@@ -198,7 +198,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate"></span>
-      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.4.0</span>
+      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.4.1</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -3564,6 +3564,51 @@ const PULSE_BANDS=[
   {name:'In Flow',min:164,max:200,color:'#80aacc'}
 ];
 
+const PULSE_BAND_DESC={
+  'Overwhelmed':'Reserves are running very low. Life is demanding more than current capacity can hold. Small steps and self-protection matter most.',
+  'Stretched':'Managing but it is costing them. Reserves are low and consistency is hard to maintain. Awareness is growing.',
+  'Stabilising':'Finding their footing. Some things are working and capacity is building. Patterns becoming visible.',
+  'In Control':'Supports are working. Handling most of what life asks with growing steadiness. Focus on consolidating what is working.',
+  'In Flow':'Operating with intention and self-trust. Capacity is strong and energy is directed toward what matters most.'
+};
+
+const PULSE_PILLAR_META={
+  self_awareness:{letter:'S',label:'Self Awareness',desc:'Understanding patterns and protecting energy',color:'#117f79',lightBg:'#f0faf8',borderColor:'#c0e4de',headerBg:'#dfe9e6'},
+  aim:{letter:'A',label:'Aim',desc:'Moving toward what matters and staying on track',color:'#cf5a17',lightBg:'#fdf5ee',borderColor:'#f0c8a0',headerBg:'#eee5e1'},
+  foundation:{letter:'F',label:'Foundation',desc:'Routines and structures that keep life steady',color:'#2a7fc4',lightBg:'#eef4fc',borderColor:'#b0cce8',headerBg:'#dce8f5'},
+  emotion:{letter:'E',label:'Emotion',desc:'Recognising, pausing, responding rather than reacting',color:'#6a3aa8',lightBg:'#f5f0fc',borderColor:'#c8b0e8',headerBg:'#e8e0ec'}
+};
+
+const PULSE_PILLAR_DESC={
+  self_awareness:'Building a clearer picture of what gives energy, what drains it, and what patterns are at play. Awareness is the foundation for every other change.',
+  aim:'Reflects how consistently attention and energy are moving toward what matters most. Direction improves when priorities are visible and the next step is clear.',
+  foundation:'Reflects the routines, structures and supports that help life feel stable. When strong, recovery is faster when things wobble.',
+  emotion:'Reflects capacity to notice rising emotional signals, pause before reacting, and return to balance. Recovery speed is the skill that grows.'
+};
+
+const PULSE_COACHING_FOCUS={
+  self_awareness:[
+    'Name one pattern this week that cost energy unnecessarily.',
+    'Track one thing that actively restored reserves.',
+    'Notice the gap between what is known and what is actually done \u2014 without judgement.'
+  ],
+  aim:[
+    'Keep the one most important priority visible this week.',
+    'Use small steps to reduce friction at the start of tasks.',
+    'When drift happens, return to what matters without self-judgement.'
+  ],
+  foundation:[
+    'Protect the one routine that most stabilises the week.',
+    'When routines slip, reset one at a time rather than all at once.',
+    'Notice early signs that structure is starting to loosen.'
+  ],
+  emotion:[
+    'Notice rising emotion one step earlier than normal.',
+    'Use one settling strategy before reactivity builds, not only after.',
+    'Practise recovery after hard moments rather than aiming for perfection.'
+  ]
+};
+
 function getPulsePortalUrl(contactId){
   return window.location.origin+window.location.pathname.replace('index.html','')+'portal/?c='+contactId;
 }
@@ -3577,11 +3622,91 @@ window.openPulseLink=function(contactId){
 };
 
 let pulseDetailContactId=null;
+let pulseDetailResultId=null;
+
+window.viewPulseResult=function(id){
+  pulseDetailResultId=id;
+  renderPulseResults();
+};
+window.backToPulseHistory=function(){
+  pulseDetailResultId=null;
+  renderPulseResults();
+};
+
+function renderPulseResultDetail(r,c){
+  const d=new Date(r.created_at);
+  const dateStr=d.toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const band=PULSE_BANDS.find(b=>b.name===r.band)||{};
+  const bandColor=band.color||'#333';
+  let html=`<div onclick="backToPulseHistory()" style="font-size:13px;color:#003366;font-weight:600;cursor:pointer;margin-bottom:16px;">&larr; Back to ${c.first_name}&rsquo;s check-ins</div>`;
+  html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;margin-bottom:14px;">
+    <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;">${c.first_name} ${c.last_name}</div>
+    <div style="font-size:13px;color:#94a3b8;margin-top:2px;">${dateStr}</div>
+  </div>`;
+  html+=`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-left:6px solid ${bandColor};border-radius:12px;padding:18px 20px;margin-bottom:16px;">
+    <div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#8a8a8a;font-weight:700;margin-bottom:10px;">Overall Result</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+      <div style="font-size:22px;font-weight:800;color:${bandColor};">${r.band}</div>
+      <div style="font-size:36px;font-weight:800;color:${bandColor};line-height:1;">${r.total}<span style="font-size:14px;color:#94a3b8;font-weight:500;">/200</span></div>
+    </div>
+    <div style="font-size:12px;line-height:1.6;color:#4a4a4a;">${PULSE_BAND_DESC[r.band]||''}</div>
+  </div>`;
+  html+=`<div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#8a8a8a;font-weight:700;margin-bottom:10px;text-align:center;">Capacity Journey</div>`;
+  html+=`<div style="display:flex;gap:3px;margin-bottom:20px;">`;
+  PULSE_BANDS.forEach(b=>{
+    const active=b.name===r.band;
+    html+=`<div style="flex:1;text-align:center;border-radius:6px;padding:8px 2px;font-size:9px;font-weight:700;line-height:1.3;${active?'background:'+b.color+';color:#fff;':'background:#ededed;color:#8a8a8a;'}">${b.name}<br><span style="font-weight:400;">${b.min}\u2013${b.max}</span></div>`;
+  });
+  html+=`</div>`;
+  html+=`<div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#8a8a8a;font-weight:700;margin-bottom:14px;text-align:center;">SAFE Results</div>`;
+  const scores={self_awareness:r.self_awareness,aim:r.aim,foundation:r.foundation,emotion:r.emotion};
+  for(const [key,meta] of Object.entries(PULSE_PILLAR_META)){
+    const score=scores[key];
+    const isLowest=r.lowest_pillar===key;
+    const focusItems=PULSE_COACHING_FOCUS[key]||[];
+    html+=`<div style="border-radius:14px;overflow:hidden;border:1px solid ${meta.borderColor};margin-bottom:14px;display:flex;background:#fff;">
+      <div style="width:28%;min-width:90px;background:${meta.lightBg};border-right:1px solid ${meta.borderColor};display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px 6px;flex-shrink:0;">
+        <div style="font-size:46px;font-weight:800;line-height:1;color:${meta.borderColor};margin-bottom:6px;">${meta.letter}</div>
+        <div style="font-size:30px;font-weight:800;line-height:1;color:${meta.color};">${score}</div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:2px;">/50</div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;min-width:0;">
+        <div style="padding:12px 16px 8px;background:${meta.headerBg};">
+          <div style="font-size:15px;font-weight:700;color:#0b3a6e;">${meta.label}${isLowest?' <span style="display:inline-block;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:#f3f4f6;color:#555;border:1px solid #d1d5db;border-radius:4px;padding:2px 8px;margin-left:4px;vertical-align:middle;">Focus area</span>':''}</div>
+          <div style="font-size:11px;color:#7c7c7c;font-style:italic;margin-top:2px;">${meta.desc}</div>
+        </div>
+        <div style="padding:10px 16px 14px;font-size:12.5px;line-height:1.6;color:#4d4d4d;">
+          ${PULSE_PILLAR_DESC[key]}
+          <div style="margin-top:10px;padding-top:10px;border-top:1px solid #eee;">
+            <div style="font-size:9.5px;letter-spacing:2px;text-transform:uppercase;color:#8a8a8a;font-weight:700;margin-bottom:6px;">Coaching Focus</div>
+            <ul style="margin:0;padding-left:18px;">
+              ${focusItems.map(item=>'<li style="font-size:12px;line-height:1.5;color:#4d4d4d;margin-bottom:4px;">'+item+'</li>').join('')}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
+  html+='<div style="height:80px;"></div>';
+  return html;
+}
 
 function renderPulseResults(){
   const q=(document.getElementById('pulseSearch').value||'').toLowerCase();
   const members=getThqMembers(q);
   let html='';
+
+  if(pulseDetailResultId){
+    const r=pulseResults.find(x=>x.id===pulseDetailResultId);
+    if(r){
+      const c=contacts.find(x=>x.id===r.contact_id);
+      if(c){
+        document.getElementById('pulseContent').innerHTML=renderPulseResultDetail(r,c);
+        return;
+      }
+    }
+    pulseDetailResultId=null;
+  }
 
   if(pulseDetailContactId){
     const c=contacts.find(x=>x.id===pulseDetailContactId);
@@ -3604,12 +3729,13 @@ function renderPulseResults(){
       if(!myResults.length){
         html+='<div style="padding:30px;text-align:center;color:#94a3b8;font-size:13px;">No Pulse results yet. Send the client their portal link to complete a check-in.</div>';
       } else {
+        html+='<div style="font-size:11px;color:#94a3b8;margin-bottom:8px;text-align:center;">Tap a check-in to view full results</div>';
         myResults.forEach(r=>{
           const d=new Date(r.created_at);
           const dateStr=d.toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
           const bandColor=(PULSE_BANDS.find(b=>b.name===r.band)||{}).color||'#333';
           const lowestLabel={self_awareness:'Self Awareness',aim:'Aim',foundation:'Foundation',emotion:'Emotion'}[r.lowest_pillar]||'';
-          html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 20px;margin-bottom:10px;">
+          html+=`<div onclick="viewPulseResult('${r.id}')" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 20px;margin-bottom:10px;cursor:pointer;transition:border-color .15s;" onmouseover="this.style.borderColor='#003366'" onmouseout="this.style.borderColor='#e2e8f0'">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
               <span style="font-size:12px;color:#64748b;">${dateStr}</span>
               <div style="display:flex;align-items:center;gap:8px;">
@@ -3638,6 +3764,7 @@ function renderPulseResults(){
             ${lowestLabel?'<div style="font-size:11px;color:#64748b;">Focus area: <strong>'+lowestLabel+'</strong></div>':''}
           </div>`;
         });
+        html+='<div style="height:80px;"></div>';
       }
       document.getElementById('pulseContent').innerHTML=html;
       return;
