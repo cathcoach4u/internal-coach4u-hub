@@ -215,7 +215,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate"></span>
-      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.8.1</span>
+      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.8.2</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -5085,14 +5085,21 @@ function renderAgents(){
   if(!list.length){
     html+='<div style="padding:40px;text-align:center;color:#94a3b8;font-size:14px;">No agents found. Add your first agent to get started.</div>';
   } else {
-    list.forEach(a=>{
+    const visibleIds=new Set(list.map(a=>a.id));
+    const childrenOf={};
+    list.forEach(a=>{if(a.parent_agent_id&&visibleIds.has(a.parent_agent_id)){(childrenOf[a.parent_agent_id]=childrenOf[a.parent_agent_id]||[]).push(a);}});
+    const topLevel=list.filter(a=>!a.parent_agent_id||!visibleIds.has(a.parent_agent_id));
+    const renderCard=(a,isChild)=>{
       const sc=AGENT_STATUS_COLORS[a.status]||{bg:'#f1f5f9',color:'#64748b'};
       const hc=AGENT_HEALTH_COLORS[a.health||'ok']||AGENT_HEALTH_COLORS.ok;
       const tc=AGENT_TYPE_COLORS[a.type||'standalone']||{bg:'#f1f5f9',color:'#64748b'};
       const platform=AGENT_PLATFORM_LABELS[a.platform]||a.platform||'';
       const lastReviewed=a.last_reviewed_at?new Date(a.last_reviewed_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}):'Never reviewed';
       const parentName=a.parent_agent_id?((agents.find(x=>x.id===a.parent_agent_id)||{}).name||''):'';
-      html+=`<div onclick="viewAgentDetail('${a.id}')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #003366;border-radius:10px;padding:16px 20px;margin-bottom:10px;cursor:pointer;transition:border-color .15s;" onmouseover="this.style.borderColor='#003366'" onmouseout="this.style.borderColor='#e2e8f0'">
+      const indent=isChild?'margin-left:32px;position:relative;':'';
+      const connector=isChild?'<div style="position:absolute;left:-22px;top:-6px;bottom:50%;width:2px;background:#cbd5e1;"></div><div style="position:absolute;left:-22px;top:50%;width:18px;height:2px;background:#cbd5e1;"></div>':'';
+      return `<div style="${indent}"><div onclick="viewAgentDetail('${a.id}')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid ${isChild?'#0f766e':'#003366'};border-radius:10px;padding:16px 20px;margin-bottom:10px;cursor:pointer;transition:border-color .15s;position:relative;" onmouseover="this.style.borderColor='#003366'" onmouseout="this.style.borderColor='#e2e8f0'">
+        ${connector}
         <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;">
           <div style="flex:1;min-width:0;">
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
@@ -5106,7 +5113,7 @@ function renderAgents(){
               <span style="font-size:12px;color:#94a3b8;">${platform}</span>
               ${a.owner?`<span style="font-size:12px;color:#94a3b8;">Owner: ${a.owner}</span>`:''}
               <span style="font-size:12px;color:#94a3b8;">Reviewed: ${lastReviewed}</span>
-              ${parentName?`<span style="font-size:12px;color:#94a3b8;">Parent: ${parentName}</span>`:''}
+              ${parentName&&!isChild?`<span style="font-size:12px;color:#94a3b8;">Parent: ${parentName}</span>`:''}
             </div>
           </div>
           <div style="display:flex;gap:6px;flex-shrink:0;" onclick="event.stopPropagation()">
@@ -5114,7 +5121,11 @@ function renderAgents(){
             <button style="background:none;border:1px solid #fecaca;border-radius:6px;padding:6px 12px;font-size:12px;color:#dc2626;cursor:pointer;" onclick="deleteAgent('${a.id}')">Del</button>
           </div>
         </div>
-      </div>`;
+      </div></div>`;
+    };
+    topLevel.forEach(a=>{
+      html+=renderCard(a,false);
+      (childrenOf[a.id]||[]).forEach(c=>{html+=renderCard(c,true);});
     });
   }
   html+='<div style="height:80px;"></div>';
