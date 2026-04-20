@@ -18,8 +18,8 @@
   .trigger{display:inline-block;background:#f1f5f9;color:#475569;font-family:monospace;font-size:12px;padding:2px 8px;border-radius:99px;margin-left:8px;}
   .stage-meta{font-size:13px;color:#64748b;margin:6px 0 14px;}
   .stage-meta strong{color:#94a3b8;font-weight:600;text-transform:uppercase;font-size:11px;letter-spacing:.5px;}
-  .ingredient{background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid #0f766e;border-radius:8px;padding:16px 20px;margin:10px 0;}
-  .ingredient-head{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;font-size:12px;font-weight:600;}
+  .message{background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid #0f766e;border-radius:8px;padding:16px 20px;margin:10px 0;}
+  .message-head{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;font-size:12px;font-weight:600;}
   .tag{padding:2px 8px;border-radius:99px;}
   .tag-cath{background:#f3e8ff;color:#7e22ce;}
   .tag-lou{background:#ccfbf1;color:#0f766e;}
@@ -99,7 +99,7 @@ async function load(){
   }
 
   if(myStages.length){
-    html+='<h2>Recipes &amp; Ingredients</h2>';
+    html+='<h2>Stages &amp; Messages</h2>';
     myStages.forEach(s=>{
       html+=`<h3>${esc(s.name)}${s.trigger_phrase?`<span class="trigger">${esc(s.trigger_phrase)}</span>`:''}</h3>`;
       if(s.purpose) html+=`<div class="stage-meta"><strong>Purpose:</strong> ${esc(s.purpose)}</div>`;
@@ -107,12 +107,12 @@ async function load(){
       if(s.platform_rule) html+=`<div class="stage-meta"><strong>Platform Rule:</strong> ${esc(s.platform_rule)}</div>`;
       const ings=myTemplates.filter(t=>t.stage_id===s.id);
       if(!ings.length){
-        html+='<div class="stage-meta" style="color:#94a3b8;font-style:italic;">No ingredients yet for this recipe.</div>';
+        html+='<div class="stage-meta" style="color:#94a3b8;font-style:italic;">No messages yet for this stage.</div>';
       } else {
         ings.forEach(t=>{
           const personaClass=t.persona==='Cath'?'tag-cath':'tag-lou';
-          html+=`<div class="ingredient">
-            <div class="ingredient-head">
+          html+=`<div class="message">
+            <div class="message-head">
               <span class="tag ${personaClass}">${esc(t.persona)}</span>
               <span class="tag tag-plat">${esc(PLATFORM_LABELS[t.platform]||t.platform)}</span>
             </div>
