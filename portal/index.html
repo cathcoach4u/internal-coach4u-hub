@@ -218,8 +218,8 @@ function render(){
   const app=document.getElementById('app');
   let html=`<div class="welcome"><h2>Welcome, ${contact.first_name}</h2><p>Your SAFEty Pulse check-in. Answer honestly \u2014 there are no right or wrong answers.</p></div>`;
   html+=`<div class="tab-bar">
-    <div class="tab ${currentView==='form'?'active':''}" onclick="switchTab('form')">New Check-In</div>
-    <div class="tab ${currentView==='history'?'active':''}" onclick="switchTab('history')">My Results (${results.length})</div>
+    <div class="tab ${currentView==='form'?'active':''}" onclick="switchTab('form')">Complete Check-In</div>
+    <div class="tab ${currentView==='history'?'active':''}" onclick="switchTab('history')">Past Results (${results.length})</div>
   </div>`;
   if(currentView==='form') html+=renderForm();
   else html+=renderHistory();
