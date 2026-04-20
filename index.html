@@ -769,6 +769,77 @@ td .actions button{padding:8px 14px;font-size:12px;}
   </div>
 </div>
 
+<!-- AGENT FORM MODAL -->
+<div class="modal-overlay" id="agentModal">
+  <div class="modal" style="max-width:620px;max-height:90vh;overflow-y:auto;">
+    <h3 id="agentFormTitle">Add Agent</h3>
+    <input type="hidden" id="agentFormId">
+    <div style="font-size:12px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin:14px 0 8px;">Basic Info</div>
+    <div class="form-group"><label>Agent Name *</label><input id="agentFormName" placeholder="e.g. C4U Communications Agent"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="form-group"><label>Status</label>
+        <select id="agentFormStatus"><option value="draft">Draft</option><option value="active">Active</option><option value="disabled">Disabled</option></select>
+      </div>
+      <div class="form-group"><label>Health</label>
+        <select id="agentFormHealth"><option value="ok">OK</option><option value="needs_attention">Needs Attention</option><option value="failing">Failing</option></select>
+      </div>
+      <div class="form-group"><label>Type</label>
+        <select id="agentFormType"><option value="standalone">Standalone</option><option value="parent">Parent</option><option value="child">Child</option></select>
+      </div>
+      <div class="form-group"><label>Platform</label>
+        <select id="agentFormPlatform"><option value="copilot_studio">Copilot Studio</option><option value="claude">Claude</option><option value="chatgpt">ChatGPT</option><option value="custom">Custom</option></select>
+      </div>
+      <div class="form-group"><label>Model</label><input id="agentFormModel" placeholder="e.g. GPT-4.1"></div>
+      <div class="form-group"><label>Trigger</label>
+        <select id="agentFormTrigger"><option value="manual">Manual</option><option value="by_agent">By Agent</option><option value="scheduled">Scheduled</option><option value="event">Event</option></select>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="form-group"><label>Owner</label><input id="agentFormOwner" value="Cath"></div>
+      <div class="form-group"><label>Review every (days)</label><input id="agentFormReviewDays" type="number" value="90"></div>
+    </div>
+    <div class="form-group"><label>Parent Agent</label>
+      <select id="agentFormParent"><option value="">None (top-level agent)</option></select>
+    </div>
+    <div style="font-size:12px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin:14px 0 8px;">Purpose &amp; Scope</div>
+    <div class="form-group"><label>Description (one line)</label><input id="agentFormDesc" placeholder="What this agent does in plain English"></div>
+    <div class="form-group"><label>Purpose (detail)</label><textarea id="agentFormPurpose" rows="2" placeholder="Why it exists, what problem it solves"></textarea></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="form-group"><label>Used by</label><input id="agentFormUsedBy" placeholder="Cath, Lou"></div>
+      <div class="form-group"><label>Used for</label><input id="agentFormUsedFor" placeholder="SMS, WhatsApp, Email, Teams"></div>
+    </div>
+    <div class="form-group"><label>Not used for</label><input id="agentFormNotUsedFor" placeholder="Manuals, reports, long-form content"></div>
+    <div style="font-size:12px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin:14px 0 8px;">Links</div>
+    <div class="form-group"><label>Source of Truth URL</label><input id="agentFormSotUrl" type="url" placeholder="https://..."></div>
+    <div class="form-group"><label>Knowledge URLs (one per line)</label><textarea id="agentFormKnowledge" rows="2" placeholder="https://..."></textarea></div>
+    <div style="font-size:12px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin:14px 0 8px;">System Prompt</div>
+    <div class="form-group"><textarea id="agentFormPrompt" rows="10" style="font-family:monospace;font-size:12px;" placeholder="Paste the full system prompt here..."></textarea></div>
+    <div style="font-size:12px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin:14px 0 8px;">Notes &amp; Version</div>
+    <div class="form-group"><label>Notes (change log, context)</label><textarea id="agentFormNotes" rows="3"></textarea></div>
+    <div class="form-group"><label>Change note for this save (appears in version history)</label><input id="agentFormChangeNote" placeholder="e.g. Added sign-off rule, fixed platform formatting"></div>
+    <div class="modal-actions">
+      <button class="btn btn-gray" onclick="closeModal('agentModal')">Cancel</button>
+      <button class="btn btn-green" onclick="saveAgent()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- AGENT ISSUE MODAL -->
+<div class="modal-overlay" id="issueModal">
+  <div class="modal">
+    <h3>Log Issue</h3>
+    <input type="hidden" id="issueAgentId">
+    <div class="form-group"><label>Date</label><input id="issueDate" type="date"></div>
+    <div class="form-group"><label>Title *</label><input id="issueTitle" placeholder="Brief summary of what went wrong"></div>
+    <div class="form-group"><label>Description</label><textarea id="issueDescription" rows="3" placeholder="What happened, what was the impact..."></textarea></div>
+    <div class="form-group"><label>Fix applied (leave blank if unresolved)</label><textarea id="issueFix" rows="2" placeholder="What was changed to fix it..."></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-gray" onclick="closeModal('issueModal')">Cancel</button>
+      <button class="btn btn-green" onclick="saveIssue()">Log Issue</button>
+    </div>
+  </div>
+</div>
+
 <!-- CONTACT MODAL -->
 <div class="modal-overlay" id="contactModal">
   <div class="modal">
@@ -1043,6 +1114,7 @@ let tasks = [];
 let referrals = [];
 let pulseResults = [];
 let itprojects = [];
+let agents = [], agentVersions = [], agentIssues = [];
 let tempMembers = [];
 
 // ── LOAD FROM SUPABASE ──
@@ -1074,6 +1146,16 @@ async function loadPulseResults(){
   const {data,error}=await supabase.from('pulse_results').select('*').order('created_at',{ascending:false});
   if(data) pulseResults=data;
   if(error) console.error('Load pulse results error:',error);
+}
+async function loadAgents(){
+  const [a,av,ai]=await Promise.all([
+    supabase.from('agents').select('*').order('name'),
+    supabase.from('agent_versions').select('*').order('created_at',{ascending:false}),
+    supabase.from('agent_issues').select('*').order('occurred_at',{ascending:false})
+  ]);
+  if(a.data) agents=a.data;
+  if(av.data) agentVersions=av.data;
+  if(ai.data) agentIssues=ai.data;
 }
 async function loadAll(){
   await Promise.all([loadContacts(), loadClients(), loadTasks(), loadProspects(), loadProspectNotes(), loadReferrers(), loadRefPayments(), loadRenewals(), loadContactReports(), loadTrials(), loadTaskLogs(), loadFinanceTransactions(), loadBills(), loadIntakeSubmissions(), loadPulseResults(), loadAgents()]);
@@ -4942,6 +5024,378 @@ window.saveITProject=function(){
 window.deleteITProject=function(id){
   if(!confirm('Delete this project?'))return;
   itprojects=itprojects.filter(p=>p.id!==id);toast('Project deleted','success');renderITProjects();
+};
+
+// ── AGENTS ──
+let agentDetailId=null, agentDetailTab='overview';
+
+const AGENT_STATUS_COLORS={
+  active:{bg:'#dcfce7',color:'#15803d'},
+  draft:{bg:'#eff6ff',color:'#2563eb'},
+  disabled:{bg:'#f1f5f9',color:'#64748b'}
+};
+const AGENT_HEALTH_COLORS={
+  ok:{bg:'#dcfce7',color:'#15803d',label:'OK'},
+  needs_attention:{bg:'#fef9c3',color:'#a16207',label:'Needs attention'},
+  failing:{bg:'#fee2e2',color:'#dc2626',label:'Failing'}
+};
+const AGENT_TYPE_COLORS={
+  parent:{bg:'#e0e7ff',color:'#3730a3'},
+  child:{bg:'#ccfbf1',color:'#0f766e'},
+  standalone:{bg:'#f3e8ff',color:'#7e22ce'}
+};
+const AGENT_PLATFORM_LABELS={
+  copilot_studio:'Copilot Studio',
+  claude:'Claude',
+  chatgpt:'ChatGPT',
+  custom:'Custom'
+};
+
+function renderAgents(){
+  const el=document.getElementById('agentContent');
+  if(!el) return;
+  if(agentDetailId){renderAgentDetail();return;}
+  const q=(document.getElementById('agentSearch')||{value:''}).value.toLowerCase();
+  const sf=(document.getElementById('agentStatusFilter')||{value:''}).value;
+  const pf=(document.getElementById('agentPlatformFilter')||{value:''}).value;
+  const list=agents.filter(a=>{
+    if(sf&&a.status!==sf) return false;
+    if(pf&&a.platform!==pf) return false;
+    if(q&&!(a.name+' '+(a.description||'')+' '+(a.owner||'')).toLowerCase().includes(q)) return false;
+    return true;
+  });
+  const total=agents.length;
+  const active=agents.filter(a=>a.status==='active').length;
+  const needsReview=agents.filter(a=>a.health&&a.health!=='ok').length;
+  const children=agents.filter(a=>a.type==='child').length;
+  let html=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
+    ${[{label:'Total Agents',val:total,color:'#003366'},{label:'Active',val:active,color:'#15803d'},{label:'Needs Review',val:needsReview,color:'#a16207'},{label:'Child Agents',val:children,color:'#7e22ce'}]
+    .map(s=>`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px 20px;">
+      <div style="font-size:11px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">${s.label}</div>
+      <div style="font-size:28px;font-weight:800;color:${s.color};">${s.val}</div>
+    </div>`).join('')}
+  </div>`;
+  if(!list.length){
+    html+='<div style="padding:40px;text-align:center;color:#94a3b8;font-size:14px;">No agents found. Add your first agent to get started.</div>';
+  } else {
+    list.forEach(a=>{
+      const sc=AGENT_STATUS_COLORS[a.status]||{bg:'#f1f5f9',color:'#64748b'};
+      const hc=AGENT_HEALTH_COLORS[a.health||'ok']||AGENT_HEALTH_COLORS.ok;
+      const tc=AGENT_TYPE_COLORS[a.type||'standalone']||{bg:'#f1f5f9',color:'#64748b'};
+      const platform=AGENT_PLATFORM_LABELS[a.platform]||a.platform||'';
+      const lastReviewed=a.last_reviewed_at?new Date(a.last_reviewed_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}):'Never reviewed';
+      const parentName=a.parent_agent_id?((agents.find(x=>x.id===a.parent_agent_id)||{}).name||''):'';
+      html+=`<div onclick="viewAgentDetail('${a.id}')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #003366;border-radius:10px;padding:16px 20px;margin-bottom:10px;cursor:pointer;transition:border-color .15s;" onmouseover="this.style.borderColor='#003366'" onmouseout="this.style.borderColor='#e2e8f0'">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
+              <span style="font-weight:700;font-size:15px;color:#1e3a5f;">${a.name}</span>
+              <span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:600;background:${tc.bg};color:${tc.color};">${a.type||'standalone'}</span>
+              <span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:600;background:${sc.bg};color:${sc.color};">${a.status||'draft'}</span>
+              ${a.health&&a.health!=='ok'?`<span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:600;background:${hc.bg};color:${hc.color};">${hc.label}</span>`:''}
+            </div>
+            <div style="font-size:13px;color:#475569;margin-bottom:6px;">${a.description||''}</div>
+            <div style="display:flex;gap:16px;flex-wrap:wrap;">
+              <span style="font-size:12px;color:#94a3b8;">${platform}</span>
+              ${a.owner?`<span style="font-size:12px;color:#94a3b8;">Owner: ${a.owner}</span>`:''}
+              <span style="font-size:12px;color:#94a3b8;">Reviewed: ${lastReviewed}</span>
+              ${parentName?`<span style="font-size:12px;color:#94a3b8;">Parent: ${parentName}</span>`:''}
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;" onclick="event.stopPropagation()">
+            <button style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;" onclick="openAgentForm('${a.id}')">Edit</button>
+            <button style="background:none;border:1px solid #fecaca;border-radius:6px;padding:6px 12px;font-size:12px;color:#dc2626;cursor:pointer;" onclick="deleteAgent('${a.id}')">Del</button>
+          </div>
+        </div>
+      </div>`;
+    });
+  }
+  html+='<div style="height:80px;"></div>';
+  el.innerHTML=html;
+}
+window.renderAgents=renderAgents;
+
+window.viewAgentDetail=function(id){
+  agentDetailId=id;
+  agentDetailTab='overview';
+  renderAgentDetail();
+};
+
+function renderAgentDetail(){
+  const el=document.getElementById('agentContent');
+  if(!el) return;
+  const a=agents.find(x=>x.id===agentDetailId);
+  if(!a){agentDetailId=null;renderAgents();return;}
+  const sc=AGENT_STATUS_COLORS[a.status]||{bg:'#f1f5f9',color:'#64748b'};
+  const hc=AGENT_HEALTH_COLORS[a.health||'ok']||AGENT_HEALTH_COLORS.ok;
+  const platform=AGENT_PLATFORM_LABELS[a.platform]||a.platform||'';
+  const myVersions=agentVersions.filter(v=>v.agent_id===a.id).sort((x,y)=>y.version_number-x.version_number);
+  const myIssues=agentIssues.filter(i=>i.agent_id===a.id).sort((x,y)=>new Date(y.occurred_at)-new Date(x.occurred_at));
+  const openIssues=myIssues.filter(i=>i.status==='open').length;
+  const tabs=[
+    {id:'overview',label:'Overview'},
+    {id:'prompt',label:'System Prompt'},
+    {id:'versions',label:`Versions (${myVersions.length})`},
+    {id:'issues',label:`Issues${openIssues?' ('+openIssues+' open)':''}`,alert:openIssues>0}
+  ];
+  let html=`<div onclick="backToAgentList()" style="font-size:13px;color:#003366;font-weight:600;cursor:pointer;margin-bottom:16px;">&larr; Back to agents</div>`;
+  html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #003366;border-radius:12px;padding:16px 20px;margin-bottom:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
+          <span style="font-weight:800;font-size:18px;color:#1e3a5f;">${a.name}</span>
+          <span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:600;background:${sc.bg};color:${sc.color};">${a.status}</span>
+          <span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:600;background:${hc.bg};color:${hc.color};">${hc.label}</span>
+        </div>
+        <div style="font-size:13px;color:#64748b;">${platform}${a.owner?' &middot; Owner: '+a.owner:''}</div>
+      </div>
+      <button style="background:#003366;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;" onclick="openAgentForm('${a.id}')">Edit Agent</button>
+    </div>
+  </div>`;
+  html+=`<div style="display:flex;gap:0;margin-bottom:16px;border-bottom:2px solid #e2e8f0;">
+    ${tabs.map(t=>`<button onclick="setAgentTab('${t.id}')" style="background:none;border:none;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;border-bottom:2px solid ${agentDetailTab===t.id?'#003366':'transparent'};color:${t.alert?'#dc2626':agentDetailTab===t.id?'#003366':'#64748b'};margin-bottom:-2px;">${t.label}</button>`).join('')}
+  </div>`;
+  if(agentDetailTab==='overview'){
+    const row=(label,val)=>val?`<div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #f1f5f9;"><span style="font-size:12px;color:#94a3b8;font-weight:600;min-width:160px;flex-shrink:0;">${label}</span><span style="font-size:13px;color:#1e293b;">${val}</span></div>`:'';
+    const parentName=a.parent_agent_id?((agents.find(x=>x.id===a.parent_agent_id)||{}).name||''):'';
+    const lastReviewed=a.last_reviewed_at?new Date(a.last_reviewed_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}):'Never';
+    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px 20px;">
+      ${row('Description',a.description)}${row('Purpose',a.purpose)}${row('Type',a.type)}${row('Platform',platform)}${row('Model',a.model)}${row('Used by',a.used_by)}${row('Used for',a.used_for)}${row('Not used for',a.not_used_for)}${row('Trigger',a.trigger_type)}${row('Parent agent',parentName)}${row('Owner',a.owner)}${row('Last reviewed',lastReviewed)}${row('Review every',a.review_frequency_days?a.review_frequency_days+' days':'')}
+      ${a.source_of_truth_url?`<div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #f1f5f9;"><span style="font-size:12px;color:#94a3b8;font-weight:600;min-width:160px;flex-shrink:0;">Source of truth</span><a href="${a.source_of_truth_url}" target="_blank" style="font-size:13px;color:#003366;">${a.source_of_truth_url}</a></div>`:''}
+      ${a.knowledge_urls?`<div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #f1f5f9;"><span style="font-size:12px;color:#94a3b8;font-weight:600;min-width:160px;flex-shrink:0;">Knowledge URLs</span><span style="font-size:13px;color:#1e293b;white-space:pre-wrap;">${a.knowledge_urls}</span></div>`:''}
+      ${a.notes?`<div style="padding:10px 0;"><span style="font-size:12px;color:#94a3b8;font-weight:600;display:block;margin-bottom:6px;">Notes</span><div style="font-size:13px;color:#1e293b;white-space:pre-wrap;">${a.notes}</div></div>`:''}
+      ${!a.description&&!a.purpose&&!a.used_by?'<div style="color:#94a3b8;font-size:13px;">No details yet. Edit this agent to fill in the overview.</div>':''}
+    </div>`;
+  }
+  if(agentDetailTab==='prompt'){
+    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px 20px;">`;
+    if(a.system_prompt){
+      html+=`<pre style="font-size:12px;color:#1e293b;white-space:pre-wrap;font-family:inherit;margin:0;line-height:1.6;">${a.system_prompt.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>`;
+    } else {
+      html+='<div style="color:#94a3b8;font-size:13px;">No system prompt saved yet. Edit this agent to add the prompt.</div>';
+    }
+    html+=`</div>`;
+  }
+  if(agentDetailTab==='versions'){
+    html+=`<div style="margin-bottom:12px;font-size:13px;color:#64748b;">Every save creates a snapshot. Click Revert to restore a previous version (creates a new snapshot — nothing is deleted).</div>`;
+    if(!myVersions.length){
+      html+='<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:20px;text-align:center;color:#94a3b8;font-size:13px;">No versions yet. Edit and save this agent to create the first snapshot.</div>';
+    } else {
+      myVersions.forEach(v=>{
+        const date=new Date(v.created_at).toLocaleString('en-AU',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+        html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;margin-bottom:8px;overflow:hidden;">
+          <div onclick="toggleVersionExpand('${v.id}')" style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;cursor:pointer;background:#f8fafc;">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+              <span style="font-weight:700;font-size:13px;color:#003366;">v${v.version_number}</span>
+              <span style="font-size:12px;color:#64748b;">${date}</span>
+              ${v.changed_by?`<span style="font-size:12px;color:#94a3b8;">${v.changed_by}</span>`:''}
+              ${v.change_note?`<span style="font-size:12px;color:#475569;font-style:italic;">${v.change_note}</span>`:''}
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <button onclick="event.stopPropagation();revertToVersion('${a.id}','${v.id}')" style="background:#003366;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;">Revert</button>
+              <span style="color:#94a3b8;font-size:12px;" id="vexpand-arrow-${v.id}">&#9654;</span>
+            </div>
+          </div>
+          <div id="vexpand-${v.id}" style="display:none;padding:16px;border-top:1px solid #e2e8f0;">
+            ${[['Name',v.name],['Status',v.status],['Type',v.type],['Platform',AGENT_PLATFORM_LABELS[v.platform]||v.platform],['Model',v.model],['Used by',v.used_by],['Used for',v.used_for],['Not used for',v.not_used_for],['Trigger',v.trigger_type],['Owner',v.owner],['Health',v.health],['Source of truth',v.source_of_truth_url],['Knowledge URLs',v.knowledge_urls]].filter(r=>r[1]).map(r=>`<div style="display:flex;gap:12px;padding:6px 0;border-bottom:1px solid #f1f5f9;"><span style="font-size:12px;color:#94a3b8;min-width:140px;flex-shrink:0;">${r[0]}</span><span style="font-size:12px;color:#1e293b;">${r[1]}</span></div>`).join('')}
+            ${v.system_prompt?`<div style="margin-top:12px;"><div style="font-size:12px;color:#94a3b8;margin-bottom:6px;">System Prompt</div><pre style="font-size:11px;color:#475569;white-space:pre-wrap;background:#f8fafc;padding:12px;border-radius:6px;font-family:inherit;max-height:200px;overflow-y:auto;">${v.system_prompt.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></div>`:''}
+            ${v.notes_snapshot?`<div style="margin-top:8px;"><div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">Notes at this version</div><div style="font-size:12px;color:#475569;white-space:pre-wrap;">${v.notes_snapshot}</div></div>`:''}
+          </div>
+        </div>`;
+      });
+    }
+  }
+  if(agentDetailTab==='issues'){
+    html+=`<div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+      <button class="btn btn-blue" onclick="openIssueForm('${a.id}')">+ Log Issue</button>
+    </div>`;
+    if(!myIssues.length){
+      html+='<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:20px;text-align:center;color:#94a3b8;font-size:13px;">No issues logged for this agent.</div>';
+    } else {
+      myIssues.forEach(i=>{
+        const date=new Date(i.occurred_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'});
+        const open=i.status==='open';
+        html+=`<div style="background:#fff;border:1px solid ${open?'#fecaca':'#e2e8f0'};border-left:4px solid ${open?'#dc2626':'#16a34a'};border-radius:10px;padding:16px 20px;margin-bottom:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+            <div>
+              <div style="font-weight:700;font-size:14px;color:#1e293b;margin-bottom:2px;">${i.title}</div>
+              <div style="font-size:12px;color:#94a3b8;">${date}${i.status==='resolved'?' &middot; Resolved '+(i.resolved_at?new Date(i.resolved_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}):''): ''}</div>
+            </div>
+            ${open?`<button onclick="resolveIssue('${i.id}')" style="background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer;">Mark Resolved</button>`:'<span style="font-size:11px;padding:3px 8px;border-radius:99px;background:#dcfce7;color:#15803d;font-weight:600;">Resolved</span>'}
+          </div>
+          ${i.description?`<div style="font-size:13px;color:#475569;margin-bottom:6px;">${i.description}</div>`:''}
+          ${i.fix_applied?`<div style="font-size:12px;color:#64748b;background:#f8fafc;padding:8px 12px;border-radius:6px;border-left:3px solid #16a34a;"><strong>Fix:</strong> ${i.fix_applied}</div>`:''}
+        </div>`;
+      });
+    }
+  }
+  html+='<div style="height:80px;"></div>';
+  el.innerHTML=html;
+}
+
+window.backToAgentList=function(){agentDetailId=null;renderAgents();};
+window.setAgentTab=function(tab){agentDetailTab=tab;renderAgentDetail();};
+window.toggleVersionExpand=function(id){
+  const el=document.getElementById('vexpand-'+id);
+  const arrow=document.getElementById('vexpand-arrow-'+id);
+  if(!el) return;
+  const open=el.style.display==='none';
+  el.style.display=open?'block':'none';
+  if(arrow) arrow.innerHTML=open?'&#9660;':'&#9654;';
+};
+
+window.openAgentForm=function(id){
+  const a=id?agents.find(x=>x.id===id):null;
+  document.getElementById('agentFormTitle').textContent=a?'Edit Agent':'Add Agent';
+  document.getElementById('agentFormId').value=a?a.id:'';
+  document.getElementById('agentFormName').value=a?a.name:'';
+  document.getElementById('agentFormStatus').value=a?(a.status||'draft'):'draft';
+  document.getElementById('agentFormType').value=a?(a.type||'standalone'):'standalone';
+  document.getElementById('agentFormPlatform').value=a?(a.platform||'copilot_studio'):'copilot_studio';
+  document.getElementById('agentFormDesc').value=a?(a.description||''):'';
+  document.getElementById('agentFormPurpose').value=a?(a.purpose||''):'';
+  document.getElementById('agentFormUsedBy').value=a?(a.used_by||''):'';
+  document.getElementById('agentFormUsedFor').value=a?(a.used_for||''):'';
+  document.getElementById('agentFormNotUsedFor').value=a?(a.not_used_for||''):'';
+  document.getElementById('agentFormTrigger').value=a?(a.trigger_type||'manual'):'manual';
+  document.getElementById('agentFormModel').value=a?(a.model||''):'';
+  document.getElementById('agentFormOwner').value=a?(a.owner||'Cath'):'Cath';
+  document.getElementById('agentFormSotUrl').value=a?(a.source_of_truth_url||''):'';
+  document.getElementById('agentFormKnowledge').value=a?(a.knowledge_urls||''):'';
+  document.getElementById('agentFormPrompt').value=a?(a.system_prompt||''):'';
+  document.getElementById('agentFormHealth').value=a?(a.health||'ok'):'ok';
+  document.getElementById('agentFormNotes').value=a?(a.notes||''):'';
+  document.getElementById('agentFormReviewDays').value=a?(a.review_frequency_days||90):90;
+  document.getElementById('agentFormChangeNote').value='';
+  const parentSel=document.getElementById('agentFormParent');
+  parentSel.innerHTML='<option value="">None (top-level agent)</option>';
+  agents.filter(x=>!a||x.id!==a.id).forEach(x=>{
+    const opt=document.createElement('option');
+    opt.value=x.id; opt.textContent=x.name;
+    if(a&&a.parent_agent_id===x.id) opt.selected=true;
+    parentSel.appendChild(opt);
+  });
+  document.getElementById('agentModal').classList.add('open');
+};
+
+window.saveAgent=async function(){
+  const id=document.getElementById('agentFormId').value;
+  const changeNote=document.getElementById('agentFormChangeNote').value.trim();
+  const data={
+    name:document.getElementById('agentFormName').value.trim(),
+    status:document.getElementById('agentFormStatus').value,
+    type:document.getElementById('agentFormType').value,
+    platform:document.getElementById('agentFormPlatform').value,
+    description:document.getElementById('agentFormDesc').value.trim(),
+    purpose:document.getElementById('agentFormPurpose').value.trim(),
+    used_by:document.getElementById('agentFormUsedBy').value.trim(),
+    used_for:document.getElementById('agentFormUsedFor').value.trim(),
+    not_used_for:document.getElementById('agentFormNotUsedFor').value.trim(),
+    trigger_type:document.getElementById('agentFormTrigger').value,
+    model:document.getElementById('agentFormModel').value.trim(),
+    parent_agent_id:document.getElementById('agentFormParent').value||null,
+    owner:document.getElementById('agentFormOwner').value.trim(),
+    source_of_truth_url:document.getElementById('agentFormSotUrl').value.trim(),
+    knowledge_urls:document.getElementById('agentFormKnowledge').value.trim(),
+    system_prompt:document.getElementById('agentFormPrompt').value,
+    health:document.getElementById('agentFormHealth').value,
+    notes:document.getElementById('agentFormNotes').value.trim(),
+    review_frequency_days:parseInt(document.getElementById('agentFormReviewDays').value)||90,
+    updated_at:new Date().toISOString()
+  };
+  if(!data.name){toast('Agent name is required','error');return;}
+  let agentId=id;
+  if(id){
+    const {error}=await supabase.from('agents').update(data).eq('id',id);
+    if(error){toast('Error saving agent','error');console.error(error);return;}
+    Object.assign(agents.find(x=>x.id===id),data);
+  } else {
+    const {data:inserted,error}=await supabase.from('agents').insert(data).select().single();
+    if(error){toast('Error creating agent','error');console.error(error);return;}
+    agentId=inserted.id;
+    agents.push(inserted);
+  }
+  const prevVersions=agentVersions.filter(v=>v.agent_id===agentId);
+  const nextVersion=(prevVersions.length?Math.max(...prevVersions.map(v=>v.version_number)):0)+1;
+  const snapshot={agent_id:agentId,version_number:nextVersion,changed_by:data.owner||'',change_note:changeNote,
+    name:data.name,status:data.status,type:data.type,platform:data.platform,description:data.description,
+    purpose:data.purpose,used_by:data.used_by,used_for:data.used_for,not_used_for:data.not_used_for,
+    trigger_type:data.trigger_type,model:data.model,owner:data.owner,source_of_truth_url:data.source_of_truth_url,
+    knowledge_urls:data.knowledge_urls,system_prompt:data.system_prompt,health:data.health,notes_snapshot:data.notes};
+  const {data:vData,error:vErr}=await supabase.from('agent_versions').insert(snapshot).select().single();
+  if(!vErr&&vData) agentVersions.push(vData);
+  toast(id?'Agent updated':'Agent created','success');
+  closeModal('agentModal');
+  if(agentDetailId) renderAgentDetail(); else renderAgents();
+};
+
+window.deleteAgent=async function(id){
+  if(!confirm('Delete this agent? This cannot be undone.'))return;
+  const {error}=await supabase.from('agents').delete().eq('id',id);
+  if(error){toast('Error deleting agent','error');return;}
+  agents=agents.filter(a=>a.id!==id);
+  agentVersions=agentVersions.filter(v=>v.agent_id!==id);
+  agentIssues=agentIssues.filter(i=>i.agent_id!==id);
+  if(agentDetailId===id) agentDetailId=null;
+  toast('Agent deleted','success');
+  renderAgents();
+};
+
+window.revertToVersion=async function(agentId,versionId){
+  if(!confirm('Revert to this version? A new snapshot will be created and nothing will be deleted.'))return;
+  const v=agentVersions.find(x=>x.id===versionId);
+  if(!v){toast('Version not found','error');return;}
+  const data={name:v.name,status:v.status,type:v.type,platform:v.platform,description:v.description,
+    purpose:v.purpose,used_by:v.used_by,used_for:v.used_for,not_used_for:v.not_used_for,
+    trigger_type:v.trigger_type,model:v.model,owner:v.owner,source_of_truth_url:v.source_of_truth_url,
+    knowledge_urls:v.knowledge_urls,system_prompt:v.system_prompt,health:v.health,notes:v.notes_snapshot,
+    updated_at:new Date().toISOString()};
+  const {error}=await supabase.from('agents').update(data).eq('id',agentId);
+  if(error){toast('Error reverting','error');return;}
+  const a=agents.find(x=>x.id===agentId);
+  if(a) Object.assign(a,data);
+  const prevVersions=agentVersions.filter(v2=>v2.agent_id===agentId);
+  const nextVersion=(prevVersions.length?Math.max(...prevVersions.map(v2=>v2.version_number)):0)+1;
+  const snapshot={...data,agent_id:agentId,version_number:nextVersion,changed_by:data.owner||'',change_note:'Reverted to v'+v.version_number,notes_snapshot:data.notes};
+  const {data:vData,error:vErr}=await supabase.from('agent_versions').insert(snapshot).select().single();
+  if(!vErr&&vData) agentVersions.push(vData);
+  toast('Reverted to v'+v.version_number,'success');
+  renderAgentDetail();
+};
+
+window.openIssueForm=function(agentId){
+  document.getElementById('issueAgentId').value=agentId;
+  document.getElementById('issueTitle').value='';
+  document.getElementById('issueDescription').value='';
+  document.getElementById('issueFix').value='';
+  document.getElementById('issueDate').value=new Date().toISOString().split('T')[0];
+  document.getElementById('issueModal').classList.add('open');
+};
+
+window.saveIssue=async function(){
+  const agentId=document.getElementById('issueAgentId').value;
+  const title=document.getElementById('issueTitle').value.trim();
+  if(!title){toast('Issue title required','error');return;}
+  const data={agent_id:agentId,title,
+    description:document.getElementById('issueDescription').value.trim(),
+    fix_applied:document.getElementById('issueFix').value.trim(),
+    occurred_at:document.getElementById('issueDate').value,status:'open'};
+  const {data:inserted,error}=await supabase.from('agent_issues').insert(data).select().single();
+  if(error){toast('Error logging issue','error');console.error(error);return;}
+  agentIssues.push(inserted);
+  toast('Issue logged','success');
+  closeModal('issueModal');
+  renderAgentDetail();
+};
+
+window.resolveIssue=async function(id){
+  const resolvedAt=new Date().toISOString();
+  const {error}=await supabase.from('agent_issues').update({status:'resolved',resolved_at:resolvedAt}).eq('id',id);
+  if(error){toast('Error resolving issue','error');return;}
+  const i=agentIssues.find(x=>x.id===id);
+  if(i){i.status='resolved';i.resolved_at=resolvedAt;}
+  toast('Issue resolved','success');
+  renderAgentDetail();
 };
 
 // ── FINANCE ──
