@@ -206,7 +206,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate"></span>
-      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.5.3</span>
+      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.6.0</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -392,6 +392,14 @@ td .actions button{padding:8px 14px;font-size:12px;}
         <input class="search-input" id="pulseSearch" placeholder="Search members..." oninput="renderPulseResults()">
       </div>
       <div id="pulseContent"></div>
+    </div>
+
+    <!-- CLIENT PULSES -->
+    <div class="screen" id="screen-clipulse">
+      <div class="toolbar">
+        <input class="search-input" id="cliPulseSearch" placeholder="Search clients..." oninput="renderClientPulses()">
+      </div>
+      <div id="cliPulseContent"></div>
     </div>
 
     <!-- OPERATIONS DASHBOARD -->
@@ -1078,6 +1086,7 @@ window.navTo = function(tab,btn){
   if(tab==='thqrenewals') renderThqRenewals();
   if(tab==='thqcalls') renderCoachingCalls();
   if(tab==='thqpulse') renderPulseResults();
+  if(tab==='clipulse') renderClientPulses();
   if(tab==='thqintake') renderIntakeSubmissions();
   if(tab==='tasks') renderTasks();
   if(tab==='refpayments') renderRefPayments();
@@ -1112,7 +1121,7 @@ const areaConfig={
   crm:{label:'CRM',pages:[{id:'masterlist',icon:'&#128209;',label:'Master List'}]},
   referrers:{label:'Referrers',pages:[{id:'referrals',icon:'&#128101;',label:'Referral Hub'},{id:'refpayments',icon:'&#128176;',label:'Payments'}]},
   prospects:{label:'Prospects',pages:[{id:'prospects',icon:'&#128203;',label:'Prospect List'}]},
-  clients:{label:'Clients',pages:[{id:'clidash',icon:'&#129309;',label:'Dashboard'},{id:'clients',icon:'&#128101;',label:'Client List'},{id:'thqintake',icon:'&#128221;',label:'Intake Forms'},{id:'clinvoices',icon:'&#128206;',label:'Invoices'}]},
+  clients:{label:'Clients',pages:[{id:'clidash',icon:'&#129309;',label:'Dashboard'},{id:'clients',icon:'&#128101;',label:'Client List'},{id:'thqintake',icon:'&#128221;',label:'Intake Forms'},{id:'clipulse',icon:'&#128147;',label:'Pulses'},{id:'clinvoices',icon:'&#128206;',label:'Invoices'}]},
   thrivehq:{label:'ThriveHQ',pages:[{id:'thqdash',icon:'&#128170;',label:'Dashboard'},{id:'thqtrials',icon:'&#127793;',label:'Trials'},{id:'thrivehq',icon:'&#128101;',label:'Members'},{id:'thqrenewals',icon:'&#128260;',label:'Renewals'},{id:'thqcalls',icon:'&#128222;',label:'Coaching Calls'},{id:'thqpulse',icon:'&#128147;',label:'SAFEty Pulse'}]},
   strengths:{label:'Strengths',pages:[{id:'strdash',icon:'&#127919;',label:'Dashboard'},{id:'strengths',icon:'&#128161;',label:'Strengths Hub'}]},
   operations:{label:'Operations',pages:[{id:'opsdash',icon:'&#128736;',label:'Dashboard'},{id:'tasks',icon:'&#9989;',label:'Task Management'},{id:'playbook',icon:'&#128214;',label:'Playbook'},{id:'itprojects',icon:'&#9881;',label:'IT Projects'}]},
@@ -3694,7 +3703,9 @@ function pulseScoreColor(v){
   if(v<=6) return '#d97706';
   return '#16a34a';
 }
-function renderPulseResultDetail(r,c){
+function renderPulseResultDetail(r,c,backHandler,backLabel){
+  backHandler=backHandler||'backToPulseHistory()';
+  backLabel=backLabel||`Back to ${c.first_name}&rsquo;s check-ins`;
   const d=new Date(r.created_at);
   const dateStr=d.toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   let answers={};
@@ -3702,7 +3713,7 @@ function renderPulseResultDetail(r,c){
   const band=PULSE_BANDS.find(b=>b.name===r.band)||{};
   const bandColor=band.color||'#333';
   let html=`<div class="no-print" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:10px;flex-wrap:wrap;">
-    <div onclick="backToPulseHistory()" style="font-size:13px;color:#003366;font-weight:600;cursor:pointer;">&larr; Back to ${c.first_name}&rsquo;s check-ins</div>
+    <div onclick="${backHandler}" style="font-size:13px;color:#003366;font-weight:600;cursor:pointer;">&larr; ${backLabel}</div>
     <button onclick="window.print()" style="background:#003366;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">&#128424; Print</button>
   </div>`;
   html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;margin-bottom:14px;">
@@ -3904,6 +3915,127 @@ function renderPulseResults(){
   if(!members.length) html='<div style="padding:30px;text-align:center;color:#94a3b8;">No ThriveHQ members found.</div>';
   html+='<div style="height:80px;"></div>';
   document.getElementById('pulseContent').innerHTML=html;
+}
+
+// ── CLIENTS → PULSES ──
+let cliPulseSelectedId='';
+let cliPulseDetailResultId=null;
+
+window.setCliPulseClient=function(id){
+  cliPulseSelectedId=id;
+  renderClientPulses();
+};
+window.viewCliPulseResult=function(id){
+  cliPulseDetailResultId=id;
+  renderClientPulses();
+};
+window.backFromCliPulseDetail=function(){
+  cliPulseDetailResultId=null;
+  renderClientPulses();
+};
+
+function getAllClientContacts(q){
+  const memberMap={};
+  clients.forEach(cl=>{
+    (cl.members||[]).forEach(mid=>{
+      if(!memberMap[mid])memberMap[mid]={contact:null,clients:[]};
+      memberMap[mid].clients.push(cl);
+    });
+  });
+  Object.keys(memberMap).forEach(mid=>{memberMap[mid].contact=contacts.find(c=>c.id===mid);});
+  let members=Object.values(memberMap).filter(m=>m.contact);
+  if(q){
+    members=members.filter(m=>{
+      const c=m.contact;
+      return (c.first_name+' '+c.last_name+' '+(c.email||'')).toLowerCase().includes(q);
+    });
+  }
+  members.sort((a,b)=>(a.contact.first_name+' '+a.contact.last_name).localeCompare(b.contact.first_name+' '+b.contact.last_name));
+  return members;
+}
+
+function renderClientPulses(){
+  const contentEl=document.getElementById('cliPulseContent');
+  if(!contentEl) return;
+
+  if(cliPulseDetailResultId){
+    const r=pulseResults.find(x=>x.id===cliPulseDetailResultId);
+    if(r){
+      const c=contacts.find(x=>x.id===r.contact_id);
+      if(c){
+        contentEl.innerHTML=renderPulseResultDetail(r,c,'backFromCliPulseDetail()','Back to Pulses');
+        return;
+      }
+    }
+    cliPulseDetailResultId=null;
+  }
+
+  const q=(document.getElementById('cliPulseSearch').value||'').toLowerCase();
+  const clientContacts=getAllClientContacts(q);
+
+  const weekStart=new Date();
+  const dayOfWeek=(weekStart.getDay()+6)%7;
+  weekStart.setDate(weekStart.getDate()-dayOfWeek);
+  weekStart.setHours(0,0,0,0);
+  const thisWeek=pulseResults.filter(r=>new Date(r.created_at)>=weekStart).length;
+
+  let html='';
+  html+=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px;">
+    <div style="background:#fff;border-radius:10px;padding:14px;border:1px solid #e2e8f0;text-align:center;">
+      <div style="font-size:24px;font-weight:800;color:#003366;">${clientContacts.length}</div>
+      <div style="font-size:11px;color:#64748b;">Clients</div>
+    </div>
+    <div style="background:#fff;border-radius:10px;padding:14px;border:1px solid #e2e8f0;text-align:center;">
+      <div style="font-size:24px;font-weight:800;color:#003366;">${thisWeek}</div>
+      <div style="font-size:11px;color:#64748b;">Check-ins This Week</div>
+    </div>
+  </div>`;
+
+  const selectedContact=cliPulseSelectedId?contacts.find(c=>c.id===cliPulseSelectedId):null;
+  html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;margin-bottom:16px;">
+    <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:10px;">Generate Pulse Link</div>
+    <select onchange="setCliPulseClient(this.value)" style="width:100%;padding:10px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#f8fafc;color:#1e3a5f;margin-bottom:${selectedContact?'10':'0'}px;">
+      <option value="">\u2014 Select a client \u2014</option>
+      ${clientContacts.map(m=>`<option value="${m.contact.id}" ${m.contact.id===cliPulseSelectedId?'selected':''}>${m.contact.first_name} ${m.contact.last_name}</option>`).join('')}
+    </select>`;
+  if(selectedContact){
+    const url=getPulsePortalUrl(selectedContact.id);
+    html+=`<div style="display:flex;gap:6px;align-items:center;margin-top:6px;">
+      <input readonly value="${url}" style="flex:1;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;background:#f8fafc;color:#64748b;font-size:11px;">
+      <button onclick="copyPulseLink('${selectedContact.id}')" style="background:#003366;color:#fff;border:none;padding:8px 14px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">Copy</button>
+      <button onclick="openPulseLink('${selectedContact.id}')" style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;padding:8px 14px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">Open</button>
+    </div>`;
+  }
+  html+=`</div>`;
+
+  const validContactIds=new Set(clientContacts.map(m=>m.contact.id));
+  const checkIns=pulseResults.filter(r=>validContactIds.has(r.contact_id));
+
+  html+=`<div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:10px;">Check-ins${checkIns.length?' ('+checkIns.length+')':''}</div>`;
+
+  if(!checkIns.length){
+    html+='<div style="padding:30px;text-align:center;color:#94a3b8;font-size:13px;background:#fff;border:1px dashed #cbd5e1;border-radius:12px;">No check-ins yet. Share a link with a client to get started.</div>';
+  } else {
+    checkIns.forEach(r=>{
+      const c=contacts.find(x=>x.id===r.contact_id);
+      if(!c) return;
+      const d=new Date(r.created_at);
+      const dateStr=d.toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+      const bandColor=(PULSE_BANDS.find(b=>b.name===r.band)||{}).color||'#333';
+      html+=`<div onclick="viewCliPulseResult('${r.id}')" style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 16px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:600;font-size:14px;color:#1e3a5f;">${c.first_name} ${c.last_name}</div>
+          <div style="font-size:11px;color:#94a3b8;margin-top:2px;">${dateStr}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+          <span style="font-size:12px;font-weight:700;color:${bandColor};">${r.band}</span>
+          <span style="font-size:20px;font-weight:800;color:${bandColor};">${r.total}<span style="font-size:12px;color:#94a3b8;font-weight:400;">/200</span></span>
+        </div>
+      </div>`;
+    });
+  }
+  html+='<div style="height:80px;"></div>';
+  contentEl.innerHTML=html;
 }
 
 // ── TASKS ──
