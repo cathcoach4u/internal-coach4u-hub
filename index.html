@@ -198,7 +198,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate"></span>
-      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.4.3</span>
+      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.4.4</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -3586,6 +3586,37 @@ const PULSE_PILLAR_DESC={
   emotion:'Reflects capacity to notice rising emotional signals, pause before reacting, and return to balance. Recovery speed is the skill that grows.'
 };
 
+const PULSE_QUESTIONS={
+  self_awareness:[
+    {id:'s1',text:'I know what gives me energy and I keep doing what works for me.'},
+    {id:'s2',text:'I notice what drains my energy and I limit those drains.'},
+    {id:'s3',text:'When my tank is running low, I notice it and refill it.'},
+    {id:'s4',text:'I understand the patterns that drain my energy and work around them.'},
+    {id:'s5',text:'When something is not working for me, I adjust rather than repeating the same pattern.'}
+  ],
+  aim:[
+    {id:'a1',text:'I know what matters most to me and I direct my energy toward it.'},
+    {id:'a2',text:'Even when my energy is lower, I take small steps forward.'},
+    {id:'a3',text:'When life takes me off track, I bring my focus back to what matters.'},
+    {id:'a4',text:'I use strategies that help me stay focused and on track.'},
+    {id:'a5',text:'I keep directing my time and energy toward my priorities.'}
+  ],
+  foundation:[
+    {id:'f1',text:'I have routines that help keep my tank steady during the day.'},
+    {id:'f2',text:'When my routines slip, I reset them.'},
+    {id:'f3',text:'I use tools or systems that make life easier to manage.'},
+    {id:'f4',text:'When life becomes busy or stressful, I simplify where I can.'},
+    {id:'f5',text:'I have structures that help protect my energy.'}
+  ],
+  emotion:[
+    {id:'e1',text:'I notice when my emotions are rising and pause before reacting.'},
+    {id:'e2',text:'When I feel overwhelmed, I slow down and steady myself.'},
+    {id:'e3',text:'After a strong emotional reaction, I settle and regain balance.'},
+    {id:'e4',text:'When something upsetting happens, I regain perspective.'},
+    {id:'e5',text:'In difficult moments, I choose responses that support my long term wellbeing.'}
+  ]
+};
+
 const PULSE_COACHING_FOCUS={
   self_awareness:[
     'Name one pattern this week that cost energy unnecessarily.',
@@ -3623,6 +3654,14 @@ window.openPulseLink=function(contactId){
 
 let pulseDetailContactId=null;
 let pulseDetailResultId=null;
+let pulseQuestionsOpen=false;
+window.togglePulseQuestions=function(){
+  pulseQuestionsOpen=!pulseQuestionsOpen;
+  const body=document.getElementById('pulseQBody');
+  const chev=document.getElementById('pulseQChev');
+  if(body) body.style.display=pulseQuestionsOpen?'block':'none';
+  if(chev) chev.innerHTML=pulseQuestionsOpen?'&#9650;':'&#9660;';
+};
 
 window.viewPulseResult=function(id){
   pulseDetailResultId=id;
@@ -3641,9 +3680,17 @@ window.backToPulseList=function(){
   renderPulseResults();
 };
 
+function pulseScoreColor(v){
+  if(!v) return '#cbd5e1';
+  if(v<=4) return '#dc2626';
+  if(v<=6) return '#d97706';
+  return '#16a34a';
+}
 function renderPulseResultDetail(r,c){
   const d=new Date(r.created_at);
   const dateStr=d.toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  let answers={};
+  try{answers=r.answers?(typeof r.answers==='string'?JSON.parse(r.answers):r.answers):{};}catch(e){answers={};}
   const band=PULSE_BANDS.find(b=>b.name===r.band)||{};
   const bandColor=band.color||'#333';
   let html=`<div onclick="backToPulseHistory()" style="font-size:13px;color:#003366;font-weight:600;cursor:pointer;margin-bottom:16px;">&larr; Back to ${c.first_name}&rsquo;s check-ins</div>`;
@@ -3685,6 +3732,17 @@ function renderPulseResultDetail(r,c){
         </div>
         <div style="padding:10px 16px 14px;font-size:12.5px;line-height:1.6;color:#4d4d4d;">
           ${PULSE_PILLAR_DESC[key]}
+          ${(PULSE_QUESTIONS[key]||[]).length?`<div style="margin-top:10px;padding-top:10px;border-top:1px solid #eee;">
+            <div style="font-size:9.5px;letter-spacing:2px;text-transform:uppercase;color:#8a8a8a;font-weight:700;margin-bottom:8px;">Question Scores</div>
+            ${(PULSE_QUESTIONS[key]||[]).map(q=>{
+              const v=answers[q.id];
+              const col=pulseScoreColor(v);
+              return `<div style="display:flex;gap:10px;align-items:flex-start;padding:5px 0;border-bottom:1px dashed #f1f5f9;">
+                <div style="flex-shrink:0;min-width:34px;height:26px;border-radius:6px;background:${col};color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;">${v||'—'}</div>
+                <div style="font-size:11.5px;line-height:1.4;color:#475569;">${q.text}</div>
+              </div>`;
+            }).join('')}
+          </div>`:''}
           <div style="margin-top:10px;padding-top:10px;border-top:1px solid #eee;">
             <div style="font-size:9.5px;letter-spacing:2px;text-transform:uppercase;color:#8a8a8a;font-weight:700;margin-bottom:6px;">Coaching Focus</div>
             <ul style="margin:0;padding-left:18px;">
@@ -3801,6 +3859,27 @@ function renderPulseResults(){
     <div style="background:#fff;border-radius:10px;padding:14px;border:1px solid #e2e8f0;text-align:center;">
       <div style="font-size:24px;font-weight:800;color:#003366;">${stats.totalCheckins}</div>
       <div style="font-size:11px;color:#64748b;">Total Check-ins</div>
+    </div>
+  </div>`;
+
+  html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;margin-bottom:16px;overflow:hidden;">
+    <div onclick="togglePulseQuestions()" id="pulseQToggle" style="padding:10px 14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:600;color:#1e3a5f;">
+      <span>&#128269; View 20 Questions (reference)</span>
+      <span id="pulseQChev" style="font-size:10px;color:#94a3b8;">&#9660;</span>
+    </div>
+    <div id="pulseQBody" style="display:${pulseQuestionsOpen?'block':'none'};padding:0 14px 14px;">
+      ${Object.entries(PULSE_PILLAR_META).map(([key,meta])=>{
+        const qs=PULSE_QUESTIONS[key]||[];
+        return `<div style="margin-top:10px;border-top:1px solid #f1f5f9;padding-top:10px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <div style="width:22px;height:22px;border-radius:6px;background:${meta.color};color:#fff;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;">${meta.letter}</div>
+            <div style="font-size:12px;font-weight:700;color:#1e3a5f;">${meta.label}</div>
+          </div>
+          <ol style="margin:0;padding-left:22px;">
+            ${qs.map(q=>'<li style="font-size:11.5px;line-height:1.5;color:#475569;margin-bottom:4px;">'+q.text+'</li>').join('')}
+          </ol>
+        </div>`;
+      }).join('')}
     </div>
   </div>`;
 
