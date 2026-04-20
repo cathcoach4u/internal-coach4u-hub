@@ -215,7 +215,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate"></span>
-      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.9.1</span>
+      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.10.0</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -5178,9 +5178,28 @@ function renderAgents(){
         </div>
       </div></div>`;
     };
+    const knowledgeBase=location.origin+location.pathname.replace(/[^/]+$/,'');
+    const renderKnowledgeRow=(agent,depth)=>{
+      const url=knowledgeBase+'knowledge.html?agent='+agent.id;
+      const indent=depth===0?'margin-left:24px;':'margin-left:56px;';
+      return `<div style="${indent}margin-top:-4px;margin-bottom:10px;padding:10px 14px;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:8px;display:flex;justify-content:space-between;align-items:center;gap:12px;">
+        <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1;">
+          <span style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.5px;">Knowledge page</span>
+          <span style="font-size:11px;color:#64748b;font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${url}</span>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0;">
+          <button onclick="navigator.clipboard.writeText('${url}');toast('URL copied','success')" style="background:#f0f4f8;border:1px solid #e2e8f0;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;color:#475569;">Copy URL</button>
+          <a href="${url}" target="_blank" style="background:#003366;color:#fff;text-decoration:none;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:600;">Open &rarr;</a>
+        </div>
+      </div>`;
+    };
     topLevel.forEach(a=>{
       html+=renderCard(a,false);
-      (childrenOf[a.id]||[]).forEach(c=>{html+=renderCard(c,true);});
+      html+=renderKnowledgeRow(a,0);
+      (childrenOf[a.id]||[]).forEach(c=>{
+        html+=renderCard(c,true);
+        html+=renderKnowledgeRow(c,1);
+      });
     });
   }
   html+='<div style="height:80px;"></div>';
