@@ -20,6 +20,18 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#f0f4f
 .tab.active{background:#003366;color:#fff}
 .tab:not(.active):hover{background:#f8fafc}
 
+/* Intro card */
+.intro-card{background:#fff;border-radius:12px;padding:22px 24px;margin-bottom:20px;border:1px solid #e2e8f0;border-left:4px solid #c9a646}
+.intro-card .intro-lead{font-size:14px;line-height:1.65;color:#1e3a5f;font-weight:600;margin-bottom:16px}
+.intro-card .intro-body{font-size:13px;line-height:1.7;color:#475569;margin-bottom:16px}
+.intro-card .intro-focus{background:#f0f4f8;border-radius:8px;padding:14px 16px;margin-bottom:16px;text-align:center}
+.intro-card .intro-focus-text{font-size:13px;line-height:1.6;color:#003366}
+.intro-card .intro-label{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:#003366;font-weight:700;margin-bottom:8px}
+.intro-card .intro-how{background:#fafbfc;border:1px solid #eef2f6;border-radius:8px;padding:14px 18px}
+.intro-card .intro-how ul{margin:0;padding-left:20px}
+.intro-card .intro-how li{font-size:12.5px;line-height:1.7;color:#475569;margin-bottom:4px}
+.intro-card .intro-how li:last-child{margin-bottom:0}
+
 /* Form */
 .pillar-section{background:#fff;border-radius:12px;margin-bottom:16px;overflow:hidden;border:1px solid #e2e8f0}
 .pillar-header{padding:14px 20px;font-weight:700;font-size:14px;display:flex;align-items:center;gap:10px}
@@ -252,7 +264,25 @@ function render(){
 function switchTab(tab){currentView=tab;render();}
 
 function renderForm(){
-  let html='<form id="pulseForm" onsubmit="submitPulse(event)">';
+  let html=`<div class="intro-card">
+    <p class="intro-lead">This diagnostic tool helps you understand your current capacity and reserves \u2014 measuring energy management, executive functioning, emotional regulation and self direction.</p>
+    <div class="intro-focus">
+      <div class="intro-label">The Core Focus</div>
+      <div class="intro-focus-text">Move from feeling <strong>Overwhelmed</strong> and <strong>Stretched</strong> &rarr; to <strong>Stabilising</strong>, <strong>In Control</strong> and <strong>In Flow</strong>.</div>
+    </div>
+    <p class="intro-body">Think of your energy like a bank account. Life makes constant withdrawals \u2014 stress, poor sleep, emotional load, decision fatigue, and everyday responsibilities. When the balance runs low, even simple tasks feel harder than they should. When you actively top up your reserves, you create more space to think clearly, manage your emotions, respond rather than react, and focus on what matters most. This check-in helps you see where your balance is sitting right now.</p>
+    <div class="intro-how">
+      <div class="intro-label">&#9999;&#65039; How to Complete the Check-In</div>
+      <ul>
+        <li>Rate how true each statement feels for you <strong>right now</strong>.</li>
+        <li>Use the <strong>1\u201310 scale</strong> for each statement.</li>
+        <li>Try not to overthink your answers. Your first response is usually the most accurate.</li>
+        <li><strong>Lower scores</strong> suggest your reserves may be running low.</li>
+        <li><strong>Higher scores</strong> suggest your capacity reserves are stronger.</li>
+      </ul>
+    </div>
+  </div>`;
+  html+='<form id="pulseForm" onsubmit="submitPulse(event)">';
   let qNum=1;
   for(const [key,meta] of Object.entries(PILLAR_META)){
     html+=`<div class="pillar-section">
