@@ -5217,11 +5217,12 @@ function renderAgentDetail(){
   const myStages=agentStages.filter(s=>s.agent_id===a.id).sort((x,y)=>(x.stage_order||0)-(y.stage_order||0));
   const myStageIds=myStages.map(s=>s.id);
   const myTemplateCount=agentTemplates.filter(t=>myStageIds.includes(t.stage_id)).length;
+  const isParent=a.type==='parent';
   const tabs=[
     {id:'overview',label:'Overview'},
-    {id:'stages',label:`Stages (${myStages.length}${myTemplateCount?' &middot; '+myTemplateCount+' messages':''})`},
+    ...(isParent?[]:[{id:'stages',label:`Stages (${myStages.length}${myTemplateCount?' &middot; '+myTemplateCount+' messages':''})`}]),
     {id:'versions',label:`Versions (${myVersions.length})`},
-    {id:'issues',label:`Issues${openIssues?' ('+openIssues+' open)':''}`,alert:openIssues>0}
+    ...(isParent?[]:[{id:'issues',label:`Issues${openIssues?' ('+openIssues+' open)':''}`,alert:openIssues>0}])
   ];
   let html=`<div onclick="backToAgentList()" style="font-size:13px;color:#003366;font-weight:600;cursor:pointer;margin-bottom:16px;">&larr; Back to agents</div>`;
   html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #003366;border-radius:12px;padding:16px 20px;margin-bottom:16px;">
