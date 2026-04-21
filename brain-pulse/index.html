@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Coach4U – ThriveHQ Brain Pulse</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Montserrat','Inter',system-ui,sans-serif;background:#fff;color:#2D2D2D;min-height:100vh;line-height:1.1}
+.header{background:#1B3664;color:#fff;padding:24px;text-align:center;border-bottom:4px solid #5684C4}
+.header h1{font-family:'Inter',sans-serif;font-size:24px;font-weight:700;margin-bottom:4px}
+.header .sub{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:#5684C4}
+.container{max-width:640px;margin:0 auto;padding:24px 16px 40px}
+.welcome{background:#fff;border-radius:12px;padding:24px;margin-bottom:24px;border-left:4px solid #1B3664}
+.welcome h2{font-family:'Inter',sans-serif;font-size:20px;font-weight:700;color:#1B3664;margin-bottom:8px}
+.welcome p{font-size:15px;color:#2D2D2D;line-height:1.6;margin-bottom:12px}
+.welcome p:last-child{margin-bottom:0;font-size:13px;color:#666;margin-top:16px}
+.public-mode-notice{background:#f8f8f8;border:1px solid #DDDDDD;border-radius:8px;padding:12px 16px;font-size:12px;color:#666;margin-top:12px}
+.progress-bar{background:#DDDDDD;height:4px;border-radius:2px;margin-bottom:20px;overflow:hidden}
+.progress-fill{background:#1B3664;height:100%;transition:width .3s}
+.screen{display:none}
+.screen.active{display:block}
+.landing-cta{background:#1B3664;color:#fff;border:none;padding:16px 32px;border-radius:10px;font-family:'Inter',sans-serif;font-size:16px;font-weight:700;cursor:pointer;width:100%;max-width:320px;margin:0 auto;display:block;transition:background .2s}
+.landing-cta:hover{background:#0f2847}
+.room-number{font-family:'Inter',sans-serif;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#666;margin-bottom:8px}
+.room-title{font-family:'Inter',sans-serif;font-size:20px;font-weight:700;color:#1B3664;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.room-subtitle{font-size:13px;color:#666;margin-bottom:16px;font-style:italic}
+.room-intro{background:#f8f8f8;border-left:4px solid #5684C4;padding:12px 16px;border-radius:4px;margin-bottom:16px;font-size:13px;line-height:1.5;color:#2D2D2D}
+.legend{background:#f8f8f8;border:1px solid #DDDDDD;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:12px;color:#666;line-height:1.5}
+.legend-item{margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.legend-item:last-child{margin-bottom:0}
+.legend-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.question-card{background:#fff;border:1px solid #DDDDDD;border-radius:10px;padding:16px;margin-bottom:12px}
+.question-text{font-size:15px;color:#2D2D2D;margin-bottom:12px;line-height:1.5}
+.rating-group{display:flex;gap:4px;justify-content:space-between;margin-bottom:8px}
+.rating-btn{flex:1;height:40px;border:1px solid #DDDDDD;border-radius:8px;background:#fff;font-size:13px;font-weight:700;color:#2D2D2D;cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent;font-family:'Inter',sans-serif}
+.rating-btn:hover{border-color:#1B3664;background:#f8f8f8}
+.rating-btn.selected{background:#1B3664;color:#fff;border-color:#1B3664}
+.scale-anchor{font-size:11px;color:#999;text-align:center;margin-top:6px}
+.nav-buttons{display:flex;gap:8px;justify-content:space-between;padding-top:16px;border-top:1px solid #DDDDDD;margin-top:20px}
+.btn-secondary{background:#f8f8f8;color:#1B3664;border:1px solid #DDDDDD;padding:12px 20px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:background .2s}
+.btn-secondary:hover{background:#eee}
+.btn-secondary:disabled{opacity:.5;cursor:not-allowed}
+.btn-primary{background:#1B3664;color:#fff;border:none;padding:12px 20px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:background .2s}
+.btn-primary:hover{background:#0f2847}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.summary-card{background:#fff;border:1px solid #DDDDDD;border-radius:10px;padding:16px;margin-bottom:12px}
+.summary-question{font-size:13px;color:#666;margin-bottom:6px}
+.summary-rating{display:inline-block;background:#1B3664;color:#fff;padding:4px 12px;border-radius:6px;font-weight:700;font-size:13px;margin-right:8px}
+.summary-edit{color:#5684C4;cursor:pointer;font-size:12px;font-weight:600;margin-left:8px}
+.result-card{background:#fff;border-radius:12px;padding:20px;margin-bottom:16px;border:1px solid #DDDDDD}
+.overall-result{background:#f8f8f8;border-left:6px solid #1B3664;padding:16px;border-radius:8px;margin-bottom:16px}
+.stage-name{font-family:'Inter',sans-serif;font-size:20px;font-weight:700;color:#1B3664;margin-bottom:8px}
+.score-display{font-family:'Inter',sans-serif;font-size:48px;font-weight:700;color:#1B3664;line-height:1;margin-bottom:8px}
+.score-display span{font-size:16px;color:#999;font-weight:500}
+.stage-desc{font-size:13px;line-height:1.6;color:#2D2D2D}
+.room-score-card{background:#fff;border:1px solid #DDDDDD;border-radius:10px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.room-score-label{font-size:13px;font-weight:600;color:#2D2D2D}
+.room-score-value{font-family:'Inter',sans-serif;font-size:18px;font-weight:700;color:#1B3664}
+.lowest-room{background:#fff3cd;border:1px solid #ffd700;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:#2D2D2D;line-height:1.5}
+.lowest-room strong{color:#1B3664}
+.trend{font-size:12px;color:#666;margin-top:2px}
+.cta-text{font-size:13px;color:#666;text-align:center;margin-top:16px}
+.print-btn{background:#1B3664;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;margin-top:16px;width:100%;display:block}
+.print-btn:hover{background:#0f2847}
+.footer{text-align:center;padding:20px;font-size:11px;color:#999;border-top:1px solid #DDDDDD;margin-top:20px}
+.loading{text-align:center;padding:40px;color:#999;font-size:14px}
+.error-card{background:#fef2f2;border:1px solid #fca5a5;border-radius:12px;padding:20px;text-align:center;color:#dc2626;font-size:14px}
+.print-only{display:none}
+@media print{
+  body{background:#fff;color-adjust:exact;-webkit-print-color-adjust:exact}
+  .header,.footer,.nav-buttons,.print-btn,.no-print{display:none}
+  .container{max-width:100%;padding:0;margin:0}
+  .result-card,.room-score-card,.overall-result{break-inside:avoid;page-break-inside:avoid}
+  .print-only{display:block}
+  a{color:inherit;text-decoration:none}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="sub">Coach4U · ThriveHQ</div>
+  <h1>Brain Pulse</h1>
+</div>
+
+<div class="container" id="app">
+  <div class="loading">Loading...</div>
+</div>
+
+<div class="footer">Coach4U · Strengths-Based Coaching & Counselling · www.coach4u.com.au</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="document.getElementById('app').innerHTML='<div class=error-card>Failed to load. Please check your internet connection and refresh.</div>'"></script>
+<script>
+window.onerror=function(msg){document.getElementById('app').innerHTML='<div class="error-card">Error: '+msg+'</div>';};
+
+const CONFIG={
+  supabaseUrl:'https://uoixetfvboevjxlkfyqy.supabase.co',
+  supabaseKey:'sb_publishable_m3qgSGvWF0n2TePf6vhqMw_9obUvJEJ',
+  tableName:'brain_pulse_submissions',
+
+  stages:[
+    {name:'Overwhelmed',min:20,max:60,emoji:'🔴',color:'#dc2626'},
+    {name:'Unsteady',min:61,max:100,emoji:'🟧',color:'#ea8a3c'},
+    {name:'Grounded',min:101,max:140,emoji:'🟨',color:'#d4a017'},
+    {name:'Steady',min:141,max:170,emoji:'🟩',color:'#16a34a'},
+    {name:'Anchored',min:171,max:200,emoji:'🔵',color:'#5684C4'}
+  ],
+
+  stageDesc:{
+    'Overwhelmed':'Your nervous system is flooded. The rooms need tending, and right now even starting feels hard. This is not failure. This is a signal that capacity is the first room to attend to.',
+    'Unsteady':'Awareness is growing. Some rooms are starting to hold, but consistency is fragile. One rough day can still knock things over. The work now is small, repeated tending, not big changes.',
+    'Grounded':'Your feet are on the floor. Structure is building, and focus is more accessible. You can feel which rooms are working and which need attention. This is the zone where real progress happens.',
+    'Steady':'The rooms are working. Most demands feel manageable, and you have reserves to draw on. Capacity holds even under pressure most of the time. You are close to anchored.',
+    'Anchored':'All four anchors are holding. You feel regulated, resourced, clear, and aimed. You are moving toward what matters, with structure that supports you. This is earned ground.'
+  },
+
+  rooms:[
+    {
+      id:'capacity',
+      emoji:'🪟',
+      label:'Capacity',
+      intro:null,
+      items:[
+        'Over the past week, I felt calm in my body most of the time.',
+        'Over the past week, I noticed stress building and took action to keep myself calm.',
+        'Over the past week, I bounced back quickly when upset rather than staying reactive.',
+        'Over the past week, I had enough energy to respond well to my day.',
+        'Over the past week, I used something that helped me calm down when I needed to.'
+      ]
+    },
+    {
+      id:'wellbeing',
+      emoji:'🌱',
+      label:'Wellbeing',
+      intro:null,
+      items:[
+        'Over the past week, what I did felt meaningful and connected to what matters to me.',
+        'Over the past week, I felt supported and connected to the people in my life.',
+        'Over the past week, I felt secure and in control of my finances.',
+        'Over the past week, I cared for my body and felt well in it.',
+        'Over the past week, I felt I belonged to and contributed to a community that matters to me.'
+      ]
+    },
+    {
+      id:'strengths',
+      emoji:'🌟',
+      label:'Strengths',
+      subtitle:'(and how you relate to yourself)',
+      intro:'This room measures the inner conversation you had with yourself this week — how you trusted your decisions, reframed the moments, accepted who you are, and spoke to yourself throughout the day.',
+      items:[
+        'Over the past week, I was confident in my decisions without second-guessing myself.',
+        'Over the past week, I focused on what I was doing right rather than what I was doing wrong.',
+        'Over the past week, I accepted who I am and how I am built rather than fighting it.',
+        'Over the past week, I spoke to myself with kindness rather than criticism.',
+        'Over the past week, I reminded myself I was doing okay.'
+      ]
+    },
+    {
+      id:'ef',
+      emoji:'🏗',
+      label:'Executive Functions',
+      intro:'This room measures how you managed the everyday brain struggles of ADHD this week — starting, finishing, pausing, prioritising, and remembering.',
+      items:[
+        'Over the past week, I started tasks that needed to be done, not just the ones that interested me.',
+        'Over the past week, I stayed with tasks long enough to finish them.',
+        'Over the past week, I caught myself before reacting in ways I would later regret.',
+        'Over the past week, I did the important things before the loud ones.',
+        'Over the past week, I remembered to do the things I meant to do.'
+      ]
+    }
+  ],
+
+  legend:[
+    {range:'1–2',label:'Not at all',emoji:'🔴'},
+    {range:'3–4',label:'A little',emoji:'🟧'},
+    {range:'5–6',label:'Somewhat',emoji:'🟨'},
+    {range:'7–8',label:'Mostly',emoji:'🟩'},
+    {range:'9–10',label:'All the time',emoji:'🔵'}
+  ]
+};
+
+let supabase;
+try{
+  supabase=window.supabase.createClient(CONFIG.supabaseUrl,CONFIG.supabaseKey);
+}catch(e){
+  document.getElementById('app').innerHTML='<div class="error-card">Connection error: '+e.message+'</div>';
+}
+
+let contact=null;
+let isPublicMode=false;
+let answers={};
+let history=[];
+let currentScreen='landing';
+let currentRoom=0;
+let viewingResultId=null;
+
+function getDraftKey(){
+  return 'brain_pulse_draft_'+(contact?contact.id:'public');
+}
+
+function saveDraft(){
+  const key=getDraftKey();
+  localStorage.setItem(key,JSON.stringify(answers));
+}
+
+function loadDraft(){
+  const key=getDraftKey();
+  const saved=localStorage.getItem(key);
+  if(saved){
+    try{answers=JSON.parse(saved);}catch(e){answers={};}
+  }
+}
+
+function clearDraft(){
+  const key=getDraftKey();
+  localStorage.removeItem(key);
+}
+
+async function init(){
+  const app=document.getElementById('app');
+  const params=new URLSearchParams(window.location.search);
+  const cid=params.get('c');
+
+  if(!cid){
+    isPublicMode=true;
+    contact={first_name:'there'};
+    loadDraft();
+    render();
+    return;
+  }
+
+  try{
+    app.innerHTML='<div class="loading">Connecting...</div>';
+    const {data,error}=await supabase.from('contacts').select('id,first_name,last_name').eq('id',cid).single();
+    if(error){
+      app.innerHTML='<div class="error-card">Error loading contact: '+error.message+'<br><br><small>Code: '+error.code+'</small></div>';
+      return;
+    }
+    if(!data){
+      app.innerHTML='<div class="error-card">Client not found. Please check your link or contact your coach.</div>';
+      return;
+    }
+    contact=data;
+    app.innerHTML='<div class="loading">Loading history...</div>';
+    const {data:hist,error:histErr}=await supabase.from(CONFIG.tableName).select('*').eq('contact_id',cid).order('created_at',{ascending:false});
+    if(!histErr) history=hist||[];
+    loadDraft();
+    render();
+  }catch(e){
+    console.error(e);
+    app.innerHTML='<div class="error-card">Error: '+(e.message||e)+'</div>';
+  }
+}
+
+function render(){
+  if(viewingResultId) return renderResultDetail(viewingResultId);
+  if(currentScreen==='landing') return renderLanding();
+  if(currentScreen==='room') return renderRoom();
+  if(currentScreen==='summary') return renderSummary();
+  if(currentScreen==='results') return renderResults();
+  if(currentScreen==='history') return renderHistory();
+}
+
+function renderLanding(){
+  let html=`<div class="welcome">
+    <h2>ThriveHQ Brain Pulse</h2>
+    <p>Four rooms. One home.</p>
+    <p>A weekly check-in on how you are managing the everyday brain struggles of ADHD — your capacity, wellbeing, inner conversation, and how you tackle the day.</p>
+    ${isPublicMode?'<div class="public-mode-notice">Your results are private and are not stored.</div>':''}
+  </div>`;
+
+  if(!isPublicMode && history.length>0){
+    html+=`<div style="background:#f8f8f8;border:1px solid #DDDDDD;border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:12px;">
+      <div style="font-weight:600;color:#1B3664;margin-bottom:6px;">Your History</div>
+      <div style="font-size:11px;color:#666;">${history.length} check-in${history.length!==1?'s':''} completed</div>
+    </div>`;
+  }
+
+  html+=`<button class="landing-cta" onclick="startForm()">Start my weekly check-in</button>`;
+
+  if(!isPublicMode && history.length>0){
+    html+=`<button class="btn-secondary" style="margin-top:12px;width:100%;" onclick="viewHistory()">View past results</button>`;
+  }
+
+  document.getElementById('app').innerHTML=html;
+}
+
+function renderRoom(){
+  const room=CONFIG.rooms[currentRoom];
+  const progress=((currentRoom+1)/CONFIG.rooms.length)*100;
+
+  let html=`<div class="progress-bar"><div class="progress-fill" style="width:${progress}%"></div></div>`;
+  html+=`<div class="room-number">Room ${currentRoom+1} of ${CONFIG.rooms.length}</div>`;
+  html+=`<div class="room-title">${room.emoji} ${room.label}${room.subtitle?'<span style="font-size:13px;font-weight:400;color:#666;margin-left:auto;">${room.subtitle}</span>':''}</div>`;
+
+  if(room.intro){
+    html+=`<div class="room-intro">${room.intro}</div>`;
+  }
+
+  if(currentRoom===0){
+    html+=`<div class="legend">
+      <div style="font-weight:600;color:#1B3664;margin-bottom:8px;">How to rate each item</div>
+      ${CONFIG.legend.map(l=>`<div class="legend-item"><span class="legend-dot" style="background:${l.emoji}"></span><strong>${l.range}</strong> ${l.label}</div>`).join('')}
+    </div>`;
+  }
+
+  room.items.forEach((text,idx)=>{
+    const qid=`${room.id}_${idx+1}`;
+    const val=answers[qid]||0;
+    html+=`<div class="question-card">
+      <div class="question-text">${text}</div>
+      <div class="rating-group">`;
+    for(let i=1;i<=10;i++){
+      const sel=val===i?'selected':'';
+      html+=`<button type="button" class="rating-btn ${sel}" onclick="rateQuestion('${qid}',${i})" aria-label="Rate question ${idx+1} as ${i} out of 10">${i}</button>`;
+    }
+    html+=`</div>
+      <div class="scale-anchor">1 = Not at all | 10 = All the time</div>
+    </div>`;
+  });
+
+  const allAnswered=Object.keys(answers).filter(k=>k.startsWith(room.id)).length===room.items.length;
+
+  html+=`<div class="nav-buttons">
+    <button class="btn-secondary" onclick="prevRoom()" ${currentRoom===0?'disabled':''}>Back</button>
+    <button class="btn-primary" onclick="nextRoom()" ${!allAnswered?'disabled':''}>Next</button>
+  </div>`;
+
+  document.getElementById('app').innerHTML=html;
+}
+
+function renderSummary(){
+  let html=`<h2 style="font-family:Inter,sans-serif;font-size:18px;font-weight:700;color:#1B3664;margin-bottom:16px;">Review your answers</h2>`;
+
+  CONFIG.rooms.forEach((room,roomIdx)=>{
+    html+=`<div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid #DDDDDD;">
+      <div style="font-weight:600;color:#1B3664;margin-bottom:8px;">${room.emoji} ${room.label}</div>`;
+    room.items.forEach((text,itemIdx)=>{
+      const qid=`${room.id}_${itemIdx+1}`;
+      const val=answers[qid]||0;
+      html+=`<div class="summary-card">
+        <div class="summary-question">${text}</div>
+        <div><span class="summary-rating">${val}</span><span class="summary-edit" onclick="editQuestion('${qid}')">Edit</span></div>
+      </div>`;
+    });
+    html+=`</div>`;
+  });
+
+  html+=`<div class="nav-buttons">
+    <button class="btn-secondary" onclick="currentScreen='room';currentRoom=0;render()">Back</button>
+    <button class="btn-primary" onclick="submitForm()">Submit</button>
+  </div>`;
+
+  document.getElementById('app').innerHTML=html;
+}
+
+function calcScores(){
+  const scores={
+    capacity:0,wellbeing:0,strengths:0,ef:0
+  };
+  CONFIG.rooms.forEach(room=>{
+    let sum=0;
+    room.items.forEach((_,idx)=>{
+      const qid=`${room.id}_${idx+1}`;
+      sum+=answers[qid]||0;
+    });
+    scores[room.id]=sum;
+  });
+  const total=scores.capacity+scores.wellbeing+scores.strengths+scores.ef;
+  let stage='Overwhelmed';
+  for(const s of CONFIG.stages){
+    if(total>=s.min&&total<=s.max){stage=s.name;break;}
+  }
+  let lowest=null,lowestVal=999;
+  for(const [k,v] of Object.entries(scores)){
+    if(v<lowestVal){lowestVal=v;lowest=k;}
+  }
+  return {scores,total,stage,lowest};
+}
+
+async function submitForm(){
+  const btn=document.querySelector('.btn-primary');
+  if(btn){btn.disabled=true;btn.textContent='Submitting...';}
+
+  const calc=calcScores();
+
+  if(isPublicMode){
+    const localResult={
+      id:'local-'+Date.now(),
+      created_at:new Date().toISOString(),
+      capacity_total:calc.scores.capacity,
+      wellbeing_total:calc.scores.wellbeing,
+      strengths_total:calc.scores.strengths,
+      ef_total:calc.scores.ef,
+      grand_total:calc.total,
+      stage:calc.stage,
+      lowest_room:calc.lowest,
+      answers:JSON.stringify(answers)
+    };
+    clearDraft();
+    answers={};
+    viewingResultId=localResult;
+    currentScreen='results';
+    render();
+    return;
+  }
+
+  const row={
+    contact_id:contact.id,
+    capacity_1:answers.capacity_1||0,
+    capacity_2:answers.capacity_2||0,
+    capacity_3:answers.capacity_3||0,
+    capacity_4:answers.capacity_4||0,
+    capacity_5:answers.capacity_5||0,
+    wellbeing_purpose:answers.wellbeing_1||0,
+    wellbeing_social:answers.wellbeing_2||0,
+    wellbeing_financial:answers.wellbeing_3||0,
+    wellbeing_physical:answers.wellbeing_4||0,
+    wellbeing_community:answers.wellbeing_5||0,
+    strengths_1:answers.strengths_1||0,
+    strengths_2:answers.strengths_2||0,
+    strengths_3:answers.strengths_3||0,
+    strengths_4:answers.strengths_4||0,
+    strengths_5:answers.strengths_5||0,
+    ef_initiation:answers.ef_1||0,
+    ef_sustained:answers.ef_2||0,
+    ef_inhibition:answers.ef_3||0,
+    ef_planning:answers.ef_4||0,
+    ef_memory:answers.ef_5||0
+  };
+
+  const {data,error}=await supabase.from(CONFIG.tableName).insert(row).select();
+  if(error){
+    if(btn){btn.disabled=false;btn.textContent='Error — try again';}
+    console.error(error);
+    return;
+  }
+
+  clearDraft();
+  answers={};
+  history.unshift(data[0]);
+  viewingResultId=data[0].id;
+  currentScreen='results';
+  render();
+}
+
+function renderResults(){
+  const r=viewingResultId?history.find(x=>x.id===viewingResultId)||{id:viewingResultId}:{};
+
+  const stage=CONFIG.stages.find(s=>s.name===r.stage||r.grand_total>=s.min&&r.grand_total<=s.max);
+
+  let html=`<div class="overall-result">
+    <div class="stage-name">${stage?stage.emoji+' '+stage.name:r.stage||'—'}</div>
+    <div class="score-display">${r.grand_total||r.total||0}<span>/200</span></div>
+    <div class="stage-desc">${CONFIG.stageDesc[stage?stage.name:r.stage]||''}</div>
+  </div>`;
+
+  html+=`<div style="font-family:Inter,sans-serif;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#666;font-weight:600;margin-bottom:10px;">Your rooms</div>`;
+
+  const roomScores=[
+    {label:'🪟 Capacity',val:r.capacity_total||r.scores?.capacity||0},
+    {label:'🌱 Wellbeing',val:r.wellbeing_total||r.scores?.wellbeing||0},
+    {label:'🌟 Strengths',val:r.strengths_total||r.scores?.strengths||0},
+    {label:'🏗 Executive Functions',val:r.ef_total||r.scores?.ef||0}
+  ];
+
+  roomScores.forEach(rs=>{
+    html+=`<div class="room-score-card">
+      <div class="room-score-label">${rs.label}</div>
+      <div class="room-score-value">${rs.val}<span style="font-size:12px;color:#999;font-weight:400;">/50</span></div>
+    </div>`;
+  });
+
+  const lowestMap={capacity:'🪟 Capacity',wellbeing:'🌱 Wellbeing',strengths:'🌟 Strengths',ef:'🏗 Executive Functions'};
+  const lowest=r.lowest_room||r.lowest;
+  if(lowest){
+    html+=`<div class="lowest-room">Your <strong>${lowestMap[lowest]||lowest}</strong> is the room asking for attention this week.</div>`;
+  }
+
+  if(!isPublicMode&&r.id&&!r.id.startsWith('local-')&&history.length>1){
+    const prev=history[1];
+    if(prev){
+      html+=`<div style="background:#f8f8f8;border:1px solid #DDDDDD;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:12px;">
+        <div style="font-weight:600;color:#1B3664;margin-bottom:6px;">Compared to last week</div>
+        <div class="trend">🪟 Capacity: ${(r.capacity_total||0)>(prev.capacity_total||0)?'↑':'→'} ${r.capacity_total||0} (was ${prev.capacity_total||0})</div>
+        <div class="trend">🌱 Wellbeing: ${(r.wellbeing_total||0)>(prev.wellbeing_total||0)?'↑':'→'} ${r.wellbeing_total||0} (was ${prev.wellbeing_total||0})</div>
+        <div class="trend">🌟 Strengths: ${(r.strengths_total||0)>(prev.strengths_total||0)?'↑':'→'} ${r.strengths_total||0} (was ${prev.strengths_total||0})</div>
+        <div class="trend">🏗 Executive Functions: ${(r.ef_total||0)>(prev.ef_total||0)?'↑':'→'} ${r.ef_total||0} (was ${prev.ef_total||0})</div>
+      </div>`;
+    }
+  }
+
+  html+=`<div class="cta-text">Come back next week for another check-in.</div>`;
+  html+=`<button class="print-btn" onclick="window.print()">Print results</button>`;
+
+  if(!isPublicMode){
+    html+=`<button class="btn-secondary" style="margin-top:8px;width:100%;" onclick="currentScreen='landing';viewingResultId=null;render()">Back to home</button>`;
+  }
+
+  document.getElementById('app').innerHTML=html;
+}
+
+function renderHistory(){
+  if(!history.length){
+    let html=`<div style="text-align:center;padding:40px 20px;color:#999;font-size:14px;">
+      <p>No past results yet.</p>
+      <p style="margin-top:12px;"><button class="btn-primary" onclick="currentScreen='landing';render()">Start a new check-in</button></p>
+    </div>`;
+    document.getElementById('app').innerHTML=html;
+    return;
+  }
+
+  let html=`<h2 style="font-family:Inter,sans-serif;font-size:18px;font-weight:700;color:#1B3664;margin-bottom:16px;">Your history</h2>`;
+
+  history.forEach(r=>{
+    const d=new Date(r.created_at);
+    const dateStr=d.toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'});
+    const stage=CONFIG.stages.find(s=>s.name===r.stage||r.grand_total>=s.min&&r.grand_total<=s.max);
+    html+=`<div class="result-card" style="cursor:pointer;" onclick="viewingResultId='${r.id}';currentScreen='results';render()">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div style="font-size:12px;color:#666;">${dateStr}</div>
+        <div style="font-size:13px;font-weight:600;color:#1B3664;">${stage?stage.emoji+' '+stage.name:r.stage}</div>
+      </div>
+      <div style="font-family:Inter,sans-serif;font-size:18px;font-weight:700;color:#1B3664;">${r.grand_total||0}<span style="font-size:12px;color:#999;font-weight:400;">/200</span></div>
+    </div>`;
+  });
+
+  html+=`<button class="btn-secondary" style="margin-top:16px;width:100%;" onclick="currentScreen='landing';render()">Back to home</button>`;
+
+  document.getElementById('app').innerHTML=html;
+}
+
+function startForm(){
+  currentScreen='room';
+  currentRoom=0;
+  render();
+}
+
+function viewHistory(){
+  currentScreen='history';
+  render();
+}
+
+function prevRoom(){
+  if(currentRoom>0){
+    currentRoom--;
+    saveDraft();
+    render();
+  }
+}
+
+function nextRoom(){
+  saveDraft();
+  if(currentRoom<CONFIG.rooms.length-1){
+    currentRoom++;
+    render();
+  } else {
+    currentScreen='summary';
+    render();
+  }
+}
+
+function rateQuestion(qid,val){
+  answers[qid]=val;
+  saveDraft();
+  const btn=document.querySelector('.rating-btn');
+  if(btn){
+    const grp=btn.parentElement;
+    if(grp){
+      const buttons=grp.querySelectorAll('.rating-btn');
+      buttons.forEach((b,i)=>{
+        b.classList.toggle('selected',i+1===val);
+      });
+    }
+  }
+  render();
+}
+
+function editQuestion(qid){
+  const parts=qid.split('_');
+  const roomId=parts[0];
+  currentRoom=CONFIG.rooms.findIndex(r=>r.id===roomId);
+  currentScreen='room';
+  render();
+}
+
+function renderResultDetail(id){
+  viewingResultId=id;
+  render();
+}
+
+init();
+</script>
+</body>
+</html>
