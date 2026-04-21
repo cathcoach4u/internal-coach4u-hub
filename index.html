@@ -216,7 +216,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.18.0</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.18.1</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -841,6 +841,40 @@ td .actions button{padding:8px 14px;font-size:12px;}
     <div class="modal-actions">
       <button class="btn btn-gray" onclick="closeModal('agentModal')">Cancel</button>
       <button class="btn btn-green" onclick="saveAgent()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- FOCUSED EDIT: SYSTEM PROMPT ONLY -->
+<div class="modal-overlay" id="editPromptModal">
+  <div class="modal" style="max-width:760px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <h3 style="margin:0;font-size:18px;color:#1e3a5f;">Edit System Prompt</h3>
+      <span id="editPromptAgentName" style="font-size:13px;color:#64748b;"></span>
+    </div>
+    <div style="font-size:12px;color:#64748b;margin-bottom:12px;">Just the system prompt. Save creates a new version snapshot.</div>
+    <div class="form-group"><textarea id="editPromptText" rows="20" style="font-family:monospace;font-size:12px;"></textarea></div>
+    <div class="form-group"><label>Change note (appears in version history)</label><input id="editPromptNote" placeholder="e.g. Tightened banned words list"></div>
+    <div class="modal-actions">
+      <button class="btn btn-gray" onclick="closeModal('editPromptModal')">Cancel</button>
+      <button class="btn btn-green" onclick="saveFocusedPrompt()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- FOCUSED EDIT: STAGES ONLY -->
+<div class="modal-overlay" id="editStagesModal">
+  <div class="modal" style="max-width:760px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <h3 style="margin:0;font-size:18px;color:#1e3a5f;">Edit Stages &amp; Messages</h3>
+      <span id="editStagesAgentName" style="font-size:13px;color:#64748b;"></span>
+    </div>
+    <div style="font-size:12px;color:#64748b;margin-bottom:12px;">Paste the full stages block. This mirrors the SharePoint source of truth. Save creates a new version snapshot.</div>
+    <div class="form-group"><textarea id="editStagesText" rows="20" style="font-family:monospace;font-size:12px;"></textarea></div>
+    <div class="form-group"><label>Change note (appears in version history)</label><input id="editStagesNote" placeholder="e.g. Updated Stage 4 intake wording"></div>
+    <div class="modal-actions">
+      <button class="btn btn-gray" onclick="closeModal('editStagesModal')">Cancel</button>
+      <button class="btn btn-green" onclick="saveFocusedStages()">Save</button>
     </div>
   </div>
 </div>
@@ -5304,7 +5338,9 @@ function renderAgentDetail(){
         ${isParent?`<button onclick="copyAgentBundle('${a.id}')" style="background:#f0f4f8;color:#003366;border:1px solid #003366;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;">Copy Full Tree</button>`:''}
         ${!isParent?`<button onclick="copySystemPromptByAgent('${a.id}')" style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;">Copy Prompt</button>`:''}
         ${!isParent&&a.stages_content?`<button onclick="copyAgentStages('${a.id}')" style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;">Copy Stages</button>`:''}
-        <button style="background:#003366;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;" onclick="openAgentForm('${a.id}')">Edit Agent</button>
+        <button style="background:#003366;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;" onclick="openEditPrompt('${a.id}')">Edit Prompt</button>
+        ${!isParent?`<button style="background:#8c6e9f;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;" onclick="openEditStages('${a.id}')">Edit Stages</button>`:''}
+        <button style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;" onclick="openAgentForm('${a.id}')">Edit Details</button>
       </div>
     </div>
     <div style="margin-top:10px;padding:10px 12px;background:#f0f4f8;border-radius:8px;font-size:12px;color:#475569;line-height:1.5;">
@@ -5336,7 +5372,7 @@ function renderAgentDetail(){
         <div style="font-size:14px;font-weight:700;color:#1e3a5f;">Stages &amp; Messages</div>
         <div style="display:flex;gap:6px;flex-shrink:0;">
           ${content?`<button onclick="copyAgentStages('${a.id}')" style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;color:#475569;font-weight:600;">Copy for SharePoint</button>`:''}
-          <button onclick="openAgentForm('${a.id}')" style="background:#003366;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;">Edit</button>
+          <button onclick="openEditStages('${a.id}')" style="background:#8c6e9f;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;">Edit Stages</button>
         </div>
       </div>
       <div style="background:#fff8e1;border:1px solid #fde68a;border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:12px;color:#78350f;line-height:1.5;">
@@ -5613,6 +5649,76 @@ window.copySystemPromptByAgent=async function(agentId){
   if(!a||!a.system_prompt){toast('No system prompt to copy','error');return;}
   await navigator.clipboard.writeText(a.system_prompt);
   toast('System prompt copied','success');
+};
+
+window.openEditPrompt=function(agentId){
+  const a=agents.find(x=>x.id===agentId);
+  if(!a){toast('Agent not found','error');return;}
+  document.getElementById('editPromptAgentName').textContent=a.name;
+  document.getElementById('editPromptText').value=a.system_prompt||'';
+  document.getElementById('editPromptNote').value='';
+  document.getElementById('editPromptText').dataset.agentId=a.id;
+  document.getElementById('editPromptModal').classList.add('open');
+  setTimeout(()=>document.getElementById('editPromptText').focus(),50);
+};
+
+window.saveFocusedPrompt=async function(){
+  const ta=document.getElementById('editPromptText');
+  const agentId=ta.dataset.agentId;
+  const a=agents.find(x=>x.id===agentId);
+  if(!a){toast('Agent not found','error');return;}
+  const newPrompt=ta.value;
+  const changeNote=document.getElementById('editPromptNote').value.trim();
+  const {error}=await supabase.from('agents').update({system_prompt:newPrompt,updated_at:new Date().toISOString()}).eq('id',agentId);
+  if(error){toast('Error saving prompt','error');console.error(error);return;}
+  a.system_prompt=newPrompt;
+  const prevVersions=agentVersions.filter(v=>v.agent_id===agentId);
+  const nextVersion=(prevVersions.length?Math.max(...prevVersions.map(v=>v.version_number)):0)+1;
+  const snapshot={agent_id:agentId,version_number:nextVersion,changed_by:a.owner||'',change_note:changeNote,
+    name:a.name,status:a.status,type:a.type,platform:a.platform,description:a.description,
+    purpose:a.purpose,used_by:a.used_by,used_for:a.used_for,not_used_for:a.not_used_for,
+    trigger_type:a.trigger_type,model:a.model,owner:a.owner,source_of_truth_url:a.source_of_truth_url,
+    knowledge_urls:a.knowledge_urls,system_prompt:newPrompt,stages_content:a.stages_content,health:a.health,notes_snapshot:a.notes};
+  const {data:vData,error:vErr}=await supabase.from('agent_versions').insert(snapshot).select().single();
+  if(!vErr&&vData) agentVersions.push(vData);
+  toast('System prompt saved','success');
+  closeModal('editPromptModal');
+  if(agentDetailId) renderAgentDetail();
+};
+
+window.openEditStages=function(agentId){
+  const a=agents.find(x=>x.id===agentId);
+  if(!a){toast('Agent not found','error');return;}
+  document.getElementById('editStagesAgentName').textContent=a.name;
+  document.getElementById('editStagesText').value=a.stages_content||'';
+  document.getElementById('editStagesNote').value='';
+  document.getElementById('editStagesText').dataset.agentId=a.id;
+  document.getElementById('editStagesModal').classList.add('open');
+  setTimeout(()=>document.getElementById('editStagesText').focus(),50);
+};
+
+window.saveFocusedStages=async function(){
+  const ta=document.getElementById('editStagesText');
+  const agentId=ta.dataset.agentId;
+  const a=agents.find(x=>x.id===agentId);
+  if(!a){toast('Agent not found','error');return;}
+  const newStages=ta.value;
+  const changeNote=document.getElementById('editStagesNote').value.trim();
+  const {error}=await supabase.from('agents').update({stages_content:newStages,updated_at:new Date().toISOString()}).eq('id',agentId);
+  if(error){toast('Error saving stages','error');console.error(error);return;}
+  a.stages_content=newStages;
+  const prevVersions=agentVersions.filter(v=>v.agent_id===agentId);
+  const nextVersion=(prevVersions.length?Math.max(...prevVersions.map(v=>v.version_number)):0)+1;
+  const snapshot={agent_id:agentId,version_number:nextVersion,changed_by:a.owner||'',change_note:changeNote,
+    name:a.name,status:a.status,type:a.type,platform:a.platform,description:a.description,
+    purpose:a.purpose,used_by:a.used_by,used_for:a.used_for,not_used_for:a.not_used_for,
+    trigger_type:a.trigger_type,model:a.model,owner:a.owner,source_of_truth_url:a.source_of_truth_url,
+    knowledge_urls:a.knowledge_urls,system_prompt:a.system_prompt,stages_content:newStages,health:a.health,notes_snapshot:a.notes};
+  const {data:vData,error:vErr}=await supabase.from('agent_versions').insert(snapshot).select().single();
+  if(!vErr&&vData) agentVersions.push(vData);
+  toast('Stages saved','success');
+  closeModal('editStagesModal');
+  if(agentDetailId) renderAgentDetail();
 };
 
 window.copyAgentBundle=async function(parentId){
