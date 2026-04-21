@@ -1387,6 +1387,7 @@ function toast(msg,type){
   t.textContent=msg;t.className='toast '+type+' show';
   setTimeout(()=>t.classList.remove('show'),2500);
 }
+window.toast=toast;
 
 // ── MODAL ──
 window.closeModal=function(id){document.getElementById(id).classList.remove('open');};
