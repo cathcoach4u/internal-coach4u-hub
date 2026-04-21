@@ -215,7 +215,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate"></span>
-      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.7.6</span>
+      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.14.3</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -810,7 +810,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="form-group"><label>Not used for</label><input id="agentFormNotUsedFor" placeholder="Manuals, reports, long-form content"></div>
     <div style="font-size:12px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin:14px 0 8px;">Links</div>
-    <div class="form-group"><label>Source of Truth URL</label><input id="agentFormSotUrl" type="url" placeholder="https://..."></div>
+    <div class="form-group"><label>SharePoint URL (source of truth)</label><input id="agentFormSotUrl" type="url" placeholder="https://...sharepoint.com/..."></div>
     <div class="form-group"><label>Knowledge URLs (one per line)</label><textarea id="agentFormKnowledge" rows="2" placeholder="https://..."></textarea></div>
     <div style="font-size:12px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin:14px 0 8px;">System Prompt</div>
     <div class="form-group"><textarea id="agentFormPrompt" rows="10" style="font-family:monospace;font-size:12px;" placeholder="Paste the full system prompt here..."></textarea></div>
@@ -836,6 +836,54 @@ td .actions button{padding:8px 14px;font-size:12px;}
     <div class="modal-actions">
       <button class="btn btn-gray" onclick="closeModal('issueModal')">Cancel</button>
       <button class="btn btn-green" onclick="saveIssue()">Log Issue</button>
+    </div>
+  </div>
+</div>
+
+<!-- STAGE MODAL -->
+<div class="modal-overlay" id="stageModal">
+  <div class="modal" style="max-width:560px;max-height:90vh;overflow-y:auto;">
+    <h3 id="stageModalTitle">Add Stage</h3>
+    <input type="hidden" id="stageFormId">
+    <input type="hidden" id="stageFormAgentId">
+    <div class="form-group"><label>Stage Name *</label><input id="stageFormName" placeholder="e.g. Initial Enquiry, Intake Booking"></div>
+    <div class="form-group"><label>Trigger Phrase</label><input id="stageFormTrigger" placeholder="e.g. initial enquiry, intake booking"></div>
+    <div class="form-group"><label>Purpose</label><textarea id="stageFormPurpose" rows="2" placeholder="What this stage is for"></textarea></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="form-group"><label>Default Sender</label>
+        <select id="stageFormSender"><option value="">(not set)</option><option value="Cath">Cath</option><option value="Lou">Lou</option><option value="Either">Either</option></select>
+      </div>
+      <div class="form-group"><label>Order</label><input id="stageFormOrder" type="number" value="0"></div>
+    </div>
+    <div class="form-group"><label>Platform Rule</label><input id="stageFormPlatformRule" placeholder="e.g. Text preferred, email acceptable"></div>
+    <div class="modal-actions">
+      <button class="btn btn-gray" onclick="closeModal('stageModal')">Cancel</button>
+      <button class="btn btn-red" id="stageDelBtn" onclick="deleteStage(document.getElementById('stageFormId').value)" style="display:none;">Delete</button>
+      <button class="btn btn-green" onclick="saveStage()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- MESSAGE MODAL -->
+<div class="modal-overlay" id="templateModal">
+  <div class="modal" style="max-width:620px;max-height:90vh;overflow-y:auto;">
+    <h3 id="templateModalTitle">Add Message</h3>
+    <input type="hidden" id="templateFormId">
+    <input type="hidden" id="templateFormStageId">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="form-group"><label>Persona *</label>
+        <select id="templateFormPersona"><option value="Cath">Cath</option><option value="Lou">Lou</option></select>
+      </div>
+      <div class="form-group"><label>Platform *</label>
+        <select id="templateFormPlatform"><option value="text">Text / SMS</option><option value="whatsapp">WhatsApp</option><option value="email">Email</option><option value="teams">Teams</option></select>
+      </div>
+    </div>
+    <div class="form-group"><label>Subject (email only)</label><input id="templateFormSubject" placeholder="Leave blank for text/WhatsApp"></div>
+    <div class="form-group"><label>Body *</label><textarea id="templateFormBody" rows="10" style="font-family:inherit;font-size:13px;" placeholder="Paste the full message text here..."></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-gray" onclick="closeModal('templateModal')">Cancel</button>
+      <button class="btn btn-red" id="templateDelBtn" onclick="deleteTemplate(document.getElementById('templateFormId').value)" style="display:none;">Delete</button>
+      <button class="btn btn-green" onclick="saveTemplate()">Save</button>
     </div>
   </div>
 </div>
@@ -1114,7 +1162,7 @@ let tasks = [];
 let referrals = [];
 let pulseResults = [];
 let itprojects = [];
-let agents = [], agentVersions = [], agentIssues = [];
+let agents = [], agentVersions = [], agentIssues = [], agentStages = [], agentTemplates = [];
 let tempMembers = [];
 
 // ── LOAD FROM SUPABASE ──
@@ -1148,14 +1196,27 @@ async function loadPulseResults(){
   if(error) console.error('Load pulse results error:',error);
 }
 async function loadAgents(){
-  const [a,av,ai]=await Promise.all([
-    supabase.from('agents').select('*').order('name'),
-    supabase.from('agent_versions').select('*').order('created_at',{ascending:false}),
-    supabase.from('agent_issues').select('*').order('occurred_at',{ascending:false})
-  ]);
-  if(a.data) agents=a.data;
-  if(av.data) agentVersions=av.data;
-  if(ai.data) agentIssues=ai.data;
+  try{
+    const [a,av,ai,as,at]=await Promise.all([
+      supabase.from('agents').select('*').order('name'),
+      supabase.from('agent_versions').select('*').order('created_at',{ascending:false}),
+      supabase.from('agent_issues').select('*').order('occurred_at',{ascending:false}),
+      supabase.from('agent_stages').select('*').order('stage_order',{ascending:true}),
+      supabase.from('agent_templates').select('*').order('created_at',{ascending:true})
+    ]);
+    if(a&&a.data) agents=a.data;
+    if(a&&a.error) console.warn('Load agents error:',a.error);
+    if(av&&av.data) agentVersions=av.data;
+    if(av&&av.error) console.warn('Load agent_versions error:',av.error);
+    if(ai&&ai.data) agentIssues=ai.data;
+    if(ai&&ai.error) console.warn('Load agent_issues error:',ai.error);
+    if(as&&as.data) agentStages=as.data;
+    if(as&&as.error) console.warn('Load agent_stages error:',as.error);
+    if(at&&at.data) agentTemplates=at.data;
+    if(at&&at.error) console.warn('Load agent_templates error:',at.error);
+  }catch(e){
+    console.warn('loadAgents failed:',e);
+  }
 }
 async function loadAll(){
   await Promise.all([loadContacts(), loadClients(), loadTasks(), loadProspects(), loadProspectNotes(), loadReferrers(), loadRefPayments(), loadRenewals(), loadContactReports(), loadTrials(), loadTaskLogs(), loadFinanceTransactions(), loadBills(), loadIntakeSubmissions(), loadPulseResults(), loadAgents()]);
@@ -5028,6 +5089,7 @@ window.deleteITProject=function(id){
 
 // ── AGENTS ──
 let agentDetailId=null, agentDetailTab='overview';
+let expandedStageId=null, expandedTemplateId=null;
 
 const AGENT_STATUS_COLORS={
   active:{bg:'#dcfce7',color:'#15803d'},
@@ -5078,14 +5140,21 @@ function renderAgents(){
   if(!list.length){
     html+='<div style="padding:40px;text-align:center;color:#94a3b8;font-size:14px;">No agents found. Add your first agent to get started.</div>';
   } else {
-    list.forEach(a=>{
+    const visibleIds=new Set(list.map(a=>a.id));
+    const childrenOf={};
+    list.forEach(a=>{if(a.parent_agent_id&&visibleIds.has(a.parent_agent_id)){(childrenOf[a.parent_agent_id]=childrenOf[a.parent_agent_id]||[]).push(a);}});
+    const topLevel=list.filter(a=>!a.parent_agent_id||!visibleIds.has(a.parent_agent_id));
+    const renderCard=(a,isChild)=>{
       const sc=AGENT_STATUS_COLORS[a.status]||{bg:'#f1f5f9',color:'#64748b'};
       const hc=AGENT_HEALTH_COLORS[a.health||'ok']||AGENT_HEALTH_COLORS.ok;
       const tc=AGENT_TYPE_COLORS[a.type||'standalone']||{bg:'#f1f5f9',color:'#64748b'};
       const platform=AGENT_PLATFORM_LABELS[a.platform]||a.platform||'';
       const lastReviewed=a.last_reviewed_at?new Date(a.last_reviewed_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}):'Never reviewed';
       const parentName=a.parent_agent_id?((agents.find(x=>x.id===a.parent_agent_id)||{}).name||''):'';
-      html+=`<div onclick="viewAgentDetail('${a.id}')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #003366;border-radius:10px;padding:16px 20px;margin-bottom:10px;cursor:pointer;transition:border-color .15s;" onmouseover="this.style.borderColor='#003366'" onmouseout="this.style.borderColor='#e2e8f0'">
+      const indent=isChild?'margin-left:32px;position:relative;':'';
+      const connector=isChild?'<div style="position:absolute;left:-22px;top:-6px;bottom:50%;width:2px;background:#cbd5e1;"></div><div style="position:absolute;left:-22px;top:50%;width:18px;height:2px;background:#cbd5e1;"></div>':'';
+      return `<div style="${indent}"><div onclick="viewAgentDetail('${a.id}')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid ${isChild?'#0f766e':'#003366'};border-radius:10px;padding:16px 20px;margin-bottom:10px;cursor:pointer;transition:border-color .15s;position:relative;" onmouseover="this.style.borderColor='#003366'" onmouseout="this.style.borderColor='#e2e8f0'">
+        ${connector}
         <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;">
           <div style="flex:1;min-width:0;">
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
@@ -5099,7 +5168,7 @@ function renderAgents(){
               <span style="font-size:12px;color:#94a3b8;">${platform}</span>
               ${a.owner?`<span style="font-size:12px;color:#94a3b8;">Owner: ${a.owner}</span>`:''}
               <span style="font-size:12px;color:#94a3b8;">Reviewed: ${lastReviewed}</span>
-              ${parentName?`<span style="font-size:12px;color:#94a3b8;">Parent: ${parentName}</span>`:''}
+              ${parentName&&!isChild?`<span style="font-size:12px;color:#94a3b8;">Parent: ${parentName}</span>`:''}
             </div>
           </div>
           <div style="display:flex;gap:6px;flex-shrink:0;" onclick="event.stopPropagation()">
@@ -5107,7 +5176,14 @@ function renderAgents(){
             <button style="background:none;border:1px solid #fecaca;border-radius:6px;padding:6px 12px;font-size:12px;color:#dc2626;cursor:pointer;" onclick="deleteAgent('${a.id}')">Del</button>
           </div>
         </div>
-      </div>`;
+      </div></div>`;
+    };
+    const hasStages=id=>agentStages.some(s=>s.agent_id===id);
+    topLevel.forEach(a=>{
+      html+=renderCard(a,false);
+      (childrenOf[a.id]||[]).forEach(c=>{
+        html+=renderCard(c,true);
+      });
     });
   }
   html+='<div style="height:80px;"></div>';
@@ -5118,6 +5194,12 @@ window.renderAgents=renderAgents;
 window.viewAgentDetail=function(id){
   agentDetailId=id;
   agentDetailTab='overview';
+  renderAgentDetail();
+};
+
+window.viewAgentStages=function(id){
+  agentDetailId=id;
+  agentDetailTab='stages';
   renderAgentDetail();
 };
 
@@ -5132,9 +5214,12 @@ function renderAgentDetail(){
   const myVersions=agentVersions.filter(v=>v.agent_id===a.id).sort((x,y)=>y.version_number-x.version_number);
   const myIssues=agentIssues.filter(i=>i.agent_id===a.id).sort((x,y)=>new Date(y.occurred_at)-new Date(x.occurred_at));
   const openIssues=myIssues.filter(i=>i.status==='open').length;
+  const myStages=agentStages.filter(s=>s.agent_id===a.id).sort((x,y)=>(x.stage_order||0)-(y.stage_order||0));
+  const myStageIds=myStages.map(s=>s.id);
+  const myTemplateCount=agentTemplates.filter(t=>myStageIds.includes(t.stage_id)).length;
   const tabs=[
     {id:'overview',label:'Overview'},
-    {id:'prompt',label:'System Prompt'},
+    {id:'stages',label:`Stages (${myStages.length}${myTemplateCount?' &middot; '+myTemplateCount+' messages':''})`},
     {id:'versions',label:`Versions (${myVersions.length})`},
     {id:'issues',label:`Issues${openIssues?' ('+openIssues+' open)':''}`,alert:openIssues>0}
   ];
@@ -5161,44 +5246,100 @@ function renderAgentDetail(){
     const lastReviewed=a.last_reviewed_at?new Date(a.last_reviewed_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}):'Never';
     html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px 20px;">
       ${row('Description',a.description)}${row('Purpose',a.purpose)}${row('Type',a.type)}${row('Platform',platform)}${row('Model',a.model)}${row('Used by',a.used_by)}${row('Used for',a.used_for)}${row('Not used for',a.not_used_for)}${row('Trigger',a.trigger_type)}${row('Parent agent',parentName)}${row('Owner',a.owner)}${row('Last reviewed',lastReviewed)}${row('Review every',a.review_frequency_days?a.review_frequency_days+' days':'')}
-      ${a.source_of_truth_url?`<div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #f1f5f9;"><span style="font-size:12px;color:#94a3b8;font-weight:600;min-width:160px;flex-shrink:0;">Source of truth</span><a href="${a.source_of_truth_url}" target="_blank" style="font-size:13px;color:#003366;">${a.source_of_truth_url}</a></div>`:''}
+      ${a.source_of_truth_url?`<div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #f1f5f9;"><span style="font-size:12px;color:#94a3b8;font-weight:600;min-width:160px;flex-shrink:0;">SharePoint URL</span><a href="${a.source_of_truth_url}" target="_blank" style="font-size:13px;color:#003366;">${a.source_of_truth_url}</a></div>`:''}
       ${a.knowledge_urls?`<div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #f1f5f9;"><span style="font-size:12px;color:#94a3b8;font-weight:600;min-width:160px;flex-shrink:0;">Knowledge URLs</span><span style="font-size:13px;color:#1e293b;white-space:pre-wrap;">${a.knowledge_urls}</span></div>`:''}
       ${a.notes?`<div style="padding:10px 0;"><span style="font-size:12px;color:#94a3b8;font-weight:600;display:block;margin-bottom:6px;">Notes</span><div style="font-size:13px;color:#1e293b;white-space:pre-wrap;">${a.notes}</div></div>`:''}
       ${!a.description&&!a.purpose&&!a.used_by?'<div style="color:#94a3b8;font-size:13px;">No details yet. Edit this agent to fill in the overview.</div>':''}
     </div>`;
   }
-  if(agentDetailTab==='prompt'){
-    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px 20px;">`;
-    if(a.system_prompt){
-      html+=`<pre style="font-size:12px;color:#1e293b;white-space:pre-wrap;font-family:inherit;margin:0;line-height:1.6;">${a.system_prompt.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>`;
+  if(agentDetailTab==='stages'){
+    html+=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px;">
+      <div style="font-size:13px;color:#64748b;flex:1;min-width:200px;">Each stage (e.g. "Initial Enquiry") holds messages — the actual text per persona and platform.</div>
+      <div style="display:flex;gap:6px;flex-shrink:0;">
+        <button onclick="copyStagesForSharePoint('${a.id}')" style="background:#f0f4f8;border:1px solid #e2e8f0;border-radius:8px;padding:8px 14px;font-size:13px;cursor:pointer;color:#475569;font-weight:600;">Copy list for SharePoint</button>
+        <button class="btn btn-blue" onclick="openStageForm('${a.id}')">+ Add Stage</button>
+      </div>
+    </div>`;
+    if(!myStages.length){
+      html+='<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:20px;text-align:center;color:#94a3b8;font-size:13px;">No stages yet. Add your first stage (e.g. "Initial Enquiry") to start building this agent\'s message library.</div>';
     } else {
-      html+='<div style="color:#94a3b8;font-size:13px;">No system prompt saved yet. Edit this agent to add the prompt.</div>';
+      myStages.forEach(s=>{
+        const messages=agentTemplates.filter(t=>t.stage_id===s.id);
+        const isOpen=expandedStageId===s.id;
+        html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;margin-bottom:10px;overflow:hidden;">
+          <div onclick="toggleStageExpand('${s.id}')" style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;cursor:pointer;background:#f8fafc;">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;flex:1;min-width:0;">
+              <span style="color:#94a3b8;font-size:12px;">${isOpen?'&#9660;':'&#9654;'}</span>
+              <span style="font-weight:700;font-size:14px;color:#1e3a5f;">${s.name}</span>
+              ${s.trigger_phrase?`<span style="font-size:11px;padding:2px 8px;border-radius:99px;background:#f1f5f9;color:#475569;font-family:monospace;">${s.trigger_phrase}</span>`:''}
+              ${s.default_sender?`<span style="font-size:11px;color:#94a3b8;">Sender: ${s.default_sender}</span>`:''}
+              <span style="font-size:11px;padding:2px 8px;border-radius:99px;background:#eff6ff;color:#2563eb;font-weight:600;">${messages.length} message${messages.length!==1?'s':''}</span>
+            </div>
+            <div style="display:flex;gap:6px;flex-shrink:0;">
+              <button onclick="event.stopPropagation();copyStageForSharePoint('${s.id}')" style="background:#f0f4f8;border:1px solid #e2e8f0;border-radius:6px;padding:4px 10px;font-size:11px;color:#475569;cursor:pointer;font-weight:600;">Copy this stage</button>
+              <button onclick="event.stopPropagation();openStageForm('${a.id}','${s.id}')" style="background:none;border:1px solid #e2e8f0;border-radius:6px;padding:4px 10px;font-size:11px;color:#475569;cursor:pointer;">Edit</button>
+            </div>
+          </div>
+          ${isOpen?`<div style="padding:16px;border-top:1px solid #e2e8f0;">
+            ${s.purpose?`<div style="font-size:13px;color:#475569;margin-bottom:8px;"><strong style="color:#94a3b8;font-size:11px;text-transform:uppercase;display:block;margin-bottom:2px;">Purpose</strong>${s.purpose}</div>`:''}
+            ${s.platform_rule?`<div style="font-size:13px;color:#475569;margin-bottom:12px;"><strong style="color:#94a3b8;font-size:11px;text-transform:uppercase;display:block;margin-bottom:2px;">Platform Rule</strong>${s.platform_rule}</div>`:''}
+            <div style="display:flex;justify-content:space-between;align-items:center;margin:12px 0 8px;">
+              <div style="font-size:12px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.5px;">Messages</div>
+              <button onclick="openTemplateForm('${s.id}')" style="background:#003366;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer;">+ Add Message</button>
+            </div>
+            ${!messages.length?'<div style="padding:14px;text-align:center;color:#94a3b8;font-size:12px;background:#f8fafc;border-radius:8px;">No messages yet. Add the first message for this stage.</div>':''}
+            ${messages.map(t=>{
+              const tOpen=expandedTemplateId===t.id;
+              const platLabel={text:'Text / SMS',whatsapp:'WhatsApp',email:'Email',teams:'Teams'}[t.platform]||t.platform;
+              const personaColor=t.persona==='Cath'?'#7e22ce':'#0f766e';
+              return `<div style="border:1px solid #e2e8f0;border-radius:8px;margin-bottom:6px;overflow:hidden;">
+                <div onclick="toggleTemplateExpand('${t.id}')" style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;cursor:pointer;">
+                  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:1;min-width:0;">
+                    <span style="color:#94a3b8;font-size:11px;">${tOpen?'&#9660;':'&#9654;'}</span>
+                    <span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:600;background:${t.persona==='Cath'?'#f3e8ff':'#ccfbf1'};color:${personaColor};">${t.persona}</span>
+                    <span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:600;background:#f1f5f9;color:#64748b;">${platLabel}</span>
+                    ${t.subject?`<span style="font-size:12px;color:#475569;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${t.subject}</span>`:''}
+                  </div>
+                  <button onclick="event.stopPropagation();openTemplateForm('${s.id}','${t.id}')" style="background:none;border:1px solid #e2e8f0;border-radius:6px;padding:3px 10px;font-size:11px;color:#475569;cursor:pointer;flex-shrink:0;">Edit</button>
+                </div>
+                ${tOpen?`<div style="padding:12px;background:#f8fafc;border-top:1px solid #e2e8f0;">
+                  ${t.subject?`<div style="font-size:11px;color:#94a3b8;margin-bottom:4px;">SUBJECT</div><div style="font-size:13px;color:#1e293b;margin-bottom:10px;">${t.subject}</div>`:''}
+                  <div style="font-size:11px;color:#94a3b8;margin-bottom:4px;">BODY</div>
+                  <pre style="font-size:12px;color:#1e293b;white-space:pre-wrap;font-family:inherit;margin:0;line-height:1.5;">${(t.body||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>
+                </div>`:''}
+              </div>`;
+            }).join('')}
+          </div>`:''}
+        </div>`;
+      });
     }
-    html+=`</div>`;
   }
   if(agentDetailTab==='versions'){
-    html+=`<div style="margin-bottom:12px;font-size:13px;color:#64748b;">Every save creates a snapshot. Click Revert to restore a previous version (creates a new snapshot — nothing is deleted).</div>`;
+    html+=`<div style="margin-bottom:12px;font-size:13px;color:#64748b;">The top entry is the current live system prompt. Every save creates a snapshot — click Revert on an older version to restore it (creates a new snapshot, nothing is deleted).</div>`;
     if(!myVersions.length){
       html+='<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:20px;text-align:center;color:#94a3b8;font-size:13px;">No versions yet. Edit and save this agent to create the first snapshot.</div>';
     } else {
-      myVersions.forEach(v=>{
+      myVersions.forEach((v,idx)=>{
+        const isCurrent=idx===0;
         const date=new Date(v.created_at).toLocaleString('en-AU',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
-        html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;margin-bottom:8px;overflow:hidden;">
-          <div onclick="toggleVersionExpand('${v.id}')" style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;cursor:pointer;background:#f8fafc;">
+        html+=`<div style="background:#fff;border:1px solid ${isCurrent?'#003366':'#e2e8f0'};border-radius:10px;margin-bottom:8px;overflow:hidden;${isCurrent?'box-shadow:0 1px 3px rgba(0,51,102,.08);':''}">
+          <div onclick="toggleVersionExpand('${v.id}')" style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;cursor:pointer;background:${isCurrent?'#f0f4f8':'#f8fafc'};">
             <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
               <span style="font-weight:700;font-size:13px;color:#003366;">v${v.version_number}</span>
+              ${isCurrent?`<span style="font-size:10px;padding:2px 8px;border-radius:99px;font-weight:700;background:#003366;color:#fff;letter-spacing:.5px;">CURRENT</span>`:''}
               <span style="font-size:12px;color:#64748b;">${date}</span>
               ${v.changed_by?`<span style="font-size:12px;color:#94a3b8;">${v.changed_by}</span>`:''}
               ${v.change_note?`<span style="font-size:12px;color:#475569;font-style:italic;">${v.change_note}</span>`:''}
             </div>
             <div style="display:flex;align-items:center;gap:8px;">
-              <button onclick="event.stopPropagation();revertToVersion('${a.id}','${v.id}')" style="background:#003366;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;">Revert</button>
-              <span style="color:#94a3b8;font-size:12px;" id="vexpand-arrow-${v.id}">&#9654;</span>
+              ${isCurrent?'':`<button onclick="event.stopPropagation();revertToVersion('${a.id}','${v.id}')" style="background:#003366;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;">Revert</button>`}
+              <span style="color:#94a3b8;font-size:12px;" id="vexpand-arrow-${v.id}">${isCurrent?'&#9660;':'&#9654;'}</span>
             </div>
           </div>
-          <div id="vexpand-${v.id}" style="display:none;padding:16px;border-top:1px solid #e2e8f0;">
+          <div id="vexpand-${v.id}" style="display:${isCurrent?'block':'none'};padding:16px;border-top:1px solid #e2e8f0;">
+            ${v.system_prompt?`<div style="margin-bottom:12px;"><div style="font-size:12px;color:#94a3b8;margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">System Prompt</div><pre style="font-size:12px;color:#1e293b;white-space:pre-wrap;background:#f8fafc;padding:14px;border-radius:8px;font-family:inherit;line-height:1.6;${isCurrent?'':'max-height:300px;overflow-y:auto;'}">${v.system_prompt.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></div>`:'<div style="color:#94a3b8;font-size:12px;margin-bottom:12px;">No system prompt saved in this version.</div>'}
+            <div style="font-size:11px;color:#94a3b8;margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">Snapshot Details</div>
             ${[['Name',v.name],['Status',v.status],['Type',v.type],['Platform',AGENT_PLATFORM_LABELS[v.platform]||v.platform],['Model',v.model],['Used by',v.used_by],['Used for',v.used_for],['Not used for',v.not_used_for],['Trigger',v.trigger_type],['Owner',v.owner],['Health',v.health],['Source of truth',v.source_of_truth_url],['Knowledge URLs',v.knowledge_urls]].filter(r=>r[1]).map(r=>`<div style="display:flex;gap:12px;padding:6px 0;border-bottom:1px solid #f1f5f9;"><span style="font-size:12px;color:#94a3b8;min-width:140px;flex-shrink:0;">${r[0]}</span><span style="font-size:12px;color:#1e293b;">${r[1]}</span></div>`).join('')}
-            ${v.system_prompt?`<div style="margin-top:12px;"><div style="font-size:12px;color:#94a3b8;margin-bottom:6px;">System Prompt</div><pre style="font-size:11px;color:#475569;white-space:pre-wrap;background:#f8fafc;padding:12px;border-radius:6px;font-family:inherit;max-height:200px;overflow-y:auto;">${v.system_prompt.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></div>`:''}
             ${v.notes_snapshot?`<div style="margin-top:8px;"><div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">Notes at this version</div><div style="font-size:12px;color:#475569;white-space:pre-wrap;">${v.notes_snapshot}</div></div>`:''}
           </div>
         </div>`;
@@ -5395,6 +5536,183 @@ window.resolveIssue=async function(id){
   const i=agentIssues.find(x=>x.id===id);
   if(i){i.status='resolved';i.resolved_at=resolvedAt;}
   toast('Issue resolved','success');
+  renderAgentDetail();
+};
+
+// ── STAGES & MESSAGES ──
+window.toggleStageExpand=function(id){
+  expandedStageId=expandedStageId===id?null:id;
+  expandedTemplateId=null;
+  renderAgentDetail();
+};
+window.toggleTemplateExpand=function(id){
+  expandedTemplateId=expandedTemplateId===id?null:id;
+  renderAgentDetail();
+};
+
+window.copyStageForSharePoint=function(stageId){
+  const s=agentStages.find(x=>x.id===stageId);
+  if(!s){toast('Stage not found','error');return;}
+  const platLabel={text:'Text / SMS',whatsapp:'WhatsApp',email:'Email',teams:'Teams'};
+  const divider='────────────────────────────────────────';
+  let out=s.name.toUpperCase()+'\n'+divider+'\n\n';
+  if(s.trigger_phrase) out+='Trigger: '+s.trigger_phrase+'\n';
+  if(s.default_sender) out+='Default sender: '+s.default_sender+'\n';
+  if(s.purpose) out+='Purpose: '+s.purpose+'\n';
+  if(s.platform_rule) out+='Platform rule: '+s.platform_rule+'\n';
+  out+='\n';
+  const msgs=agentTemplates.filter(t=>t.stage_id===stageId);
+  if(!msgs.length){out+='No messages yet.\n\n';}
+  msgs.forEach(t=>{
+    out+='── '+t.persona+' — '+(platLabel[t.platform]||t.platform)+' ──\n\n';
+    if(t.subject) out+='Subject: '+t.subject+'\n\n';
+    out+=(t.body||'').trim()+'\n\n';
+  });
+  navigator.clipboard.writeText(out).then(()=>{
+    toast('Stage copied as plain text','success');
+  }).catch(e=>{
+    console.error(e);
+    toast('Copy failed — see console','error');
+  });
+};
+
+window.copyStagesForSharePoint=function(agentId){
+  const a=agents.find(x=>x.id===agentId);
+  if(!a){toast('Agent not found','error');return;}
+  const stages=agentStages.filter(s=>s.agent_id===agentId).sort((x,y)=>(x.stage_order||0)-(y.stage_order||0));
+  const platLabel={text:'Text / SMS',whatsapp:'WhatsApp',email:'Email',teams:'Teams'};
+  const heavy='════════════════════════════════════════';
+  const divider='────────────────────────────────────────';
+  let out=heavy+'\n'+a.name.toUpperCase()+'\n'+heavy+'\n\n';
+  if(a.description) out+=a.description+'\n\n';
+  if(!stages.length){out+='No stages yet.\n';}
+  stages.forEach((s,i)=>{
+    out+='\n'+divider+'\nSTAGE '+(i+1)+': '+s.name.toUpperCase()+'\n'+divider+'\n\n';
+    if(s.trigger_phrase) out+='Trigger: '+s.trigger_phrase+'\n';
+    if(s.default_sender) out+='Default sender: '+s.default_sender+'\n';
+    if(s.purpose) out+='Purpose: '+s.purpose+'\n';
+    if(s.platform_rule) out+='Platform rule: '+s.platform_rule+'\n';
+    out+='\n';
+    const msgs=agentTemplates.filter(t=>t.stage_id===s.id);
+    if(!msgs.length){out+='No messages yet.\n\n';}
+    msgs.forEach(t=>{
+      out+='── '+t.persona+' — '+(platLabel[t.platform]||t.platform)+' ──\n\n';
+      if(t.subject) out+='Subject: '+t.subject+'\n\n';
+      out+=(t.body||'').trim()+'\n\n';
+    });
+  });
+  navigator.clipboard.writeText(out).then(()=>{
+    toast('Copied as plain text — paste into SharePoint','success');
+  }).catch(e=>{
+    console.error(e);
+    toast('Copy failed — see console','error');
+  });
+};
+
+window.openStageForm=function(agentId,stageId){
+  const s=stageId?agentStages.find(x=>x.id===stageId):null;
+  document.getElementById('stageModalTitle').textContent=s?'Edit Stage':'Add Stage';
+  document.getElementById('stageFormId').value=s?s.id:'';
+  document.getElementById('stageFormAgentId').value=agentId;
+  document.getElementById('stageFormName').value=s?(s.name||''):'';
+  document.getElementById('stageFormTrigger').value=s?(s.trigger_phrase||''):'';
+  document.getElementById('stageFormPurpose').value=s?(s.purpose||''):'';
+  document.getElementById('stageFormSender').value=s?(s.default_sender||''):'';
+  document.getElementById('stageFormOrder').value=s?(s.stage_order||0):(agentStages.filter(x=>x.agent_id===agentId).length);
+  document.getElementById('stageFormPlatformRule').value=s?(s.platform_rule||''):'';
+  document.getElementById('stageDelBtn').style.display=s?'inline-block':'none';
+  document.getElementById('stageModal').classList.add('open');
+};
+
+window.saveStage=async function(){
+  const id=document.getElementById('stageFormId').value;
+  const agentId=document.getElementById('stageFormAgentId').value;
+  const data={
+    agent_id:agentId,
+    name:document.getElementById('stageFormName').value.trim(),
+    trigger_phrase:document.getElementById('stageFormTrigger').value.trim(),
+    purpose:document.getElementById('stageFormPurpose').value.trim(),
+    default_sender:document.getElementById('stageFormSender').value,
+    stage_order:parseInt(document.getElementById('stageFormOrder').value)||0,
+    platform_rule:document.getElementById('stageFormPlatformRule').value.trim(),
+    updated_at:new Date().toISOString()
+  };
+  if(!data.name){toast('Stage name required','error');return;}
+  if(id){
+    const {error}=await supabase.from('agent_stages').update(data).eq('id',id);
+    if(error){toast('Error saving stage','error');console.error(error);return;}
+    Object.assign(agentStages.find(x=>x.id===id),data);
+  } else {
+    const {data:inserted,error}=await supabase.from('agent_stages').insert(data).select().single();
+    if(error){toast('Error creating stage','error');console.error(error);return;}
+    agentStages.push(inserted);
+    expandedStageId=inserted.id;
+  }
+  toast(id?'Stage updated':'Stage created','success');
+  closeModal('stageModal');
+  renderAgentDetail();
+};
+
+window.deleteStage=async function(id){
+  if(!confirm('Delete this stage and all its messages? This cannot be undone.'))return;
+  const {error}=await supabase.from('agent_stages').delete().eq('id',id);
+  if(error){toast('Error deleting stage','error');return;}
+  agentStages=agentStages.filter(s=>s.id!==id);
+  agentTemplates=agentTemplates.filter(t=>t.stage_id!==id);
+  if(expandedStageId===id) expandedStageId=null;
+  toast('Stage deleted','success');
+  closeModal('stageModal');
+  renderAgentDetail();
+};
+
+window.openTemplateForm=function(stageId,templateId){
+  const t=templateId?agentTemplates.find(x=>x.id===templateId):null;
+  document.getElementById('templateModalTitle').textContent=t?'Edit Message':'Add Message';
+  document.getElementById('templateFormId').value=t?t.id:'';
+  document.getElementById('templateFormStageId').value=stageId;
+  document.getElementById('templateFormPersona').value=t?(t.persona||'Cath'):'Cath';
+  document.getElementById('templateFormPlatform').value=t?(t.platform||'text'):'text';
+  document.getElementById('templateFormSubject').value=t?(t.subject||''):'';
+  document.getElementById('templateFormBody').value=t?(t.body||''):'';
+  document.getElementById('templateDelBtn').style.display=t?'inline-block':'none';
+  document.getElementById('templateModal').classList.add('open');
+};
+
+window.saveTemplate=async function(){
+  const id=document.getElementById('templateFormId').value;
+  const stageId=document.getElementById('templateFormStageId').value;
+  const data={
+    stage_id:stageId,
+    persona:document.getElementById('templateFormPersona').value,
+    platform:document.getElementById('templateFormPlatform').value,
+    subject:document.getElementById('templateFormSubject').value.trim(),
+    body:document.getElementById('templateFormBody').value,
+    updated_at:new Date().toISOString()
+  };
+  if(!data.body.trim()){toast('Body is required','error');return;}
+  if(id){
+    const {error}=await supabase.from('agent_templates').update(data).eq('id',id);
+    if(error){toast('Error saving message','error');console.error(error);return;}
+    Object.assign(agentTemplates.find(x=>x.id===id),data);
+  } else {
+    const {data:inserted,error}=await supabase.from('agent_templates').insert(data).select().single();
+    if(error){toast('Error creating message','error');console.error(error);return;}
+    agentTemplates.push(inserted);
+    expandedTemplateId=inserted.id;
+  }
+  toast(id?'Message updated':'Message created','success');
+  closeModal('templateModal');
+  renderAgentDetail();
+};
+
+window.deleteTemplate=async function(id){
+  if(!confirm('Delete this message?'))return;
+  const {error}=await supabase.from('agent_templates').delete().eq('id',id);
+  if(error){toast('Error deleting message','error');return;}
+  agentTemplates=agentTemplates.filter(t=>t.id!==id);
+  if(expandedTemplateId===id) expandedTemplateId=null;
+  toast('Message deleted','success');
+  closeModal('templateModal');
   renderAgentDetail();
 };
 
