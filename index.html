@@ -215,7 +215,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate"></span>
-      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.13.0</span>
+      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.14.0</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -5178,39 +5178,11 @@ function renderAgents(){
         </div>
       </div></div>`;
     };
-    const renderStagesBox=(agent,depth)=>{
-      const sharepointUrl=agent.source_of_truth_url||'';
-      const stagesCount=agentStages.filter(s=>s.agent_id===agent.id).length;
-      const stageIds=agentStages.filter(s=>s.agent_id===agent.id).map(s=>s.id);
-      const msgCount=agentTemplates.filter(t=>stageIds.includes(t.stage_id)).length;
-      const indent=depth===0?'margin-left:24px;':'margin-left:56px;';
-      const connector=depth===0?'':'<div style="position:absolute;left:-22px;top:-8px;bottom:50%;width:2px;background:#cbd5e1;"></div><div style="position:absolute;left:-22px;top:50%;width:18px;height:2px;background:#cbd5e1;"></div>';
-      return `<div style="${indent}margin-top:-4px;margin-bottom:12px;position:relative;">
-        ${connector}
-        <div onclick="viewAgentStages('${agent.id}')" style="background:#fff;border:1px solid #e2e8f0;border-left:3px solid #7e22ce;border-radius:10px;padding:14px 18px;cursor:pointer;transition:border-color .15s;" onmouseover="this.style.borderColor='#7e22ce'" onmouseout="this.style.borderColor='#e2e8f0'">
-          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
-            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0;flex:1;">
-              <span style="font-size:11px;padding:3px 9px;border-radius:99px;font-weight:700;background:#f3e8ff;color:#7e22ce;text-transform:uppercase;letter-spacing:.5px;">Stages</span>
-              <span style="font-weight:700;font-size:14px;color:#1e3a5f;">${stagesCount} stage${stagesCount!==1?'s':''}</span>
-              <span style="font-size:12px;color:#94a3b8;">&middot;</span>
-              <span style="font-size:13px;color:#475569;">${msgCount} message${msgCount!==1?'s':''} inside</span>
-            </div>
-            <div style="display:flex;gap:6px;flex-shrink:0;" onclick="event.stopPropagation()">
-              ${sharepointUrl?`<button onclick="navigator.clipboard.writeText('${sharepointUrl}');toast('SharePoint URL copied','success')" style="background:#f0f4f8;border:1px solid #e2e8f0;border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;color:#475569;font-weight:600;">Copy URL</button>
-              <a href="${sharepointUrl}" target="_blank" style="background:#003366;color:#fff;text-decoration:none;border-radius:6px;padding:6px 12px;font-size:11px;font-weight:600;">Open SharePoint &rarr;</a>`:`<button onclick="openAgentForm('${agent.id}')" style="background:#f0f4f8;border:1px solid #e2e8f0;border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;color:#475569;font-weight:600;">+ Add SharePoint URL</button>`}
-            </div>
-          </div>
-          ${sharepointUrl?`<div style="margin-top:8px;padding-top:8px;border-top:1px dashed #f1f5f9;font-size:11px;color:#94a3b8;font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${sharepointUrl}</div>`:''}
-        </div>
-      </div>`;
-    };
     const hasStages=id=>agentStages.some(s=>s.agent_id===id);
     topLevel.forEach(a=>{
       html+=renderCard(a,false);
-      if(hasStages(a.id)) html+=renderStagesBox(a,0);
       (childrenOf[a.id]||[]).forEach(c=>{
         html+=renderCard(c,true);
-        if(hasStages(c.id)) html+=renderStagesBox(c,1);
       });
     });
   }
@@ -5291,9 +5263,12 @@ function renderAgentDetail(){
     html+=`</div>`;
   }
   if(agentDetailTab==='stages'){
-    html+=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-      <div style="font-size:13px;color:#64748b;">Each stage (e.g. "Initial Enquiry") holds messages — the actual text per persona and platform.</div>
-      <button class="btn btn-blue" onclick="openStageForm('${a.id}')" style="flex-shrink:0;margin-left:12px;">+ Add Stage</button>
+    html+=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px;">
+      <div style="font-size:13px;color:#64748b;flex:1;min-width:200px;">Each stage (e.g. "Initial Enquiry") holds messages — the actual text per persona and platform.</div>
+      <div style="display:flex;gap:6px;flex-shrink:0;">
+        <button onclick="copyStagesForSharePoint('${a.id}')" style="background:#f0f4f8;border:1px solid #e2e8f0;border-radius:8px;padding:8px 14px;font-size:13px;cursor:pointer;color:#475569;font-weight:600;">Copy list for SharePoint</button>
+        <button class="btn btn-blue" onclick="openStageForm('${a.id}')">+ Add Stage</button>
+      </div>
     </div>`;
     if(!myStages.length){
       html+='<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:20px;text-align:center;color:#94a3b8;font-size:13px;">No stages yet. Add your first stage (e.g. "Initial Enquiry") to start building this agent\'s message library.</div>';
@@ -5577,6 +5552,36 @@ window.toggleStageExpand=function(id){
 window.toggleTemplateExpand=function(id){
   expandedTemplateId=expandedTemplateId===id?null:id;
   renderAgentDetail();
+};
+
+window.copyStagesForSharePoint=function(agentId){
+  const a=agents.find(x=>x.id===agentId);
+  if(!a){toast('Agent not found','error');return;}
+  const stages=agentStages.filter(s=>s.agent_id===agentId).sort((x,y)=>(x.stage_order||0)-(y.stage_order||0));
+  const platLabel={text:'Text / SMS',whatsapp:'WhatsApp',email:'Email',teams:'Teams'};
+  let out='# '+a.name+'\n\n';
+  if(a.description) out+=a.description+'\n\n';
+  if(!stages.length){out+='_No stages yet._\n';}
+  stages.forEach((s,i)=>{
+    out+='---\n\n## Stage '+(i+1)+': '+s.name+'\n\n';
+    if(s.trigger_phrase) out+='**Trigger:** '+s.trigger_phrase+'\n\n';
+    if(s.default_sender) out+='**Default sender:** '+s.default_sender+'\n\n';
+    if(s.purpose) out+='**Purpose:** '+s.purpose+'\n\n';
+    if(s.platform_rule) out+='**Platform rule:** '+s.platform_rule+'\n\n';
+    const msgs=agentTemplates.filter(t=>t.stage_id===s.id);
+    if(!msgs.length){out+='_No messages yet._\n\n';}
+    msgs.forEach(t=>{
+      out+='### '+t.persona+' — '+(platLabel[t.platform]||t.platform)+'\n\n';
+      if(t.subject) out+='**Subject:** '+t.subject+'\n\n';
+      out+=(t.body||'').trim()+'\n\n';
+    });
+  });
+  navigator.clipboard.writeText(out).then(()=>{
+    toast('Copied — paste into SharePoint','success');
+  }).catch(e=>{
+    console.error(e);
+    toast('Copy failed — see console','error');
+  });
 };
 
 window.openStageForm=function(agentId,stageId){
