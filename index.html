@@ -215,7 +215,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate"></span>
-      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.15.7</span>
+      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.15.8</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -5266,7 +5266,7 @@ function renderAgentDetail(){
   const tabs=[
     {id:'overview',label:'Overview'},
     ...(isParent?[]:[{id:'stages',label:`Stages (${myStages.length}${myTemplateCount?' &middot; '+myTemplateCount+' messages':''})`}]),
-    {id:'versions',label:isParent?'System Prompt/Instructions':`Versions (${myVersions.length})`}
+    {id:'versions',label:'System Prompt/Instructions'}
   ];
   let html=`<div onclick="backToAgentList()" style="font-size:13px;color:#003366;font-weight:600;cursor:pointer;margin-bottom:16px;">&larr; Back to agents</div>`;
   html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #003366;border-radius:12px;padding:16px 20px;margin-bottom:16px;">
