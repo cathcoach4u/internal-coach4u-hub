@@ -216,7 +216,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.16.6</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.16.7</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -5631,18 +5631,19 @@ window.copyStageForSharePoint=function(stageId){
   if(!s){toast('Stage not found','error');return;}
   const platLabel={text:'Text / SMS',whatsapp:'WhatsApp',email:'Email',teams:'Teams'};
   const divider='────────────────────────────────────────';
+  const clean=str=>(str||'').replace(/<(https?:\/\/[^>]+|www\.[^>]+)>/g,'$1');
   let out=s.name.toUpperCase()+'\n'+divider+'\n\n';
   if(s.trigger_phrase) out+='Trigger: '+s.trigger_phrase+'\n';
   if(s.default_sender) out+='Default sender: '+s.default_sender+'\n';
-  if(s.purpose) out+='Purpose: '+s.purpose+'\n';
-  if(s.platform_rule) out+='Platform rule: '+s.platform_rule+'\n';
+  if(s.purpose) out+='Purpose: '+clean(s.purpose)+'\n';
+  if(s.platform_rule) out+='Platform rule: '+clean(s.platform_rule)+'\n';
   out+='\n';
   const msgs=agentTemplates.filter(t=>t.stage_id===stageId);
   if(!msgs.length){out+='No messages yet.\n\n';}
   msgs.forEach(t=>{
     out+='── '+t.persona+' — '+(platLabel[t.platform]||t.platform)+' ──\n\n';
     if(t.subject) out+='Subject: '+t.subject+'\n\n';
-    out+=(t.body||'').trim()+'\n\n';
+    out+=clean((t.body||'').trim())+'\n\n';
   });
   navigator.clipboard.writeText(out).then(()=>{
     toast('Stage copied as plain text','success');
@@ -5659,24 +5660,41 @@ window.copyStagesForSharePoint=function(agentId){
   const platLabel={text:'Text / SMS',whatsapp:'WhatsApp',email:'Email',teams:'Teams'};
   const heavy='════════════════════════════════════════';
   const divider='────────────────────────────────────────';
+  const today=new Date().toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'});
+  const clean=s=>(s||'').replace(/<(https?:\/\/[^>]+|www\.[^>]+)>/g,'$1');
+  const totalMsgs=agentTemplates.filter(t=>stages.some(s=>s.id===t.stage_id)).length;
   let out=heavy+'\n'+a.name.toUpperCase()+'\n'+heavy+'\n\n';
-  if(a.description) out+=a.description+'\n\n';
+  out+='Last updated: '+today+'\n';
+  out+='Stages: '+stages.length+'  |  Messages: '+totalMsgs+'\n';
+  if(a.owner) out+='Owner: '+a.owner+'\n';
+  out+='\n';
+  if(a.description) out+=clean(a.description)+'\n\n';
+  if(stages.length){
+    out+=divider+'\nCONTENTS\n'+divider+'\n\n';
+    stages.forEach((s,i)=>{
+      const msgs=agentTemplates.filter(t=>t.stage_id===s.id);
+      const personas=[...new Set(msgs.map(t=>t.persona))].join(', ');
+      out+=String(i+1).padStart(2,' ')+'. '+s.name+(personas?'  ('+personas+')':'')+'\n';
+    });
+    out+='\n';
+  }
   if(!stages.length){out+='No stages yet.\n';}
   stages.forEach((s,i)=>{
     out+='\n'+divider+'\nSTAGE '+(i+1)+': '+s.name.toUpperCase()+'\n'+divider+'\n\n';
     if(s.trigger_phrase) out+='Trigger: '+s.trigger_phrase+'\n';
     if(s.default_sender) out+='Default sender: '+s.default_sender+'\n';
-    if(s.purpose) out+='Purpose: '+s.purpose+'\n';
-    if(s.platform_rule) out+='Platform rule: '+s.platform_rule+'\n';
+    if(s.purpose) out+='Purpose: '+clean(s.purpose)+'\n';
+    if(s.platform_rule) out+='Platform rule: '+clean(s.platform_rule)+'\n';
     out+='\n';
     const msgs=agentTemplates.filter(t=>t.stage_id===s.id);
     if(!msgs.length){out+='No messages yet.\n\n';}
     msgs.forEach(t=>{
       out+='── '+t.persona+' — '+(platLabel[t.platform]||t.platform)+' ──\n\n';
       if(t.subject) out+='Subject: '+t.subject+'\n\n';
-      out+=(t.body||'').trim()+'\n\n';
+      out+=clean((t.body||'').trim())+'\n\n';
     });
   });
+  out+=heavy+'\nEND OF DOCUMENT\n'+heavy+'\n';
   navigator.clipboard.writeText(out).then(()=>{
     toast('Copied as plain text — paste into SharePoint','success');
   }).catch(e=>{
