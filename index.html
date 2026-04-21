@@ -216,7 +216,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.16.3</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.16.4</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -5201,20 +5201,18 @@ function renderAgents(){
       const connector=isChild?'<div style="position:absolute;left:-22px;top:-6px;bottom:50%;width:2px;background:#cbd5e1;"></div><div style="position:absolute;left:-22px;top:50%;width:18px;height:2px;background:#cbd5e1;"></div>':'';
       return `<div style="${indent}"><div onclick="viewAgentDetail('${a.id}')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid ${isChild?'#0f766e':'#003366'};border-radius:10px;padding:10px 14px;margin-bottom:8px;cursor:pointer;transition:border-color .15s;position:relative;" onmouseover="this.style.borderColor='#003366'" onmouseout="this.style.borderColor='#e2e8f0'">
         ${connector}
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-          <div style="flex:1;min-width:0;">
-            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-              <span style="font-weight:700;font-size:14px;color:#1e3a5f;">${a.name}</span>
-              <span style="font-size:10px;padding:1px 6px;border-radius:99px;font-weight:600;background:${tc.bg};color:${tc.color};">${a.type||'standalone'}</span>
-              <span style="font-size:10px;padding:1px 6px;border-radius:99px;font-weight:600;background:${sc.bg};color:${sc.color};">${a.status||'draft'}</span>
-              ${a.health&&a.health!=='ok'?`<span style="font-size:10px;padding:1px 6px;border-radius:99px;font-weight:600;background:${hc.bg};color:${hc.color};">${hc.label}</span>`:''}
-              ${a.owner?`<span style="font-size:11px;color:#94a3b8;">${a.owner}</span>`:''}
-            </div>
-          </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;">
+          <div style="font-weight:700;font-size:14px;color:#1e3a5f;flex:1;min-width:0;word-break:break-word;">${a.name}</div>
           <div style="display:flex;gap:4px;flex-shrink:0;" onclick="event.stopPropagation()">
             <button style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;" onclick="openAgentForm('${a.id}')">Edit</button>
             <button style="background:none;border:1px solid #fecaca;border-radius:6px;padding:4px 10px;font-size:11px;color:#dc2626;cursor:pointer;" onclick="deleteAgent('${a.id}')">Del</button>
           </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+          <span style="font-size:10px;padding:1px 6px;border-radius:99px;font-weight:600;background:${tc.bg};color:${tc.color};">${a.type||'standalone'}</span>
+          <span style="font-size:10px;padding:1px 6px;border-radius:99px;font-weight:600;background:${sc.bg};color:${sc.color};">${a.status||'draft'}</span>
+          ${a.health&&a.health!=='ok'?`<span style="font-size:10px;padding:1px 6px;border-radius:99px;font-weight:600;background:${hc.bg};color:${hc.color};">${hc.label}</span>`:''}
+          ${a.owner?`<span style="font-size:11px;color:#94a3b8;">${a.owner}</span>`:''}
         </div>
       </div></div>`;
     };
