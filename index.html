@@ -216,7 +216,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.16.5</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.16.6</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -5225,7 +5225,7 @@ function renderAgents(){
       return `<div style="margin-left:64px;position:relative;margin-bottom:10px;">
         <div style="position:absolute;left:-22px;top:-6px;bottom:50%;width:2px;background:#cbd5e1;"></div>
         <div style="position:absolute;left:-22px;top:50%;width:18px;height:2px;background:#cbd5e1;"></div>
-        <div onclick="viewAgentDetail('${c.id}')" style="background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid #8c6e9f;border-radius:8px;padding:10px 14px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;" onmouseover="this.style.background='#f0f4f8'" onmouseout="this.style.background='#f8fafc'">
+        <div onclick="viewAgentStages('${c.id}')" style="background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid #8c6e9f;border-radius:8px;padding:10px 14px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;" onmouseover="this.style.background='#f0f4f8'" onmouseout="this.style.background='#f8fafc'">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
             <span style="font-size:13px;font-weight:600;color:#1e3a5f;">Stages</span>
             <span style="font-size:11px;padding:2px 8px;border-radius:99px;background:#eff6ff;color:#2563eb;font-weight:600;">${childStages.length}${msgCount?' &middot; '+msgCount+' messages':''}</span>
@@ -5255,8 +5255,12 @@ window.viewAgentDetail=function(id){
 
 window.viewAgentStages=function(id){
   agentDetailId=id;
-  agentDetailTab='stages';
+  agentDetailTab='overview';
   renderAgentDetail();
+  setTimeout(()=>{
+    const el=document.getElementById('agentStagesBlock');
+    if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+  },50);
 };
 
 function renderAgentDetail(){
@@ -5310,7 +5314,7 @@ function renderAgentDetail(){
     </div>`;
   }
   function renderStagesBlock(){
-    let sHtml=`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-left:20px;border-left:3px solid #8c6e9f;">
+    let sHtml=`<div id="agentStagesBlock" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-left:20px;border-left:3px solid #8c6e9f;scroll-margin-top:16px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px;">
         <div style="font-size:14px;font-weight:700;color:#1e3a5f;">Stages (${myStages.length}${myTemplateCount?' &middot; '+myTemplateCount+' messages':''})</div>
         <div style="display:flex;gap:6px;flex-shrink:0;">
