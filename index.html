@@ -215,7 +215,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate"></span>
-      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.12.0</span>
+      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.13.0</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -810,7 +810,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="form-group"><label>Not used for</label><input id="agentFormNotUsedFor" placeholder="Manuals, reports, long-form content"></div>
     <div style="font-size:12px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin:14px 0 8px;">Links</div>
-    <div class="form-group"><label>Source of Truth URL</label><input id="agentFormSotUrl" type="url" placeholder="https://..."></div>
+    <div class="form-group"><label>SharePoint URL (source of truth)</label><input id="agentFormSotUrl" type="url" placeholder="https://...sharepoint.com/..."></div>
     <div class="form-group"><label>Knowledge URLs (one per line)</label><textarea id="agentFormKnowledge" rows="2" placeholder="https://..."></textarea></div>
     <div style="font-size:12px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin:14px 0 8px;">System Prompt</div>
     <div class="form-group"><textarea id="agentFormPrompt" rows="10" style="font-family:monospace;font-size:12px;" placeholder="Paste the full system prompt here..."></textarea></div>
@@ -5178,9 +5178,8 @@ function renderAgents(){
         </div>
       </div></div>`;
     };
-    const knowledgeBase=location.origin+location.pathname.replace(/[^/]+$/,'');
     const renderStagesBox=(agent,depth)=>{
-      const url=knowledgeBase+'knowledge.html?agent='+agent.id;
+      const sharepointUrl=agent.source_of_truth_url||'';
       const stagesCount=agentStages.filter(s=>s.agent_id===agent.id).length;
       const stageIds=agentStages.filter(s=>s.agent_id===agent.id).map(s=>s.id);
       const msgCount=agentTemplates.filter(t=>stageIds.includes(t.stage_id)).length;
@@ -5197,11 +5196,11 @@ function renderAgents(){
               <span style="font-size:13px;color:#475569;">${msgCount} message${msgCount!==1?'s':''} inside</span>
             </div>
             <div style="display:flex;gap:6px;flex-shrink:0;" onclick="event.stopPropagation()">
-              <button onclick="navigator.clipboard.writeText('${url}');toast('Knowledge URL copied','success')" style="background:#f0f4f8;border:1px solid #e2e8f0;border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;color:#475569;font-weight:600;">Copy URL</button>
-              <a href="${url}" target="_blank" style="background:#003366;color:#fff;text-decoration:none;border-radius:6px;padding:6px 12px;font-size:11px;font-weight:600;">Knowledge page &rarr;</a>
+              ${sharepointUrl?`<button onclick="navigator.clipboard.writeText('${sharepointUrl}');toast('SharePoint URL copied','success')" style="background:#f0f4f8;border:1px solid #e2e8f0;border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;color:#475569;font-weight:600;">Copy URL</button>
+              <a href="${sharepointUrl}" target="_blank" style="background:#003366;color:#fff;text-decoration:none;border-radius:6px;padding:6px 12px;font-size:11px;font-weight:600;">Open SharePoint &rarr;</a>`:`<button onclick="openAgentForm('${agent.id}')" style="background:#f0f4f8;border:1px solid #e2e8f0;border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;color:#475569;font-weight:600;">+ Add SharePoint URL</button>`}
             </div>
           </div>
-          <div style="margin-top:8px;padding-top:8px;border-top:1px dashed #f1f5f9;font-size:11px;color:#94a3b8;font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${url}</div>
+          ${sharepointUrl?`<div style="margin-top:8px;padding-top:8px;border-top:1px dashed #f1f5f9;font-size:11px;color:#94a3b8;font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${sharepointUrl}</div>`:''}
         </div>
       </div>`;
     };
@@ -5276,7 +5275,7 @@ function renderAgentDetail(){
     const lastReviewed=a.last_reviewed_at?new Date(a.last_reviewed_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}):'Never';
     html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px 20px;">
       ${row('Description',a.description)}${row('Purpose',a.purpose)}${row('Type',a.type)}${row('Platform',platform)}${row('Model',a.model)}${row('Used by',a.used_by)}${row('Used for',a.used_for)}${row('Not used for',a.not_used_for)}${row('Trigger',a.trigger_type)}${row('Parent agent',parentName)}${row('Owner',a.owner)}${row('Last reviewed',lastReviewed)}${row('Review every',a.review_frequency_days?a.review_frequency_days+' days':'')}
-      ${a.source_of_truth_url?`<div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #f1f5f9;"><span style="font-size:12px;color:#94a3b8;font-weight:600;min-width:160px;flex-shrink:0;">Source of truth</span><a href="${a.source_of_truth_url}" target="_blank" style="font-size:13px;color:#003366;">${a.source_of_truth_url}</a></div>`:''}
+      ${a.source_of_truth_url?`<div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #f1f5f9;"><span style="font-size:12px;color:#94a3b8;font-weight:600;min-width:160px;flex-shrink:0;">SharePoint URL</span><a href="${a.source_of_truth_url}" target="_blank" style="font-size:13px;color:#003366;">${a.source_of_truth_url}</a></div>`:''}
       ${a.knowledge_urls?`<div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #f1f5f9;"><span style="font-size:12px;color:#94a3b8;font-weight:600;min-width:160px;flex-shrink:0;">Knowledge URLs</span><span style="font-size:13px;color:#1e293b;white-space:pre-wrap;">${a.knowledge_urls}</span></div>`:''}
       ${a.notes?`<div style="padding:10px 0;"><span style="font-size:12px;color:#94a3b8;font-weight:600;display:block;margin-bottom:6px;">Notes</span><div style="font-size:13px;color:#1e293b;white-space:pre-wrap;">${a.notes}</div></div>`:''}
       ${!a.description&&!a.purpose&&!a.used_by?'<div style="color:#94a3b8;font-size:13px;">No details yet. Edit this agent to fill in the overview.</div>':''}
