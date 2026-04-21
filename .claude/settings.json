@@ -1,3 +1,3 @@
 {
-  "instructions": "Always work directly on the main branch. Never create or switch to feature branches. All commits and pushes go to main."
+  "instructions": "Always work directly on the main branch. Never create or switch to feature branches. All commits and pushes go to main. After every change, bump the version number: update v{major}.{minor}.{patch} in index.html (line ~218) and bump the cache version in sw.js (CACHE_NAME). Create a new commit and push to main."
 }
