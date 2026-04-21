@@ -216,7 +216,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.18.2</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.18.3</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -5267,7 +5267,6 @@ function renderAgents(){
             <span style="width:6px;height:6px;border-radius:99px;background:#b87a90;flex-shrink:0;"></span>
             <span style="font-weight:600;font-size:13px;color:#1e3a5f;">${c.name}</span>
             <span style="font-size:10px;padding:1px 6px;border-radius:99px;background:#fce7f3;color:#b87a90;font-weight:600;">child</span>
-            ${stageCount?`<span style="font-size:11px;color:#8c6e9f;">${stageCount} stages</span>`:''}
             ${drift?`<span title="Menu has ${menuCount} items but stages doc has ${stageCount}" style="font-size:10px;padding:1px 6px;border-radius:99px;background:#fef3c7;color:#a16207;font-weight:600;cursor:help;">&#9888; drift</span>`:''}
           </div>
           <span style="font-size:11px;color:#94a3b8;flex-shrink:0;">${lastEditedFor(c.id)}</span>
