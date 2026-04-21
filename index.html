@@ -216,7 +216,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.16.7</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.17.0</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -833,6 +833,8 @@ td .actions button{padding:8px 14px;font-size:12px;}
     <div id="agentFormKnowledgeGroup" class="form-group"><label>Knowledge URLs (one per line)</label><textarea id="agentFormKnowledge" rows="2" placeholder="https://..."></textarea></div>
     <div style="font-size:12px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin:14px 0 8px;">System Prompt</div>
     <div class="form-group"><textarea id="agentFormPrompt" rows="10" style="font-family:monospace;font-size:12px;" placeholder="Paste the full system prompt here..."></textarea></div>
+    <div id="agentFormStagesSection" style="font-size:12px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin:14px 0 8px;">Stages &amp; Messages (copied to SharePoint)</div>
+    <div id="agentFormStagesContentGroup" class="form-group"><textarea id="agentFormStagesContent" rows="14" style="font-family:monospace;font-size:12px;" placeholder="Paste the full stages and messages block here. This is the source of truth — same text you paste into SharePoint."></textarea></div>
     <div style="font-size:12px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin:14px 0 8px;">Notes &amp; Version</div>
     <div class="form-group"><label>Notes (change log, context)</label><textarea id="agentFormNotes" rows="3"></textarea></div>
     <div class="form-group"><label>Change note for this save (appears in version history)</label><input id="agentFormChangeNote" placeholder="e.g. Added sign-off rule, fixed platform formatting"></div>
@@ -5314,67 +5316,21 @@ function renderAgentDetail(){
     </div>`;
   }
   function renderStagesBlock(){
+    const content=a.stages_content||'';
+    const escaped=content.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     let sHtml=`<div id="agentStagesBlock" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-left:20px;border-left:3px solid #8c6e9f;scroll-margin-top:16px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px;">
-        <div style="font-size:14px;font-weight:700;color:#1e3a5f;">Stages (${myStages.length}${myTemplateCount?' &middot; '+myTemplateCount+' messages':''})</div>
+        <div style="font-size:14px;font-weight:700;color:#1e3a5f;">Stages &amp; Messages</div>
         <div style="display:flex;gap:6px;flex-shrink:0;">
-          <button onclick="copyStagesForSharePoint('${a.id}')" style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;color:#475569;font-weight:600;">Copy for SharePoint</button>
-          <button onclick="openStageForm('${a.id}')" style="background:#003366;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;">+ Add Stage</button>
+          ${content?`<button onclick="copyAgentStages('${a.id}')" style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;color:#475569;font-weight:600;">Copy for SharePoint</button>`:''}
+          <button onclick="openAgentForm('${a.id}')" style="background:#003366;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;">Edit</button>
         </div>
       </div>
-      <div style="font-size:12px;color:#64748b;margin-bottom:12px;">Each stage (e.g. "Initial Enquiry") holds messages — the actual text per persona and platform.</div>`;
-    if(!myStages.length){
-      sHtml+='<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:20px;text-align:center;color:#94a3b8;font-size:13px;">No stages yet. Add your first stage (e.g. "Initial Enquiry") to start building this agent\'s message library.</div>';
+      <div style="font-size:12px;color:#64748b;margin-bottom:12px;">Single source of truth for this agent's stages. Edit once here, copy to SharePoint, versioned on every save.</div>`;
+    if(!content){
+      sHtml+='<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:20px;text-align:center;color:#94a3b8;font-size:13px;">No stages yet. Click Edit to paste in your stages &amp; messages block.</div>';
     } else {
-      myStages.forEach(s=>{
-        const messages=agentTemplates.filter(t=>t.stage_id===s.id);
-        const isOpen=expandedStageId===s.id;
-        sHtml+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;margin-bottom:10px;overflow:hidden;">
-          <div onclick="toggleStageExpand('${s.id}')" style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;cursor:pointer;background:#f8fafc;">
-            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;flex:1;min-width:0;">
-              <span style="color:#94a3b8;font-size:12px;">${isOpen?'&#9660;':'&#9654;'}</span>
-              <span style="font-weight:700;font-size:14px;color:#1e3a5f;">${s.name}</span>
-              ${s.trigger_phrase?`<span style="font-size:11px;padding:2px 8px;border-radius:99px;background:#f1f5f9;color:#475569;font-family:monospace;">${s.trigger_phrase}</span>`:''}
-              ${s.default_sender?`<span style="font-size:11px;color:#94a3b8;">Sender: ${s.default_sender}</span>`:''}
-              <span style="font-size:11px;padding:2px 8px;border-radius:99px;background:#eff6ff;color:#2563eb;font-weight:600;">${messages.length} message${messages.length!==1?'s':''}</span>
-            </div>
-            <div style="display:flex;gap:6px;flex-shrink:0;">
-              <button onclick="event.stopPropagation();copyStageForSharePoint('${s.id}')" style="background:#f0f4f8;border:1px solid #e2e8f0;border-radius:6px;padding:4px 10px;font-size:11px;color:#475569;cursor:pointer;font-weight:600;">Copy this stage</button>
-              <button onclick="event.stopPropagation();openStageForm('${a.id}','${s.id}')" style="background:none;border:1px solid #e2e8f0;border-radius:6px;padding:4px 10px;font-size:11px;color:#475569;cursor:pointer;">Edit</button>
-            </div>
-          </div>
-          ${isOpen?`<div style="padding:16px;border-top:1px solid #e2e8f0;">
-            ${s.purpose?`<div style="font-size:13px;color:#475569;margin-bottom:8px;"><strong style="color:#94a3b8;font-size:11px;text-transform:uppercase;display:block;margin-bottom:2px;">Purpose</strong>${s.purpose}</div>`:''}
-            ${s.platform_rule?`<div style="font-size:13px;color:#475569;margin-bottom:12px;"><strong style="color:#94a3b8;font-size:11px;text-transform:uppercase;display:block;margin-bottom:2px;">Platform Rule</strong>${s.platform_rule}</div>`:''}
-            <div style="display:flex;justify-content:space-between;align-items:center;margin:12px 0 8px;">
-              <div style="font-size:12px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.5px;">Messages</div>
-              <button onclick="openTemplateForm('${s.id}')" style="background:#003366;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer;">+ Add Message</button>
-            </div>
-            ${!messages.length?'<div style="padding:14px;text-align:center;color:#94a3b8;font-size:12px;background:#f8fafc;border-radius:8px;">No messages yet. Add the first message for this stage.</div>':''}
-            ${messages.map(t=>{
-              const tOpen=expandedTemplateId===t.id;
-              const platLabel={text:'Text / SMS',whatsapp:'WhatsApp',email:'Email',teams:'Teams'}[t.platform]||t.platform;
-              const personaColor=t.persona==='Cath'?'#7e22ce':'#0f766e';
-              return `<div style="border:1px solid #e2e8f0;border-radius:8px;margin-bottom:6px;overflow:hidden;">
-                <div onclick="toggleTemplateExpand('${t.id}')" style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;cursor:pointer;">
-                  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:1;min-width:0;">
-                    <span style="color:#94a3b8;font-size:11px;">${tOpen?'&#9660;':'&#9654;'}</span>
-                    <span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:600;background:${t.persona==='Cath'?'#f3e8ff':'#ccfbf1'};color:${personaColor};">${t.persona}</span>
-                    <span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:600;background:#f1f5f9;color:#64748b;">${platLabel}</span>
-                    ${t.subject?`<span style="font-size:12px;color:#475569;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${t.subject}</span>`:''}
-                  </div>
-                  <button onclick="event.stopPropagation();openTemplateForm('${s.id}','${t.id}')" style="background:none;border:1px solid #e2e8f0;border-radius:6px;padding:3px 10px;font-size:11px;color:#475569;cursor:pointer;flex-shrink:0;">Edit</button>
-                </div>
-                ${tOpen?`<div style="padding:12px;background:#f8fafc;border-top:1px solid #e2e8f0;">
-                  ${t.subject?`<div style="font-size:11px;color:#94a3b8;margin-bottom:4px;">SUBJECT</div><div style="font-size:13px;color:#1e293b;margin-bottom:10px;">${t.subject}</div>`:''}
-                  <div style="font-size:11px;color:#94a3b8;margin-bottom:4px;">BODY</div>
-                  <pre style="font-size:12px;color:#1e293b;white-space:pre-wrap;font-family:inherit;margin:0;line-height:1.5;">${(t.body||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>
-                </div>`:''}
-              </div>`;
-            }).join('')}
-          </div>`:''}
-        </div>`;
-      });
+      sHtml+=`<pre style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px;font-size:12px;color:#1e293b;white-space:pre-wrap;font-family:inherit;line-height:1.6;margin:0;max-height:500px;overflow-y:auto;">${escaped}</pre>`;
     }
     sHtml+='</div>';
     return sHtml;
@@ -5470,6 +5426,7 @@ window.openAgentForm=function(id){
   document.getElementById('agentFormSotUrl').value=a?(a.source_of_truth_url||''):'';
   document.getElementById('agentFormKnowledge').value=a?(a.knowledge_urls||''):'';
   document.getElementById('agentFormPrompt').value=a?(a.system_prompt||''):'';
+  document.getElementById('agentFormStagesContent').value=a?(a.stages_content||''):'';
   document.getElementById('agentFormHealth').value=a?(a.health||'ok'):'ok';
   document.getElementById('agentFormNotes').value=a?(a.notes||''):'';
   document.getElementById('agentFormReviewDays').value=a?(a.review_frequency_days||90):90;
@@ -5477,6 +5434,8 @@ window.openAgentForm=function(id){
   document.getElementById('agentFormLinksSection').style.display=isParent?'none':'block';
   document.getElementById('agentFormSotUrlGroup').style.display=isParent?'none':'block';
   document.getElementById('agentFormKnowledgeGroup').style.display=isParent?'none':'block';
+  document.getElementById('agentFormStagesSection').style.display=isParent?'none':'block';
+  document.getElementById('agentFormStagesContentGroup').style.display=isParent?'none':'block';
   const parentSel=document.getElementById('agentFormParent');
   parentSel.innerHTML='<option value="">None (top-level agent)</option>';
   agents.filter(x=>!a||x.id!==a.id).forEach(x=>{
@@ -5508,6 +5467,7 @@ window.saveAgent=async function(){
     source_of_truth_url:document.getElementById('agentFormSotUrl').value.trim(),
     knowledge_urls:document.getElementById('agentFormKnowledge').value.trim(),
     system_prompt:document.getElementById('agentFormPrompt').value,
+    stages_content:document.getElementById('agentFormStagesContent').value,
     health:document.getElementById('agentFormHealth').value,
     notes:document.getElementById('agentFormNotes').value.trim(),
     review_frequency_days:parseInt(document.getElementById('agentFormReviewDays').value)||90,
@@ -5531,7 +5491,7 @@ window.saveAgent=async function(){
     name:data.name,status:data.status,type:data.type,platform:data.platform,description:data.description,
     purpose:data.purpose,used_by:data.used_by,used_for:data.used_for,not_used_for:data.not_used_for,
     trigger_type:data.trigger_type,model:data.model,owner:data.owner,source_of_truth_url:data.source_of_truth_url,
-    knowledge_urls:data.knowledge_urls,system_prompt:data.system_prompt,health:data.health,notes_snapshot:data.notes};
+    knowledge_urls:data.knowledge_urls,system_prompt:data.system_prompt,stages_content:data.stages_content,health:data.health,notes_snapshot:data.notes};
   const {data:vData,error:vErr}=await supabase.from('agent_versions').insert(snapshot).select().single();
   if(!vErr&&vData) agentVersions.push(vData);
   toast(id?'Agent updated':'Agent created','success');
@@ -5565,7 +5525,7 @@ window.revertToVersion=async function(agentId,versionId){
   const data={name:v.name,status:v.status,type:v.type,platform:v.platform,description:v.description,
     purpose:v.purpose,used_by:v.used_by,used_for:v.used_for,not_used_for:v.not_used_for,
     trigger_type:v.trigger_type,model:v.model,owner:v.owner,source_of_truth_url:v.source_of_truth_url,
-    knowledge_urls:v.knowledge_urls,system_prompt:v.system_prompt,health:v.health,notes:v.notes_snapshot,
+    knowledge_urls:v.knowledge_urls,system_prompt:v.system_prompt,stages_content:v.stages_content,health:v.health,notes:v.notes_snapshot,
     updated_at:new Date().toISOString()};
   const {error}=await supabase.from('agents').update(data).eq('id',agentId);
   if(error){toast('Error reverting','error');return;}
@@ -5624,6 +5584,13 @@ window.toggleStageExpand=function(id){
 window.toggleTemplateExpand=function(id){
   expandedTemplateId=expandedTemplateId===id?null:id;
   renderAgentDetail();
+};
+
+window.copyAgentStages=async function(agentId){
+  const a=agents.find(x=>x.id===agentId);
+  if(!a||!a.stages_content){toast('No stages content to copy','error');return;}
+  await navigator.clipboard.writeText(a.stages_content);
+  toast('Copied for SharePoint','success');
 };
 
 window.copyStageForSharePoint=function(stageId){
