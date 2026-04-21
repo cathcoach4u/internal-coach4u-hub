@@ -95,7 +95,7 @@ body{font-family:'Montserrat','Inter',system-ui,sans-serif;background:#fff;color
 <script>
 window.onerror=function(msg){document.getElementById('app').innerHTML='<div class="error-card">Error: '+msg+'</div>';};
 
-const CONFIG={
+var CONFIG={
   supabaseUrl:'https://uoixetfvboevjxlkfyqy.supabase.co',
   supabaseKey:'sb_publishable_m3qgSGvWF0n2TePf6vhqMw_9obUvJEJ',
   tableName:'brain_pulse_submissions',
@@ -181,7 +181,7 @@ const CONFIG={
   ]
 };
 
-let supabase;
+var supabase;
 try{
   supabase=window.supabase.createClient(CONFIG.supabaseUrl,CONFIG.supabaseKey);
 }catch(e){
