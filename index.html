@@ -16,7 +16,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Quicksand:wght@600;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#f0f6ff;color:#1e293b;min-height:100vh;display:flex;letter-spacing:-0.01em;}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#f0f6ff;color:#1e293b;min-height:100vh;display:flex;letter-spacing:-0.01em;-webkit-text-size-adjust:100%;text-size-adjust:100%;}
 
 /* ── SIDEBAR ── */
 .sidebar{width:220px;background:linear-gradient(180deg,#1e3a5f 0%,#234b78 100%);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:50;}
@@ -215,7 +216,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate"></span>
-      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.15.8</span>
+      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.15.9</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -5265,7 +5266,6 @@ function renderAgentDetail(){
   const isParent=a.type==='parent';
   const tabs=[
     {id:'overview',label:'Overview'},
-    ...(isParent?[]:[{id:'stages',label:`Stages (${myStages.length}${myTemplateCount?' &middot; '+myTemplateCount+' messages':''})`}]),
     {id:'versions',label:'System Prompt/Instructions'}
   ];
   let html=`<div onclick="backToAgentList()" style="font-size:13px;color:#003366;font-weight:600;cursor:pointer;margin-bottom:16px;">&larr; Back to agents</div>`;
@@ -5282,6 +5282,9 @@ function renderAgentDetail(){
       <button style="background:#003366;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;" onclick="openAgentForm('${a.id}')">Edit Agent</button>
     </div>
   </div>`;
+  if(!isParent){
+    html+=`<div style="margin-bottom:16px;">${renderStagesBlock()}</div>`;
+  }
   html+=`<div style="display:flex;gap:0;margin-bottom:16px;border-bottom:2px solid #e2e8f0;">
     ${tabs.map(t=>`<button onclick="setAgentTab('${t.id}')" style="background:none;border:none;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;border-bottom:2px solid ${agentDetailTab===t.id?'#003366':'transparent'};color:${t.alert?'#dc2626':agentDetailTab===t.id?'#003366':'#64748b'};margin-bottom:-2px;">${t.label}</button>`).join('')}
   </div>`;
@@ -5299,21 +5302,23 @@ function renderAgentDetail(){
       ${!a.description&&!a.purpose&&!a.used_by?'<div style="color:#94a3b8;font-size:13px;">No details yet. Edit this agent to fill in the overview.</div>':''}
     </div>`;
   }
-  if(agentDetailTab==='stages'){
-    html+=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px;">
-      <div style="font-size:13px;color:#64748b;flex:1;min-width:200px;">Each stage (e.g. "Initial Enquiry") holds messages — the actual text per persona and platform.</div>
-      <div style="display:flex;gap:6px;flex-shrink:0;">
-        <button onclick="copyStagesForSharePoint('${a.id}')" style="background:#f0f4f8;border:1px solid #e2e8f0;border-radius:8px;padding:8px 14px;font-size:13px;cursor:pointer;color:#475569;font-weight:600;">Copy list for SharePoint</button>
-        <button class="btn btn-blue" onclick="openStageForm('${a.id}')">+ Add Stage</button>
+  function renderStagesBlock(){
+    let sHtml=`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-left:20px;border-left:3px solid #003366;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px;">
+        <div style="font-size:14px;font-weight:700;color:#1e3a5f;">Stages (${myStages.length}${myTemplateCount?' &middot; '+myTemplateCount+' messages':''})</div>
+        <div style="display:flex;gap:6px;flex-shrink:0;">
+          <button onclick="copyStagesForSharePoint('${a.id}')" style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;color:#475569;font-weight:600;">Copy for SharePoint</button>
+          <button onclick="openStageForm('${a.id}')" style="background:#003366;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;">+ Add Stage</button>
+        </div>
       </div>
-    </div>`;
+      <div style="font-size:12px;color:#64748b;margin-bottom:12px;">Each stage (e.g. "Initial Enquiry") holds messages — the actual text per persona and platform.</div>`;
     if(!myStages.length){
-      html+='<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:20px;text-align:center;color:#94a3b8;font-size:13px;">No stages yet. Add your first stage (e.g. "Initial Enquiry") to start building this agent\'s message library.</div>';
+      sHtml+='<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:20px;text-align:center;color:#94a3b8;font-size:13px;">No stages yet. Add your first stage (e.g. "Initial Enquiry") to start building this agent\'s message library.</div>';
     } else {
       myStages.forEach(s=>{
         const messages=agentTemplates.filter(t=>t.stage_id===s.id);
         const isOpen=expandedStageId===s.id;
-        html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;margin-bottom:10px;overflow:hidden;">
+        sHtml+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;margin-bottom:10px;overflow:hidden;">
           <div onclick="toggleStageExpand('${s.id}')" style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;cursor:pointer;background:#f8fafc;">
             <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;flex:1;min-width:0;">
               <span style="color:#94a3b8;font-size:12px;">${isOpen?'&#9660;':'&#9654;'}</span>
@@ -5360,6 +5365,8 @@ function renderAgentDetail(){
         </div>`;
       });
     }
+    sHtml+='</div>';
+    return sHtml;
   }
   if(agentDetailTab==='versions'){
     html+=`<div style="margin-bottom:12px;font-size:13px;color:#64748b;">The top entry is the current live system prompt. Every save creates a snapshot — click Revert on an older version to restore it (creates a new snapshot, nothing is deleted).</div>`;
