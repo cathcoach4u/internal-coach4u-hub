@@ -216,7 +216,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.18.1</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.18.2</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -5219,6 +5219,63 @@ function renderAgents(){
       <div style="font-size:28px;font-weight:800;color:${s.color};">${s.val}</div>
     </div>`).join('')}
   </div>`;
+  const parents=agents.filter(a=>a.type==='parent');
+  if(parents.length){
+    const lastEditedFor=(id)=>{
+      const vs=agentVersions.filter(v=>v.agent_id===id).sort((x,y)=>new Date(y.created_at)-new Date(x.created_at));
+      return vs.length?new Date(vs[0].created_at).toLocaleDateString('en-AU',{day:'numeric',month:'short'}):'Never';
+    };
+    const countStages=(content)=>{
+      if(!content) return 0;
+      const matches=content.match(/^STAGE\s+\d+[A-Z]?:/gmi)||[];
+      return matches.length;
+    };
+    const countMenuItems=(prompt)=>{
+      if(!prompt) return null;
+      const menuStart=prompt.search(/Which stage\?/i);
+      if(menuStart<0) return null;
+      const menuEnd=prompt.indexOf('Reply with',menuStart);
+      if(menuEnd<0) return null;
+      const menu=prompt.substring(menuStart,menuEnd);
+      const items=menu.split('\n').filter(l=>{
+        const t=l.trim();
+        return t&&!/Which stage/i.test(t)&&(/^\d+\.?\s/.test(t)||/^[a-z][\w\s\-()]+$/i.test(t));
+      });
+      return items.length;
+    };
+    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px 20px;margin-bottom:20px;">
+      <div style="font-size:11px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">Document Map</div>`;
+    parents.forEach(p=>{
+      const kids=agents.filter(c=>c.parent_agent_id===p.id);
+      html+=`<div onclick="viewAgentDetail('${p.id}')" style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;cursor:pointer;border-bottom:1px solid #f1f5f9;">
+        <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+          <span style="width:8px;height:8px;border-radius:99px;background:#003366;flex-shrink:0;"></span>
+          <span style="font-weight:700;font-size:13px;color:#1e3a5f;">${p.name}</span>
+          <span style="font-size:10px;padding:1px 6px;border-radius:99px;background:#eef2ff;color:#4f46e5;font-weight:600;">parent</span>
+        </div>
+        <span style="font-size:11px;color:#94a3b8;flex-shrink:0;">${lastEditedFor(p.id)}</span>
+      </div>`;
+      kids.forEach((c,i)=>{
+        const isLast=i===kids.length-1;
+        const stageCount=countStages(c.stages_content);
+        const menuCount=countMenuItems(c.system_prompt);
+        const drift=menuCount!==null&&stageCount>0&&menuCount!==stageCount;
+        html+=`<div onclick="viewAgentDetail('${c.id}')" style="display:flex;justify-content:space-between;align-items:center;padding:8px 0 8px 24px;cursor:pointer;border-bottom:${isLast?'none':'1px solid #f1f5f9'};position:relative;">
+          <div style="position:absolute;left:8px;top:0;bottom:${isLast?'50%':'0'};width:2px;background:#cbd5e1;"></div>
+          <div style="position:absolute;left:8px;top:50%;width:14px;height:2px;background:#cbd5e1;"></div>
+          <div style="display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap;">
+            <span style="width:6px;height:6px;border-radius:99px;background:#b87a90;flex-shrink:0;"></span>
+            <span style="font-weight:600;font-size:13px;color:#1e3a5f;">${c.name}</span>
+            <span style="font-size:10px;padding:1px 6px;border-radius:99px;background:#fce7f3;color:#b87a90;font-weight:600;">child</span>
+            ${stageCount?`<span style="font-size:11px;color:#8c6e9f;">${stageCount} stages</span>`:''}
+            ${drift?`<span title="Menu has ${menuCount} items but stages doc has ${stageCount}" style="font-size:10px;padding:1px 6px;border-radius:99px;background:#fef3c7;color:#a16207;font-weight:600;cursor:help;">&#9888; drift</span>`:''}
+          </div>
+          <span style="font-size:11px;color:#94a3b8;flex-shrink:0;">${lastEditedFor(c.id)}</span>
+        </div>`;
+      });
+    });
+    html+='</div>';
+  }
   if(!list.length){
     html+='<div style="padding:40px;text-align:center;color:#94a3b8;font-size:14px;">No agents found. Add your first agent to get started.</div>';
   } else {
