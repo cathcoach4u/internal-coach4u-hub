@@ -215,7 +215,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate"></span>
-      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.15.4</span>
+      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.15.5</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -5287,14 +5287,16 @@ function renderAgentDetail(){
     ${tabs.map(t=>`<button onclick="setAgentTab('${t.id}')" style="background:none;border:none;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;border-bottom:2px solid ${agentDetailTab===t.id?'#003366':'transparent'};color:${t.alert?'#dc2626':agentDetailTab===t.id?'#003366':'#64748b'};margin-bottom:-2px;">${t.label}</button>`).join('')}
   </div>`;
   if(agentDetailTab==='overview'){
-    const row=(label,val)=>val?`<div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #f1f5f9;"><span style="font-size:12px;color:#94a3b8;font-weight:600;min-width:160px;flex-shrink:0;">${label}</span><span style="font-size:13px;color:#1e293b;">${val}</span></div>`:'';
+    const labelStyle='font-size:11px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px;';
+    const valueStyle='font-size:13px;color:#1e293b;font-weight:400;line-height:1.5;word-break:break-word;';
+    const row=(label,val)=>val?`<div style="padding:10px 0;border-bottom:1px solid #f1f5f9;"><span style="${labelStyle}">${label}</span><div style="${valueStyle}">${val}</div></div>`:'';
     const parentName=a.parent_agent_id?((agents.find(x=>x.id===a.parent_agent_id)||{}).name||''):'';
     const lastReviewed=a.last_reviewed_at?new Date(a.last_reviewed_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}):'Never';
     html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px 20px;">
       ${row('Description',a.description)}${row('Purpose',a.purpose)}${row('Type',a.type)}${row('Platform',platform)}${row('Model',a.model)}${row('Used by',a.used_by)}${row('Used for',a.used_for)}${row('Not used for',a.not_used_for)}${row('Trigger',a.trigger_type)}${row('Parent agent',parentName)}${row('Owner',a.owner)}${row('Last reviewed',lastReviewed)}${row('Review every',a.review_frequency_days?a.review_frequency_days+' days':'')}
-      ${a.source_of_truth_url?`<div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #f1f5f9;"><span style="font-size:12px;color:#94a3b8;font-weight:600;min-width:160px;flex-shrink:0;">SharePoint URL</span><a href="${a.source_of_truth_url}" target="_blank" style="font-size:13px;color:#003366;">${a.source_of_truth_url}</a></div>`:''}
-      ${a.knowledge_urls?`<div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #f1f5f9;"><span style="font-size:12px;color:#94a3b8;font-weight:600;min-width:160px;flex-shrink:0;">Knowledge URLs</span><span style="font-size:13px;color:#1e293b;white-space:pre-wrap;">${a.knowledge_urls}</span></div>`:''}
-      ${a.notes?`<div style="padding:10px 0;"><span style="font-size:12px;color:#94a3b8;font-weight:600;display:block;margin-bottom:6px;">Notes</span><div style="font-size:13px;color:#1e293b;white-space:pre-wrap;">${a.notes}</div></div>`:''}
+      ${a.source_of_truth_url?`<div style="padding:10px 0;border-bottom:1px solid #f1f5f9;"><span style="${labelStyle}">SharePoint URL</span><a href="${a.source_of_truth_url}" target="_blank" style="${valueStyle}color:#003366;text-decoration:underline;">${a.source_of_truth_url}</a></div>`:''}
+      ${a.knowledge_urls?`<div style="padding:10px 0;border-bottom:1px solid #f1f5f9;"><span style="${labelStyle}">Knowledge URLs</span><div style="${valueStyle}white-space:pre-wrap;">${a.knowledge_urls}</div></div>`:''}
+      ${a.notes?`<div style="padding:10px 0;"><span style="${labelStyle}">Notes</span><div style="${valueStyle}white-space:pre-wrap;">${a.notes}</div></div>`:''}
       ${!a.description&&!a.purpose&&!a.used_by?'<div style="color:#94a3b8;font-size:13px;">No details yet. Edit this agent to fill in the overview.</div>':''}
     </div>`;
   }
