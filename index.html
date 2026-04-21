@@ -215,7 +215,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate"></span>
-      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.14.0</span>
+      <span style="font-size:10px;color:rgba(255,255,255,.4);margin-left:8px;">v3.14.1</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -5285,7 +5285,10 @@ function renderAgentDetail(){
               ${s.default_sender?`<span style="font-size:11px;color:#94a3b8;">Sender: ${s.default_sender}</span>`:''}
               <span style="font-size:11px;padding:2px 8px;border-radius:99px;background:#eff6ff;color:#2563eb;font-weight:600;">${messages.length} message${messages.length!==1?'s':''}</span>
             </div>
-            <button onclick="event.stopPropagation();openStageForm('${a.id}','${s.id}')" style="background:none;border:1px solid #e2e8f0;border-radius:6px;padding:4px 10px;font-size:11px;color:#475569;cursor:pointer;flex-shrink:0;">Edit</button>
+            <div style="display:flex;gap:6px;flex-shrink:0;">
+              <button onclick="event.stopPropagation();copyStageForSharePoint('${s.id}')" style="background:#f0f4f8;border:1px solid #e2e8f0;border-radius:6px;padding:4px 10px;font-size:11px;color:#475569;cursor:pointer;font-weight:600;">Copy this stage</button>
+              <button onclick="event.stopPropagation();openStageForm('${a.id}','${s.id}')" style="background:none;border:1px solid #e2e8f0;border-radius:6px;padding:4px 10px;font-size:11px;color:#475569;cursor:pointer;">Edit</button>
+            </div>
           </div>
           ${isOpen?`<div style="padding:16px;border-top:1px solid #e2e8f0;">
             ${s.purpose?`<div style="font-size:13px;color:#475569;margin-bottom:8px;"><strong style="color:#94a3b8;font-size:11px;text-transform:uppercase;display:block;margin-bottom:2px;">Purpose</strong>${s.purpose}</div>`:''}
@@ -5552,6 +5555,30 @@ window.toggleStageExpand=function(id){
 window.toggleTemplateExpand=function(id){
   expandedTemplateId=expandedTemplateId===id?null:id;
   renderAgentDetail();
+};
+
+window.copyStageForSharePoint=function(stageId){
+  const s=agentStages.find(x=>x.id===stageId);
+  if(!s){toast('Stage not found','error');return;}
+  const platLabel={text:'Text / SMS',whatsapp:'WhatsApp',email:'Email',teams:'Teams'};
+  let out='# '+s.name+'\n\n';
+  if(s.trigger_phrase) out+='**Trigger:** '+s.trigger_phrase+'\n\n';
+  if(s.default_sender) out+='**Default sender:** '+s.default_sender+'\n\n';
+  if(s.purpose) out+='**Purpose:** '+s.purpose+'\n\n';
+  if(s.platform_rule) out+='**Platform rule:** '+s.platform_rule+'\n\n';
+  const msgs=agentTemplates.filter(t=>t.stage_id===stageId);
+  if(!msgs.length){out+='_No messages yet._\n\n';}
+  msgs.forEach(t=>{
+    out+='## '+t.persona+' — '+(platLabel[t.platform]||t.platform)+'\n\n';
+    if(t.subject) out+='**Subject:** '+t.subject+'\n\n';
+    out+=(t.body||'').trim()+'\n\n';
+  });
+  navigator.clipboard.writeText(out).then(()=>{
+    toast('Stage copied — paste into SharePoint collapsible section','success');
+  }).catch(e=>{
+    console.error(e);
+    toast('Copy failed — see console','error');
+  });
 };
 
 window.copyStagesForSharePoint=function(agentId){
