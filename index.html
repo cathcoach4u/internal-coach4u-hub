@@ -217,7 +217,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.19.2</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.19.3</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -5222,8 +5222,8 @@ function renderAgents(){
   const children=agents.filter(a=>a.type==='child').length;
   let html=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;">
     ${[{label:'Total Agents',val:total,color:'#003366'},{label:'Active',val:active,color:'#15803d'},{label:'Child Agents',val:children,color:'#7e22ce'}]
-    .map(s=>`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px 20px;">
-      <div style="font-size:11px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">${s.label}</div>
+    .map(s=>`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px 20px;display:flex;flex-direction:column;justify-content:space-between;min-height:96px;">
+      <div style="font-size:11px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">${s.label}</div>
       <div style="font-size:28px;font-weight:800;color:${s.color};">${s.val}</div>
     </div>`).join('')}
   </div>`;
