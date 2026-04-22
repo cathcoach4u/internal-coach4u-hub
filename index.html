@@ -216,7 +216,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.18.7</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.18.8</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -501,13 +501,13 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
 
     <!-- WRITING PARTNER -->
-    <div class="screen" id="screen-writingpartner">
-      <div class="toolbar" style="display:flex;align-items:center;gap:10px;">
+    <div class="screen" id="screen-writingpartner" style="display:flex;flex-direction:column;">
+      <div class="toolbar" style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
         <div style="flex:1;font-size:13px;color:#475569;">AI-powered writing assistance for Coach4U communications.</div>
         <a class="btn btn-blue" href="writing-partner/" target="_blank" rel="noopener" style="text-decoration:none;">Open in new tab &#8599;</a>
       </div>
-      <div style="height:calc(100vh - 220px);min-height:520px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04);">
-        <iframe src="https://copilotstudio.microsoft.com/environments/Default-019b5ca9-c4b8-49ff-8164-ada87549ea35/bots/new_Coach4UWritingPartner/webchat?__version__=2" style="width:100%;height:100%;border:none;" title="Coach4U Writing Partner"></iframe>
+      <div style="flex:1;min-height:480px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04);display:flex;">
+        <iframe src="https://copilotstudio.microsoft.com/environments/Default-019b5ca9-c4b8-49ff-8164-ada87549ea35/bots/new_Coach4UWritingPartner/webchat?__version__=2" style="width:100%;height:100%;border:none;display:block;" title="Coach4U Writing Partner"></iframe>
       </div>
     </div>
 
