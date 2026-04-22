@@ -2,14 +2,14 @@
 <html lang="en-AU">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Coach4U CRM</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="theme-color" content="#3b82f6">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Coach4U">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -41,7 +41,7 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#f0f6ff;c
 .main{margin-left:220px;flex:1;min-width:0;min-height:100vh;}
 
 /* ── HEADER ── */
-.header{background:linear-gradient(180deg,#1e3a5f 0%,#234b78 100%);padding:14px 32px;display:flex;align-items:center;justify-content:space-between;}
+.header{background:linear-gradient(180deg,#1e3a5f 0%,#234b78 100%);padding:calc(14px + env(safe-area-inset-top)) calc(32px + env(safe-area-inset-right)) 14px calc(32px + env(safe-area-inset-left));display:flex;align-items:center;justify-content:space-between;}
 .header h2{font-family:'Quicksand','Inter',sans-serif;font-size:20px;font-weight:700;color:#fff;}
 .header-right{display:flex;align-items:center;gap:12px;font-size:13px;color:rgba(255,255,255,.7);font-weight:500;}
 
@@ -123,7 +123,8 @@ td .actions button{padding:8px 14px;font-size:12px;}
   .mobile-overlay.show{display:block;}
   .area-tabs{display:none;}
   .content{padding:14px 16px;}
-  .header{padding:12px 16px;}
+  .header{padding:calc(12px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) 12px calc(16px + env(safe-area-inset-left));}
+  .content{padding-bottom:calc(14px + env(safe-area-inset-bottom));}
   .modal{padding:18px;max-width:92vw;}
   .dash-cards{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));}
   .mob-grid-2{grid-template-columns:1fr;}
@@ -217,7 +218,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.21.1</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.21.2</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
