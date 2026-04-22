@@ -217,7 +217,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.19.6</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.19.7</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -5365,6 +5365,8 @@ function renderAgentDetail(){
         ${isParent?`<button onclick="copyAgentBundle('${a.id}')" style="background:#f0f4f8;color:#003366;border:1px solid #003366;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;">Copy Full Tree</button>`:''}
         ${!isParent?`<button onclick="copySystemPromptByAgent('${a.id}')" style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;">Copy Prompt</button>`:''}
         ${!isParent&&a.stages_content?`<button onclick="copyAgentStages('${a.id}')" style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;">Copy Stages</button>`:''}
+        <button style="background:#003366;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;" onclick="openEditPrompt('${a.id}')">Edit Prompt</button>
+        ${!isParent?`<button style="background:#8c6e9f;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;" onclick="openEditStages('${a.id}')">Edit Stages</button>`:''}
         <button style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;" onclick="openAgentForm('${a.id}')">Edit Details</button>
       </div>
     </div>
@@ -5397,7 +5399,6 @@ function renderAgentDetail(){
         <div style="font-size:14px;font-weight:700;color:#1e3a5f;">Stages &amp; Messages</div>
         <div style="display:flex;gap:6px;flex-shrink:0;">
           ${content?`<button onclick="copyAgentStages('${a.id}')" style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;color:#475569;font-weight:600;">Copy for SharePoint</button>`:''}
-          <button onclick="openEditStages('${a.id}')" style="background:#8c6e9f;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;">Edit Stages</button>
         </div>
       </div>
       <div style="background:#fff8e1;border:1px solid #fde68a;border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:12px;color:#78350f;line-height:1.5;">
@@ -5412,10 +5413,7 @@ function renderAgentDetail(){
     return sHtml;
   }
   if(agentDetailTab==='versions'){
-    html+=`<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
-      <div style="font-size:13px;color:#64748b;flex:1;min-width:200px;">The top entry is the current live system prompt. Every save creates a snapshot — click Revert on an older version to restore it (creates a new snapshot, nothing is deleted).</div>
-      <button onclick="openEditPrompt('${a.id}')" style="background:#003366;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;flex-shrink:0;">Edit Prompt</button>
-    </div>`;
+    html+=`<div style="margin-bottom:12px;font-size:13px;color:#64748b;">The top entry is the current live system prompt. Every save creates a snapshot — click Revert on an older version to restore it (creates a new snapshot, nothing is deleted).</div>`;
     if(!myVersions.length){
       html+='<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:20px;text-align:center;color:#94a3b8;font-size:13px;">No versions yet. Edit and save this agent to create the first snapshot.</div>';
     } else {
