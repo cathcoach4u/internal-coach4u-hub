@@ -217,7 +217,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.20.1</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.20.2</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -5290,7 +5290,7 @@ function renderAgents(){
             <div style="display:flex;align-items:center;gap:8px;margin-top:4px;margin-left:14px;flex-wrap:wrap;">
               <span style="font-size:10px;padding:1px 6px;border-radius:99px;background:#fce7f3;color:#b87a90;font-weight:600;">child</span>
               ${editedHtml(c.id)}
-              ${drift?`<span title="Menu has ${menuCount} items but stages doc has ${stageCount}" style="font-size:10px;padding:1px 6px;border-radius:99px;background:#fef3c7;color:#a16207;font-weight:600;cursor:help;">&#9888; drift</span>`:''}
+              ${drift?`<span onclick="event.stopPropagation();alert('Drift warning\\n\\nThe system prompt menu lists ${menuCount} stage option${menuCount===1?'':'s'}, but the Stages & Messages document has ${stageCount} stage${stageCount===1?'':'s'}.\\n\\nThe two should match. Open the agent and update the prompt menu or the stages doc so they agree.')" style="font-size:10px;padding:1px 6px;border-radius:99px;background:#fef3c7;color:#a16207;font-weight:600;cursor:pointer;">&#9888; drift</span>`:''}
             </div>
           </div>
           ${rowActions(c.id)}
