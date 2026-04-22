@@ -217,7 +217,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.19.8</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.19.9</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -5411,8 +5411,22 @@ function renderAgentDetail(){
   }
   if(agentDetailTab==='versions'){
     html+=`<div style="margin-bottom:12px;font-size:13px;color:#64748b;">The top entry is the current live system prompt. Every save creates a snapshot — click Revert on an older version to restore it (creates a new snapshot, nothing is deleted).</div>`;
-    if(!myVersions.length){
-      html+='<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:20px;text-align:center;color:#94a3b8;font-size:13px;">No versions yet. Edit and save this agent to create the first snapshot.</div>';
+    if(!myVersions.length && a.system_prompt){
+      const escaped=a.system_prompt.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      html+=`<div style="background:#fff;border:1px solid #003366;border-radius:10px;margin-bottom:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,51,102,.08);">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:#f0f4f8;flex-wrap:wrap;gap:8px;">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <span style="font-size:10px;padding:2px 8px;border-radius:99px;font-weight:700;background:#003366;color:#fff;letter-spacing:.5px;">CURRENT</span>
+            <span style="font-size:12px;color:#64748b;font-style:italic;">No version snapshot yet — save the prompt to create one</span>
+          </div>
+          <button onclick="copySystemPromptByAgent('${a.id}')" style="background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:4px 10px;font-size:11px;color:#475569;cursor:pointer;font-weight:600;">Copy</button>
+        </div>
+        <div style="padding:16px;border-top:1px solid #e2e8f0;">
+          <pre style="font-size:13px;color:#1e293b;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;background:#f8fafc;padding:14px;border-radius:8px;font-family:inherit;line-height:1.6;margin:0;">${escaped}</pre>
+        </div>
+      </div>`;
+    } else if(!myVersions.length){
+      html+='<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:20px;text-align:center;color:#94a3b8;font-size:13px;">No prompt yet. Tap Edit Prompt above to add one.</div>';
     } else {
       myVersions.forEach((v,idx)=>{
         const isCurrent=idx===0;
@@ -5432,7 +5446,7 @@ function renderAgentDetail(){
             </div>
           </div>
           <div id="vexpand-${v.id}" style="display:${isCurrent?'block':'none'};padding:16px;border-top:1px solid #e2e8f0;">
-            ${v.system_prompt?`<div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><div style="font-size:11px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">System Prompt</div><button onclick="event.stopPropagation();copySystemPrompt('${v.id}')" style="background:#f0f4f8;border:1px solid #e2e8f0;border-radius:6px;padding:4px 10px;font-size:11px;color:#475569;cursor:pointer;font-weight:600;">Copy</button></div><pre style="font-size:13px;color:#1e293b;white-space:pre-wrap;background:#f8fafc;padding:14px;border-radius:8px;font-family:inherit;line-height:1.6;${isCurrent?'':'max-height:300px;overflow-y:auto;'}">${v.system_prompt.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></div>`:'<div style="color:#94a3b8;font-size:13px;">No system prompt saved in this version.</div>'}
+            ${v.system_prompt?`<div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><div style="font-size:11px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">System Prompt</div><button onclick="event.stopPropagation();copySystemPrompt('${v.id}')" style="background:#f0f4f8;border:1px solid #e2e8f0;border-radius:6px;padding:4px 10px;font-size:11px;color:#475569;cursor:pointer;font-weight:600;">Copy</button></div><pre style="font-size:13px;color:#1e293b;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;background:#f8fafc;padding:14px;border-radius:8px;font-family:inherit;line-height:1.6;${isCurrent?'':'max-height:300px;overflow-y:auto;'}">${v.system_prompt.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></div>`:'<div style="color:#94a3b8;font-size:13px;">No system prompt saved in this version.</div>'}
           </div>
         </div>`;
       });
