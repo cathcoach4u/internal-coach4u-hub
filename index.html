@@ -49,6 +49,7 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#f0f6ff;c
 .content{padding:28px 32px;}
 .screen{display:none;}
 .screen.active{display:block;}
+#screen-writingpartner.active{display:flex;flex-direction:column;}
 
 /* ── DASHBOARD ── */
 .dash-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-bottom:28px;}
@@ -216,7 +217,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.18.8</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.18.9</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -501,7 +502,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
 
     <!-- WRITING PARTNER -->
-    <div class="screen" id="screen-writingpartner" style="display:flex;flex-direction:column;">
+    <div class="screen" id="screen-writingpartner">
       <div class="toolbar" style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
         <div style="flex:1;font-size:13px;color:#475569;">AI-powered writing assistance for Coach4U communications.</div>
         <a class="btn btn-blue" href="writing-partner/" target="_blank" rel="noopener" style="text-decoration:none;">Open in new tab &#8599;</a>
