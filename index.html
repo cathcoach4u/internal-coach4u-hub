@@ -217,7 +217,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.19.9</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.20.0</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -5229,7 +5229,11 @@ function renderAgents(){
   if(parents.length){
     const lastEditedFor=(id)=>{
       const vs=agentVersions.filter(v=>v.agent_id===id).sort((x,y)=>new Date(y.created_at)-new Date(x.created_at));
-      return vs.length?new Date(vs[0].created_at).toLocaleDateString('en-AU',{day:'numeric',month:'short'}):'Never';
+      return vs.length?new Date(vs[0].created_at).toLocaleDateString('en-AU',{day:'numeric',month:'short'}):'';
+    };
+    const editedHtml=(id)=>{
+      const d=lastEditedFor(id);
+      return d?`<span style="font-size:11px;color:#94a3b8;">Edited ${d}</span>`:'';
     };
     const countStages=(content)=>{
       if(!content) return 0;
@@ -5257,12 +5261,16 @@ function renderAgents(){
       <div style="font-size:11px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">Agents</div>`;
     parents.forEach(p=>{
       const kids=agents.filter(c=>c.parent_agent_id===p.id);
-      html+=`<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid #f1f5f9;">
-        <div onclick="viewAgentDetail('${p.id}')" style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;cursor:pointer;flex-wrap:wrap;">
-          <span style="width:8px;height:8px;border-radius:99px;background:#003366;flex-shrink:0;"></span>
-          <span style="font-weight:700;font-size:13px;color:#1e3a5f;">${p.name}</span>
-          <span style="font-size:10px;padding:1px 6px;border-radius:99px;background:#eef2ff;color:#4f46e5;font-weight:600;">parent</span>
-          <span style="font-size:11px;color:#94a3b8;">${lastEditedFor(p.id)}</span>
+      html+=`<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding:10px 0;border-bottom:1px solid #f1f5f9;">
+        <div onclick="viewAgentDetail('${p.id}')" style="min-width:0;flex:1;cursor:pointer;">
+          <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+            <span style="width:8px;height:8px;border-radius:99px;background:#003366;flex-shrink:0;"></span>
+            <span style="font-weight:700;font-size:13px;color:#1e3a5f;word-break:break-word;">${p.name}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:4px;margin-left:16px;flex-wrap:wrap;">
+            <span style="font-size:10px;padding:1px 6px;border-radius:99px;background:#eef2ff;color:#4f46e5;font-weight:600;">parent</span>
+            ${editedHtml(p.id)}
+          </div>
         </div>
         ${rowActions(p.id)}
       </div>`;
@@ -5271,15 +5279,19 @@ function renderAgents(){
         const stageCount=countStages(c.stages_content);
         const menuCount=countMenuItems(c.system_prompt);
         const drift=menuCount!==null&&stageCount>0&&menuCount!==stageCount;
-        html+=`<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 0 10px 24px;border-bottom:${isLast?'none':'1px solid #f1f5f9'};position:relative;">
+        html+=`<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding:10px 0 10px 24px;border-bottom:${isLast?'none':'1px solid #f1f5f9'};position:relative;">
           <div style="position:absolute;left:8px;top:0;bottom:${isLast?'50%':'0'};width:2px;background:#cbd5e1;"></div>
-          <div style="position:absolute;left:8px;top:50%;width:14px;height:2px;background:#cbd5e1;"></div>
-          <div onclick="viewAgentDetail('${c.id}')" style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;flex-wrap:wrap;cursor:pointer;">
-            <span style="width:6px;height:6px;border-radius:99px;background:#b87a90;flex-shrink:0;"></span>
-            <span style="font-weight:600;font-size:13px;color:#1e3a5f;">${c.name}</span>
-            <span style="font-size:10px;padding:1px 6px;border-radius:99px;background:#fce7f3;color:#b87a90;font-weight:600;">child</span>
-            <span style="font-size:11px;color:#94a3b8;">${lastEditedFor(c.id)}</span>
-            ${drift?`<span title="Menu has ${menuCount} items but stages doc has ${stageCount}" style="font-size:10px;padding:1px 6px;border-radius:99px;background:#fef3c7;color:#a16207;font-weight:600;cursor:help;">&#9888; drift</span>`:''}
+          <div style="position:absolute;left:8px;top:22px;width:14px;height:2px;background:#cbd5e1;"></div>
+          <div onclick="viewAgentDetail('${c.id}')" style="min-width:0;flex:1;cursor:pointer;">
+            <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+              <span style="width:6px;height:6px;border-radius:99px;background:#b87a90;flex-shrink:0;"></span>
+              <span style="font-weight:600;font-size:13px;color:#1e3a5f;word-break:break-word;">${c.name}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:4px;margin-left:14px;flex-wrap:wrap;">
+              <span style="font-size:10px;padding:1px 6px;border-radius:99px;background:#fce7f3;color:#b87a90;font-weight:600;">child</span>
+              ${editedHtml(c.id)}
+              ${drift?`<span title="Menu has ${menuCount} items but stages doc has ${stageCount}" style="font-size:10px;padding:1px 6px;border-radius:99px;background:#fef3c7;color:#a16207;font-weight:600;cursor:help;">&#9888; drift</span>`:''}
+            </div>
           </div>
           ${rowActions(c.id)}
         </div>`;
@@ -5288,12 +5300,16 @@ function renderAgents(){
     const orphans=agents.filter(a=>a.type!=='parent'&&!parents.some(p=>p.id===a.parent_agent_id));
     orphans.forEach((a,i)=>{
       const isLast=i===orphans.length-1;
-      html+=`<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 0;border-bottom:${isLast?'none':'1px solid #f1f5f9'};">
-        <div onclick="viewAgentDetail('${a.id}')" style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;cursor:pointer;flex-wrap:wrap;">
-          <span style="width:8px;height:8px;border-radius:99px;background:#64748b;flex-shrink:0;"></span>
-          <span style="font-weight:700;font-size:13px;color:#1e3a5f;">${a.name}</span>
-          <span style="font-size:10px;padding:1px 6px;border-radius:99px;background:#f1f5f9;color:#64748b;font-weight:600;">${a.type||'standalone'}</span>
-          <span style="font-size:11px;color:#94a3b8;">${lastEditedFor(a.id)}</span>
+      html+=`<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding:10px 0;border-bottom:${isLast?'none':'1px solid #f1f5f9'};">
+        <div onclick="viewAgentDetail('${a.id}')" style="min-width:0;flex:1;cursor:pointer;">
+          <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+            <span style="width:8px;height:8px;border-radius:99px;background:#64748b;flex-shrink:0;"></span>
+            <span style="font-weight:700;font-size:13px;color:#1e3a5f;word-break:break-word;">${a.name}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:4px;margin-left:16px;flex-wrap:wrap;">
+            <span style="font-size:10px;padding:1px 6px;border-radius:99px;background:#f1f5f9;color:#64748b;font-weight:600;">${a.type||'standalone'}</span>
+            ${editedHtml(a.id)}
+          </div>
         </div>
         ${rowActions(a.id)}
       </div>`;
