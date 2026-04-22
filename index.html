@@ -217,7 +217,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.18.9</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.19.0</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -843,8 +843,6 @@ td .actions button{padding:8px 14px;font-size:12px;}
     <div id="agentFormLinksSection" style="font-size:12px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin:14px 0 8px;">Links</div>
     <div id="agentFormSotUrlGroup" class="form-group"><label>SharePoint URL (source of truth)</label><input id="agentFormSotUrl" type="url" placeholder="https://...sharepoint.com/..."></div>
     <div id="agentFormKnowledgeGroup" class="form-group"><label>Knowledge URLs (one per line)</label><textarea id="agentFormKnowledge" rows="2" placeholder="https://..."></textarea></div>
-    <div style="font-size:12px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin:14px 0 8px;">System Prompt</div>
-    <div class="form-group"><textarea id="agentFormPrompt" rows="10" style="font-family:monospace;font-size:12px;" placeholder="Paste the full system prompt here..."></textarea></div>
     <div id="agentFormStagesSection" style="font-size:12px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin:14px 0 8px;">Stages &amp; Messages (copied to SharePoint)</div>
     <div id="agentFormStagesContentGroup" class="form-group"><textarea id="agentFormStagesContent" rows="14" style="font-family:monospace;font-size:12px;" placeholder="Paste the full stages and messages block here. This is the source of truth — same text you paste into SharePoint."></textarea></div>
     <div style="font-size:12px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin:14px 0 8px;">Notes &amp; Version</div>
@@ -5507,7 +5505,6 @@ window.openAgentForm=function(id){
   document.getElementById('agentFormOwner').value=a?(a.owner||'Cath'):'Cath';
   document.getElementById('agentFormSotUrl').value=a?(a.source_of_truth_url||''):'';
   document.getElementById('agentFormKnowledge').value=a?(a.knowledge_urls||''):'';
-  document.getElementById('agentFormPrompt').value=a?(a.system_prompt||''):'';
   document.getElementById('agentFormStagesContent').value=a?(a.stages_content||''):'';
   document.getElementById('agentFormHealth').value=a?(a.health||'ok'):'ok';
   document.getElementById('agentFormNotes').value=a?(a.notes||''):'';
@@ -5531,6 +5528,7 @@ window.openAgentForm=function(id){
 
 window.saveAgent=async function(){
   const id=document.getElementById('agentFormId').value;
+  const existing=id?agents.find(x=>x.id===id):null;
   const changeNote=document.getElementById('agentFormChangeNote').value.trim();
   const data={
     name:document.getElementById('agentFormName').value.trim(),
@@ -5548,7 +5546,7 @@ window.saveAgent=async function(){
     owner:document.getElementById('agentFormOwner').value.trim(),
     source_of_truth_url:document.getElementById('agentFormSotUrl').value.trim(),
     knowledge_urls:document.getElementById('agentFormKnowledge').value.trim(),
-    system_prompt:document.getElementById('agentFormPrompt').value,
+    system_prompt:existing?existing.system_prompt||'':'',
     stages_content:document.getElementById('agentFormStagesContent').value,
     health:document.getElementById('agentFormHealth').value,
     notes:document.getElementById('agentFormNotes').value.trim(),
