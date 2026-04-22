@@ -217,7 +217,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.19.3</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.19.4</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -5343,9 +5343,9 @@ function renderAgentDetail(){
   const isParent=a.type==='parent';
   const tabs=[
     {id:'overview',label:'Overview'},
-    {id:'versions',label:'System Prompt/Instructions'}
+    {id:'versions',label:'System Prompt'}
   ];
-  if(!isParent) tabs.push({id:'stages',label:'Stages &amp; Messages'});
+  if(!isParent) tabs.push({id:'stages',label:'Stages'});
   const latestVersion=myVersions[0];
   const lastEdited=latestVersion?new Date(latestVersion.created_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}):'Never';
   const scopeText=isParent
@@ -5376,8 +5376,8 @@ function renderAgentDetail(){
       <span style="font-weight:700;color:#003366;">What this controls:</span> ${scopeText}
     </div>
   </div>`;
-  html+=`<div style="display:flex;gap:0;margin-bottom:16px;border-bottom:2px solid #e2e8f0;">
-    ${tabs.map(t=>`<button onclick="setAgentTab('${t.id}')" style="background:none;border:none;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;border-bottom:2px solid ${agentDetailTab===t.id?'#003366':'transparent'};color:${t.alert?'#dc2626':agentDetailTab===t.id?'#003366':'#64748b'};margin-bottom:-2px;">${t.label}</button>`).join('')}
+  html+=`<div style="display:flex;gap:0;margin-bottom:16px;border-bottom:2px solid #e2e8f0;overflow-x:auto;-webkit-overflow-scrolling:touch;">
+    ${tabs.map(t=>`<button onclick="setAgentTab('${t.id}')" style="background:none;border:none;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;border-bottom:2px solid ${agentDetailTab===t.id?'#003366':'transparent'};color:${t.alert?'#dc2626':agentDetailTab===t.id?'#003366':'#64748b'};margin-bottom:-2px;white-space:nowrap;flex-shrink:0;">${t.label}</button>`).join('')}
   </div>`;
   if(agentDetailTab==='overview'){
     const labelStyle='font-size:11px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px;';
