@@ -218,7 +218,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.24.2</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.24.3</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -3244,7 +3244,7 @@ window.convertIntakeToClient=async function(id){
 // ── COUPLES INTAKE (Port Institute Assessment & Formulation Worksheet) ──
 const couplesIntakeConfig=[
   {step:'Step 1: Engagement',color:'#5c8a7a',sections:[
-    {name:'Online Setup',items:['Tech check - audio and video clear for both?','Are they together (same screen) or on separate devices?','Confirm they are in a private space and cannot be overheard','Recording policy - confirm not recording unless agreed']},
+    {name:'Online Setup',single:true,items:['Tech check - audio and video clear for both?','Are they together (same screen) or on separate devices?','Confirm they are in a private space and cannot be overheard','Recording policy - confirm not recording unless agreed']},
     {name:'Non-Verbals',items:['Warm welcome - greet both by name, confirm preferred names','Observe energy, body language and affect through camera','Counter-Transference - notice your own reactions','Reassurance bids - watch for nervous energy, reassure as needed']},
     {name:'Verbals',items:['How did you find me?','Have you done therapy or coaching before? Online or in person?']},
     {name:'Protocols',items:['Session Structure - outline how the 2 hours will run','What happens if connection drops (who calls back, how)']},
@@ -3340,10 +3340,12 @@ function renderCouplesIntake(){
             <input type="checkbox" id="${fidBase}_chk" onchange="saveCouplesIntake()" style="margin-top:2px;flex-shrink:0;">
             <span>${item}</span>
           </label>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          ${sec.single
+            ? `<textarea id="${fidBase}_p1" placeholder="Notes..." oninput="saveCouplesIntake()" style="${taStyle}"></textarea>`
+            : `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
             <textarea id="${fidBase}_p1" placeholder="${p1}..." oninput="saveCouplesIntake()" style="${taStyle}"></textarea>
             <textarea id="${fidBase}_p2" placeholder="${p2}..." oninput="saveCouplesIntake()" style="${taStyle}"></textarea>
-          </div>
+          </div>`}
         </div>`;
       });
       html+=`</div>`;
