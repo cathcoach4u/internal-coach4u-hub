@@ -225,8 +225,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     <button class="area-tab active" onclick="switchArea('home')"><span class="tab-icon">&#9776;</span>Home</button>
     <button class="area-tab" onclick="switchArea('crm')"><span class="tab-icon">&#128202;</span>CRM</button>
     <button class="area-tab" onclick="switchArea('referrers')"><span class="tab-icon">&#128200;</span>Referrers</button>
-    <button class="area-tab" onclick="switchArea('prospects')"><span class="tab-icon">&#127793;</span>Prospects</button>
-    <button class="area-tab" onclick="switchArea('clients')"><span class="tab-icon">&#129309;</span>Clients</button>
+    <button class="area-tab" onclick="switchArea('couples')"><span class="tab-icon">&#128149;</span>Couples</button>
     <button class="area-tab" onclick="switchArea('thrivehq')"><span class="tab-icon">&#128170;</span>ThriveHQ</button>
     <button class="area-tab" onclick="switchArea('strengths')"><span class="tab-icon">&#127919;</span>Strengths</button>
     <button class="area-tab" onclick="switchArea('agentsArea')"><span class="tab-icon">&#129302;</span>Agents</button>
@@ -581,6 +580,21 @@ td .actions button{padding:8px 14px;font-size:12px;}
         </div>
       </div>
       <div id="finTxnList"></div>
+    </div>
+
+    <!-- COUPLES INTAKE (Port Institute Worksheet) -->
+    <div class="screen" id="screen-couplesintake">
+      <div class="toolbar" style="flex-wrap:wrap;gap:8px;">
+        <input class="search-input" id="coupIntakeClients" placeholder="Client Name(s) e.g. Bob & Sue" style="max-width:260px;" onchange="saveCouplesIntake()">
+        <input type="date" id="coupIntakeDate" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;font-family:inherit;" onchange="saveCouplesIntake()">
+        <select id="coupIntakeSessionPicker" onchange="loadCouplesIntakeSession(this.value)" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;font-family:inherit;">
+          <option value="">Load session...</option>
+        </select>
+        <button class="btn btn-gray" onclick="newCouplesIntake()">&#10133; New</button>
+        <button class="btn btn-blue" onclick="saveCouplesIntake(true)">&#128190; Save</button>
+        <button class="btn btn-gray" onclick="printCouplesIntake()">&#128438; Print</button>
+      </div>
+      <div id="coupIntakeForm" style="padding:16px;"></div>
     </div>
 
     <div class="screen" id="screen-about">
@@ -1335,7 +1349,7 @@ document.getElementById('headerDate').textContent = new Date().toLocaleDateStrin
 window.navTo = function(tab,btn){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+tab).classList.add('active');
-  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ',thqintake:'Intake Forms',strdash:'Strengths',opsdash:'Admin',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Strengths Hub',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Task Management',playbook:'Lou\'s Playbook',itprojects:'IT Projects',agents:'Agents',writingpartner:'Writing Partner',findash:'Finance',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fintxns:'Transactions',thqbrainpulse:'Brain Pulse',clibrainpulse:'Brain Pulse'};
+  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ',thqintake:'Intake Forms',strdash:'Strengths',opsdash:'Admin',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Strengths Hub',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Task Management',playbook:'Lou\'s Playbook',itprojects:'IT Projects',agents:'Agents',writingpartner:'Writing Partner',findash:'Finance',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fintxns:'Transactions',thqbrainpulse:'Brain Pulse',clibrainpulse:'Brain Pulse',thqpulse:'SAFEty Pulse',clipulse:'SAFE Pulse',couplesintake:'Couples Intake'};
   document.getElementById('pageTitle').textContent=titles[tab]||'Coach4U';
   // Sync area tab
   const area=pageToArea[tab]||'home';
@@ -1374,6 +1388,7 @@ window.navTo = function(tab,btn){
   if(tab==='thqbrainpulse'){loadBrainPulseSubmissions().then(()=>renderBrainPulseThq());}
   if(tab==='clibrainpulse'){loadBrainPulseSubmissions().then(()=>renderBrainPulseClients());}
   if(tab==='thqintake') renderIntakeSubmissions();
+  if(tab==='couplesintake') renderCouplesIntake();
   if(tab==='tasks') renderTasks();
   if(tab==='refpayments') renderRefPayments();
   if(tab==='playbook') renderPlaybook();
@@ -1405,10 +1420,9 @@ window.goToClient=function(clientId){
 // ── AREA TABS & SIDEBAR ──
 const areaConfig={
   home:{label:'Home',pages:[{id:'dashboard',icon:'&#9776;',label:'Dashboard'}]},
-  crm:{label:'CRM',pages:[{id:'masterlist',icon:'&#128209;',label:'Master List'}]},
+  crm:{label:'CRM',pages:[{id:'masterlist',icon:'&#128209;',label:'Master List'},{id:'prospects',icon:'&#128203;',label:'Prospect List'},{id:'clidash',icon:'&#129309;',label:'Clients Dashboard'},{id:'clients',icon:'&#128101;',label:'Client List'},{id:'thqintake',icon:'&#128221;',label:'Intake Forms'},{id:'clipulse',icon:'&#128147;',label:'SAFE Pulse'},{id:'clibrainpulse',icon:'&#129504;',label:'Brain Pulse'},{id:'clinvoices',icon:'&#128206;',label:'Invoices'}]},
   referrers:{label:'Referrers',pages:[{id:'referrals',icon:'&#128101;',label:'Referral Hub'},{id:'refpayments',icon:'&#128176;',label:'Payments'}]},
-  prospects:{label:'Prospects',pages:[{id:'prospects',icon:'&#128203;',label:'Prospect List'}]},
-  clients:{label:'Clients',pages:[{id:'clidash',icon:'&#129309;',label:'Dashboard'},{id:'clients',icon:'&#128101;',label:'Client List'},{id:'thqintake',icon:'&#128221;',label:'Intake Forms'},{id:'clipulse',icon:'&#128147;',label:'Pulses'},{id:'clibrainpulse',icon:'&#129504;',label:'Brain Pulse'},{id:'clinvoices',icon:'&#128206;',label:'Invoices'}]},
+  couples:{label:'Couples',pages:[{id:'couplesintake',icon:'&#128221;',label:'Couples Intake'}]},
   thrivehq:{label:'ThriveHQ',pages:[{id:'thqdash',icon:'&#128170;',label:'Dashboard'},{id:'thqtrials',icon:'&#127793;',label:'Trials'},{id:'thrivehq',icon:'&#128101;',label:'Members'},{id:'thqrenewals',icon:'&#128260;',label:'Renewals'},{id:'thqcalls',icon:'&#128222;',label:'Coaching Calls'},{id:'thqpulse',icon:'&#128147;',label:'SAFEty Pulse'},{id:'thqbrainpulse',icon:'&#129504;',label:'Brain Pulse'}]},
   strengths:{label:'Strengths',pages:[{id:'strdash',icon:'&#127919;',label:'Dashboard'},{id:'strengths',icon:'&#128161;',label:'Strengths Hub'}]},
   agentsArea:{label:'Agents',pages:[{id:'agents',icon:'&#129302;',label:'Agents'},{id:'writingpartner',icon:'&#9997;',label:'Writing Partner'}]},
@@ -3225,6 +3239,161 @@ window.convertIntakeToClient=async function(id){
   toast('Converted to client!','success');
   closeModal('intakeDetailModal');
 };
+
+// ── COUPLES INTAKE (Port Institute Assessment & Formulation Worksheet) ──
+const couplesIntakeConfig=[
+  {step:'Step 1: Engagement',color:'#5c8a7a',sections:[
+    {name:'Non-Verbals',items:['Shake Hands','Baseline - Assess Breath/Colour','Counter-Transference','Reassurance bids']},
+    {name:'Verbals',items:['How did you find me?','Have you done therapy before?']},
+    {name:'Protocols',items:['Session Structure']},
+    {name:'Your Expectations',items:['Confidentiality','Contact with you','Cancellation','Payment']},
+    {name:'Client',items:['Expectations/Questions','Client Goals','Individual/Positively Framed']}
+  ]},
+  {step:'Step 2: Scoping',color:'#0891b2',sections:[
+    {name:'Demographics',items:['Relationship Status','Children','Previous Relationships',"Ex's"]},
+    {name:'Work/Finances',items:['Role','Stability','Enjoyment','Working Hours','Intrusion of Work','Status','Change Plans']},
+    {name:'Health',items:['Couple','Children','History of past issues e.g. cancer']},
+    {name:'Drug and Alcohol Use',items:['Frequency','Type','Changes','Partner perspectives']}
+  ]},
+  {step:'Step 3: Attachment',color:'#b87a90',sections:[
+    {name:'Parents',items:['Parents Relationship','Alive/Dead','Together/Separated/Divorce','Dates/How/Why','Quality - (probe for evidence: touch/emotional connection/affection/appreciation/teamwork/respect)','Change over time']},
+    {name:'Childhood Relationship with Parents',items:['Closeness - probe for evidence','Touch/Discipline patterns','Praise/Emotional Connection','Life Shocks/Transition Age/Impact/Support','Siblings Birth Order/Fairness/Roles']},
+    {name:'Love Story',items:['Connection Points','Initial Perceptions','Positive Behaviours','Brain State Changes']},
+    {name:'Transitions',items:['Length of Honeymoon','Engagement','Mutuality','Breaches']},
+    {name:'External Impacts',items:['Life Shocks/Trauma/Abuse','Betrayal and Loss','Use the Lens of Attachment Impact (Support/Sharing/Empathy and Collaboration)']}
+  ]},
+  {step:'Step 4: Challenges',color:'#d97706',sections:[
+    {name:'Frustrations',items:['Tell on themselves using scaling questions (out of 10)','Speak as their partner (e.g. Bob speaking as Sue saying, "I get frustrated when Bob ...")','Headlines/No Justification/Keep Moving','Read the list to confirm frustrations, ask Partner to add any missing','Over 8 frustrations: cut off explanations/expansions','Switch Roles - (keep moving or you drown)']},
+    {name:'Betrayal',items:['Explain what you want (affairs/emotional affairs/violence/gambling/secrets)','Have couple tell on themselves','Concise Version (Who, What, When, Where)','Confirm with Partner','Check major breaches - promise to come back in session']},
+    {name:'Life Shocks',items:['Anything you missed - just ask','Explore more practical impacts of Life Shocks mentioned before (cost/job impacts/sex/etc)']}
+  ]},
+  {step:'Step 5: Formulations',color:'#16a34a',sections:[
+    {name:'Strengths and Resources',items:['Specific Achievements','Target the Relationship/Coupleship where possible (e.g. You created a much safer home for your kids vs Sue you are a great Mum)']},
+    {name:'Familiar Connections',items:['Obvious (both from farming families/grew up poor/violence etc)','Emotional (Sounds like you both experienced loneliness/affection as children)','Contrasts (aspirational choices - you thought Bob had the perfect family)']},
+    {name:'Challenge/Gap Identification',items:["Couple first (e.g. Bob the Avoider never learnt to share feelings; Sue the Pursuer associates silences with secrecy and abandonment)","Identify the deficit (You don't have a working and safe model to raise problems)"]},
+    {name:'Deficit Consequence',items:['Couple focused','Build Past/Present and Future','Looking for nods/affirmations/corrections (make space if necessary)']},
+    {name:'Intervention Outline',items:['What needs to happen is this ...','Probably going to take about this long ...','Hard thing for you both is ...',"For you Bob it's this ...","For you Sue it's ..."]},
+    {name:'Feedback',items:['Listen and Validate','Correct if necessary']},
+    {name:'Formulation Example',items:["A) Because you couldn't talk about problems you tried avoiding issues ...",'B) Bob you coped by ...','C) Sue you coped by ...','D) This created this situation ...','E) Which you dealt with by ...','F) Kids/moved/Covid arrived and caused ...','G) And Bob coped by ...','H) And Sue coped by ...','I) Leaving you feeling ...','J) Which you coped with by ...','K) How I would suggest we approach this ...','L) How does that sound to you?','M) What do you like/dislike']}
+  ]}
+];
+
+function couplesIntakeKey(id){return 'couplesIntake:'+id;}
+function couplesIntakeIndex(){try{return JSON.parse(localStorage.getItem('couplesIntakeIndex')||'[]');}catch(e){return [];}}
+function couplesIntakeSaveIndex(idx){localStorage.setItem('couplesIntakeIndex',JSON.stringify(idx));}
+
+let currentCouplesIntakeId=null;
+
+function itemFieldId(stepIdx,secIdx,itemIdx){return 'ci_'+stepIdx+'_'+secIdx+'_'+itemIdx;}
+
+function renderCouplesIntake(){
+  const form=document.getElementById('coupIntakeForm');
+  if(!form) return;
+  if(!currentCouplesIntakeId) currentCouplesIntakeId=Date.now().toString();
+  let html=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 20px;margin-bottom:16px;">
+    <div style="font-family:'Quicksand',sans-serif;font-size:18px;font-weight:700;color:#1e3a5f;margin-bottom:4px;">Assessment &amp; Formulation Worksheet</div>
+    <div style="font-size:12px;color:#64748b;">Port Institute - 2 hour couples intake prompt. Notes save automatically to this device.</div>
+  </div>`;
+  couplesIntakeConfig.forEach((step,si)=>{
+    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid ${step.color};border-radius:10px;padding:14px 18px;margin-bottom:12px;">
+      <div style="font-family:'Quicksand',sans-serif;font-size:16px;font-weight:700;color:${step.color};margin-bottom:10px;">${step.step}</div>`;
+    step.sections.forEach((sec,sidx)=>{
+      html+=`<div style="margin-bottom:14px;">
+        <div style="font-weight:700;font-size:13px;color:#1e293b;margin-bottom:6px;text-decoration:underline;">${sec.name}</div>`;
+      sec.items.forEach((item,ii)=>{
+        const fid=itemFieldId(si,sidx,ii);
+        html+=`<div style="margin-bottom:8px;">
+          <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:#475569;margin-bottom:3px;">
+            <input type="checkbox" id="${fid}_chk" onchange="saveCouplesIntake()" style="margin-top:3px;">
+            <span>${item}</span>
+          </label>
+          <textarea id="${fid}" placeholder="Notes..." oninput="saveCouplesIntake()" style="width:100%;min-height:38px;padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;font-family:inherit;resize:vertical;box-sizing:border-box;"></textarea>
+        </div>`;
+      });
+      html+=`</div>`;
+    });
+    html+=`</div>`;
+  });
+  form.innerHTML=html;
+  loadCouplesIntakeValues();
+  refreshCouplesIntakePicker();
+}
+
+function collectCouplesIntakeState(){
+  const state={
+    id:currentCouplesIntakeId,
+    clients:document.getElementById('coupIntakeClients')?.value||'',
+    date:document.getElementById('coupIntakeDate')?.value||'',
+    updated_at:new Date().toISOString(),
+    fields:{}
+  };
+  couplesIntakeConfig.forEach((step,si)=>{
+    step.sections.forEach((sec,sidx)=>{
+      sec.items.forEach((_,ii)=>{
+        const fid=itemFieldId(si,sidx,ii);
+        const txt=document.getElementById(fid);
+        const chk=document.getElementById(fid+'_chk');
+        if(txt||chk) state.fields[fid]={text:txt?txt.value:'',done:chk?chk.checked:false};
+      });
+    });
+  });
+  return state;
+}
+
+window.saveCouplesIntake=function(showToast){
+  if(!currentCouplesIntakeId) currentCouplesIntakeId=Date.now().toString();
+  const state=collectCouplesIntakeState();
+  localStorage.setItem(couplesIntakeKey(state.id),JSON.stringify(state));
+  const idx=couplesIntakeIndex().filter(x=>x.id!==state.id);
+  idx.unshift({id:state.id,clients:state.clients,date:state.date,updated_at:state.updated_at});
+  couplesIntakeSaveIndex(idx.slice(0,50));
+  if(showToast) toast('Saved','success');
+  refreshCouplesIntakePicker();
+};
+
+function loadCouplesIntakeValues(){
+  if(!currentCouplesIntakeId) return;
+  const raw=localStorage.getItem(couplesIntakeKey(currentCouplesIntakeId));
+  if(!raw) return;
+  let state;try{state=JSON.parse(raw);}catch(e){return;}
+  if(state.clients!==undefined){const el=document.getElementById('coupIntakeClients');if(el) el.value=state.clients;}
+  if(state.date!==undefined){const el=document.getElementById('coupIntakeDate');if(el) el.value=state.date;}
+  Object.entries(state.fields||{}).forEach(([fid,v])=>{
+    const txt=document.getElementById(fid);if(txt) txt.value=v.text||'';
+    const chk=document.getElementById(fid+'_chk');if(chk) chk.checked=!!v.done;
+  });
+}
+
+function refreshCouplesIntakePicker(){
+  const sel=document.getElementById('coupIntakeSessionPicker');
+  if(!sel) return;
+  const idx=couplesIntakeIndex();
+  const current=sel.value;
+  let html='<option value="">Load session...</option>';
+  idx.forEach(s=>{
+    const label=(s.clients||'(unnamed)')+(s.date?' - '+s.date:'')+(s.updated_at?' ['+new Date(s.updated_at).toLocaleString('en-AU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+']':'');
+    html+=`<option value="${s.id}"${s.id===currentCouplesIntakeId?' selected':''}>${label.replace(/</g,'&lt;')}</option>`;
+  });
+  sel.innerHTML=html;
+  if(current&&!idx.find(x=>x.id===current)) sel.value='';
+}
+
+window.loadCouplesIntakeSession=function(id){
+  if(!id) return;
+  currentCouplesIntakeId=id;
+  renderCouplesIntake();
+};
+
+window.newCouplesIntake=function(){
+  if(!confirm('Start a new intake session? Current notes are saved locally.')) return;
+  currentCouplesIntakeId=Date.now().toString();
+  const cl=document.getElementById('coupIntakeClients');if(cl) cl.value='';
+  const dt=document.getElementById('coupIntakeDate');if(dt) dt.value=new Date().toISOString().slice(0,10);
+  renderCouplesIntake();
+  saveCouplesIntake();
+};
+
+window.printCouplesIntake=function(){window.print();};
 
 // ── THRIVEHQ TRIALS ──
 let thqTrials=[];
