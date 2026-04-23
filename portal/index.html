@@ -289,6 +289,7 @@ function renderForm(){
       </ul>
     </div>
   </div>`;
+  html+=`<div style="text-align:center;margin-bottom:20px;"><button type="button" class="submit-btn" onclick="document.getElementById('pulseForm').scrollIntoView({behavior:'smooth'});this.style.display='none';" style="background:#003366;">Start</button></div>`;
   html+='<form id="pulseForm" onsubmit="submitPulse(event)">';
   let qNum=1;
   for(const [key,meta] of Object.entries(PILLAR_META)){
