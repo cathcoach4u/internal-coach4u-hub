@@ -218,13 +218,14 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.24.7</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.24.8</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
     <button class="area-tab active" onclick="switchArea('home')"><span class="tab-icon">&#9776;</span>Home</button>
     <button class="area-tab" onclick="switchArea('crm')"><span class="tab-icon">&#128202;</span>CRM</button>
     <button class="area-tab" onclick="switchArea('referrers')"><span class="tab-icon">&#128200;</span>Referrers</button>
+    <button class="area-tab" onclick="switchArea('pulses')"><span class="tab-icon">&#128147;</span>Pulses</button>
     <button class="area-tab" onclick="switchArea('couples')"><span class="tab-icon">&#128149;</span>Couples</button>
     <button class="area-tab" onclick="switchArea('thrivehq')"><span class="tab-icon">&#128170;</span>ThriveHQ</button>
     <button class="area-tab" onclick="switchArea('strengths')"><span class="tab-icon">&#127919;</span>Strengths</button>
@@ -1421,8 +1422,9 @@ window.goToClient=function(clientId){
 // ── AREA TABS & SIDEBAR ──
 const areaConfig={
   home:{label:'Home',pages:[{id:'dashboard',icon:'&#9776;',label:'Dashboard'}]},
-  crm:{label:'CRM',pages:[{id:'masterlist',icon:'&#128209;',label:'Master List'},{id:'prospects',icon:'&#128203;',label:'Prospect List'},{id:'clidash',icon:'&#129309;',label:'Clients Dashboard'},{id:'clients',icon:'&#128101;',label:'Client List'},{id:'thqintake',icon:'&#128221;',label:'Intake Forms'},{id:'clipulse',icon:'&#128147;',label:'SAFE Pulse'},{id:'clibrainpulse',icon:'&#129504;',label:'Brain Pulse'},{id:'clinvoices',icon:'&#128206;',label:'Invoices'}]},
+  crm:{label:'CRM',pages:[{id:'masterlist',icon:'&#128209;',label:'Master List'},{id:'prospects',icon:'&#128203;',label:'Prospect List'},{id:'clidash',icon:'&#129309;',label:'Clients Dashboard'},{id:'clients',icon:'&#128101;',label:'Client List'},{id:'thqintake',icon:'&#128221;',label:'Intake Forms'},{id:'clinvoices',icon:'&#128206;',label:'Invoices'}]},
   referrers:{label:'Referrers',pages:[{id:'referrals',icon:'&#128101;',label:'Referral Hub'},{id:'refpayments',icon:'&#128176;',label:'Payments'}]},
+  pulses:{label:'Pulses',pages:[{id:'clipulse',icon:'&#128147;',label:'SAFE Pulse'},{id:'clibrainpulse',icon:'&#129504;',label:'Brain Pulse'}]},
   couples:{label:'Couples',pages:[{id:'couplesintake',icon:'&#128221;',label:'Couples Intake'}]},
   thrivehq:{label:'ThriveHQ',pages:[{id:'thqdash',icon:'&#128170;',label:'Dashboard'},{id:'thqtrials',icon:'&#127793;',label:'Trials'},{id:'thrivehq',icon:'&#128101;',label:'Members'},{id:'thqrenewals',icon:'&#128260;',label:'Renewals'},{id:'thqcalls',icon:'&#128222;',label:'Coaching Calls'},{id:'thqpulse',icon:'&#128147;',label:'SAFEty Pulse'},{id:'thqbrainpulse',icon:'&#129504;',label:'Brain Pulse'}]},
   strengths:{label:'Strengths',pages:[{id:'strdash',icon:'&#127919;',label:'Dashboard'},{id:'strengths',icon:'&#128161;',label:'Strengths Hub'}]},
