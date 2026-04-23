@@ -2,42 +2,43 @@
 
 ## Architecture
 
-Single-page CRM app hosted on GitHub Pages with a Supabase backend. All CRM functionality lives in one file: `index.html` (~6900+ lines). No build step, no framework — vanilla HTML/CSS/JS with inline `<script>` and `<style>` tags.
+Single-page CRM app hosted on GitHub Pages with a Supabase backend. All CRM functionality lives in one file: `index.html` (~7000+ lines). No build step, no framework — vanilla HTML/CSS/JS with inline `<script>` and `<style>` tags.
 
 ### Key files
 
 | File | Purpose |
 |------|---------|
 | `index.html` | Main CRM app (all screens, all JS) |
-| `portal/index.html` | Client-facing portal (SAFEty Pulse check-in, results) |
+| `portal/index.html` | Client-facing SAFE Pulse portal (check-in, results) |
+| `brain-pulse/index.html` | Client-facing Brain Pulse portal |
 | `sw.js` | Service worker for PWA caching |
 | `manifest.json` | PWA manifest |
 | `intake.html` | Legacy ThriveHQ intake form |
 | `intake/` | Current intake subpages (thrivehq, couples, individual) — canonical |
 | `bot/`, `bot.html` | Bot interface |
-| `brain-pulse/index.html` | ThriveHQ Brain Pulse portal |
 | `schema.sql` | Original DB schema reference |
 
 ### Supabase backend
 
 - **URL**: `https://uoixetfvboevjxlkfyqy.supabase.co`
 - **Client init**: Line ~1018 of `index.html`
-- **Tables**: contacts, clients, client_members, tasks, prospects, prospect_notes, pulse_results, intake_submissions, trials, renewals, task_logs, referrers, referrer_payments, finance_transactions, bills, contact_reports, agents, agent_versions, agent_issues, agent_stages, agent_templates
+- **Tables**: contacts, clients, client_members, tasks, prospects, prospect_notes, pulse_results, brain_pulse_submissions, intake_submissions, trials, renewals, task_logs, referrers, referrer_payments, finance_transactions, bills, contact_reports, agents, agent_versions, agent_issues, agent_stages, agent_templates
 - **RLS**: Enabled on all tables via Supabase policies
 - **Auth**: Anonymous key (publishable) — no user auth, RLS relies on anon role
 
 ### CRM structure (areaConfig)
 
-Areas and their pages (defined at line ~1158):
+Areas and their pages (defined at line ~1423):
 
 - **Home**: Dashboard
-- **CRM**: Master List
+- **CRM**: Master List, Prospect List, Clients Dashboard, Client List, Intake Forms, Invoices
 - **Referrers**: Referral Hub, Payments
-- **Prospects**: Prospect List
-- **Clients**: Dashboard, Client List, Intake Forms, Pulses, Invoices
-- **ThriveHQ**: Dashboard, Trials, Members, Renewals, Coaching Calls, SAFEty Pulse
+- **Pulses**: SAFE Pulse, Brain Pulse (consolidated from former CRM+ThriveHQ pulse pages; client selector for per-client mini-portal view)
+- **Couples**: Couples Intake (Port Institute 2-hour worksheet, stored in localStorage)
+- **ThriveHQ**: Dashboard, Trials, Members, Renewals, Coaching Calls
 - **Strengths**: Dashboard, Strengths Hub
-- **Operations**: Dashboard, Task Management, Playbook, IT Projects, Agents
+- **Agents**: Agents, Writing Partner
+- **Admin**: Dashboard, Task Management, Playbook, IT Projects
 - **Finance**: Dashboard, Income, Where Money Goes, Bills, Transactions
 - **About**: About
 
@@ -46,9 +47,29 @@ Areas and their pages (defined at line ~1158):
 - `navTo(tab)` switches screens by showing `#screen-{tab}` and hiding others
 - Each area has pages defined in `areaConfig`; sidebar nav renders from this
 - `pageToArea` maps page IDs back to areas
-- Page titles defined in `pageTitles` object (line ~1070)
+- Page titles defined in `titles` object inside `navTo` (line ~1354)
+- Area tab order in HTML (`#areaTabs`, line ~225) MUST match `Object.keys(areaConfig)` order — `switchArea` highlights the tab via `areaKeys.indexOf(area)`
 
-## Agents (Operations > Agents)
+## Pulses
+
+All pulse pages live under the **Pulses** area. Screen IDs `clipulse`/`clibrainpulse` are the active client-facing views; `thqpulse`/`thqbrainpulse` screens still exist in HTML but are no longer linked from nav.
+
+- **SAFE Pulse**: loads `pulse_results`, rendered via `renderClientPulses()`
+- **Brain Pulse**: loads `brain_pulse_submissions`, rendered via `renderBrainPulseClients()`
+- Each view has a client selector so a single client's results across all pulse types are visible together as a mini portal
+- Portals (`portal/index.html`, `brain-pulse/index.html`) and CRM must produce identical printed reports
+
+## Couples Intake (Port Institute Worksheet)
+
+- **Area**: Couples > Couples Intake (screen `couplesintake`)
+- **Purpose**: live session prompt for a 2-hour couples intake, based on the Port Institute Assessment & Formulation Worksheet
+- **Config**: `couplesIntakeConfig` (~line 3245) — 5 steps, each with sections and prompt items
+- **Layout**: two-column (Partner 1 / Partner 2) note fields per prompt; sections flagged `single:true` render a single full-width notes field (e.g. Online Setup)
+- **Step visibility**: Steps 1-3 open by default; 4-5 collapsed with "Session 2+" badge. Click step header to toggle
+- **Storage**: all state in `localStorage` under `couplesIntake:<id>`; session index under `couplesIntakeIndex`. Session picker loads any previous session. No Supabase table
+- **Partner headers**: column headers update live as P1/P2 names are typed (`updateCouplesPartnerHeaders`)
+
+## Agents (Agents > Agents)
 
 ### Overview
 
@@ -98,21 +119,12 @@ Parent agents represent the master system prompts for Copilot Studio. Child agen
 - **All stages**: "Copy list for SharePoint" outputs all stages with `════` title divider and `────` between sections
 - **Format**: Plain text, no markdown; designed to paste directly into SharePoint
 
-### Code locations
-
-- **State variables** (line ~5090): `let agents=[], agentVersions=[], agentIssues=[], agentStages=[], agentTemplates=[];`
-- **Load functions** (line ~5100): `loadAgents()` with try/catch for each table
-- **Render functions** (line ~5175): `renderAgents()` (hierarchical list), `renderAgentDetail()` (tabs), `renderCard()` (parent/child display)
-- **Form handlers** (line ~5389): `openAgentForm()`, `saveAgent()` (auto-versioning), `openAgentDetail()`, `openStageForm()`, `openTemplateForm()`, `openIssueForm()`
-- **Utilities** (line ~5480): `revertToVersion()`, `copyStagesForSharePoint()`, `copyStageForSharePoint()`, `resolveIssue()`
-- **Detail tab render blocks** (line ~5243): `if(agentDetailTab===...)` for overview, stages, versions, issues
-
 ## Conventions
 
 ### Versioning
 
-- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently v3.22.1, line 221)
-- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently v214)
+- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.25.1**, line ~221)
+- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v240**)
 - **Both must be bumped on every release**
 
 ### Code patterns
@@ -123,41 +135,37 @@ Parent agents represent the master system prompts for Copilot Studio. Child agen
 - State stored in module-level `let` variables (e.g., `let contacts=[]`, `let agents=[]`)
 - Load functions: `async function loadX()` fetches from Supabase into state var
 - Render functions: `function renderX()` builds HTML string, sets `.innerHTML`
-- Init: `loadAll()` at line ~1078 calls all load functions in `Promise.all`
+- Init: `loadAll()` at line ~1324 calls all load functions in `Promise.all`
 
 ### Print / PDF
 
 - Print CSS uses `print-color-adjust: exact !important` to preserve background colours
-- SAFEty Pulse report: 2-page A4 layout with `page-break-before` on page 2
-- Portal and CRM must produce identical printed reports
+- SAFE Pulse report: 2-page A4 layout with `page-break-before` on page 2
+- Portal and CRM must produce identical printed reports (same for Brain Pulse)
 
-### SAFEty Pulse
+### SAFE Pulse
 
 - Four pillars: Self Awareness (#5c8a7a), Aim (#0891b2), Foundation (#b87a90), Emotion (#8c6e9f)
 - Score ranges: 1-2 amber (#d97706), 3 teal (#0d9488), 4-5 green (#16a34a)
 - Client-facing copy uses second person ("your patterns", "your energy")
 - Portal (`portal/index.html`) and CRM (`index.html`) must stay in sync for report output
 
-## Completed work (this session)
+### Brain Pulse
 
-### Agents page (Operations > Agents) ✅
-
-- Scaffold: HTML modal, routing, page entry
-- CRUD: Add, edit, delete agents
-- Hierarchy: Parent agents with indented child agents, tree connectors
-- Versioning: Auto-snapshot on save, revert to older versions, CURRENT badge on latest
-- System Prompt/Instructions tab: Live prompt auto-expanded, Copy button
-- Stages/Messages: Card UI with expand/collapse, nested templates
-- Issues: Log, resolve, track agent drift
-- SharePoint export: Plain-text format with dividers
-- Parent agent simplification: Removed Stages/Issues/Links tabs, System Prompt tab renamed
+- Stages: Consolidating → Momentum → Building → Grounded (navy-blue progression matching SAFE Pulse)
+- Stage derived from score, not stored by name
+- Portal (`brain-pulse/index.html`) and CRM must produce identical reports
+- Red-score question rows highlighted with light red background in reports
 
 ## Git workflow
 
 - Main branch: All work merged and pushed
-- No active feature branches
+- Active feature branches on remote (as of this update):
+  - `claude/merge-prospect-intake-ChyfP` — stale, fully represented in main via rebase
+  - `claude/crm-dashboard-tabs-ESRoq`, `claude/recover-project-work-Gwcpq` — old divergent work, superseded by main
+  - `claude/add-thrivehq-brain-pulse-ALmPv`, `claude/coach4u-writing-partner-1cyZI` — merged into main, safe to delete
 - Commit messages: Concise, imperative mood
-- Version bumping: Always bump both `index.html` version (v3.14.x) and `sw.js` cache (v{N}) on release
+- Version bumping: Always bump both `index.html` version and `sw.js` cache on release
 
 ## Prospect ↔ Intake linking
 
