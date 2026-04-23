@@ -219,7 +219,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.25.2</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.25.3</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -438,6 +438,11 @@ td .actions button{padding:8px 14px;font-size:12px;}
         <button onclick="copyPublicPulseLink()" style="padding:6px 12px;border:1px solid #bfdbfe;border-radius:99px;font-size:11px;font-weight:600;color:#1e3a5f;background:#dbeafe;cursor:pointer;font-family:inherit;white-space:nowrap;" onmouseover="this.style.background='#bfdbfe'" onmouseout="this.style.background='#dbeafe'">&#128279; SAFE (public)</button>
       </div>
       <div id="cliPulseContent"></div>
+    </div>
+
+    <!-- PULSES DASHBOARD -->
+    <div class="screen" id="screen-pulsesdash">
+      <div id="pulsesDashContent"></div>
     </div>
 
     <!-- THRIVEHQ BRAIN PULSE -->
@@ -1353,7 +1358,7 @@ window.navTo = function(tab,btn){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+tab).classList.add('active');
   window.scrollTo(0,0);
-  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ',thqintake:'Intake Forms',strdash:'Strengths',opsdash:'Admin',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Strengths Hub',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Task Management',playbook:'Lou\'s Playbook',itprojects:'IT Projects',agents:'Agents',writingpartner:'Writing Partner',findash:'Finance',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fintxns:'Transactions',thqbrainpulse:'Brain Pulse',clibrainpulse:'Brain Pulse',thqpulse:'SAFEty Pulse',clipulse:'SAFE Pulse',couplesintake:'Couples Intake'};
+  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ',thqintake:'Intake Forms',strdash:'Strengths',opsdash:'Admin',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Strengths Hub',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Task Management',playbook:'Lou\'s Playbook',itprojects:'IT Projects',agents:'Agents',writingpartner:'Writing Partner',findash:'Finance',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fintxns:'Transactions',thqbrainpulse:'Brain Pulse',clibrainpulse:'Brain Pulse',thqpulse:'SAFEty Pulse',clipulse:'SAFE Pulse',pulsesdash:'Pulses Dashboard',couplesintake:'Couples Intake'};
   document.getElementById('pageTitle').textContent=titles[tab]||'Coach4U';
   // Sync area tab
   const area=pageToArea[tab]||'home';
@@ -1371,6 +1376,7 @@ window.navTo = function(tab,btn){
   if(btn) btn.classList.add('active');
   else document.querySelectorAll('.nav-item').forEach(n=>{if(n.dataset.page===tab) n.classList.add('active');});
   if(tab==='dashboard') renderDashboard();
+  if(tab==='pulsesdash') renderPulsesDash();
   if(tab==='crmdash') renderCrmDash();
   if(tab==='prospdash') renderProspDash();
   if(tab==='clidash') renderCliDash();
@@ -1426,7 +1432,7 @@ const areaConfig={
   home:{label:'Home',pages:[{id:'dashboard',icon:'&#9776;',label:'Dashboard'}]},
   crm:{label:'CRM',pages:[{id:'masterlist',icon:'&#128209;',label:'Master List'},{id:'prospects',icon:'&#128203;',label:'Prospect List'},{id:'clidash',icon:'&#129309;',label:'Clients Dashboard'},{id:'clients',icon:'&#128101;',label:'Client List'},{id:'thqintake',icon:'&#128221;',label:'Intake Forms'},{id:'clinvoices',icon:'&#128206;',label:'Invoices'}]},
   referrers:{label:'Referrers',pages:[{id:'referrals',icon:'&#128101;',label:'Referral Hub'},{id:'refpayments',icon:'&#128176;',label:'Payments'}]},
-  pulses:{label:'Pulses',pages:[{id:'clipulse',icon:'&#128147;',label:'SAFE Pulse'},{id:'clibrainpulse',icon:'&#129504;',label:'Brain Pulse'}]},
+  pulses:{label:'Pulses',pages:[{id:'pulsesdash',icon:'&#128200;',label:'Dashboard'},{id:'clipulse',icon:'&#128147;',label:'SAFE Pulse'},{id:'clibrainpulse',icon:'&#129504;',label:'Brain Pulse'}]},
   couples:{label:'Couples',pages:[{id:'couplesintake',icon:'&#128221;',label:'Couples Intake'}]},
   thrivehq:{label:'ThriveHQ',pages:[{id:'thqdash',icon:'&#128170;',label:'Dashboard'},{id:'thqtrials',icon:'&#127793;',label:'Trials'},{id:'thrivehq',icon:'&#128101;',label:'Members'},{id:'thqrenewals',icon:'&#128260;',label:'Renewals'},{id:'thqcalls',icon:'&#128222;',label:'Coaching Calls'}]},
   strengths:{label:'Strengths',pages:[{id:'strdash',icon:'&#127919;',label:'Dashboard'},{id:'strengths',icon:'&#128161;',label:'Strengths Hub'}]},
@@ -5002,6 +5008,89 @@ function buildBrainPulseReportHTML(r,c,opts){
   return html;
 }
 function renderBrainPulseClients(){const contentEl=document.getElementById('cliBrainPulseContent');if(!contentEl) return;const q=(document.getElementById('cliBrainPulseSearch')?.value||'').toLowerCase();const allCheckIns=[...brainPulseSubmissions];const weekStart=new Date();const dayOfWeek=(weekStart.getDay()+6)%7;weekStart.setDate(weekStart.getDate()-dayOfWeek);weekStart.setHours(0,0,0,0);let filtered=allCheckIns;if(q) filtered=filtered.filter(r=>{const c=contacts.find(x=>x.id===r.contact_id);if(!c) return false;return (c.first_name+' '+c.last_name+' '+(c.email||'')+' '+(r.stage||'')).toLowerCase().includes(q);});const weekCount=allCheckIns.filter(r=>new Date(r.created_at)>=weekStart).length;const uniqueClients=new Set(allCheckIns.map(r=>r.contact_id)).size;let html=`<div class="dash-cards" style="margin-bottom:16px;"><div class="dash-card" style="cursor:pointer;${weekCount?'box-shadow:0 0 0 2px #3b82f6;':''}" onclick="document.getElementById('cliBrainPulseSearch').value='';renderBrainPulseClients();"><div class="dc-icon" style="background:#dbeafe;color:#2563eb;">&#128197;</div><div class="dc-info"><h4>${weekCount}</h4><p>This Week</p></div></div><div class="dash-card" style="cursor:pointer;"><div class="dc-icon" style="background:#dcfce7;color:#16a34a;">&#128101;</div><div class="dc-info"><h4>${uniqueClients}</h4><p>Members</p></div></div><div class="dash-card" style="cursor:pointer;"><div class="dc-icon" style="background:#f1f5f9;color:#64748b;">&#129504;</div><div class="dc-info"><h4>${allCheckIns.length}</h4><p>Total</p></div></div></div>`;const brainSelectedContact=cliBrainPulseSelectedId?contacts.find(c=>c.id===cliBrainPulseSelectedId):null;const brainAllContacts=[...contacts].sort((a,b)=>(a.first_name+' '+a.last_name).localeCompare(b.first_name+' '+b.last_name));html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;margin-bottom:16px;"><div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:10px;">Generate Brain Pulse Link</div><select onchange="setCliBrainPulseClient(this.value)" style="width:100%;padding:10px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#f8fafc;color:#1e3a5f;margin-bottom:${brainSelectedContact?'10':'0'}px;"><option value="">— Select a contact —</option>${brainAllContacts.map(c=>`<option value="${c.id}" ${c.id===cliBrainPulseSelectedId?'selected':''}>${c.first_name} ${c.last_name}</option>`).join('')}</select>`;if(brainSelectedContact){const url=getBrainPulseUrl(brainSelectedContact.id);html+=`<div style="display:flex;gap:6px;align-items:center;margin-top:6px;flex-wrap:wrap;"><input readonly value="${url}" style="flex:1;min-width:200px;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;background:#f8fafc;color:#64748b;font-size:11px;"><button onclick="copyBrainPulseLink('${brainSelectedContact.id}')" style="background:#003366;color:#fff;border:none;padding:8px 14px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">Copy</button><button onclick="openBrainPulseLink('${brainSelectedContact.id}')" style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;padding:8px 14px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">Open</button></div>`;}html+=`</div>`;if(!filtered.length){html+='<div style="padding:30px;text-align:center;color:#94a3b8;font-size:13px;background:#fff;border:1px dashed #cbd5e1;border-radius:12px;">No check-ins found.</div>';}else{filtered.forEach(r=>{const c=contacts.find(x=>x.id===r.contact_id);if(!c) return;const d=new Date(r.created_at);const dateStr=d.toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short',year:'numeric'});const stageColor=(BRAIN_STAGES.find(s=>s.name===r.stage)||{}).color||'#333';html+=`<div onclick="viewBrainPulseClientResult('${r.id}')" style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 16px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;"><div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:14px;color:#1e3a5f;">${c.first_name} ${c.last_name}</div><div style="display:flex;gap:8px;align-items:center;margin-top:3px;"><span style="font-size:10px;letter-spacing:1px;text-transform:uppercase;background:#f0e6ff;color:#7c3aed;padding:1px 6px;border-radius:4px;font-weight:700;">BRAIN</span><span style="font-size:11px;color:#94a3b8;">${dateStr}</span></div></div><div style="display:flex;align-items:center;gap:10px;flex-shrink:0;"><span style="font-size:12px;font-weight:700;color:${stageColor};">${r.stage}</span><span style="font-size:20px;font-weight:800;color:${stageColor};">${r.grand_total}<span style="font-size:12px;color:#94a3b8;font-weight:400;">/200</span></span></div></div>`;});html+='<div style="height:80px;"></div>';}contentEl.innerHTML=html;if(brainPulseDetailResultId){const r=brainPulseSubmissions.find(x=>x.id===brainPulseDetailResultId);if(r){const c=contacts.find(x=>x.id===r.contact_id);if(c){contentEl.innerHTML=buildBrainPulseReportHTML(r,c,{showBackBar:true,backHandler:'backToBrainPulseClientList()',backLabel:'Back to all check-ins'});}}} }
+
+// ── PULSES DASHBOARD ──
+function renderPulsesDash(){
+  const el=document.getElementById('pulsesDashContent');
+  if(!el) return;
+  const weekStart=new Date();
+  const dayOfWeek=(weekStart.getDay()+6)%7;
+  weekStart.setDate(weekStart.getDate()-dayOfWeek);
+  weekStart.setHours(0,0,0,0);
+  const safeAll=pulseResults||[];
+  const brainAll=brainPulseSubmissions||[];
+  const safeWeek=safeAll.filter(r=>new Date(r.created_at)>=weekStart).length;
+  const brainWeek=brainAll.filter(r=>new Date(r.created_at)>=weekStart).length;
+  const safeClients=new Set(safeAll.map(r=>r.contact_id)).size;
+  const brainClients=new Set(brainAll.map(r=>r.contact_id)).size;
+  const combined=[...safeAll.map(r=>({...r,_type:'safe'})),...brainAll.map(r=>({...r,_type:'brain'}))]
+    .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at))
+    .slice(0,10);
+
+  let html=`<div class="dash-cards" style="margin-bottom:20px;">
+    <div class="dash-card" onclick="navTo('clipulse')" style="cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
+      <div class="dc-icon" style="background:#dbeafe;color:#2563eb;">&#128147;</div>
+      <div class="dc-info"><h4>${safeAll.length}</h4><p>SAFE Pulse Total</p></div>
+    </div>
+    <div class="dash-card" onclick="navTo('clibrainpulse')" style="cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
+      <div class="dc-icon" style="background:#f0e6ff;color:#7c3aed;">&#129504;</div>
+      <div class="dc-info"><h4>${brainAll.length}</h4><p>Brain Pulse Total</p></div>
+    </div>
+    <div class="dash-card" style="cursor:default;">
+      <div class="dc-icon" style="background:#dcfce7;color:#16a34a;">&#128197;</div>
+      <div class="dc-info"><h4>${safeWeek+brainWeek}</h4><p>Check-ins This Week</p></div>
+    </div>
+    <div class="dash-card" style="cursor:default;">
+      <div class="dc-icon" style="background:#fef3c7;color:#b45309;">&#128101;</div>
+      <div class="dc-info"><h4>${new Set([...safeAll.map(r=>r.contact_id),...brainAll.map(r=>r.contact_id)]).size}</h4><p>Unique Clients</p></div>
+    </div>
+  </div>`;
+
+  html+=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-bottom:20px;">
+    <div onclick="navTo('clipulse')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #003366;border-radius:12px;padding:18px 20px;cursor:pointer;transition:border-color .15s;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;"><span style="font-size:22px;">&#128147;</span><div style="font-weight:700;color:#1e3a5f;font-size:15px;">SAFE Pulse</div></div>
+      <div style="font-size:12px;color:#64748b;line-height:1.5;margin-bottom:10px;">Capacity check-in across Self Awareness, Aim, Foundation and Emotion.</div>
+      <div style="display:flex;gap:14px;font-size:11px;color:#64748b;"><span><strong style="color:#003366;">${safeAll.length}</strong> check-ins</span><span><strong style="color:#003366;">${safeClients}</strong> clients</span><span><strong style="color:#003366;">${safeWeek}</strong> this week</span></div>
+    </div>
+    <div onclick="navTo('clibrainpulse')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #7c3aed;border-radius:12px;padding:18px 20px;cursor:pointer;transition:border-color .15s;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;"><span style="font-size:22px;">&#129504;</span><div style="font-weight:700;color:#1e3a5f;font-size:15px;">Brain Pulse</div></div>
+      <div style="font-size:12px;color:#64748b;line-height:1.5;margin-bottom:10px;">Four-room check-in: Capacity, Wellbeing, Strengths, Execution.</div>
+      <div style="display:flex;gap:14px;font-size:11px;color:#64748b;"><span><strong style="color:#7c3aed;">${brainAll.length}</strong> check-ins</span><span><strong style="color:#7c3aed;">${brainClients}</strong> clients</span><span><strong style="color:#7c3aed;">${brainWeek}</strong> this week</span></div>
+    </div>
+  </div>`;
+
+  html+=`<div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:10px;">Recent Activity</div>`;
+  if(!combined.length){
+    html+=`<div style="padding:30px;text-align:center;color:#94a3b8;font-size:13px;background:#fff;border:1px dashed #cbd5e1;border-radius:12px;">No check-ins yet.</div>`;
+  } else {
+    combined.forEach(r=>{
+      const c=contacts.find(x=>x.id===r.contact_id);
+      if(!c) return;
+      const d=new Date(r.created_at);
+      const dateStr=d.toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'});
+      const isBrain=r._type==='brain';
+      const tagBg=isBrain?'#f0e6ff':'#dbeafe';
+      const tagColor=isBrain?'#7c3aed':'#2563eb';
+      const tagLabel=isBrain?'BRAIN':'SAFE';
+      const score=isBrain?r.grand_total:r.total;
+      const stage=isBrain?((BRAIN_STAGES.find(s=>score>=s.min&&score<=s.max)||{}).name||r.stage):r.band;
+      const stageColor=isBrain?((BRAIN_STAGES.find(s=>score>=s.min&&score<=s.max)||{}).color||'#333'):((PULSE_BANDS.find(b=>b.name===r.band)||{}).color||'#333');
+      const clickHandler=isBrain?`navTo('clibrainpulse');viewBrainPulseClientResult('${r.id}')`:`navTo('clipulse');viewPulseResult('${r.id}')`;
+      html+=`<div onclick="${clickHandler}" style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 16px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:600;font-size:14px;color:#1e3a5f;">${c.first_name} ${c.last_name}</div>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:3px;"><span style="font-size:10px;letter-spacing:1px;text-transform:uppercase;background:${tagBg};color:${tagColor};padding:1px 6px;border-radius:4px;font-weight:700;">${tagLabel}</span><span style="font-size:11px;color:#94a3b8;">${dateStr}</span></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+          <span style="font-size:12px;font-weight:700;color:${stageColor};">${stage||''}</span>
+          <span style="font-size:20px;font-weight:800;color:${stageColor};">${score}<span style="font-size:12px;color:#94a3b8;font-weight:400;">/200</span></span>
+        </div>
+      </div>`;
+    });
+  }
+  html+='<div style="height:80px;"></div>';
+  el.innerHTML=html;
+}
 
 // ── TASKS ──
 const tkGroupState={};
