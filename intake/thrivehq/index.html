@@ -84,6 +84,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f6ff;color:#1e293b;m
     <div class="form-group"><label>Address Line 2 <span style="color:#94a3b8;font-weight:400;">(optional)</span></label><input id="fAddress2" placeholder="Unit, apartment, PO Box"></div>
     <div class="row">
       <div class="form-group"><label>Suburb</label><input id="fSuburb"></div>
+      <div class="form-group"><label>Postcode</label><input id="fPostcode" inputmode="numeric" maxlength="5"></div>
       <div class="form-group"><label>State / Region</label><select id="fState">
         <option value="">Select...</option>
         <optgroup label="Australia">
@@ -115,7 +116,6 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f6ff;color:#1e293b;m
           <option value="NZ-WTC">West Coast</option>
         </optgroup>
       </select></div>
-      <div class="form-group"><label>Postcode</label><input id="fPostcode" inputmode="numeric" maxlength="5"></div>
     </div>
     <div class="form-group">
       <label>How did you hear about ThriveHQ?</label>
@@ -183,8 +183,28 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f6ff;color:#1e293b;m
     <div style="font-weight:700;font-size:13px;color:#1e3a5f;margin:20px 0 10px;">Consent</div>
 
     <div class="consent-item">
-      <input type="checkbox" id="cConsent">
-      <label for="cConsent">I consent to Coach4U storing my information for ThriveHQ, I agree to group confidentiality, and I understand ThriveHQ is coaching, not medical or clinical treatment, and sessions may be recorded. <span class="req">*</span></label>
+      <input type="checkbox" id="cConsentInfo">
+      <label for="cConsentInfo">I consent to Coach4U collecting and storing the information I&rsquo;ve provided (contact details, intake responses, session notes) for the purpose of delivering my ThriveHQ coaching. Records are stored securely and retained as required by law. <span class="req">*</span></label>
+    </div>
+    <div class="consent-item">
+      <input type="checkbox" id="cConsentGroup">
+      <label for="cConsentGroup">I agree to group confidentiality: what is shared by other members within a ThriveHQ session stays within the group. <span class="req">*</span></label>
+    </div>
+    <div class="consent-item">
+      <input type="checkbox" id="cConsentScope">
+      <label for="cConsentScope">I understand ThriveHQ is coaching, not medical, psychological, or clinical treatment, and is not a substitute for professional health care. <span class="req">*</span></label>
+    </div>
+    <div class="consent-item">
+      <input type="checkbox" id="cConsentRecording">
+      <label for="cConsentRecording">I understand that ThriveHQ sessions are recorded. Recordings are stored securely and used only by my practitioner to review sessions, support file notes, and ensure quality of care. <span class="req">*</span></label>
+    </div>
+    <div class="consent-item">
+      <input type="checkbox" id="cConsentAI">
+      <label for="cConsentAI">I consent to the use of AI tools to help my practitioner summarise and organise session notes. Recordings and notes remain confidential and are not used to train AI models. <span class="req">*</span></label>
+    </div>
+    <div class="consent-item">
+      <input type="checkbox" id="cConsentConfidentiality">
+      <label for="cConsentConfidentiality">I understand my information is confidential, except where my practitioner is legally required to disclose it (risk of serious harm to myself or others, child safety concerns, or a court subpoena). <span class="req">*</span></label>
     </div>
 
     <div class="error-msg" id="errorMsg1"></div>
@@ -238,7 +258,8 @@ function validateStep(n){
 async function submitForm(){
   hideError();
   if(!g('fDiagnosis')){showError('Please select your ADHD status.');return;}
-  if(!document.getElementById('cConsent').checked){showError('Please agree to the consent item to continue.');return;}
+  const tc=['cConsentInfo','cConsentGroup','cConsentScope','cConsentRecording','cConsentAI','cConsentConfidentiality'];
+  if(tc.some(id=>!document.getElementById(id).checked)){showError('Please agree to all six consent items to continue.');return;}
   if(g('fWebsite'))return;
 
   const btn=document.getElementById('submitBtn');
@@ -264,8 +285,8 @@ async function submitForm(){
     adhd_diagnosis:g('fDiagnosis'),
     areas_of_interest:getChips('areasChips')||null,
     wellbeing_goals:g('fGoals')||null,
-    consent_accepted:document.getElementById('cConsent').checked,
-    consent_version:'thrivehq-v2-single-checkbox',
+    consent_accepted:tc.every(id=>document.getElementById(id).checked),
+    consent_version:'thrivehq-v3-six-checkboxes',
     signature_name:g('fFirstName')+' '+g('fLastName')
   });
 

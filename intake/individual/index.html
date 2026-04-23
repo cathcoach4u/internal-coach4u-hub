@@ -84,6 +84,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f6ff;color:#1e293b;m
     <div class="form-group"><label>Address Line 2 <span style="color:#94a3b8;font-weight:400;">(optional)</span></label><input id="fAddress2" placeholder="Unit, apartment, PO Box"></div>
     <div class="row">
       <div class="form-group"><label>Suburb</label><input id="fSuburb"></div>
+      <div class="form-group"><label>Postcode</label><input id="fPostcode" inputmode="numeric" maxlength="5"></div>
       <div class="form-group"><label>State / Region</label><select id="fState">
         <option value="">Select...</option>
         <optgroup label="Australia">
@@ -115,7 +116,6 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f6ff;color:#1e293b;m
           <option value="NZ-WTC">West Coast</option>
         </optgroup>
       </select></div>
-      <div class="form-group"><label>Postcode</label><input id="fPostcode" inputmode="numeric" maxlength="5"></div>
     </div>
     <div class="form-group">
       <label>How did you hear about Coach4U?</label>
@@ -196,15 +196,23 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f6ff;color:#1e293b;m
 
     <div class="consent-item">
       <input type="checkbox" id="cConsentInfo">
-      <label for="cConsentInfo">I consent to Coach4U storing my information for Individual Sessions. <span class="req">*</span></label>
+      <label for="cConsentInfo">I consent to Coach4U collecting and storing the information I&rsquo;ve provided (contact details, intake responses, session notes) for the purpose of delivering my coaching/counselling sessions. Records are stored securely and retained as required by law. <span class="req">*</span></label>
+    </div>
+    <div class="consent-item">
+      <input type="checkbox" id="cConsentRecording">
+      <label for="cConsentRecording">I understand that my sessions are recorded. Recordings are stored securely and used only by my practitioner to review sessions, support file notes, and ensure quality of care. <span class="req">*</span></label>
+    </div>
+    <div class="consent-item">
+      <input type="checkbox" id="cConsentAI">
+      <label for="cConsentAI">I consent to the use of AI tools to help my practitioner summarise and organise session notes. Recordings and notes remain confidential and are not used to train AI models. <span class="req">*</span></label>
+    </div>
+    <div class="consent-item">
+      <input type="checkbox" id="cConsentConfidentiality">
+      <label for="cConsentConfidentiality">I understand my sessions are confidential, except where my practitioner is legally required to disclose information (risk of serious harm to myself or others, child safety concerns, or a court subpoena). <span class="req">*</span></label>
     </div>
     <div class="consent-item">
       <input type="checkbox" id="cConsentPolicy">
       <label for="cConsentPolicy">I have read and agree to the <a href="https://www.coach4u.com.au/cancellation_reschedule" target="_blank" rel="noopener" style="color:#2563eb;font-weight:600;">Cancellation &amp; Rescheduling Policy</a>. <span class="req">*</span></label>
-    </div>
-    <div class="consent-item">
-      <input type="checkbox" id="cConsentRecording">
-      <label for="cConsentRecording">I consent to recordings. <span class="req">*</span></label>
     </div>
 
     <div class="error-msg" id="errorMsg1"></div>
@@ -260,9 +268,11 @@ async function submitForm(){
   hideError();
   if(!g('fServiceFocus')){showError('Please select a coaching type.');return;}
   const c1=document.getElementById('cConsentInfo').checked;
-  const c2=document.getElementById('cConsentPolicy').checked;
-  const c3=document.getElementById('cConsentRecording').checked;
-  if(!c1||!c2||!c3){showError('Please agree to all three consent items to continue.');return;}
+  const c2=document.getElementById('cConsentRecording').checked;
+  const c3=document.getElementById('cConsentAI').checked;
+  const c4=document.getElementById('cConsentConfidentiality').checked;
+  const c5=document.getElementById('cConsentPolicy').checked;
+  if(!c1||!c2||!c3||!c4||!c5){showError('Please agree to all five consent items to continue.');return;}
   if(g('fWebsite'))return;
 
   const btn=document.getElementById('submitBtn');
@@ -290,8 +300,8 @@ async function submitForm(){
     areas_of_interest:getChips('areasChips')||null,
     current_challenges:g('fChallenges')||null,
     wellbeing_goals:g('fGoals')||null,
-    consent_accepted:c1&&c2&&c3,
-    consent_version:'individual-v2-three-checkboxes',
+    consent_accepted:c1&&c2&&c3&&c4&&c5,
+    consent_version:'individual-v3-five-checkboxes',
     signature_name:g('fFirstName')+' '+g('fLastName')
   });
 
