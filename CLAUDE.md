@@ -12,8 +12,8 @@ Single-page CRM app hosted on GitHub Pages with a Supabase backend. All CRM func
 | `portal/index.html` | Client-facing portal (SAFEty Pulse check-in, results) |
 | `sw.js` | Service worker for PWA caching |
 | `manifest.json` | PWA manifest |
-| `intake.html`, `couples-intake.html`, `individual-intake.html` | Legacy intake forms |
-| `intake/` | Intake subpages (thrivehq, couples, individual) |
+| `intake.html` | Legacy ThriveHQ intake form |
+| `intake/` | Current intake subpages (thrivehq, couples, individual) — canonical |
 | `bot/`, `bot.html` | Bot interface |
 | `brain-pulse/index.html` | ThriveHQ Brain Pulse portal |
 | `schema.sql` | Original DB schema reference |
@@ -111,8 +111,8 @@ Parent agents represent the master system prompts for Copilot Studio. Child agen
 
 ### Versioning
 
-- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently v3.22.0, line 221)
-- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently v213)
+- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently v3.22.1, line 221)
+- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently v214)
 - **Both must be bumped on every release**
 
 ### Code patterns

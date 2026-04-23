@@ -83,7 +83,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f6ff;color:#1e293b;m
     <div class="form-group"><label>Suburb</label><input id="fSuburb"></div>
     <div class="form-group">
       <label>How did you hear about Coach4U?</label>
-      <select id="fHowHeard">
+      <select id="fHowHeard" onchange="toggleHowHeardOther()">
         <option value="">Select...</option>
         <option>Word of Mouth</option>
         <option>Social Media</option>
@@ -92,6 +92,10 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f6ff;color:#1e293b;m
         <option>Health Professional</option>
         <option>Other</option>
       </select>
+    </div>
+    <div class="form-group" id="fHowHeardOtherWrap" style="display:none;">
+      <label>Please tell us where you heard about us</label>
+      <input id="fHowHeardOther" placeholder="Let us know how you found us...">
     </div>
 
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-top:16px;">
@@ -154,8 +158,16 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f6ff;color:#1e293b;m
     <div style="font-weight:700;font-size:13px;color:#1e3a5f;margin:20px 0 10px;">Consent</div>
 
     <div class="consent-item">
-      <input type="checkbox" id="cConsent">
-      <label for="cConsent">I consent to Coach4U storing my information for Individual Coaching, and I understand this is coaching, not therapy or clinical treatment. <span class="req">*</span></label>
+      <input type="checkbox" id="cConsentInfo">
+      <label for="cConsentInfo">I consent to Coach4U storing my information for Individual Sessions. <span class="req">*</span></label>
+    </div>
+    <div class="consent-item">
+      <input type="checkbox" id="cConsentPolicy">
+      <label for="cConsentPolicy">I have read and agree to the <a href="https://www.coach4u.com.au/cancellation_reschedule" target="_blank" rel="noopener" style="color:#2563eb;font-weight:600;">Cancellation &amp; Rescheduling Policy</a>. <span class="req">*</span></label>
+    </div>
+    <div class="consent-item">
+      <input type="checkbox" id="cConsentRecording">
+      <label for="cConsentRecording">I consent to recordings. <span class="req">*</span></label>
     </div>
 
     <div class="error-msg" id="errorMsg1"></div>
@@ -192,6 +204,7 @@ function nextStep(){if(validateStep(currentStep))showStep(currentStep+1);}
 function prevStep(){if(currentStep>0)showStep(currentStep-1);}
 function g(id){return document.getElementById(id).value.trim();}
 function toggleChip(el){el.classList.toggle('selected');}
+function toggleHowHeardOther(){document.getElementById('fHowHeardOtherWrap').style.display=document.getElementById('fHowHeard').value==='Other'?'block':'none';}
 function getChips(id){return Array.from(document.querySelectorAll('#'+id+' .chip.selected')).map(c=>c.textContent).join(', ');}
 function showError(msg){const el=document.getElementById('errorMsg'+currentStep);if(el){el.textContent=msg;el.style.display='block';el.scrollIntoView({behavior:'smooth',block:'center'});}}
 function hideError(){document.querySelectorAll('.error-msg').forEach(el=>el.style.display='none');}
@@ -209,7 +222,10 @@ function validateStep(n){
 async function submitForm(){
   hideError();
   if(!g('fServiceFocus')){showError('Please select a coaching type.');return;}
-  if(!document.getElementById('cConsent').checked){showError('Please agree to the consent item to continue.');return;}
+  const c1=document.getElementById('cConsentInfo').checked;
+  const c2=document.getElementById('cConsentPolicy').checked;
+  const c3=document.getElementById('cConsentRecording').checked;
+  if(!c1||!c2||!c3){showError('Please agree to all three consent items to continue.');return;}
   if(g('fWebsite'))return;
 
   const btn=document.getElementById('submitBtn');
@@ -217,6 +233,7 @@ async function submitForm(){
 
   const supabase=getSB();
   if(!supabase){showError('Still loading — please try again in a moment.');btn.disabled=false;btn.textContent='Submit';return;}
+  const howHeard=g('fHowHeard')==='Other'&&g('fHowHeardOther')?'Other: '+g('fHowHeardOther'):(g('fHowHeard')||null);
   const {error}=await supabase.from('intake_submissions').insert({
     form_type:'individual',
     first_name:g('fFirstName'),
@@ -225,15 +242,15 @@ async function submitForm(){
     email:g('fEmail'),
     phone:g('fPhone')||null,
     suburb:g('fSuburb')||null,
-    how_heard:g('fHowHeard')||null,
+    how_heard:howHeard,
     emergency_contact_name:g('fEmName'),
     emergency_contact_phone:g('fEmPhone'),
     service_focus:g('fServiceFocus'),
     areas_of_interest:getChips('areasChips')||null,
     current_challenges:g('fChallenges')||null,
     wellbeing_goals:g('fGoals')||null,
-    consent_accepted:document.getElementById('cConsent').checked,
-    consent_version:'individual-v1-single-checkbox',
+    consent_accepted:c1&&c2&&c3,
+    consent_version:'individual-v2-three-checkboxes',
     signature_name:g('fFirstName')+' '+g('fLastName')
   });
 
@@ -247,13 +264,13 @@ async function submitForm(){
 // Auto-save
 function save(){try{localStorage.setItem('individual_intake',JSON.stringify({
   fFirstName:g('fFirstName'),fLastName:g('fLastName'),fPreferred:g('fPreferred'),
-  fEmail:g('fEmail'),fPhone:g('fPhone'),fSuburb:g('fSuburb'),fHowHeard:g('fHowHeard'),
+  fEmail:g('fEmail'),fPhone:g('fPhone'),fSuburb:g('fSuburb'),fHowHeard:g('fHowHeard'),fHowHeardOther:g('fHowHeardOther'),
   fEmName:g('fEmName'),fEmPhone:g('fEmPhone'),fServiceFocus:g('fServiceFocus'),
   fChallenges:g('fChallenges'),fGoals:g('fGoals'),areas:getChips('areasChips')
 }));}catch(e){}}
 function restore(){try{const s=JSON.parse(localStorage.getItem('individual_intake'));if(!s)return;
-  ['fFirstName','fLastName','fPreferred','fEmail','fPhone','fSuburb','fEmName','fEmPhone','fChallenges','fGoals'].forEach(id=>{if(s[id])document.getElementById(id).value=s[id];});
-  if(s.fHowHeard)document.getElementById('fHowHeard').value=s.fHowHeard;
+  ['fFirstName','fLastName','fPreferred','fEmail','fPhone','fSuburb','fEmName','fEmPhone','fChallenges','fGoals','fHowHeardOther'].forEach(id=>{if(s[id])document.getElementById(id).value=s[id];});
+  if(s.fHowHeard){document.getElementById('fHowHeard').value=s.fHowHeard;toggleHowHeardOther();}
   if(s.fServiceFocus)document.getElementById('fServiceFocus').value=s.fServiceFocus;
   if(s.areas){const a=s.areas.split(', ');document.querySelectorAll('#areasChips .chip').forEach(c=>{if(a.includes(c.textContent))c.classList.add('selected');});}
 }catch(e){}}
