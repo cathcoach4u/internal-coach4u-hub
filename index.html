@@ -219,7 +219,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.25.3</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.25.4</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -7489,16 +7489,20 @@ function renderAbout(){
   );
 
   html+=card('Features','<ul style="list-style:disc;padding-left:20px;margin:0;">'+
-    listItem('Dashboard','Overview with total contacts, active clients, ThriveHQ trials')+
-    listItem('CRM Master List','Contact management with search, grouped alphabetically')+
+    listItem('Dashboard','Overview with total contacts, active clients, ThriveHQ trials, intake alerts')+
+    listItem('CRM','Master List, Prospect List, Client List and Dashboard, Intake Forms, Invoices — all under one area')+
     listItem('Prospects','Sales pipeline with status tracking, dated activity logs, follow-up dates, overdue highlighting')+
-    listItem('Clients','Client relationship management with linked members, referrers, Xero & SharePoint links')+
-    listItem('ThriveHQ','ADHD group program management — intake forms, trials, members, renewals, coaching calls')+
-    listItem('Intake Forms','Public intake form for new ThriveHQ members with consent, flows into CRM')+
-    listItem('Strengths','CliftonStrengths tracking with top 10 per contact, PDF report uploads')+
+    listItem('Clients','Client relationship management with linked members, referrers, Xero & SharePoint links, strengths reports')+
+    listItem('Intake Forms','Public intake forms for ThriveHQ, Couples and Individual clients with consent, flows into CRM')+
     listItem('Referrers','Referral partner management with linked contacts and payment tracking')+
-    listItem('Operations','Task management with priority/status, playbook, IT projects')+
-    listItem('Finance','Xero CSV import, income/expense analysis, transaction search')+
+    listItem('Pulses','Dashboard plus SAFE Pulse and Brain Pulse check-ins per client, with printable reports')+
+    listItem('Couples','Port Institute 2-hour Couples Intake live-session worksheet (5 steps, per-partner notes, localStorage-saved sessions)')+
+    listItem('ThriveHQ','ADHD group program management — trials, members, renewals, coaching calls')+
+    listItem('Strengths','CliftonStrengths tracking with top 10 per contact, PDF report uploads (Gallup, Personal Insights, Bring Need)')+
+    listItem('Agents','Parent/child AI agent management for Copilot Studio — versioning, stages, issues, SharePoint export')+
+    listItem('Writing Partner','AI-assisted writing helper for coaching content')+
+    listItem('Admin','Task management with priority/status, playbook, IT projects')+
+    listItem('Finance','Xero CSV import, income/expense analysis, transaction search, bill tracker')+
     listItem('C4U Bot','AI chat assistant that can add prospects, contacts, tasks, search CRM, and view dashboards')+
   '</ul>');
 
@@ -7517,7 +7521,9 @@ function renderAbout(){
     tableItem('prospect_notes','Dated activity log for prospects (calls, emails, meetings, notes)')+
     tableItem('clients','Client relationships with role, status, practitioner, links')+
     tableItem('client_members','Link table connecting clients to contacts')+
-    tableItem('intake_submissions','ThriveHQ intake form data with consent and ADHD info')+
+    tableItem('intake_submissions','Intake form data (ThriveHQ, Couples, Individual) with consent and form-specific fields')+
+    tableItem('pulse_results','SAFE Pulse check-in scores per pillar with coaching focus')+
+    tableItem('brain_pulse_submissions','Brain Pulse check-in scores with derived stage and question detail')+
     tableItem('thrivehq_trials','Trial memberships with dates and conversion tracking')+
     tableItem('membership_renewals','Renewal history with period dates and amounts')+
     tableItem('contact_reports','CliftonStrengths PDF report uploads (Gallup, Personal Insights, Bring Need)')+
@@ -7528,13 +7534,22 @@ function renderAbout(){
     tableItem('task_logs','Activity log for tasks (status updates, notes, actions)')+
     tableItem('finance_transactions','Financial data imported from Xero CSV')+
     tableItem('bills','Recurring and one-off bills with due dates, amounts, status')+
+    tableItem('agents','AI agent records (name, type parent/child, status, system prompt)')+
+    tableItem('agent_versions','Immutable snapshots of agent state on each save')+
+    tableItem('agent_stages','Agent communication stages/flows (e.g. Initial Enquiry)')+
+    tableItem('agent_templates','Stage messages (persona × platform combinations)')+
+    tableItem('agent_issues','Agent drift/issue log with status and fix_applied')+
     tableItem('bot_config','AI bot system prompt, model, and API configuration')+
   '</ul>');
 
   html+=card('Pages','<ul style="list-style:disc;padding-left:20px;margin:0;">'+
     '<li style="margin:6px 0;font-size:14px;color:#334155;"><strong style="color:#1e3a5f;">index.html</strong> — Main CRM app (single-page)</li>'+
-    '<li style="margin:6px 0;font-size:14px;color:#334155;"><strong style="color:#1e3a5f;">intake.html</strong> — Public ThriveHQ intake form</li>'+
+    '<li style="margin:6px 0;font-size:14px;color:#334155;"><strong style="color:#1e3a5f;">intake/thrivehq/</strong>, <strong style="color:#1e3a5f;">intake/couples/</strong>, <strong style="color:#1e3a5f;">intake/individual/</strong> — Public intake forms</li>'+
+    '<li style="margin:6px 0;font-size:14px;color:#334155;"><strong style="color:#1e3a5f;">portal/</strong> — Client-facing SAFE Pulse portal (check-in &amp; printable report)</li>'+
+    '<li style="margin:6px 0;font-size:14px;color:#334155;"><strong style="color:#1e3a5f;">brain-pulse/</strong> — Client-facing Brain Pulse portal</li>'+
+    '<li style="margin:6px 0;font-size:14px;color:#334155;"><strong style="color:#1e3a5f;">writing-partner/</strong> — Writing Partner helper</li>'+
     '<li style="margin:6px 0;font-size:14px;color:#334155;"><strong style="color:#1e3a5f;">bot/</strong> — C4U Bot AI assistant (separate PWA)</li>'+
+    '<li style="margin:6px 0;font-size:14px;color:#334155;"><strong style="color:#1e3a5f;">intake.html</strong> — Legacy, redirects to current ThriveHQ intake</li>'+
   '</ul>');
 
   document.getElementById('aboutContent').innerHTML=html;

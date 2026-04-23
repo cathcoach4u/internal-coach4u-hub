@@ -13,8 +13,9 @@ Single-page CRM app hosted on GitHub Pages with a Supabase backend. All CRM func
 | `brain-pulse/index.html` | Client-facing Brain Pulse portal |
 | `sw.js` | Service worker for PWA caching |
 | `manifest.json` | PWA manifest |
-| `intake.html` | Legacy ThriveHQ intake form |
-| `intake/` | Current intake subpages (thrivehq, couples, individual) — canonical |
+| `intake.html` | Legacy — now redirects to current ThriveHQ intake |
+| `intake/` | Current intake subpages (thrivehq, couples, individual) — canonical. Each has State/Postcode (AU+NZ), full street address, partner preferred name (couples) |
+| `writing-partner/` | Writing Partner AI helper (separate PWA) |
 | `bot/`, `bot.html` | Bot interface |
 | `schema.sql` | Original DB schema reference |
 
@@ -33,7 +34,7 @@ Areas and their pages (defined at line ~1423):
 - **Home**: Dashboard
 - **CRM**: Master List, Prospect List, Clients Dashboard, Client List, Intake Forms, Invoices
 - **Referrers**: Referral Hub, Payments
-- **Pulses**: SAFE Pulse, Brain Pulse (consolidated from former CRM+ThriveHQ pulse pages; client selector for per-client mini-portal view)
+- **Pulses**: Dashboard, SAFE Pulse, Brain Pulse (consolidated from former CRM+ThriveHQ pulse pages; client selector for per-client mini-portal view)
 - **Couples**: Couples Intake (Port Institute 2-hour worksheet, stored in localStorage)
 - **ThriveHQ**: Dashboard, Trials, Members, Renewals, Coaching Calls
 - **Strengths**: Dashboard, Strengths Hub
@@ -54,6 +55,7 @@ Areas and their pages (defined at line ~1423):
 
 All pulse pages live under the **Pulses** area. Screen IDs `clipulse`/`clibrainpulse` are the active client-facing views; `thqpulse`/`thqbrainpulse` screens still exist in HTML but are no longer linked from nav.
 
+- **Dashboard** (`pulsesdash`): landing page with quick-nav grid to SAFE/Brain Pulse
 - **SAFE Pulse**: loads `pulse_results`, rendered via `renderClientPulses()`
 - **Brain Pulse**: loads `brain_pulse_submissions`, rendered via `renderBrainPulseClients()`
 - Each view has a client selector so a single client's results across all pulse types are visible together as a mini portal
@@ -123,8 +125,8 @@ Parent agents represent the master system prompts for Copilot Studio. Child agen
 
 ### Versioning
 
-- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.25.1**, line ~221)
-- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v240**)
+- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.25.4**, line ~222)
+- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v249**)
 - **Both must be bumped on every release**
 
 ### Code patterns
