@@ -218,7 +218,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.23.1</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.23.2</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -2996,7 +2996,6 @@ function renderIntakeSubmissions(){
         <div style="font-size:12px;color:#64748b;">${s.email||''}</div>
         <div style="display:flex;gap:8px;margin-top:6px;font-size:11px;color:#94a3b8;flex-wrap:wrap;">
           ${showFormType?'<span style="background:'+(formTypeBg[ft]||'#f1f5f9')+';color:'+(formTypeColors[ft]||'#64748b')+';padding:2px 6px;border-radius:4px;font-weight:600;">'+(formTypeLabels[ft]||ft)+'</span>':''}
-          ${ft==='thrivehq'&&s.adhd_diagnosis?'<span style="background:#f5f3ff;color:#7c3aed;padding:2px 6px;border-radius:4px;font-weight:500;">'+s.adhd_diagnosis+'</span>':''}
           ${ft==='couples'&&s.secondary_name?'<span style="background:#fff1f2;color:#e11d48;padding:2px 6px;border-radius:4px;font-weight:500;">Partner: '+s.secondary_name+'</span>':''}
           ${ft==='individual'&&s.service_focus?'<span style="background:#ecfeff;color:#0891b2;padding:2px 6px;border-radius:4px;font-weight:500;">'+s.service_focus+'</span>':''}
           <span>${date}</span>
@@ -3004,15 +3003,14 @@ function renderIntakeSubmissions(){
       </div>`;
     });
   } else {
-    const progCol=formTypeFilter==='couples'?'Partner':formTypeFilter==='individual'?'Service Focus':'ADHD Status';
+    const progCol=formTypeFilter==='couples'?'Partner':formTypeFilter==='individual'?'Service Focus':'Details';
     html+=`<table><thead><tr><th>Name</th><th>Email</th>${showFormType?'<th>Program</th>':''}<th>${progCol}</th><th>Submitted</th><th>Status</th><th>Actions</th></tr></thead><tbody>`;
     filtered.forEach(s=>{
       const st=s.status||'New';
       const ft=s.form_type||'thrivehq';
       const date=s.submitted_at?new Date(s.submitted_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}):'';
       let progVal='';
-      if(ft==='thrivehq'&&s.adhd_diagnosis) progVal='<span style="background:#f5f3ff;color:#7c3aed;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;">'+s.adhd_diagnosis+'</span>';
-      else if(ft==='couples') progVal=s.secondary_name||'';
+      if(ft==='couples') progVal=s.secondary_name||'';
       else if(ft==='individual') progVal=s.service_focus||'';
       html+=`<tr>
         <td style="font-weight:600;">${s.preferred_name||s.first_name} ${s.last_name}</td>
