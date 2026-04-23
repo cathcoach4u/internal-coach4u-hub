@@ -218,7 +218,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.21.7</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.22.0</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -621,6 +621,13 @@ td .actions button{padding:8px 14px;font-size:12px;}
         <input id="prospLogMsg" placeholder="Add note..." style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;">
       </div>
     </div>
+    <div id="prospIntakeSection" style="display:none;margin-top:12px;padding:10px 12px;border:1px solid #e2e8f0;border-radius:8px;background:#f8fafc;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;flex-wrap:wrap;">
+        <div style="font-weight:700;font-size:13px;color:#1e3a5f;">Intake Form</div>
+        <button type="button" onclick="findMatchingIntakes()" id="prospFindIntakeBtn" class="btn btn-gray" style="padding:4px 10px;font-size:11px;">Find matching intake</button>
+      </div>
+      <div id="prospIntakeList" style="font-size:12px;color:#64748b;">No intake linked.</div>
+    </div>
     <div id="prospCreatedInfo" style="display:none;margin-top:12px;font-size:11px;color:#94a3b8;"></div>
     <div class="modal-actions">
       <button class="btn btn-gray" onclick="closeModal('prospModal')">Cancel</button>
@@ -1014,7 +1021,16 @@ td .actions button{padding:8px 14px;font-size:12px;}
       <select id="clReferredBy"><option value="">-- None --</option></select>
     </div>
     <div class="form-group"><label>Xero Invoice Link</label><input id="clXeroLink" placeholder="https://go.xero.com/..."></div>
-    <div class="form-group"><label>File Notes (SharePoint)</label><input id="clFileNotes" placeholder="https://netorgft4053847.sharepoint.com/..."></div>
+    <div class="form-group"><label>File Notes (SharePoint)</label>
+      <div style="display:flex;gap:6px;">
+        <input id="clFileNotes" placeholder="https://netorgft4053847.sharepoint.com/..." style="flex:1;">
+        <a id="clFileNotesOpen" href="#" target="_blank" onclick="event.preventDefault();const u=document.getElementById('clFileNotes').value.trim();if(u)window.open(u,'_blank');" style="display:flex;align-items:center;padding:0 12px;font-size:12px;color:#3b82f6;text-decoration:none;font-weight:600;white-space:nowrap;">Open &#8599;</a>
+      </div>
+    </div>
+    <div class="form-group" id="clReportsSection" style="display:none;">
+      <label>Strengths Reports</label>
+      <div id="clReportsArea" style="display:flex;flex-direction:column;gap:12px;"></div>
+    </div>
     <div class="form-group"><label>Notes</label><textarea id="clNotes"></textarea></div>
     <div class="modal-actions">
       <button class="btn btn-gray" onclick="closeModal('clientModal')">Cancel</button>
@@ -2109,12 +2125,129 @@ window.openProspectModal=function(id){
     const created=p.created_at?new Date(p.created_at).toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'}):'';
     createdInfo.textContent=created?'Added to system: '+created:'';
     createdInfo.style.display='block';
+    document.getElementById('prospIntakeSection').style.display='block';
+    renderProspectIntake(p);
   } else {
     logSection.style.display='none';
     createdInfo.style.display='none';
+    document.getElementById('prospIntakeSection').style.display='none';
   }
   document.getElementById('prospLogMsg').value='';
   document.getElementById('prospModal').classList.add('open');
+};
+
+function findProspectIntakes(p){
+  const linked=[],candidates=[];
+  const email=(p.email||'').toLowerCase().trim();
+  const phone=(p.phone||'').replace(/\D/g,'');
+  intakeSubmissions.forEach(s=>{
+    const sEmail=(s.email||'').toLowerCase().trim();
+    const sPhone=(s.phone||'').replace(/\D/g,'');
+    const sameContact=p.contact_id&&s.contact_id&&p.contact_id===s.contact_id;
+    const emailMatch=email&&sEmail&&email===sEmail;
+    const phoneMatch=phone&&sPhone&&phone.length>=6&&phone===sPhone;
+    if(sameContact) linked.push(s);
+    else if(emailMatch||phoneMatch) candidates.push({s,reason:emailMatch?'email':'phone'});
+  });
+  return {linked,candidates};
+}
+
+function renderProspectIntake(p){
+  const box=document.getElementById('prospIntakeList');
+  const btn=document.getElementById('prospFindIntakeBtn');
+  const {linked,candidates}=findProspectIntakes(p);
+  if(linked.length){
+    btn.style.display='none';
+    box.innerHTML=linked.map(s=>intakeSummaryHtml(s,'linked')).join('');
+  } else {
+    btn.style.display='inline-block';
+    btn.textContent=candidates.length?'Review '+candidates.length+' match'+(candidates.length>1?'es':''):'Find matching intake';
+    box.innerHTML='<div style="font-size:12px;color:#64748b;">No intake linked'+(candidates.length?' — click the button above to review matches.':'.')+'</div>';
+  }
+}
+
+function intakeSummaryHtml(s,mode){
+  const date=s.submitted_at?new Date(s.submitted_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}):'';
+  const ft=s.form_type||'thrivehq';
+  const label={thrivehq:'ThriveHQ',couples:'Couples',individual:'Individual'}[ft]||ft;
+  const action=mode==='linked'
+    ? `<button type="button" onclick="openIntakeDetailFromProspect('${s.id}')" class="btn btn-blue" style="padding:4px 10px;font-size:11px;">View</button>
+       <button type="button" onclick="unlinkProspectIntake('${s.id}')" class="btn btn-gray" style="padding:4px 10px;font-size:11px;">Unlink</button>`
+    : `<button type="button" onclick="linkProspectToIntake('${s.id}')" class="btn btn-green" style="padding:4px 10px;font-size:11px;">Link</button>`;
+  return `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;background:#fff;margin-bottom:6px;flex-wrap:wrap;">
+    <div style="min-width:0;flex:1;">
+      <div style="font-size:13px;font-weight:600;color:#1e293b;">${s.first_name||''} ${s.last_name||''} <span style="font-weight:500;color:#64748b;font-size:11px;">· ${label}</span></div>
+      <div style="font-size:11px;color:#64748b;">${s.email||''}${s.email&&s.phone?' · ':''}${s.phone||''}${date?' · '+date:''}</div>
+    </div>
+    <div style="display:flex;gap:6px;flex-shrink:0;">${action}</div>
+  </div>`;
+}
+
+window.openIntakeDetailFromProspect=function(intakeId){
+  closeModal('prospModal');
+  if(typeof window.openIntakeDetail==='function') window.openIntakeDetail(intakeId);
+};
+
+window.findMatchingIntakes=function(){
+  const id=document.getElementById('prospId').value;
+  const p=prospects.find(x=>x.id===id);
+  if(!p) return;
+  const {candidates}=findProspectIntakes(p);
+  const box=document.getElementById('prospIntakeList');
+  if(!candidates.length){
+    box.innerHTML='<div style="font-size:12px;color:#64748b;padding:6px 0;">No matching intake found by email or phone.</div>';
+    return;
+  }
+  box.innerHTML='<div style="font-size:11px;color:#64748b;margin-bottom:6px;">Confirm the match — the prospect\'s details remain source of truth.</div>'+
+    candidates.map(({s,reason})=>{
+      const html=intakeSummaryHtml(s,'candidate');
+      return html.replace('</div></div>','<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:#fef3c7;color:#92400e;font-weight:600;margin-left:6px;">matched '+reason+'</span></div></div>');
+    }).join('');
+};
+
+window.linkProspectToIntake=async function(intakeId){
+  const id=document.getElementById('prospId').value;
+  const p=prospects.find(x=>x.id===id);
+  const s=intakeSubmissions.find(x=>x.id===intakeId);
+  if(!p||!s) return;
+  if(!confirm('Link this intake to '+p.name+'?\n\nThe prospect\'s details stay as source of truth — intake data will be viewable but won\'t overwrite prospect fields.')) return;
+
+  // Ensure prospect has a contact_id (create contact if missing)
+  let contactId=p.contact_id;
+  if(!contactId){
+    const names=(p.name||'').split(/\s+/);
+    const first=names[0]||p.name||'';
+    const last=names.slice(1).join(' ')||'';
+    const existing=contacts.find(c=>c.first_name&&first&&c.first_name.toLowerCase()===first.toLowerCase()&&(c.last_name||'').toLowerCase()===last.toLowerCase());
+    if(existing){
+      contactId=existing.id;
+    } else {
+      const {data:inserted,error:cErr}=await supabase.from('contacts').insert({
+        first_name:first,last_name:last,email:p.email,phone:p.phone,contact_type:'Prospect'
+      }).select();
+      if(cErr){toast('Error creating contact: '+cErr.message,'error');return;}
+      contactId=inserted[0].id;
+    }
+    await supabase.from('prospects').update({contact_id:contactId}).eq('id',p.id);
+  }
+
+  const {error}=await supabase.from('intake_submissions')
+    .update({contact_id:contactId,status:s.status==='New'?'Reviewed':s.status})
+    .eq('id',intakeId);
+  if(error){toast('Error linking intake: '+error.message,'error');return;}
+  await Promise.all([loadProspects(),loadContacts(),loadIntakeSubmissions()]);
+  openProspectModal(p.id);
+  toast('Intake linked','success');
+};
+
+window.unlinkProspectIntake=async function(intakeId){
+  if(!confirm('Unlink this intake from the prospect?')) return;
+  const {error}=await supabase.from('intake_submissions').update({contact_id:null}).eq('id',intakeId);
+  if(error){toast('Error: '+error.message,'error');return;}
+  const id=document.getElementById('prospId').value;
+  await loadIntakeSubmissions();
+  openProspectModal(id);
+  toast('Intake unlinked','success');
 };
 
 window.searchProspContacts=function(){
@@ -2605,7 +2738,51 @@ window.openClientModal=function(id){
   refSel.innerHTML='<option value="">-- None --</option>'+referrals.map(r=>'<option value="'+r.id+'"'+(c&&c.referred_by===r.id?' selected':'')+'>'+r.name+'</option>').join('');
   renderMemberSelect();
   renderTempMembers();
+  const reportsSection=document.getElementById('clReportsSection');
+  if(c){
+    reportsSection.style.display='block';
+    renderClientReports();
+  } else {
+    reportsSection.style.display='none';
+  }
   document.getElementById('clientModal').classList.add('open');
+};
+
+function renderClientReports(){
+  const area=document.getElementById('clReportsArea');
+  if(!tempMembers||!tempMembers.length){
+    area.innerHTML='<div style="font-size:12px;color:#94a3b8;padding:8px 0;">Link a member above to upload their strengths reports.</div>';
+    return;
+  }
+  area.innerHTML=tempMembers.map(mid=>{
+    const name=getContactName(mid);
+    const rows=reportTypes.map(rt=>{
+      const report=contactReports.find(r=>r.contact_id===mid&&r.report_type===rt.key);
+      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border:1px solid #f1f5f9;border-radius:8px;background:#f8fafc;gap:8px;">
+        <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">
+          <span style="font-size:14px;">&#128196;</span>
+          <span style="font-size:12px;font-weight:600;color:#1e293b;white-space:nowrap;">${rt.label}</span>
+          ${report?'<a href="'+report.url+'" target="_blank" style="font-size:11px;color:#3b82f6;text-decoration:none;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;" onmouseover="this.style.textDecoration=\'underline\'" onmouseout="this.style.textDecoration=\'none\'">'+report.filename+'</a>':'<span style="font-size:11px;color:#94a3b8;">Not uploaded</span>'}
+        </div>
+        <div style="flex-shrink:0;display:flex;gap:6px;align-items:center;">
+          ${report?'<a href="'+report.url+'" target="_blank" style="background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;border-radius:6px;padding:6px 10px;font-size:11px;font-weight:600;text-decoration:none;">View</a>':''}
+          <label style="background:${report?'#f1f5f9':'#1e3a5f'};color:${report?'#64748b':'#fff'};border:none;border-radius:6px;padding:7px 12px;font-size:11px;font-weight:600;cursor:pointer;">
+            ${report?'Replace':'Upload'}
+            <input type="file" accept=".pdf" style="display:none;" onchange="uploadClientReport('${mid}','${rt.key}',this.files[0],this)">
+          </label>
+        </div>
+      </div>`;
+    }).join('');
+    return `<div style="border:1px solid #e2e8f0;border-radius:8px;padding:10px;background:#fff;">
+      <div style="font-weight:700;font-size:12px;color:#1e3a5f;margin-bottom:8px;">${name}</div>
+      <div style="display:flex;flex-direction:column;gap:6px;">${rows}</div>
+    </div>`;
+  }).join('');
+}
+
+window.uploadClientReport=async function(contactId,reportType,file,input){
+  await uploadReport(contactId,reportType,file,input);
+  renderClientReports();
 };
 
 function renderMemberSelect(){
@@ -2626,11 +2803,13 @@ window.addMemberToClient=function(){
   tempMembers.push(val);
   sel.value='';
   renderTempMembers();
+  if(document.getElementById('clReportsSection').style.display==='block') renderClientReports();
 };
 
 window.removeTempMember=function(mid){
   tempMembers=tempMembers.filter(m=>m!==mid);
   renderTempMembers();
+  if(document.getElementById('clReportsSection').style.display==='block') renderClientReports();
 };
 
 window.saveClient=async function(){

@@ -111,8 +111,8 @@ Parent agents represent the master system prompts for Copilot Studio. Child agen
 
 ### Versioning
 
-- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently v3.14.5, line 218)
-- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently v158)
+- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently v3.22.0, line 221)
+- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently v213)
 - **Both must be bumped on every release**
 
 ### Code patterns
@@ -158,3 +158,18 @@ Parent agents represent the master system prompts for Copilot Studio. Child agen
 - No active feature branches
 - Commit messages: Concise, imperative mood
 - Version bumping: Always bump both `index.html` version (v3.14.x) and `sw.js` cache (v{N}) on release
+
+## Prospect ↔ Intake linking
+
+- **Intake Form section** in the prospect modal (`#prospIntakeSection`, HTML ~line 624) shows any linked intake submission or candidate matches.
+- **Matching logic** (`findProspectIntakes`, `renderProspectIntake` ~line 2130): matches on shared `contact_id`, then falls back to email or phone (digits-only, length ≥6). Manual confirmation only — no auto-merge.
+- **Link action** (`linkProspectToIntake` ~line 2200): ensures the prospect has a `contact_id` (creates one from the name if missing), then sets `intake_submissions.contact_id = prospect.contact_id`. Also bumps intake status `New → Reviewed`.
+- **Source-of-truth rule**: prospect/contact fields are never overwritten by intake data — the prospect record wins. The intake becomes viewable via `openIntakeDetailFromProspect` but is never merged into prospect fields.
+- **Unlink** (`unlinkProspectIntake`): clears `intake_submissions.contact_id`.
+
+## Client detail — strengths reports
+
+- **Reports section** in the client modal (`#clReportsSection`, HTML ~line 1020) renders per-linked-member cards showing the three report types (Gallup, Personal Insights, Bring Need) from `contact_reports`.
+- **Render function**: `renderClientReports()` (~line 2750) iterates `tempMembers`; re-rendered by `addMemberToClient` / `removeTempMember` / `uploadClientReport`.
+- **View vs. Upload**: each report row has both a filename link and an explicit "View" button (opens the Supabase storage URL in a new tab). Upload/Replace uses the shared `uploadReport()` handler.
+- **File Notes SharePoint link** (`#clFileNotes`) now has an "Open ↗" button next to the input.
