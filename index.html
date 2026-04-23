@@ -218,7 +218,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.24.1</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.24.2</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -585,7 +585,8 @@ td .actions button{padding:8px 14px;font-size:12px;}
     <!-- COUPLES INTAKE (Port Institute Worksheet) -->
     <div class="screen" id="screen-couplesintake">
       <div class="toolbar" style="flex-wrap:wrap;gap:8px;">
-        <input class="search-input" id="coupIntakeClients" placeholder="Client Name(s) e.g. Bob & Sue" style="max-width:260px;" onchange="saveCouplesIntake()">
+        <input class="search-input" id="coupP1Name" placeholder="Partner 1 name" style="max-width:160px;" oninput="updateCouplesPartnerHeaders();saveCouplesIntake()">
+        <input class="search-input" id="coupP2Name" placeholder="Partner 2 name" style="max-width:160px;" oninput="updateCouplesPartnerHeaders();saveCouplesIntake()">
         <input type="date" id="coupIntakeDate" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;font-family:inherit;" onchange="saveCouplesIntake()">
         <select id="coupIntakeSessionPicker" onchange="loadCouplesIntakeSession(this.value)" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;font-family:inherit;">
           <option value="">Load session...</option>
@@ -3285,35 +3286,69 @@ function couplesIntakeSaveIndex(idx){localStorage.setItem('couplesIntakeIndex',J
 
 let currentCouplesIntakeId=null;
 
-function itemFieldId(stepIdx,secIdx,itemIdx){return 'ci_'+stepIdx+'_'+secIdx+'_'+itemIdx;}
+function itemFieldId(stepIdx,secIdx,itemIdx,partner){return 'ci_'+stepIdx+'_'+secIdx+'_'+itemIdx+(partner?'_'+partner:'');}
+
+function getCouplesNames(){
+  const p1=(document.getElementById('coupP1Name')?.value||'Partner 1').trim()||'Partner 1';
+  const p2=(document.getElementById('coupP2Name')?.value||'Partner 2').trim()||'Partner 2';
+  return {p1,p2};
+}
+
+window.updateCouplesPartnerHeaders=function(){
+  const {p1,p2}=getCouplesNames();
+  document.querySelectorAll('.coup-p1-header').forEach(el=>el.textContent=p1);
+  document.querySelectorAll('.coup-p2-header').forEach(el=>el.textContent=p2);
+};
+
+window.toggleCouplesStep=function(si){
+  const body=document.getElementById('coup-step-body-'+si);
+  const arrow=document.getElementById('coup-step-arrow-'+si);
+  if(!body) return;
+  const open=body.style.display!=='none';
+  body.style.display=open?'none':'block';
+  if(arrow) arrow.textContent=open?'▶':'▼';
+};
 
 function renderCouplesIntake(){
   const form=document.getElementById('coupIntakeForm');
   if(!form) return;
   if(!currentCouplesIntakeId) currentCouplesIntakeId=Date.now().toString();
-  let html=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 20px;margin-bottom:16px;">
-    <div style="font-family:'Quicksand',sans-serif;font-size:18px;font-weight:700;color:#1e3a5f;margin-bottom:4px;">Assessment &amp; Formulation Worksheet</div>
-    <div style="font-size:12px;color:#64748b;">Port Institute - 2 hour couples intake prompt. Notes save automatically to this device.</div>
-  </div>`;
+  const {p1,p2}=getCouplesNames();
+  const taStyle='width:100%;min-height:42px;padding:5px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;font-family:inherit;resize:vertical;box-sizing:border-box;';
+  let html='';
   couplesIntakeConfig.forEach((step,si)=>{
-    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid ${step.color};border-radius:10px;padding:14px 18px;margin-bottom:12px;">
-      <div style="font-family:'Quicksand',sans-serif;font-size:16px;font-weight:700;color:${step.color};margin-bottom:10px;">${step.step}</div>`;
+    const open=si<3; // Steps 1-3 open by default; 4-5 collapsed
+    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid ${step.color};border-radius:10px;margin-bottom:10px;overflow:hidden;">
+      <div onclick="toggleCouplesStep(${si})" style="display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;user-select:none;">
+        <span id="coup-step-arrow-${si}" style="font-size:11px;color:${step.color};font-weight:700;">${open?'▼':'▶'}</span>
+        <span style="font-family:'Quicksand',sans-serif;font-size:15px;font-weight:700;color:${step.color};flex:1;">${step.step}</span>
+        ${si>=3?'<span style="font-size:10px;color:#94a3b8;font-weight:600;">Session 2+</span>':''}
+      </div>
+      <div id="coup-step-body-${si}" style="display:${open?'block':'none'};padding:0 16px 14px;">`;
+    // Sticky partner header row within step
+    html+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:6px 0 8px;border-bottom:2px solid ${step.color}22;margin-bottom:10px;position:sticky;top:52px;background:#fff;z-index:2;">
+      <div style="font-size:11px;font-weight:700;color:${step.color};text-align:center;" class="coup-p1-header">${p1}</div>
+      <div style="font-size:11px;font-weight:700;color:${step.color};text-align:center;" class="coup-p2-header">${p2}</div>
+    </div>`;
     step.sections.forEach((sec,sidx)=>{
       html+=`<div style="margin-bottom:14px;">
-        <div style="font-weight:700;font-size:13px;color:#1e293b;margin-bottom:6px;text-decoration:underline;">${sec.name}</div>`;
+        <div style="font-size:12px;font-weight:700;color:#1e293b;margin-bottom:8px;padding:4px 8px;background:${step.color}12;border-radius:4px;">${sec.name}</div>`;
       sec.items.forEach((item,ii)=>{
-        const fid=itemFieldId(si,sidx,ii);
-        html+=`<div style="margin-bottom:8px;">
-          <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:#475569;margin-bottom:3px;">
-            <input type="checkbox" id="${fid}_chk" onchange="saveCouplesIntake()" style="margin-top:3px;">
+        const fidBase=itemFieldId(si,sidx,ii);
+        html+=`<div style="margin-bottom:10px;">
+          <label style="display:flex;align-items:flex-start;gap:6px;font-size:11px;color:#64748b;margin-bottom:4px;cursor:pointer;">
+            <input type="checkbox" id="${fidBase}_chk" onchange="saveCouplesIntake()" style="margin-top:2px;flex-shrink:0;">
             <span>${item}</span>
           </label>
-          <textarea id="${fid}" placeholder="Notes..." oninput="saveCouplesIntake()" style="width:100%;min-height:38px;padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;font-family:inherit;resize:vertical;box-sizing:border-box;"></textarea>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <textarea id="${fidBase}_p1" placeholder="${p1}..." oninput="saveCouplesIntake()" style="${taStyle}"></textarea>
+            <textarea id="${fidBase}_p2" placeholder="${p2}..." oninput="saveCouplesIntake()" style="${taStyle}"></textarea>
+          </div>
         </div>`;
       });
       html+=`</div>`;
     });
-    html+=`</div>`;
+    html+=`</div></div>`;
   });
   form.innerHTML=html;
   loadCouplesIntakeValues();
@@ -3321,9 +3356,11 @@ function renderCouplesIntake(){
 }
 
 function collectCouplesIntakeState(){
+  const p1val=document.getElementById('coupP1Name')?.value||'';
+  const p2val=document.getElementById('coupP2Name')?.value||'';
   const state={
     id:currentCouplesIntakeId,
-    clients:document.getElementById('coupIntakeClients')?.value||'',
+    p1:p1val,p2:p2val,
     date:document.getElementById('coupIntakeDate')?.value||'',
     updated_at:new Date().toISOString(),
     fields:{}
@@ -3331,10 +3368,11 @@ function collectCouplesIntakeState(){
   couplesIntakeConfig.forEach((step,si)=>{
     step.sections.forEach((sec,sidx)=>{
       sec.items.forEach((_,ii)=>{
-        const fid=itemFieldId(si,sidx,ii);
-        const txt=document.getElementById(fid);
-        const chk=document.getElementById(fid+'_chk');
-        if(txt||chk) state.fields[fid]={text:txt?txt.value:'',done:chk?chk.checked:false};
+        const fidBase=itemFieldId(si,sidx,ii);
+        const chk=document.getElementById(fidBase+'_chk');
+        const t1=document.getElementById(fidBase+'_p1');
+        const t2=document.getElementById(fidBase+'_p2');
+        state.fields[fidBase]={done:chk?chk.checked:false,p1:t1?t1.value:'',p2:t2?t2.value:''};
       });
     });
   });
@@ -3345,8 +3383,9 @@ window.saveCouplesIntake=function(showToast){
   if(!currentCouplesIntakeId) currentCouplesIntakeId=Date.now().toString();
   const state=collectCouplesIntakeState();
   localStorage.setItem(couplesIntakeKey(state.id),JSON.stringify(state));
+  const label=(state.p1&&state.p2?state.p1+' & '+state.p2:state.p1||state.p2||'(unnamed)');
   const idx=couplesIntakeIndex().filter(x=>x.id!==state.id);
-  idx.unshift({id:state.id,clients:state.clients,date:state.date,updated_at:state.updated_at});
+  idx.unshift({id:state.id,clients:label,date:state.date,updated_at:state.updated_at});
   couplesIntakeSaveIndex(idx.slice(0,50));
   if(showToast) toast('Saved','success');
   refreshCouplesIntakePicker();
@@ -3357,26 +3396,28 @@ function loadCouplesIntakeValues(){
   const raw=localStorage.getItem(couplesIntakeKey(currentCouplesIntakeId));
   if(!raw) return;
   let state;try{state=JSON.parse(raw);}catch(e){return;}
-  if(state.clients!==undefined){const el=document.getElementById('coupIntakeClients');if(el) el.value=state.clients;}
+  const p1el=document.getElementById('coupP1Name');if(p1el&&state.p1!==undefined) p1el.value=state.p1;
+  const p2el=document.getElementById('coupP2Name');if(p2el&&state.p2!==undefined) p2el.value=state.p2;
   if(state.date!==undefined){const el=document.getElementById('coupIntakeDate');if(el) el.value=state.date;}
-  Object.entries(state.fields||{}).forEach(([fid,v])=>{
-    const txt=document.getElementById(fid);if(txt) txt.value=v.text||'';
-    const chk=document.getElementById(fid+'_chk');if(chk) chk.checked=!!v.done;
+  Object.entries(state.fields||{}).forEach(([fidBase,v])=>{
+    const chk=document.getElementById(fidBase+'_chk');if(chk) chk.checked=!!v.done;
+    // Support legacy single-field format
+    const t1=document.getElementById(fidBase+'_p1');if(t1) t1.value=v.p1||v.text||'';
+    const t2=document.getElementById(fidBase+'_p2');if(t2) t2.value=v.p2||'';
   });
+  updateCouplesPartnerHeaders();
 }
 
 function refreshCouplesIntakePicker(){
   const sel=document.getElementById('coupIntakeSessionPicker');
   if(!sel) return;
   const idx=couplesIntakeIndex();
-  const current=sel.value;
   let html='<option value="">Load session...</option>';
   idx.forEach(s=>{
     const label=(s.clients||'(unnamed)')+(s.date?' - '+s.date:'')+(s.updated_at?' ['+new Date(s.updated_at).toLocaleString('en-AU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+']':'');
     html+=`<option value="${s.id}"${s.id===currentCouplesIntakeId?' selected':''}>${label.replace(/</g,'&lt;')}</option>`;
   });
   sel.innerHTML=html;
-  if(current&&!idx.find(x=>x.id===current)) sel.value='';
 }
 
 window.loadCouplesIntakeSession=function(id){
@@ -3388,7 +3429,8 @@ window.loadCouplesIntakeSession=function(id){
 window.newCouplesIntake=function(){
   if(!confirm('Start a new intake session? Current notes are saved locally.')) return;
   currentCouplesIntakeId=Date.now().toString();
-  const cl=document.getElementById('coupIntakeClients');if(cl) cl.value='';
+  const p1=document.getElementById('coupP1Name');if(p1) p1.value='';
+  const p2=document.getElementById('coupP2Name');if(p2) p2.value='';
   const dt=document.getElementById('coupIntakeDate');if(dt) dt.value=new Date().toISOString().slice(0,10);
   renderCouplesIntake();
   saveCouplesIntake();
