@@ -80,7 +80,41 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f6ff;color:#1e293b;m
       <div class="form-group"><label>Email <span class="req">*</span></label><input id="fEmail" type="email"></div>
       <div class="form-group"><label>Phone</label><input id="fPhone" type="tel"></div>
     </div>
-    <div class="form-group"><label>Suburb</label><input id="fSuburb"></div>
+    <div class="row">
+      <div class="form-group"><label>Suburb</label><input id="fSuburb"></div>
+      <div class="form-group"><label>State / Region</label><select id="fState">
+        <option value="">Select...</option>
+        <optgroup label="Australia">
+          <option value="ACT">ACT</option>
+          <option value="NSW">NSW</option>
+          <option value="NT">NT</option>
+          <option value="QLD">QLD</option>
+          <option value="SA">SA</option>
+          <option value="TAS">TAS</option>
+          <option value="VIC">VIC</option>
+          <option value="WA">WA</option>
+        </optgroup>
+        <optgroup label="New Zealand">
+          <option value="NZ-AUK">Auckland</option>
+          <option value="NZ-BOP">Bay of Plenty</option>
+          <option value="NZ-CAN">Canterbury</option>
+          <option value="NZ-GIS">Gisborne</option>
+          <option value="NZ-HKB">Hawke's Bay</option>
+          <option value="NZ-MWT">Manawatu-Wanganui</option>
+          <option value="NZ-MBH">Marlborough</option>
+          <option value="NZ-NSN">Nelson</option>
+          <option value="NZ-NTL">Northland</option>
+          <option value="NZ-OTA">Otago</option>
+          <option value="NZ-STL">Southland</option>
+          <option value="NZ-TKI">Taranaki</option>
+          <option value="NZ-TAS">Tasman</option>
+          <option value="NZ-WKO">Waikato</option>
+          <option value="NZ-WGN">Wellington</option>
+          <option value="NZ-WTC">West Coast</option>
+        </optgroup>
+      </select></div>
+      <div class="form-group"><label>Postcode</label><input id="fPostcode" inputmode="numeric" maxlength="5"></div>
+    </div>
     <div class="form-group">
       <label>How did you hear about Coach4U?</label>
       <select id="fHowHeard" onchange="toggleHowHeardOther()">
@@ -243,6 +277,8 @@ async function submitForm(){
     email:g('fEmail'),
     phone:g('fPhone')||null,
     suburb:g('fSuburb')||null,
+    state:g('fState')||null,
+    postcode:g('fPostcode')||null,
     how_heard:howHeard,
     emergency_contact_name:g('fEmName'),
     emergency_contact_phone:g('fEmPhone'),
@@ -265,12 +301,12 @@ async function submitForm(){
 // Auto-save
 function save(){try{localStorage.setItem('individual_intake',JSON.stringify({
   fFirstName:g('fFirstName'),fLastName:g('fLastName'),fPreferred:g('fPreferred'),
-  fEmail:g('fEmail'),fPhone:g('fPhone'),fSuburb:g('fSuburb'),fHowHeard:g('fHowHeard'),fHowHeardOther:g('fHowHeardOther'),
+  fEmail:g('fEmail'),fPhone:g('fPhone'),fSuburb:g('fSuburb'),fState:g('fState'),fPostcode:g('fPostcode'),fHowHeard:g('fHowHeard'),fHowHeardOther:g('fHowHeardOther'),
   fEmName:g('fEmName'),fEmPhone:g('fEmPhone'),fServiceFocus:g('fServiceFocus'),
   fChallenges:g('fChallenges'),fGoals:g('fGoals'),areas:getChips('areasChips')
 }));}catch(e){}}
 function restore(){try{const s=JSON.parse(localStorage.getItem('individual_intake'));if(!s)return;
-  ['fFirstName','fLastName','fPreferred','fEmail','fPhone','fSuburb','fEmName','fEmPhone','fChallenges','fGoals','fHowHeardOther'].forEach(id=>{if(s[id])document.getElementById(id).value=s[id];});
+  ['fFirstName','fLastName','fPreferred','fEmail','fPhone','fSuburb','fState','fPostcode','fEmName','fEmPhone','fChallenges','fGoals','fHowHeardOther'].forEach(id=>{if(s[id])document.getElementById(id).value=s[id];});
   if(s.fHowHeard){document.getElementById('fHowHeard').value=s.fHowHeard;toggleHowHeardOther();}
   if(s.fServiceFocus)document.getElementById('fServiceFocus').value=s.fServiceFocus;
   if(s.areas){const a=s.areas.split(', ');document.querySelectorAll('#areasChips .chip').forEach(c=>{if(a.includes(c.textContent))c.classList.add('selected');});}
