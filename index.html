@@ -218,7 +218,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.24.8</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.24.9</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -4497,7 +4497,8 @@ function buildPulseReportHTML(r,c,opts){
     (PULSE_QUESTIONS[key]||[]).forEach(q=>{
       const v=answers[q.id];
       const col=pulseScoreColor(v);
-      html+=`<div style="display:flex;gap:8px;align-items:flex-start;padding:4px 0;border-bottom:1px dashed #f1f5f9;">
+      const rowBg=(v&&v<=4)?'background:#fef2f2;border-radius:6px;margin:1px -4px;padding:4px;':'padding:4px 0;';
+      html+=`<div style="display:flex;gap:8px;align-items:flex-start;${rowBg}border-bottom:1px dashed #f1f5f9;">
         <div style="flex-shrink:0;min-width:24px;height:22px;border-radius:5px;background:${col};color:#fff;font-weight:800;font-size:11px;display:flex;align-items:center;justify-content:center;">${v||'—'}</div>
         <div style="font-size:10.5px;line-height:1.4;color:#475569;">${q.text}</div>
       </div>`;
@@ -4984,7 +4985,8 @@ function buildBrainPulseReportHTML(r,c,opts){
     (BRAIN_QUESTIONS[key]||[]).forEach(q=>{
       const v=r[q.id];
       const col=pulseScoreColor(v);
-      html+=`<div style="display:flex;gap:8px;align-items:flex-start;padding:4px 0;border-bottom:1px dashed #f1f5f9;">
+      const rowBg=(v&&v<=4)?'background:#fef2f2;border-radius:6px;margin:1px -4px;padding:4px;':'padding:4px 0;';
+      html+=`<div style="display:flex;gap:8px;align-items:flex-start;${rowBg}border-bottom:1px dashed #f1f5f9;">
         <div style="flex-shrink:0;min-width:24px;height:22px;border-radius:5px;background:${col};color:#fff;font-weight:800;font-size:11px;display:flex;align-items:center;justify-content:center;">${v||'—'}</div>
         <div style="font-size:10.5px;line-height:1.4;color:#475569;">${q.text}</div>
       </div>`;
