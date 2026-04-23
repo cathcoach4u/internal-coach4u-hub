@@ -218,7 +218,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.24.4</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.24.5</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -4485,8 +4485,8 @@ function buildPulseReportHTML(r,c,opts){
     <div class="pulse-quad">`;
   pillarKeys.forEach(key=>{
     const meta=PULSE_PILLAR_META[key];
-    html+=`<div class="pulse-card" style="border-radius:12px;border:1px solid ${meta.borderColor};background:#fff;overflow:hidden;">
-      <div style="background:${meta.headerBg};padding:8px 12px;display:flex;align-items:center;gap:8px;">
+    html+=`<div class="pulse-card" style="border-radius:12px;border:1px solid #bfdbfe;background:#fff;overflow:hidden;">
+      <div style="background:#dbeafe;padding:8px 12px;display:flex;align-items:center;gap:8px;">
         <div style="width:24px;height:24px;border-radius:6px;background:#003366;color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${meta.letter}</div>
         <div style="font-size:12px;font-weight:700;color:#0b3a6e;">${meta.label}</div>
         <div style="margin-left:auto;font-size:11px;font-weight:700;color:#003366;">${scores[key]}/50</div>
@@ -4972,8 +4972,8 @@ function buildBrainPulseReportHTML(r,c,opts){
     <div class="pulse-quad">`;
   roomKeys.forEach(key=>{
     const meta=BRAIN_ROOM_META[key];
-    html+=`<div class="pulse-card" style="border-radius:12px;border:1px solid ${meta.borderColor};background:#fff;overflow:hidden;">
-      <div style="background:${meta.headerBg};padding:8px 12px;display:flex;align-items:center;gap:8px;">
+    html+=`<div class="pulse-card" style="border-radius:12px;border:1px solid #bfdbfe;background:#fff;overflow:hidden;">
+      <div style="background:#dbeafe;padding:8px 12px;display:flex;align-items:center;gap:8px;">
         <div style="width:24px;height:24px;border-radius:6px;background:#003366;color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${meta.letter}</div>
         <div style="font-size:12px;font-weight:700;color:#0b3a6e;">${meta.label}</div>
         <div style="margin-left:auto;font-size:11px;font-weight:700;color:#003366;">${scores[key]}/50</div>
