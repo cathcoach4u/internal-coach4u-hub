@@ -80,6 +80,8 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f6ff;color:#1e293b;m
       <div class="form-group"><label>Email <span class="req">*</span></label><input id="fEmail" type="email"></div>
       <div class="form-group"><label>Phone</label><input id="fPhone" type="tel"></div>
     </div>
+    <div class="form-group"><label>Street Address</label><input id="fAddress1" placeholder="e.g. 12 Smith Street"></div>
+    <div class="form-group"><label>Address Line 2 <span style="color:#94a3b8;font-weight:400;">(optional)</span></label><input id="fAddress2" placeholder="Unit, apartment, PO Box"></div>
     <div class="row">
       <div class="form-group"><label>Suburb</label><input id="fSuburb"></div>
       <div class="form-group"><label>State / Region</label><select id="fState">
@@ -276,6 +278,8 @@ async function submitForm(){
     preferred_name:g('fPreferred')||null,
     email:g('fEmail'),
     phone:g('fPhone')||null,
+    address_line_1:g('fAddress1')||null,
+    address_line_2:g('fAddress2')||null,
     suburb:g('fSuburb')||null,
     state:g('fState')||null,
     postcode:g('fPostcode')||null,
@@ -301,12 +305,12 @@ async function submitForm(){
 // Auto-save
 function save(){try{localStorage.setItem('individual_intake',JSON.stringify({
   fFirstName:g('fFirstName'),fLastName:g('fLastName'),fPreferred:g('fPreferred'),
-  fEmail:g('fEmail'),fPhone:g('fPhone'),fSuburb:g('fSuburb'),fState:g('fState'),fPostcode:g('fPostcode'),fHowHeard:g('fHowHeard'),fHowHeardOther:g('fHowHeardOther'),
+  fEmail:g('fEmail'),fPhone:g('fPhone'),fAddress1:g('fAddress1'),fAddress2:g('fAddress2'),fSuburb:g('fSuburb'),fState:g('fState'),fPostcode:g('fPostcode'),fHowHeard:g('fHowHeard'),fHowHeardOther:g('fHowHeardOther'),
   fEmName:g('fEmName'),fEmPhone:g('fEmPhone'),fServiceFocus:g('fServiceFocus'),
   fChallenges:g('fChallenges'),fGoals:g('fGoals'),areas:getChips('areasChips')
 }));}catch(e){}}
 function restore(){try{const s=JSON.parse(localStorage.getItem('individual_intake'));if(!s)return;
-  ['fFirstName','fLastName','fPreferred','fEmail','fPhone','fSuburb','fState','fPostcode','fEmName','fEmPhone','fChallenges','fGoals','fHowHeardOther'].forEach(id=>{if(s[id])document.getElementById(id).value=s[id];});
+  ['fFirstName','fLastName','fPreferred','fEmail','fPhone','fAddress1','fAddress2','fSuburb','fState','fPostcode','fEmName','fEmPhone','fChallenges','fGoals','fHowHeardOther'].forEach(id=>{if(s[id])document.getElementById(id).value=s[id];});
   if(s.fHowHeard){document.getElementById('fHowHeard').value=s.fHowHeard;toggleHowHeardOther();}
   if(s.fServiceFocus)document.getElementById('fServiceFocus').value=s.fServiceFocus;
   if(s.areas){const a=s.areas.split(', ');document.querySelectorAll('#areasChips .chip').forEach(c=>{if(a.includes(c.textContent))c.classList.add('selected');});}
