@@ -4691,7 +4691,7 @@ function buildBrainPulseReportHTML(r,c,opts){
   html+=`<div class="pulse-card" style="background:#f8fafc;border:1px solid #e2e8f0;border-left:6px solid ${stageColor};border-radius:12px;padding:16px 20px;margin-bottom:14px;">
     <div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#8a8a8a;font-weight:700;margin-bottom:8px;">Overall Result</div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
-      <div style="font-size:22px;font-weight:800;color:${stageColor};">${stage.emoji||''} ${r.stage}</div>
+      <div style="font-size:22px;font-weight:800;color:${stageColor};">${r.stage}</div>
       <div style="font-size:36px;font-weight:800;color:${stageColor};line-height:1;">${r.grand_total}<span style="font-size:14px;color:#94a3b8;font-weight:500;">/200</span></div>
     </div>
     <div style="font-size:12px;line-height:1.55;color:#4a4a4a;">${BRAIN_STAGE_DESC[r.stage]||''}</div>
