@@ -4442,9 +4442,9 @@ function buildPulseReportHTML(r,c,opts){
     const meta=PULSE_PILLAR_META[key];
     html+=`<div class="pulse-card" style="border-radius:12px;border:1px solid ${meta.borderColor};background:#fff;overflow:hidden;">
       <div style="background:${meta.headerBg};padding:8px 12px;display:flex;align-items:center;gap:8px;">
-        <div style="width:24px;height:24px;border-radius:6px;background:${meta.color};color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${meta.letter}</div>
+        <div style="width:24px;height:24px;border-radius:6px;background:#003366;color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${meta.letter}</div>
         <div style="font-size:12px;font-weight:700;color:#0b3a6e;">${meta.label}</div>
-        <div style="margin-left:auto;font-size:11px;font-weight:700;color:${meta.color};">${scores[key]}/50</div>
+        <div style="margin-left:auto;font-size:11px;font-weight:700;color:#003366;">${scores[key]}/50</div>
       </div>
       <div style="padding:6px 12px 10px;">`;
     (PULSE_QUESTIONS[key]||[]).forEach(q=>{
@@ -4929,9 +4929,9 @@ function buildBrainPulseReportHTML(r,c,opts){
     const meta=BRAIN_ROOM_META[key];
     html+=`<div class="pulse-card" style="border-radius:12px;border:1px solid ${meta.borderColor};background:#fff;overflow:hidden;">
       <div style="background:${meta.headerBg};padding:8px 12px;display:flex;align-items:center;gap:8px;">
-        <div style="width:24px;height:24px;border-radius:6px;background:${meta.color};color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${meta.letter}</div>
+        <div style="width:24px;height:24px;border-radius:6px;background:#003366;color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${meta.letter}</div>
         <div style="font-size:12px;font-weight:700;color:#0b3a6e;">${meta.label}</div>
-        <div style="margin-left:auto;font-size:11px;font-weight:700;color:${meta.color};">${scores[key]}/50</div>
+        <div style="margin-left:auto;font-size:11px;font-weight:700;color:#003366;">${scores[key]}/50</div>
       </div>
       <div style="padding:6px 12px 10px;">`;
     (BRAIN_QUESTIONS[key]||[]).forEach(q=>{
