@@ -218,7 +218,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.24.0</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.24.1</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -3243,38 +3243,39 @@ window.convertIntakeToClient=async function(id){
 // ── COUPLES INTAKE (Port Institute Assessment & Formulation Worksheet) ──
 const couplesIntakeConfig=[
   {step:'Step 1: Engagement',color:'#5c8a7a',sections:[
-    {name:'Non-Verbals',items:['Shake Hands','Baseline - Assess Breath/Colour','Counter-Transference','Reassurance bids']},
-    {name:'Verbals',items:['How did you find me?','Have you done therapy before?']},
-    {name:'Protocols',items:['Session Structure']},
-    {name:'Your Expectations',items:['Confidentiality','Contact with you','Cancellation','Payment']},
-    {name:'Client',items:['Expectations/Questions','Client Goals','Individual/Positively Framed']}
+    {name:'Online Setup',items:['Tech check - audio and video clear for both?','Are they together (same screen) or on separate devices?','Confirm they are in a private space and cannot be overheard','Recording policy - confirm not recording unless agreed']},
+    {name:'Non-Verbals',items:['Warm welcome - greet both by name, confirm preferred names','Observe energy, body language and affect through camera','Counter-Transference - notice your own reactions','Reassurance bids - watch for nervous energy, reassure as needed']},
+    {name:'Verbals',items:['How did you find me?','Have you done therapy or coaching before? Online or in person?']},
+    {name:'Protocols',items:['Session Structure - outline how the 2 hours will run','What happens if connection drops (who calls back, how)']},
+    {name:'Your Expectations',items:['Confidentiality - what stays in the room (and limits e.g. safety)','Contact with you - how to reach me between sessions','Cancellation and rescheduling policy','Payment - confirm arrangements']},
+    {name:'Client',items:["Expectations/Questions - what are they hoping for today?","Client Goals - what does a good outcome look like for them?","Individual/Positively Framed - keep goals forward-looking"]}
   ]},
   {step:'Step 2: Scoping',color:'#0891b2',sections:[
-    {name:'Demographics',items:['Relationship Status','Children','Previous Relationships',"Ex's"]},
-    {name:'Work/Finances',items:['Role','Stability','Enjoyment','Working Hours','Intrusion of Work','Status','Change Plans']},
-    {name:'Health',items:['Couple','Children','History of past issues e.g. cancer']},
-    {name:'Drug and Alcohol Use',items:['Frequency','Type','Changes','Partner perspectives']}
+    {name:'Demographics',items:['Relationship Status - how long together, living together?','Children - ages, living arrangements','Previous Relationships - significant history',"Ex's - ongoing contact, co-parenting?"]},
+    {name:'Work/Finances',items:['Role - what do they each do?','Stability - secure employment?','Enjoyment - do they like their work?','Working Hours - how much time apart/together?','Intrusion of Work - does work spill into relationship time?','Status - career pressures or ambitions creating tension?','Change Plans - any upcoming changes?']},
+    {name:'Health',items:['Couple - any joint health concerns?','Children - any health needs?','History of past issues e.g. cancer, mental health, chronic illness']},
+    {name:'Drug and Alcohol Use',items:['Frequency - how often, both partners?','Type - what and how much?','Changes - increased lately?','Partner perspectives - does one partner have concerns about the other?']}
   ]},
   {step:'Step 3: Attachment',color:'#b87a90',sections:[
-    {name:'Parents',items:['Parents Relationship','Alive/Dead','Together/Separated/Divorce','Dates/How/Why','Quality - (probe for evidence: touch/emotional connection/affection/appreciation/teamwork/respect)','Change over time']},
-    {name:'Childhood Relationship with Parents',items:['Closeness - probe for evidence','Touch/Discipline patterns','Praise/Emotional Connection','Life Shocks/Transition Age/Impact/Support','Siblings Birth Order/Fairness/Roles']},
-    {name:'Love Story',items:['Connection Points','Initial Perceptions','Positive Behaviours','Brain State Changes']},
-    {name:'Transitions',items:['Length of Honeymoon','Engagement','Mutuality','Breaches']},
-    {name:'External Impacts',items:['Life Shocks/Trauma/Abuse','Betrayal and Loss','Use the Lens of Attachment Impact (Support/Sharing/Empathy and Collaboration)']}
+    {name:'Parents',items:['Parents Relationship - what did they model?','Alive/Dead - losses and grief','Together/Separated/Divorce - stability of home','Dates/How/Why - when did things change?','Quality - probe for evidence: touch, emotional connection, affection, appreciation, teamwork, respect','Change over time - did things improve or deteriorate?']},
+    {name:'Childhood Relationship with Parents',items:['Closeness - probe for evidence, emotional availability','Touch/Discipline patterns - physical affection vs punishment','Praise/Emotional Connection - were they seen and heard?','Life Shocks/Transition Age/Impact/Support - what was hard growing up?','Siblings Birth Order/Fairness/Roles - family dynamics']},
+    {name:'Love Story',items:['Connection Points - what drew them to each other?','Initial Perceptions - first impressions','Positive Behaviours - what did they love about each other early on?','Brain State Changes - when did the warmth start to fade?']},
+    {name:'Transitions',items:['Length of Honeymoon - how long did the good phase last?','Engagement/Commitment - was this smooth?','Mutuality - did both want the same things?','Breaches - first signs of cracks']},
+    {name:'External Impacts',items:['Life Shocks/Trauma/Abuse - what happened to them as a couple?','Betrayal and Loss - any major ruptures?','Use the Lens of Attachment Impact (Support/Sharing/Empathy and Collaboration) - how did they respond to each other in hard times?']}
   ]},
   {step:'Step 4: Challenges',color:'#d97706',sections:[
-    {name:'Frustrations',items:['Tell on themselves using scaling questions (out of 10)','Speak as their partner (e.g. Bob speaking as Sue saying, "I get frustrated when Bob ...")','Headlines/No Justification/Keep Moving','Read the list to confirm frustrations, ask Partner to add any missing','Over 8 frustrations: cut off explanations/expansions','Switch Roles - (keep moving or you drown)']},
-    {name:'Betrayal',items:['Explain what you want (affairs/emotional affairs/violence/gambling/secrets)','Have couple tell on themselves','Concise Version (Who, What, When, Where)','Confirm with Partner','Check major breaches - promise to come back in session']},
-    {name:'Life Shocks',items:['Anything you missed - just ask','Explore more practical impacts of Life Shocks mentioned before (cost/job impacts/sex/etc)']}
+    {name:'Frustrations',items:['Tell on themselves using scaling questions (out of 10)','Speak as their partner (e.g. Bob speaking as Sue saying, "I get frustrated when Bob ...")','Headlines/No Justification/Keep Moving - keep it brief','Read the list back to confirm, ask partner to add anything missing',"Over 8 frustrations: gently cut off - 'I think we have enough to work with'",'Switch Roles - ask them to swap, keep energy moving (works well online - address each directly to camera)']},
+    {name:'Betrayal',items:['Explain what you want to explore (affairs/emotional affairs/violence/gambling/secrets)','Have each tell on themselves first','Concise Version - Who, What, When, Where','Confirm with Partner - any additions or corrections?','Check major breaches - promise to return to these in a future session']},
+    {name:'Life Shocks',items:['Anything you missed - just ask, leave space','Explore practical impacts of Life Shocks mentioned before (cost/job/sex/health/etc)']}
   ]},
   {step:'Step 5: Formulations',color:'#16a34a',sections:[
-    {name:'Strengths and Resources',items:['Specific Achievements','Target the Relationship/Coupleship where possible (e.g. You created a much safer home for your kids vs Sue you are a great Mum)']},
-    {name:'Familiar Connections',items:['Obvious (both from farming families/grew up poor/violence etc)','Emotional (Sounds like you both experienced loneliness/affection as children)','Contrasts (aspirational choices - you thought Bob had the perfect family)']},
-    {name:'Challenge/Gap Identification',items:["Couple first (e.g. Bob the Avoider never learnt to share feelings; Sue the Pursuer associates silences with secrecy and abandonment)","Identify the deficit (You don't have a working and safe model to raise problems)"]},
-    {name:'Deficit Consequence',items:['Couple focused','Build Past/Present and Future','Looking for nods/affirmations/corrections (make space if necessary)']},
-    {name:'Intervention Outline',items:['What needs to happen is this ...','Probably going to take about this long ...','Hard thing for you both is ...',"For you Bob it's this ...","For you Sue it's ..."]},
-    {name:'Feedback',items:['Listen and Validate','Correct if necessary']},
-    {name:'Formulation Example',items:["A) Because you couldn't talk about problems you tried avoiding issues ...",'B) Bob you coped by ...','C) Sue you coped by ...','D) This created this situation ...','E) Which you dealt with by ...','F) Kids/moved/Covid arrived and caused ...','G) And Bob coped by ...','H) And Sue coped by ...','I) Leaving you feeling ...','J) Which you coped with by ...','K) How I would suggest we approach this ...','L) How does that sound to you?','M) What do you like/dislike']}
+    {name:'Strengths and Resources',items:['Specific Achievements - name them clearly',"Target the Relationship/Coupleship - e.g. 'You created a much safer home for your kids' or 'Sue, you are a great Mum'"]},
+    {name:'Familiar Connections',items:['Obvious (both from farming families/grew up poor/violence etc)','Emotional (Sounds like you both experienced loneliness/lack of affection as children)',"Contrasts (aspirational choices - 'you thought Bob had the perfect family')"]},
+    {name:'Challenge/Gap Identification',items:["Name each pattern directly to the person - speak to them on screen: 'Bob, you're the Avoider - you never learnt to share your feelings. Sue, as the Pursuer, silence reads as secrecy or abandonment'","Identify the deficit: 'You don't have a working and safe model to raise problems together'"]},
+    {name:'Deficit Consequence',items:['Keep it couple-focused, not individual blame','Build Past/Present and Future arc','Watch for nods/affirmations on camera - pause, make space if needed']},
+    {name:'Intervention Outline',items:['What needs to happen is this ...','Probably going to take about this long ...','Hard thing for you both will be ...',"For you [Partner 1] it's this ...","For you [Partner 2] it's this ..."]},
+    {name:'Feedback',items:["Listen and Validate - don't move too fast",'Correct if necessary - gently']},
+    {name:'Formulation Example',items:["A) Because you couldn't talk about problems, you tried avoiding issues ...",'B) [Partner 1] you coped by ...','C) [Partner 2] you coped by ...','D) This created this situation ...','E) Which you dealt with by ...','F) [Life event e.g. kids/move/illness] arrived and caused ...','G) And [Partner 1] coped by ...','H) And [Partner 2] coped by ...','I) Leaving you both feeling ...','J) Which you coped with by ...','K) How I would suggest we approach this ...','L) How does that sound to you?','M) What do you like / what sits less well?']}
   ]}
 ];
 
