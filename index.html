@@ -219,7 +219,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.26.4</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.27.0</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -277,6 +277,12 @@ td .actions button{padding:8px 14px;font-size:12px;}
     <!-- CRM DASHBOARD -->
     <div class="screen" id="screen-crmdash">
       <div id="crmDashContent"></div>
+    </div>
+    <div class="screen" id="screen-couplesdash">
+      <div id="couplesDashContent"></div>
+    </div>
+    <div class="screen" id="screen-agentsdash">
+      <div id="agentsDashContent"></div>
     </div>
 
     <!-- MASTER LIST -->
@@ -1362,7 +1368,7 @@ window.navTo = function(tab,btn){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+tab).classList.add('active');
   window.scrollTo(0,0);
-  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ',thqintake:'Intake Forms',strdash:'Strengths',opsdash:'Admin',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Strengths Hub',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Task Management',playbook:'Lou\'s Playbook',itprojects:'IT Projects',agents:'Agents',writingpartner:'Writing Partner',findash:'Finance',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fintxns:'Transactions',thqbrainpulse:'Brain Pulse',clibrainpulse:'Brain Pulse',thqpulse:'SAFEty Pulse',clipulse:'SAFE Pulse',pulsesdash:'Pulses Dashboard',couplesintake:'Couples Intake'};
+  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ',thqintake:'Intake Forms',strdash:'Strengths',opsdash:'Admin',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Strengths Hub',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Task Management',playbook:'Lou\'s Playbook',itprojects:'IT Projects',agents:'Agents',writingpartner:'Writing Partner',findash:'Finance',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fintxns:'Transactions',thqbrainpulse:'Brain Pulse',clibrainpulse:'Brain Pulse',thqpulse:'SAFEty Pulse',clipulse:'SAFE Pulse',pulsesdash:'Pulses Dashboard',couplesintake:'Couples Intake',couplesdash:'Couples Dashboard',agentsdash:'Agents Dashboard'};
   document.getElementById('pageTitle').textContent=titles[tab]||'Coach4U';
   // Sync area tab
   const area=pageToArea[tab]||'home';
@@ -1381,6 +1387,8 @@ window.navTo = function(tab,btn){
   else document.querySelectorAll('.nav-item').forEach(n=>{if(n.dataset.page===tab) n.classList.add('active');});
   if(tab==='dashboard') renderDashboard();
   if(tab==='pulsesdash') renderPulsesDash();
+  if(tab==='couplesdash') renderCouplesDash();
+  if(tab==='agentsdash') renderAgentsDash();
   if(tab==='crmdash') renderCrmDash();
   if(tab==='prospdash') renderProspDash();
   if(tab==='clidash') renderCliDash();
@@ -1434,13 +1442,13 @@ window.goToClient=function(clientId){
 // ── AREA TABS & SIDEBAR ──
 const areaConfig={
   home:{label:'Home',pages:[{id:'dashboard',icon:'&#9776;',label:'Dashboard'}]},
-  crm:{label:'CRM',pages:[{id:'masterlist',icon:'&#128209;',label:'Master List'},{id:'prospects',icon:'&#128203;',label:'Prospect List'},{id:'clidash',icon:'&#129309;',label:'Clients Dashboard'},{id:'clients',icon:'&#128101;',label:'Client List'},{id:'thqintake',icon:'&#128221;',label:'Intake Forms'},{id:'clinvoices',icon:'&#128206;',label:'Invoices'}]},
-  referrers:{label:'Referrers',pages:[{id:'referrals',icon:'&#128101;',label:'Referral Hub'},{id:'refpayments',icon:'&#128176;',label:'Payments'}]},
+  crm:{label:'CRM',pages:[{id:'crmdash',icon:'&#128200;',label:'Dashboard'},{id:'masterlist',icon:'&#128209;',label:'Master List'},{id:'prospects',icon:'&#128203;',label:'Prospect List'},{id:'clidash',icon:'&#129309;',label:'Clients Dashboard'},{id:'clients',icon:'&#128101;',label:'Client List'},{id:'thqintake',icon:'&#128221;',label:'Intake Forms'},{id:'clinvoices',icon:'&#128206;',label:'Invoices'}]},
+  referrers:{label:'Referrers',pages:[{id:'referrals',icon:'&#128200;',label:'Dashboard'},{id:'refpayments',icon:'&#128176;',label:'Payments'}]},
   pulses:{label:'Pulses',pages:[{id:'pulsesdash',icon:'&#128200;',label:'Dashboard'},{id:'clipulse',icon:'&#128147;',label:'SAFE Pulse'},{id:'clibrainpulse',icon:'&#129504;',label:'Brain Pulse'}]},
-  couples:{label:'Couples',pages:[{id:'couplesintake',icon:'&#128221;',label:'Couples Intake'}]},
+  couples:{label:'Couples',pages:[{id:'couplesdash',icon:'&#128200;',label:'Dashboard'},{id:'couplesintake',icon:'&#128221;',label:'Couples Intake'}]},
   thrivehq:{label:'ThriveHQ',pages:[{id:'thqdash',icon:'&#128170;',label:'Dashboard'},{id:'thqtrials',icon:'&#127793;',label:'Trials'},{id:'thrivehq',icon:'&#128101;',label:'Members'},{id:'thqrenewals',icon:'&#128260;',label:'Renewals'},{id:'thqcalls',icon:'&#128222;',label:'Coaching Calls'}]},
   strengths:{label:'Strengths',pages:[{id:'strdash',icon:'&#127919;',label:'Dashboard'},{id:'strengths',icon:'&#128161;',label:'Strengths Hub'}]},
-  agentsArea:{label:'Agents',pages:[{id:'agents',icon:'&#129302;',label:'Agents'},{id:'writingpartner',icon:'&#9997;',label:'Writing Partner'}]},
+  agentsArea:{label:'Agents',pages:[{id:'agentsdash',icon:'&#128200;',label:'Dashboard'},{id:'agents',icon:'&#129302;',label:'Agents'},{id:'writingpartner',icon:'&#9997;',label:'Writing Partner'}]},
   operations:{label:'Admin',pages:[{id:'opsdash',icon:'&#128736;',label:'Dashboard'},{id:'tasks',icon:'&#9989;',label:'Task Management'},{id:'playbook',icon:'&#128214;',label:'Playbook'},{id:'itprojects',icon:'&#9881;',label:'IT Projects'}]},
   finance:{label:'Finance',pages:[{id:'findash',icon:'&#128176;',label:'Dashboard'},{id:'finincome',icon:'&#128181;',label:'Income'},{id:'finspend',icon:'&#128200;',label:'Where Money Goes'},{id:'finbills',icon:'&#128196;',label:'Bills'},{id:'fintxns',icon:'&#128203;',label:'Transactions'}]},
   about:{label:'About',pages:[{id:'about',icon:'&#8505;',label:'About'}]}
@@ -1558,7 +1566,141 @@ function renderDashboard(){
 }
 
 // ── CRM DASHBOARD ──
-function renderCrmDash(){ renderMasterList(); }
+function renderCrmDash(){
+  const el=document.getElementById('crmDashContent');
+  if(!el) return;
+  const allContacts=contacts||[];
+  const activeClients=(clients||[]).filter(c=>c.status==='Active');
+  const prospectsList=(prospects||[]);
+  const newProspects=prospectsList.filter(p=>(p.prospect_stage||'Lead')==='Lead').length;
+  const newIntake=(intakeSubmissions||[]).filter(s=>s.status==='New').length;
+  const reviewedIntake=(intakeSubmissions||[]).filter(s=>s.status==='Reviewed').length;
+  const coupleClients=activeClients.filter(c=>c.role==='Couple').length;
+  const individualClients=activeClients.filter(c=>c.role==='Individual').length;
+
+  let html=`<div class="dash-cards" style="margin-bottom:20px;">
+    <div class="dash-card" onclick="navTo('masterlist')" style="cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
+      <div class="dc-icon blue">&#128209;</div>
+      <div class="dc-info"><h4>${allContacts.length}</h4><p>Total Contacts</p></div>
+    </div>
+    <div class="dash-card" onclick="navTo('prospects')" style="cursor:pointer;${newProspects?'box-shadow:0 0 0 2px #3b82f6;':''}" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='${newProspects?'0 0 0 2px #3b82f6':'0 1px 3px rgba(0,0,0,.04)'}'">
+      <div class="dc-icon" style="background:#dbeafe;color:#2563eb;">&#128203;</div>
+      <div class="dc-info"><h4>${prospectsList.length}</h4><p>Prospects</p></div>
+    </div>
+    <div class="dash-card" onclick="navTo('clients')" style="cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
+      <div class="dc-icon green">&#128101;</div>
+      <div class="dc-info"><h4>${activeClients.length}</h4><p>Active Clients</p></div>
+    </div>
+    <div class="dash-card" onclick="navTo('thqintake')" style="cursor:pointer;${newIntake?'box-shadow:0 0 0 2px #3b82f6;':''}" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='${newIntake?'0 0 0 2px #3b82f6':'0 1px 3px rgba(0,0,0,.04)'}'">
+      <div class="dc-icon" style="background:${newIntake?'#dbeafe':'#f1f5f9'};color:${newIntake?'#2563eb':'#64748b'};">&#128221;</div>
+      <div class="dc-info"><h4>${newIntake}</h4><p>New Intake Forms</p></div>
+    </div>
+    <div class="dash-card" onclick="navTo('thqintake')" style="cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
+      <div class="dc-icon" style="background:#fef3c7;color:#d97706;">&#128270;</div>
+      <div class="dc-info"><h4>${reviewedIntake}</h4><p>Reviewed Intakes</p></div>
+    </div>
+    <div class="dash-card" onclick="navTo('clinvoices')" style="cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
+      <div class="dc-icon" style="background:#f0fdf4;color:#16a34a;">&#128206;</div>
+      <div class="dc-info"><h4>&rarr;</h4><p>Invoices</p></div>
+    </div>
+  </div>`;
+
+  html+=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;">
+    <div onclick="navTo('masterlist')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #1e3a5f;border-radius:12px;padding:16px 18px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
+      <div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">&#128209; Master List</div>
+      <div style="font-size:11px;color:#64748b;">All contacts</div>
+    </div>
+    <div onclick="navTo('prospects')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #2563eb;border-radius:12px;padding:16px 18px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
+      <div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">&#128203; Prospects</div>
+      <div style="font-size:11px;color:#64748b;">Leads and pipeline</div>
+    </div>
+    <div onclick="navTo('clidash')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #16a34a;border-radius:12px;padding:16px 18px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
+      <div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">&#129309; Clients Dashboard</div>
+      <div style="font-size:11px;color:#64748b;">${coupleClients} couples &middot; ${individualClients} individual</div>
+    </div>
+    <div onclick="navTo('thqintake')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #d97706;border-radius:12px;padding:16px 18px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
+      <div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">&#128221; Intake Forms</div>
+      <div style="font-size:11px;color:#64748b;">${newIntake} new &middot; ${reviewedIntake} reviewed</div>
+    </div>
+  </div>`;
+  el.innerHTML=html;
+}
+
+// ── COUPLES DASHBOARD ──
+function renderCouplesDash(){
+  const el=document.getElementById('couplesDashContent');
+  if(!el) return;
+  const activeClients=(clients||[]).filter(c=>c.status==='Active');
+  const coupleClients=activeClients.filter(c=>c.role==='Couple');
+  const draftCount=couplesIntakeIndex().length;
+
+  let html=`<div class="dash-cards" style="margin-bottom:20px;">
+    <div class="dash-card" onclick="navTo('couplesintake')" style="cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
+      <div class="dc-icon" style="background:#fce7f3;color:#b87a90;">&#128147;</div>
+      <div class="dc-info"><h4>${coupleClients.length}</h4><p>Couple Clients</p></div>
+    </div>
+    <div class="dash-card" onclick="navTo('couplesintake')" style="cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
+      <div class="dc-icon" style="background:#dbeafe;color:#2563eb;">&#128221;</div>
+      <div class="dc-info"><h4>${draftCount}</h4><p>Session Drafts</p></div>
+    </div>
+  </div>`;
+
+  html+=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;">
+    <div onclick="navTo('couplesintake')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #b87a90;border-radius:12px;padding:18px 20px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
+      <div style="font-weight:700;color:#1e3a5f;font-size:15px;margin-bottom:6px;">&#128221; Couples Intake Worksheet</div>
+      <div style="font-size:12px;color:#64748b;line-height:1.5;">Port Institute assessment &amp; formulation across 5 stages. Stage-by-stage notes saved to records.</div>
+    </div>
+  </div>`;
+  el.innerHTML=html;
+}
+
+// ── AGENTS DASHBOARD ──
+function renderAgentsDash(){
+  const el=document.getElementById('agentsDashContent');
+  if(!el) return;
+  const all=agents||[];
+  const active=all.filter(a=>a.status==='active').length;
+  const draft=all.filter(a=>a.status==='draft').length;
+  const disabled=all.filter(a=>a.status==='disabled').length;
+  const openIssues=(agentIssues||[]).filter(i=>i.status==='open').length;
+  const parents=all.filter(a=>(a.type||'')==='parent').length;
+  const children=all.filter(a=>(a.type||'')==='child').length;
+
+  let html=`<div class="dash-cards" style="margin-bottom:20px;">
+    <div class="dash-card" onclick="navTo('agents')" style="cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
+      <div class="dc-icon" style="background:#eff6ff;color:#2563eb;">&#129302;</div>
+      <div class="dc-info"><h4>${all.length}</h4><p>Total Agents</p></div>
+    </div>
+    <div class="dash-card" onclick="navTo('agents')" style="cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
+      <div class="dc-icon green">&#10004;</div>
+      <div class="dc-info"><h4>${active}</h4><p>Active</p></div>
+    </div>
+    <div class="dash-card" onclick="navTo('agents')" style="cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
+      <div class="dc-icon" style="background:#fef3c7;color:#d97706;">&#128221;</div>
+      <div class="dc-info"><h4>${draft}</h4><p>Draft</p></div>
+    </div>
+    <div class="dash-card" onclick="navTo('agents')" style="cursor:pointer;${openIssues?'box-shadow:0 0 0 2px #dc2626;':''}" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='${openIssues?'0 0 0 2px #dc2626':'0 1px 3px rgba(0,0,0,.04)'}'">
+      <div class="dc-icon" style="background:#fef2f2;color:#dc2626;">&#9888;</div>
+      <div class="dc-info"><h4>${openIssues}</h4><p>Open Issues</p></div>
+    </div>
+    <div class="dash-card" style="cursor:default;">
+      <div class="dc-icon" style="background:#f1f5f9;color:#64748b;">&#128683;</div>
+      <div class="dc-info"><h4>${disabled}</h4><p>Disabled</p></div>
+    </div>
+  </div>`;
+
+  html+=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;">
+    <div onclick="navTo('agents')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #2563eb;border-radius:12px;padding:18px 20px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
+      <div style="font-weight:700;color:#1e3a5f;font-size:15px;margin-bottom:6px;">&#129302; Agents</div>
+      <div style="font-size:12px;color:#64748b;line-height:1.5;">${parents} parent &middot; ${children} child &middot; ${all.length-parents-children} standalone</div>
+    </div>
+    <div onclick="navTo('writingpartner')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #7c3aed;border-radius:12px;padding:18px 20px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
+      <div style="font-weight:700;color:#1e3a5f;font-size:15px;margin-bottom:6px;">&#9997; Writing Partner</div>
+      <div style="font-size:12px;color:#64748b;line-height:1.5;">AI helper for writing drafts and replies.</div>
+    </div>
+  </div>`;
+  el.innerHTML=html;
+}
 
 // ── THRIVEHQ DASHBOARD ──
 function renderThqDash(){
