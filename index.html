@@ -219,7 +219,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.26.2</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.26.3</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -2950,6 +2950,11 @@ window.filterStrengths=function(){renderStrengths();};
 
 // ── THRIVEHQ INTAKE SUBMISSIONS ──
 let intakeSubmissions=[];
+let intakeCategoryOpen={};
+window.toggleIntakeCategory=function(key){
+  intakeCategoryOpen[key]=!(intakeCategoryOpen[key]??(key!=='archived'));
+  renderIntakeSubmissions();
+};
 async function loadIntakeSubmissions(){
   const {data,error}=await supabase.from('intake_submissions').select('*').order('submitted_at',{ascending:false});
   if(data) intakeSubmissions=data;
@@ -3012,42 +3017,70 @@ function renderIntakeSubmissions(){
   const isMobile=window.innerWidth<=768;
   const showFormType=!formTypeFilter;
 
-  if(isMobile){
-    filtered.forEach(s=>{
+  // Group by category: active submissions by form_type, plus Archived pooled at the bottom
+  const groups={thrivehq:[],couples:[],individual:[],archived:[]};
+  filtered.forEach(s=>{
+    if((s.status||'')==='Archived'){groups.archived.push(s);return;}
+    const ft=s.form_type||'thrivehq';
+    if(groups[ft]) groups[ft].push(s); else groups.thrivehq.push(s);
+  });
+  Object.values(groups).forEach(g=>g.sort((a,b)=>new Date(b.submitted_at||0)-new Date(a.submitted_at||0)));
+
+  function renderRowMobile(s){
+    const st=s.status||'New';
+    const ft=s.form_type||'thrivehq';
+    const date=s.submitted_at?new Date(s.submitted_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}):'';
+    return `<div onclick="openIntakeDetail('${s.id}')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid ${statusColors[st]||'#64748b'};border-radius:8px;padding:14px 16px;margin-bottom:8px;cursor:pointer;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+        <span style="font-weight:600;font-size:14px;color:#1e293b;">${s.preferred_name||s.first_name} ${s.last_name}</span>
+        <span style="background:${statusBg[st]||'#f1f5f9'};color:${statusColors[st]||'#64748b'};padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;">${st}</span>
+      </div>
+      <div style="font-size:12px;color:#64748b;">${s.email||''}</div>
+      <div style="display:flex;gap:8px;margin-top:6px;font-size:11px;color:#94a3b8;flex-wrap:wrap;">
+        ${ft==='couples'&&s.secondary_name?'<span style="background:#fff1f2;color:#e11d48;padding:2px 6px;border-radius:4px;font-weight:500;">Partner: '+s.secondary_name+'</span>':''}
+        ${ft==='individual'&&s.service_focus?'<span style="background:#ecfeff;color:#0891b2;padding:2px 6px;border-radius:4px;font-weight:500;">'+s.service_focus+'</span>':''}
+        <span>${date}</span>
+      </div>
+    </div>`;
+  }
+  function renderRowsDesktop(rows){
+    let h=`<table><thead><tr><th>Name</th><th>Email</th><th>Submitted</th><th>Status</th><th>Actions</th></tr></thead><tbody>`;
+    rows.forEach(s=>{
       const st=s.status||'New';
-      const ft=s.form_type||'thrivehq';
       const date=s.submitted_at?new Date(s.submitted_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}):'';
-      html+=`<div onclick="openIntakeDetail('${s.id}')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid ${statusColors[st]||'#64748b'};border-radius:8px;padding:14px 16px;margin-bottom:8px;cursor:pointer;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-          <span style="font-weight:600;font-size:14px;color:#1e293b;">${s.preferred_name||s.first_name} ${s.last_name}</span>
-          <span style="background:${statusBg[st]||'#f1f5f9'};color:${statusColors[st]||'#64748b'};padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;">${st}</span>
-        </div>
-        <div style="font-size:12px;color:#64748b;">${s.email||''}</div>
-        <div style="display:flex;gap:8px;margin-top:6px;font-size:11px;color:#94a3b8;flex-wrap:wrap;">
-          ${showFormType?'<span style="background:'+(formTypeBg[ft]||'#f1f5f9')+';color:'+(formTypeColors[ft]||'#64748b')+';padding:2px 6px;border-radius:4px;font-weight:600;">'+(formTypeLabels[ft]||ft)+'</span>':''}
-          ${ft==='couples'&&s.secondary_name?'<span style="background:#fff1f2;color:#e11d48;padding:2px 6px;border-radius:4px;font-weight:500;">Partner: '+s.secondary_name+'</span>':''}
-          ${ft==='individual'&&s.service_focus?'<span style="background:#ecfeff;color:#0891b2;padding:2px 6px;border-radius:4px;font-weight:500;">'+s.service_focus+'</span>':''}
-          <span>${date}</span>
-        </div>
-      </div>`;
-    });
-  } else {
-    html+=`<table><thead><tr><th>Name</th><th>Email</th>${showFormType?'<th>Program</th>':''}<th>Submitted</th><th>Status</th><th>Actions</th></tr></thead><tbody>`;
-    filtered.forEach(s=>{
-      const st=s.status||'New';
-      const ft=s.form_type||'thrivehq';
-      const date=s.submitted_at?new Date(s.submitted_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}):'';
-      html+=`<tr>
+      h+=`<tr>
         <td style="font-weight:600;">${s.preferred_name||s.first_name} ${s.last_name}</td>
         <td>${s.email||''}</td>
-        ${showFormType?'<td><span style="background:'+(formTypeBg[ft]||'#f1f5f9')+';color:'+(formTypeColors[ft]||'#64748b')+';padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;">'+(formTypeLabels[ft]||ft)+'</span></td>':''}
         <td style="font-size:12px;color:#64748b;">${date}</td>
         <td><span style="background:${statusBg[st]||'#f1f5f9'};color:${statusColors[st]||'#64748b'};padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;">${st}</span></td>
         <td><div class="actions"><button class="btn btn-gray" onclick="openIntakeDetail('${s.id}')">View</button>${st==='New'?'<button class="btn btn-blue" onclick="markIntakeReviewed(\''+s.id+'\')">Reviewed</button>':''}</div></td>
       </tr>`;
     });
-    html+=`</tbody></table>`;
+    h+=`</tbody></table>`;
+    return h;
   }
+
+  const catOrder=[
+    {key:'thrivehq',label:'ThriveHQ',color:'#1e3a5f',openDefault:true},
+    {key:'couples',label:'Couples',color:'#b87a90',openDefault:true},
+    {key:'individual',label:'Individual',color:'#0891b2',openDefault:true},
+    {key:'archived',label:'Archived',color:'#94a3b8',openDefault:false}
+  ];
+  catOrder.forEach(cat=>{
+    const rows=groups[cat.key];
+    if(!rows.length) return;
+    const isOpen=intakeCategoryOpen[cat.key]??cat.openDefault;
+    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid ${cat.color};border-radius:10px;margin-bottom:12px;overflow:hidden;">
+      <div onclick="toggleIntakeCategory('${cat.key}')" style="display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;user-select:none;">
+        <span style="font-size:11px;color:${cat.color};font-weight:700;">${isOpen?'▼':'▶'}</span>
+        <span style="font-family:'Quicksand',sans-serif;font-size:15px;font-weight:700;color:${cat.color};flex:1;">${cat.label}</span>
+        <span style="font-size:11px;color:#64748b;font-weight:600;background:#f1f5f9;padding:2px 10px;border-radius:99px;">${rows.length}</span>
+      </div>
+      <div style="display:${isOpen?'block':'none'};padding:${isMobile?'0 12px 12px':'0 16px 14px'};">
+        ${isMobile?rows.map(renderRowMobile).join(''):renderRowsDesktop(rows)}
+      </div>
+    </div>`;
+  });
 
   document.getElementById('intakeContent').innerHTML=html;
 }
