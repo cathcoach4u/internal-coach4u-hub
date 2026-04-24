@@ -219,7 +219,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.26.1</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.26.2</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -592,6 +592,9 @@ td .actions button{padding:8px 14px;font-size:12px;}
     <!-- COUPLES INTAKE (Port Institute Worksheet) -->
     <div class="screen" id="screen-couplesintake">
       <div class="toolbar" style="flex-wrap:wrap;gap:8px;">
+        <select id="coupClientPicker" onchange="setCouplesIntakeClient(this.value)" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;font-family:inherit;min-width:200px;">
+          <option value="">&mdash; Select couple client &mdash;</option>
+        </select>
         <input class="search-input" id="coupP1Name" placeholder="Partner 1 name" style="max-width:160px;" oninput="updateCouplesPartnerHeaders();saveCouplesIntake()">
         <input class="search-input" id="coupP2Name" placeholder="Partner 2 name" style="max-width:160px;" oninput="updateCouplesPartnerHeaders();saveCouplesIntake()">
         <input type="date" id="coupIntakeDate" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;font-family:inherit;" onchange="saveCouplesIntake()">
@@ -3296,6 +3299,7 @@ function couplesIntakeIndex(){try{return JSON.parse(localStorage.getItem('couple
 function couplesIntakeSaveIndex(idx){localStorage.setItem('couplesIntakeIndex',JSON.stringify(idx));}
 
 let currentCouplesIntakeId=null;
+let currentCouplesIntakeClientId='';
 
 function itemFieldId(stepIdx,secIdx,itemIdx,partner){return 'ci_'+stepIdx+'_'+secIdx+'_'+itemIdx+(partner?'_'+partner:'');}
 
@@ -3359,6 +3363,7 @@ function collectCouplesIntakeState(){
   const p2val=document.getElementById('coupP2Name')?.value||'';
   const state={
     id:currentCouplesIntakeId,
+    client_id:currentCouplesIntakeClientId||null,
     p1:p1val,p2:p2val,
     date:document.getElementById('coupIntakeDate')?.value||'',
     updated_at:new Date().toISOString(),
@@ -3388,6 +3393,8 @@ function loadCouplesIntakeValues(){
   const raw=localStorage.getItem(couplesIntakeKey(currentCouplesIntakeId));
   if(!raw) return;
   let state;try{state=JSON.parse(raw);}catch(e){return;}
+  currentCouplesIntakeClientId=state.client_id||'';
+  const cp=document.getElementById('coupClientPicker');if(cp) cp.value=currentCouplesIntakeClientId;
   const p1el=document.getElementById('coupP1Name');if(p1el&&state.p1!==undefined) p1el.value=state.p1;
   const p2el=document.getElementById('coupP2Name');if(p2el&&state.p2!==undefined) p2el.value=state.p2;
   if(state.date!==undefined){const el=document.getElementById('coupIntakeDate');if(el) el.value=state.date;}
@@ -3400,15 +3407,48 @@ function loadCouplesIntakeValues(){
 
 function refreshCouplesIntakePicker(){
   const sel=document.getElementById('coupIntakeSessionPicker');
+  if(sel){
+    const idx=couplesIntakeIndex();
+    let html='<option value="">Load session...</option>';
+    idx.forEach(s=>{
+      const label=(s.clients||'(unnamed)')+(s.date?' - '+s.date:'')+(s.updated_at?' ['+new Date(s.updated_at).toLocaleString('en-AU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+']':'');
+      html+=`<option value="${s.id}"${s.id===currentCouplesIntakeId?' selected':''}>${label.replace(/</g,'&lt;')}</option>`;
+    });
+    sel.innerHTML=html;
+  }
+  refreshCoupleClientPicker();
+}
+
+function refreshCoupleClientPicker(){
+  const sel=document.getElementById('coupClientPicker');
   if(!sel) return;
-  const idx=couplesIntakeIndex();
-  let html='<option value="">Load session...</option>';
-  idx.forEach(s=>{
-    const label=(s.clients||'(unnamed)')+(s.date?' - '+s.date:'')+(s.updated_at?' ['+new Date(s.updated_at).toLocaleString('en-AU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+']':'');
-    html+=`<option value="${s.id}"${s.id===currentCouplesIntakeId?' selected':''}>${label.replace(/</g,'&lt;')}</option>`;
+  const couples=(clients||[]).filter(c=>c.role==='Couple').sort((a,b)=>(a.relationship_name||'').localeCompare(b.relationship_name||''));
+  let html='<option value="">&mdash; Select couple client &mdash;</option>';
+  couples.forEach(c=>{
+    html+=`<option value="${c.id}"${c.id===currentCouplesIntakeClientId?' selected':''}>${(c.relationship_name||'').replace(/</g,'&lt;')}</option>`;
   });
   sel.innerHTML=html;
+  if(currentCouplesIntakeClientId) sel.value=currentCouplesIntakeClientId;
 }
+
+window.setCouplesIntakeClient=function(clientId){
+  currentCouplesIntakeClientId=clientId||'';
+  if(clientId){
+    const client=(clients||[]).find(c=>c.id===clientId);
+    if(client){
+      const memberIds=client.members||[];
+      const memberContacts=memberIds.map(id=>contacts.find(c=>c.id===id)).filter(Boolean);
+      // Prefer preferred_name if set, else first_name
+      const nameOf=c=>((c.preferred_name||c.first_name)||'').trim();
+      const p1=memberContacts[0]?nameOf(memberContacts[0]):'';
+      const p2=memberContacts[1]?nameOf(memberContacts[1]):'';
+      const p1el=document.getElementById('coupP1Name');if(p1el) p1el.value=p1;
+      const p2el=document.getElementById('coupP2Name');if(p2el) p2el.value=p2;
+    }
+  }
+  updateCouplesPartnerHeaders();
+  saveCouplesIntake();
+};
 
 window.loadCouplesIntakeSession=function(id){
   if(!id) return;
@@ -3419,6 +3459,8 @@ window.loadCouplesIntakeSession=function(id){
 window.newCouplesIntake=function(){
   if(!confirm('Start a new intake session? Current notes are saved locally.')) return;
   currentCouplesIntakeId=Date.now().toString();
+  currentCouplesIntakeClientId='';
+  const cp=document.getElementById('coupClientPicker');if(cp) cp.value='';
   const p1=document.getElementById('coupP1Name');if(p1) p1.value='';
   const p2=document.getElementById('coupP2Name');if(p2) p2.value='';
   const dt=document.getElementById('coupIntakeDate');if(dt) dt.value=new Date().toISOString().slice(0,10);
@@ -3437,6 +3479,7 @@ window.fileCouplesIntakeToRecords=async function(){
   saveCouplesIntake();
   const payload={
     draft_id:state.id,
+    client_id:state.client_id||null,
     p1_name:state.p1||null,
     p2_name:state.p2||null,
     session_date:state.date||null,
