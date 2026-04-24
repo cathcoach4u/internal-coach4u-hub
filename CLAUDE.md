@@ -32,16 +32,19 @@ Single-page CRM app hosted on GitHub Pages with a Supabase backend. All CRM func
 Areas and their pages (defined at line ~1423):
 
 - **Home**: Dashboard
-- **CRM**: Master List, Prospect List, Clients Dashboard, Client List, Intake Forms, Invoices
-- **Referrers**: Referral Hub, Payments
-- **Pulses**: Dashboard, SAFE Pulse, Brain Pulse (consolidated from former CRM+ThriveHQ pulse pages; client selector for per-client mini-portal view)
-- **Couples**: Couples Intake (Port Institute 2-hour worksheet, stored in localStorage)
+- **CRM**: Dashboard, Master List, Prospect List, Clients Dashboard, Client List, Intake Forms, Invoices
+- **Referrers**: Dashboard (Referral Hub), Payments
+- **Pulses**: Dashboard, SAFE Pulse, Brain Pulse (client selector for per-client mini-portal view)
+- **Couples**: Dashboard, Couples Intake (Port Institute stage-by-stage worksheet; drafts in localStorage, filed to Supabase `couples_intake_sessions`; session linked to Couple client)
 - **ThriveHQ**: Dashboard, Trials, Members, Renewals, Coaching Calls
 - **Strengths**: Dashboard, Strengths Hub
-- **Agents**: Agents, Writing Partner
-- **Admin**: Dashboard, Task Management, Playbook, IT Projects
+- **IT**: Dashboard, IT Projects, Agents, Writing Partner
+- **Resources**: Dashboard (shareable public links — intake forms, cancellation policy)
+- **Admin**: Dashboard, Task Management, Playbook (Lou's operational work)
 - **Finance**: Dashboard, Income, Where Money Goes, Bills, Transactions
 - **About**: About
+
+Every area's first page is a **Dashboard** so clicking an area tab never lands on a raw list.
 
 ### Routing
 
@@ -65,11 +68,13 @@ All pulse pages live under the **Pulses** area. Screen IDs `clipulse`/`clibrainp
 
 - **Area**: Couples > Couples Intake (screen `couplesintake`)
 - **Purpose**: live session prompt for a 2-hour couples intake, based on the Port Institute Assessment & Formulation Worksheet
-- **Config**: `couplesIntakeConfig` (~line 3245) — 5 steps, each with sections and prompt items
-- **Layout**: two-column (Partner 1 / Partner 2) note fields per prompt; sections flagged `single:true` render a single full-width notes field (e.g. Online Setup)
-- **Step visibility**: Steps 1-3 open by default; 4-5 collapsed with "Session 2+" badge. Click step header to toggle
-- **Storage**: all state in `localStorage` under `couplesIntake:<id>`; session index under `couplesIntakeIndex`. Session picker loads any previous session. No Supabase table
-- **Partner headers**: column headers update live as P1/P2 names are typed (`updateCouplesPartnerHeaders`)
+- **Config**: `couplesIntakeConfig` — 5 steps, each with sections; items shown as a read-only bullet-point guide
+- **Layout**: **stage-by-stage** — a tab bar shows all 5 steps; only the selected step's section guide + one notes textarea is visible. Tabs get a check-mark when their stage has notes. Previous / Next navigate between stages.
+- **Client link**: top toolbar has a **client picker filtered to `role='Couple'` clients**. Selecting one auto-populates P1 and P2 from the client's two linked member contacts (preferred_name or first_name). Name inputs stay editable for drop-ins / overrides.
+- **Storage**:
+  - Local draft in `localStorage` under `couplesIntake:<id>` (index under `couplesIntakeIndex`)
+  - **Filed sessions in Supabase** table `couples_intake_sessions` — one row per session, upserted on `draft_id`. Columns: `draft_id` (unique), `client_id` (FK → clients), `p1_name`, `p2_name`, `session_date`, `step_notes` (JSONB keyed by step index 0–4), timestamps.
+- **Save behaviour**: toolbar has "Save Draft" (localStorage) and "Save to Records" (upsert to Supabase). Each stage also has its own "Save this stage" button that does both.
 
 ## Agents (Agents > Agents)
 
@@ -125,8 +130,8 @@ Parent agents represent the master system prompts for Copilot Studio. Child agen
 
 ### Versioning
 
-- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.25.4**, line ~222)
-- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v249**)
+- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.28.0**, line ~222)
+- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v257**)
 - **Both must be bumped on every release**
 
 ### Code patterns
