@@ -219,7 +219,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.28.4</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.28.5</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -246,6 +246,10 @@ td .actions button{padding:8px 14px;font-size:12px;}
         <div class="dash-card" onclick="navTo('clients')" style="cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
           <div class="dc-icon green">&#129309;</div>
           <div class="dc-info"><h4 id="dcClients">0</h4><p>Active Clients</p></div>
+        </div>
+        <div class="dash-card" onclick="navTo('prospects')" id="dcProspectsCard" style="cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
+          <div class="dc-icon" style="background:#dbeafe;color:#2563eb;">&#128203;</div>
+          <div class="dc-info"><h4 id="dcProspects">0</h4><p id="dcProspectsLabel">Active Prospects</p></div>
         </div>
         <div class="dash-card" onclick="navTo('thqintake')" id="dcIntakeCard" style="cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
           <div class="dc-icon" style="background:#f1f5f9;color:#64748b;">&#128221;</div>
@@ -1548,6 +1552,16 @@ function renderDashboard(){
   document.getElementById('dcContacts').textContent=contacts.length;
   document.getElementById('dcClients').textContent=clients.filter(c=>c.status==='Active').length;
   document.getElementById('dcTrials').textContent=thqTrials.filter(t=>t.status==='Active'||t.status==='Extended').length;
+  // Prospect summary — active = anyone not Lost or Converted; flag Hot/Warm in label
+  const allProspects=prospects||[];
+  const activeProspects=allProspects.filter(p=>p.status!=='Lost'&&p.status!=='Converted');
+  const hotCount=allProspects.filter(p=>p.status==='Hot').length;
+  const warmCount=allProspects.filter(p=>p.status==='Warm').length;
+  document.getElementById('dcProspects').textContent=activeProspects.length;
+  const prospLabel=document.getElementById('dcProspectsLabel');
+  if(prospLabel) prospLabel.textContent=(hotCount||warmCount)?`Active (${hotCount} Hot · ${warmCount} Warm)`:'Active Prospects';
+  const prospCard=document.getElementById('dcProspectsCard');
+  if(prospCard) prospCard.style.boxShadow=hotCount?'0 0 0 2px #dc2626':'0 1px 3px rgba(0,0,0,.04)';
   const newIntakes=intakeSubmissions.filter(s=>s.status==='New'||s.status==='Reviewed').length;
   document.getElementById('dcIntakeForms').textContent=newIntakes;
   const card=document.getElementById('dcIntakeCard');
