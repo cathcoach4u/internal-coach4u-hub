@@ -130,8 +130,8 @@ Parent agents represent the master system prompts for Copilot Studio. Child agen
 
 ### Versioning
 
-- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.28.0**, line ~222)
-- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v257**)
+- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.28.4**, line ~222)
+- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v261**)
 - **Both must be bumped on every release**
 
 ### Code patterns
@@ -167,12 +167,14 @@ Parent agents represent the master system prompts for Copilot Studio. Child agen
 ## Git workflow
 
 - Main branch: All work merged and pushed
+- Feature branches: Create per-session, merge to main when ready
 - Active feature branches on remote (as of this update):
-  - `claude/merge-prospect-intake-ChyfP` — stale, fully represented in main via rebase
-  - `claude/crm-dashboard-tabs-ESRoq`, `claude/recover-project-work-Gwcpq` — old divergent work, superseded by main
-  - `claude/add-thrivehq-brain-pulse-ALmPv`, `claude/coach4u-writing-partner-1cyZI` — merged into main, safe to delete
+  - `claude/add-prospects-dashboard-2zdj1` — in progress, ready for merge
 - Commit messages: Concise, imperative mood
-- Version bumping: Always bump both `index.html` version and `sw.js` cache on release
+- **Version bumping protocol**:
+  - Always bump both `index.html` version and `sw.js` cache on every commit
+  - Include version bump + CLAUDE.md update in final commit before merge
+  - Ask user before final merge to main
 
 ## Prospect ↔ Intake linking
 

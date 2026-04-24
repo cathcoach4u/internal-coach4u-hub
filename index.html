@@ -219,7 +219,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.28.3</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.28.4</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -1570,6 +1570,12 @@ function renderCrmDash(){
   const activeClients=(clients||[]).filter(c=>c.status==='Active');
   const prospectsList=(prospects||[]);
   const newProspects=prospectsList.filter(p=>(p.prospect_stage||'Lead')==='Lead').length;
+  const hotProspects=prospectsList.filter(p=>p.status==='Hot').length;
+  const warmProspects=prospectsList.filter(p=>p.status==='Warm').length;
+  const newProspectsByStatus=prospectsList.filter(p=>p.status==='New').length;
+  const convertedProspects=prospectsList.filter(p=>p.status==='Converted').length;
+  const lostProspects=prospectsList.filter(p=>p.status==='Lost').length;
+  const activeProspects=prospectsList.filter(p=>p.status!=='Lost'&&p.status!=='Converted').length;
   const newIntake=(intakeSubmissions||[]).filter(s=>s.status==='New').length;
   const reviewedIntake=(intakeSubmissions||[]).filter(s=>s.status==='Reviewed').length;
   const coupleClients=activeClients.filter(c=>c.role==='Couple').length;
@@ -1580,7 +1586,7 @@ function renderCrmDash(){
       <div class="dc-icon blue">&#128209;</div>
       <div class="dc-info"><h4>${allContacts.length}</h4><p>Total Contacts</p></div>
     </div>
-    <div class="dash-card" onclick="navTo('prospects')" style="cursor:pointer;${newProspects?'box-shadow:0 0 0 2px #3b82f6;':''}" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='${newProspects?'0 0 0 2px #3b82f6':'0 1px 3px rgba(0,0,0,.04)'}'">
+    <div class="dash-card" onclick="navTo('prospects')" style="cursor:pointer;${activeProspects?'box-shadow:0 0 0 2px #3b82f6;':''}" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='${activeProspects?'0 0 0 2px #3b82f6':'0 1px 3px rgba(0,0,0,.04)'}'">
       <div class="dc-icon" style="background:#dbeafe;color:#2563eb;">&#128203;</div>
       <div class="dc-info"><h4>${prospectsList.length}</h4><p>Prospects</p></div>
     </div>
@@ -1599,6 +1605,32 @@ function renderCrmDash(){
     <div class="dash-card" onclick="navTo('clinvoices')" style="cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
       <div class="dc-icon" style="background:#f0fdf4;color:#16a34a;">&#128206;</div>
       <div class="dc-info"><h4>&rarr;</h4><p>Invoices</p></div>
+    </div>
+  </div>`;
+
+  html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:20px;">
+    <div style="font-weight:700;font-size:15px;color:#1e293b;margin-bottom:14px;">Prospect Pipeline</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:12px;">
+      <div style="text-align:center;padding:12px;background:#fef2f2;border-radius:10px;cursor:pointer;" onclick="navTo('prospects')" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">
+        <div style="font-weight:700;font-size:20px;color:#dc2626;">${hotProspects}</div>
+        <div style="font-size:12px;color:#991b1b;margin-top:2px;">Hot</div>
+      </div>
+      <div style="text-align:center;padding:12px;background:#fef3c7;border-radius:10px;cursor:pointer;" onclick="navTo('prospects')" onmouseover="this.style.background='#fef08a'" onmouseout="this.style.background='#fef3c7'">
+        <div style="font-weight:700;font-size:20px;color:#d97706;">${warmProspects}</div>
+        <div style="font-size:12px;color:#92400e;margin-top:2px;">Warm</div>
+      </div>
+      <div style="text-align:center;padding:12px;background:#eff6ff;border-radius:10px;cursor:pointer;" onclick="navTo('prospects')" onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#eff6ff'">
+        <div style="font-weight:700;font-size:20px;color:#2563eb;">${newProspectsByStatus}</div>
+        <div style="font-size:12px;color:#1e40af;margin-top:2px;">New</div>
+      </div>
+      <div style="text-align:center;padding:12px;background:#dcfce7;border-radius:10px;cursor:pointer;" onclick="navTo('prospects')" onmouseover="this.style.background='#bbf7d0'" onmouseout="this.style.background='#dcfce7'">
+        <div style="font-weight:700;font-size:20px;color:#16a34a;">${convertedProspects}</div>
+        <div style="font-size:12px;color:#15803d;margin-top:2px;">Converted</div>
+      </div>
+      <div style="text-align:center;padding:12px;background:#f1f5f9;border-radius:10px;cursor:pointer;" onclick="navTo('prospects')" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
+        <div style="font-weight:700;font-size:20px;color:#64748b;">${lostProspects}</div>
+        <div style="font-size:12px;color:#475569;margin-top:2px;">Lost</div>
+      </div>
     </div>
   </div>`;
 
