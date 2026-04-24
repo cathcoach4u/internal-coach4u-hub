@@ -53,8 +53,10 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#f0f6ff;c
 
 /* ── DASHBOARD ── */
 .dash-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-bottom:28px;}
-.dash-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;display:flex;align-items:center;gap:14px;box-shadow:0 1px 3px rgba(0,0,0,.04);}
-.dash-card .dc-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;}
+.dash-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;display:flex;align-items:center;gap:14px;box-shadow:0 1px 3px rgba(0,0,0,.04);min-width:0;overflow:hidden;}
+.dash-card .dc-info{min-width:0;flex:1;overflow:hidden;}
+.dash-card .dc-info p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.dash-card .dc-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
 .dc-icon.blue{background:#dbeafe;color:#2563eb;}
 .dc-icon.green{background:#dcfce7;color:#16a34a;}
 .dc-icon.amber{background:#fef3c7;color:#d97706;}
@@ -122,9 +124,8 @@ td .actions button{padding:8px 14px;font-size:12px;}
   .mobile-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:55;}
   .mobile-overlay.show{display:block;}
   .area-tabs{display:none;}
-  .content{padding:14px 16px;}
-  .header{padding:calc(12px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) 12px calc(16px + env(safe-area-inset-left));position:sticky;top:0;z-index:30;}
-  .content{padding-bottom:calc(14px + env(safe-area-inset-bottom));}
+  .content{padding:14px max(16px, env(safe-area-inset-right)) calc(14px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));}
+  .header{padding:calc(12px + env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 12px max(16px, env(safe-area-inset-left));position:sticky;top:0;z-index:30;}
   .modal{padding:18px;max-width:92vw;}
   .dash-cards{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));}
   .mob-grid-2{grid-template-columns:1fr;}
@@ -219,7 +220,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.28.6</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.28.7</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
