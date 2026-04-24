@@ -219,7 +219,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.28.1</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.28.2</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -756,7 +756,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     <div class="modal-actions">
       <button class="btn btn-gray" onclick="closeModal('taskModal')">Cancel</button>
       <button class="btn btn-red" onclick="deleteTask(document.getElementById('taskId').value)" id="tkDelBtn" style="display:none;">Delete</button>
-      <button class="btn btn-green" onclick="saveTask()">Save</button>
+      <button class="btn btn-green" id="tkSaveBtn" onclick="saveTask()">Save</button>
     </div>
   </div>
 </div>
@@ -1712,6 +1712,19 @@ function renderItDash(){
 }
 
 // ── RESOURCES DASHBOARD ──
+window.copyPublicLink=function(btn){
+  try{
+    const url=btn.getAttribute('data-url')||'';
+    const label=btn.getAttribute('data-label')||'Link';
+    if(!url){toast('No URL on button','error');return;}
+    if(typeof copyText==='function'){copyText(url,label);return;}
+    navigator.clipboard&&navigator.clipboard.writeText(url).then(()=>toast(label+' copied','success')).catch(()=>toast('Copy failed','error'));
+  }catch(e){console.error(e);toast('Copy failed','error');}
+};
+window.openPublicLink=function(btn){
+  const url=btn.getAttribute('data-url')||'';
+  if(url) window.open(url,'_blank','noopener');
+};
 function renderResourcesDash(){
   const el=document.getElementById('resourcesDashContent');
   if(!el) return;
@@ -1734,8 +1747,8 @@ function renderResourcesDash(){
         <div style="font-size:11px;color:#64748b;">${l.desc}</div>
         <div style="font-size:11px;color:#94a3b8;word-break:break-all;margin-top:2px;">${full}</div>
       </div>
-      <button onclick="copyText('${full}','Link copied')" style="background:#003366;color:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">Copy</button>
-      <button onclick="window.open('${full}','_blank')" style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;padding:6px 14px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">Open</button>
+      <button type="button" data-url="${full}" data-label="${l.label} link" onclick="copyPublicLink(this)" style="background:#003366;color:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">Copy</button>
+      <button type="button" data-url="${full}" onclick="openPublicLink(this)" style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;padding:6px 14px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">Open</button>
     </div>`;
   }
 
@@ -1752,8 +1765,8 @@ function renderResourcesDash(){
       <div style="font-size:11px;color:rgba(255,255,255,.55);margin-top:4px;word-break:break-all;">${linktreeUrl}</div>
     </div>
     <div style="display:flex;gap:6px;flex-shrink:0;">
-      <button onclick="copyText('${linktreeUrl}','Linktree link copied')" style="background:#fff;color:#1e3a5f;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">Copy</button>
-      <button onclick="window.open('${linktreeUrl}','_blank')" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">Open</button>
+      <button type="button" data-url="${linktreeUrl}" data-label="Linktree link" onclick="copyPublicLink(this)" style="background:#fff;color:#1e3a5f;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">Copy</button>
+      <button type="button" data-url="${linktreeUrl}" onclick="openPublicLink(this)" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">Open</button>
     </div>
   </div>`;
 
@@ -5546,6 +5559,7 @@ function copyText(text,label){
     }).catch(()=>{toast('Copy failed — try again','error');});
   }
 }
+window.copyText=copyText;
 
 window.toggleCopyMenu=function(){
   const m=document.getElementById('copyListMenu');
@@ -5698,6 +5712,8 @@ window.addTaskLog=async function(){
 };
 
 window.saveTask=async function(){
+  const saveBtn=document.getElementById('tkSaveBtn');
+  if(saveBtn&&saveBtn.disabled) return; // guard against double-click
   const id=document.getElementById('taskId').value;
   const data={
     title:document.getElementById('tkTitle').value.trim(),
@@ -5714,22 +5730,29 @@ window.saveTask=async function(){
     blocked_reason:document.getElementById('tkStatus').value==='Blocked'?document.getElementById('tkBlocked').value.trim()||null:null
   };
   if(!data.title){toast('Task title required','error');return;}
-  if(id){
-    const {error}=await supabase.from('tasks').update(data).eq('id',id);
-    if(error){toast('Error: '+error.message,'error');return;}
-    toast('Task updated','success');
-  }else{
-    const {error}=await supabase.from('tasks').insert(data);
-    if(error){toast('Error: '+error.message,'error');return;}
-    toast('Task added','success');
+  if(saveBtn){saveBtn.disabled=true;saveBtn.textContent='Saving...';}
+  try{
+    if(id){
+      const {error}=await supabase.from('tasks').update(data).eq('id',id);
+      if(error){toast('Error: '+error.message,'error');return;}
+      toast('Task updated','success');
+    }else{
+      const {error}=await supabase.from('tasks').insert(data);
+      if(error){toast('Error: '+error.message,'error');return;}
+      toast('Task added','success');
+    }
+    closeModal('taskModal');await loadTasks();renderTasks();renderOpsDash();
+    if(document.getElementById('screen-playbook')?.classList.contains('active')) renderPlaybook();
+  }finally{
+    if(saveBtn){saveBtn.disabled=false;saveBtn.textContent='Save';}
   }
-  closeModal('taskModal');await loadTasks();renderTasks();renderOpsDash();
 };
 
 window.completeTask=async function(id){
   const {error}=await supabase.from('tasks').update({status:'Complete'}).eq('id',id);
   if(error){toast('Error: '+error.message,'error');return;}
   toast('Task completed','success');await loadTasks();renderTasks();renderOpsDash();
+  if(document.getElementById('screen-playbook')?.classList.contains('active')) renderPlaybook();
 };
 
 window.deleteTask=async function(id){
