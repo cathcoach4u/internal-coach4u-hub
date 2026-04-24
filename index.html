@@ -219,7 +219,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.25.4</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.26.1</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -599,7 +599,8 @@ td .actions button{padding:8px 14px;font-size:12px;}
           <option value="">Load session...</option>
         </select>
         <button class="btn btn-gray" onclick="newCouplesIntake()">&#10133; New</button>
-        <button class="btn btn-blue" onclick="saveCouplesIntake(true)">&#128190; Save</button>
+        <button class="btn btn-blue" onclick="saveCouplesIntake(true)">&#128190; Save Draft</button>
+        <button class="btn btn-blue" onclick="fileCouplesIntakeToRecords()" style="background:#16a34a;">&#128193; Save to Records</button>
         <button class="btn btn-gray" onclick="printCouplesIntake()">&#128438; Print</button>
       </div>
       <div id="coupIntakeForm" style="padding:16px;"></div>
@@ -3323,8 +3324,7 @@ function renderCouplesIntake(){
   const form=document.getElementById('coupIntakeForm');
   if(!form) return;
   if(!currentCouplesIntakeId) currentCouplesIntakeId=Date.now().toString();
-  const {p1,p2}=getCouplesNames();
-  const taStyle='width:100%;min-height:42px;padding:5px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;font-family:inherit;resize:vertical;box-sizing:border-box;';
+  const taStyle='width:100%;min-height:140px;padding:10px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;box-sizing:border-box;line-height:1.5;';
   let html='';
   couplesIntakeConfig.forEach((step,si)=>{
     const open=si<3; // Steps 1-3 open by default; 4-5 collapsed
@@ -3335,31 +3335,18 @@ function renderCouplesIntake(){
         ${si>=3?'<span style="font-size:10px;color:#94a3b8;font-weight:600;">Session 2+</span>':''}
       </div>
       <div id="coup-step-body-${si}" style="display:${open?'block':'none'};padding:0 16px 14px;">`;
-    // Sticky partner header row within step
-    html+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:6px 0 8px;border-bottom:2px solid ${step.color}22;margin-bottom:10px;position:sticky;top:52px;background:#fff;z-index:2;">
-      <div style="font-size:11px;font-weight:700;color:${step.color};text-align:center;" class="coup-p1-header">${p1}</div>
-      <div style="font-size:11px;font-weight:700;color:${step.color};text-align:center;" class="coup-p2-header">${p2}</div>
-    </div>`;
-    step.sections.forEach((sec,sidx)=>{
-      html+=`<div style="margin-bottom:14px;">
-        <div style="font-size:12px;font-weight:700;color:#1e293b;margin-bottom:8px;padding:4px 8px;background:${step.color}12;border-radius:4px;">${sec.name}</div>`;
-      sec.items.forEach((item,ii)=>{
-        const fidBase=itemFieldId(si,sidx,ii);
-        html+=`<div style="margin-bottom:10px;">
-          <label style="display:flex;align-items:flex-start;gap:6px;font-size:11px;color:#64748b;margin-bottom:4px;cursor:pointer;">
-            <input type="checkbox" id="${fidBase}_chk" onchange="saveCouplesIntake()" style="margin-top:2px;flex-shrink:0;">
-            <span>${item}</span>
-          </label>
-          ${sec.single
-            ? `<textarea id="${fidBase}_p1" placeholder="Notes..." oninput="saveCouplesIntake()" style="${taStyle}"></textarea>`
-            : `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-            <textarea id="${fidBase}_p1" placeholder="${p1}..." oninput="saveCouplesIntake()" style="${taStyle}"></textarea>
-            <textarea id="${fidBase}_p2" placeholder="${p2}..." oninput="saveCouplesIntake()" style="${taStyle}"></textarea>
-          </div>`}
-        </div>`;
-      });
-      html+=`</div>`;
+    step.sections.forEach((sec)=>{
+      html+=`<div style="margin-bottom:12px;">
+        <div style="font-size:12px;font-weight:700;color:#1e293b;margin-bottom:6px;padding:4px 8px;background:${step.color}12;border-radius:4px;">${sec.name}</div>
+        <ul style="margin:0 0 0 18px;padding:0;font-size:12px;color:#475569;line-height:1.5;">
+          ${sec.items.map(item=>'<li style="margin-bottom:3px;">'+item+'</li>').join('')}
+        </ul>
+      </div>`;
     });
+    html+=`<div style="margin-top:10px;padding-top:10px;border-top:1px dashed ${step.color}44;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:${step.color};margin-bottom:6px;">Notes &mdash; ${step.step}</div>
+      <textarea id="coup-step-notes-${si}" placeholder="Type your notes for this step..." oninput="saveCouplesIntake()" style="${taStyle}"></textarea>
+    </div>`;
     html+=`</div></div>`;
   });
   form.innerHTML=html;
@@ -3375,18 +3362,11 @@ function collectCouplesIntakeState(){
     p1:p1val,p2:p2val,
     date:document.getElementById('coupIntakeDate')?.value||'',
     updated_at:new Date().toISOString(),
-    fields:{}
+    step_notes:{}
   };
-  couplesIntakeConfig.forEach((step,si)=>{
-    step.sections.forEach((sec,sidx)=>{
-      sec.items.forEach((_,ii)=>{
-        const fidBase=itemFieldId(si,sidx,ii);
-        const chk=document.getElementById(fidBase+'_chk');
-        const t1=document.getElementById(fidBase+'_p1');
-        const t2=document.getElementById(fidBase+'_p2');
-        state.fields[fidBase]={done:chk?chk.checked:false,p1:t1?t1.value:'',p2:t2?t2.value:''};
-      });
-    });
+  couplesIntakeConfig.forEach((_,si)=>{
+    const ta=document.getElementById('coup-step-notes-'+si);
+    state.step_notes[si]=ta?ta.value:'';
   });
   return state;
 }
@@ -3411,11 +3391,9 @@ function loadCouplesIntakeValues(){
   const p1el=document.getElementById('coupP1Name');if(p1el&&state.p1!==undefined) p1el.value=state.p1;
   const p2el=document.getElementById('coupP2Name');if(p2el&&state.p2!==undefined) p2el.value=state.p2;
   if(state.date!==undefined){const el=document.getElementById('coupIntakeDate');if(el) el.value=state.date;}
-  Object.entries(state.fields||{}).forEach(([fidBase,v])=>{
-    const chk=document.getElementById(fidBase+'_chk');if(chk) chk.checked=!!v.done;
-    // Support legacy single-field format
-    const t1=document.getElementById(fidBase+'_p1');if(t1) t1.value=v.p1||v.text||'';
-    const t2=document.getElementById(fidBase+'_p2');if(t2) t2.value=v.p2||'';
+  Object.entries(state.step_notes||{}).forEach(([si,text])=>{
+    const ta=document.getElementById('coup-step-notes-'+si);
+    if(ta) ta.value=text||'';
   });
   updateCouplesPartnerHeaders();
 }
@@ -3449,6 +3427,27 @@ window.newCouplesIntake=function(){
 };
 
 window.printCouplesIntake=function(){window.print();};
+
+window.fileCouplesIntakeToRecords=async function(){
+  const state=collectCouplesIntakeState();
+  if(!state.p1&&!state.p2){toast('Add at least one partner name before filing','error');return;}
+  const hasNotes=Object.values(state.step_notes||{}).some(t=>(t||'').trim());
+  if(!hasNotes){toast('No notes to file yet','error');return;}
+  // Persist draft locally first
+  saveCouplesIntake();
+  const payload={
+    draft_id:state.id,
+    p1_name:state.p1||null,
+    p2_name:state.p2||null,
+    session_date:state.date||null,
+    step_notes:state.step_notes||{},
+    updated_at:new Date().toISOString()
+  };
+  // Upsert on draft_id so re-filing overwrites the same row
+  const {error}=await supabase.from('couples_intake_sessions').upsert(payload,{onConflict:'draft_id'});
+  if(error){console.error(error);toast('Save failed: '+error.message,'error');return;}
+  toast('Filed to records','success');
+};
 
 // ── THRIVEHQ TRIALS ──
 let thqTrials=[];
