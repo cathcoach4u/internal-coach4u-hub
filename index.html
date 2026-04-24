@@ -16,8 +16,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Quicksand:wght@600;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
-html{-webkit-text-size-adjust:100%;text-size-adjust:100%;width:100vw;max-width:100vw;overflow-x:hidden;scroll-behavior:auto;position:relative;}
-body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#f0f6ff;color:#1e293b;min-height:100vh;display:flex;letter-spacing:-0.01em;-webkit-text-size-adjust:100%;text-size-adjust:100%;width:100vw;max-width:100vw;overflow-x:hidden;position:relative;left:0;}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;overflow-x:hidden;scroll-behavior:auto;}
+body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#f0f6ff;color:#1e293b;min-height:100vh;display:flex;letter-spacing:-0.01em;-webkit-text-size-adjust:100%;text-size-adjust:100%;overflow-x:hidden;}
 
 /* ── SIDEBAR ── */
 .sidebar{width:220px;background:linear-gradient(180deg,#1e3a5f 0%,#234b78 100%);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:50;}
@@ -120,7 +120,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
 @media(max-width:768px){
   .sidebar{display:none;}
   .sidebar.mobile-open{display:flex;width:280px;z-index:60;}
-  .main{margin-left:0;width:100%;max-width:100%;}
+  .main{margin-left:0;}
   .mobile-toggle{display:block!important;}
   .mobile-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:55;}
   .mobile-overlay.show{display:block;}
@@ -173,7 +173,19 @@ td .actions button{padding:8px 14px;font-size:12px;}
 <script>
 if('scrollRestoration' in history)history.scrollRestoration='manual';
 // Force top-left on every page lifecycle event iOS PWA might trigger
-function __c4uResetView(){try{window.scrollTo(0,0);document.documentElement.scrollLeft=0;document.documentElement.scrollTop=0;document.body&&(document.body.scrollLeft=0,document.body.scrollTop=0);}catch(e){}}
+function __c4uResetView(){try{window.scrollTo(0,0);document.documentElement.scrollLeft=0;document.documentElement.scrollTop=0;document.body&&(document.body.scrollLeft=0,document.body.scrollTop=0);__c4uDebug();}catch(e){}}
+function __c4uDebug(){
+  const el=document.getElementById('screenDebug');
+  if(!el) return;
+  const mob=window.innerWidth<=768;
+  const show=localStorage.getItem('c4uShowDebug')==='1'||window.location.search.indexOf('debug')>=0;
+  if(!show||!mob){el.style.display='none';return;}
+  el.style.display='block';
+  const body=document.body;const html=document.documentElement;
+  el.textContent='vw='+window.innerWidth+' vh='+window.innerHeight+' | htmlW='+html.clientWidth+' htmlScroll='+html.scrollWidth+' | bodyW='+body.clientWidth+' bodyScroll='+body.scrollWidth+' | scrollX='+window.scrollX+' scrollY='+window.scrollY+' | sPWA='+(window.matchMedia('(display-mode: standalone)').matches?'Y':'N');
+}
+window.c4uDebugOn=function(){localStorage.setItem('c4uShowDebug','1');__c4uDebug();};
+window.c4uDebugOff=function(){localStorage.removeItem('c4uShowDebug');__c4uDebug();};
 window.addEventListener('pageshow',__c4uResetView);
 window.addEventListener('load',__c4uResetView);
 window.addEventListener('orientationchange',__c4uResetView);
@@ -237,7 +249,7 @@ if('serviceWorker' in navigator){
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.29.4</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.29.5</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -253,6 +265,7 @@ if('serviceWorker' in navigator){
     <button class="area-tab" onclick="switchArea('operations')"><span class="tab-icon">&#128736;</span>Admin</button>
     <button class="area-tab" onclick="switchArea('finance')"><span class="tab-icon">&#128176;</span>Finance</button>
   </div>
+  <div id="screenDebug" style="display:none;background:#fef3c7;border-bottom:1px solid #fcd34d;padding:6px 10px;font-family:'Segoe UI',monospace;font-size:10px;color:#92400e;word-break:break-all;line-height:1.4;"></div>
   <div class="content">
 
     <!-- DASHBOARD -->
