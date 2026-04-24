@@ -249,7 +249,7 @@ if('serviceWorker' in navigator){
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.29.5</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.29.6</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -1640,7 +1640,7 @@ function renderCrmDash(){
     </div>
     <div class="dash-card" onclick="navTo('prospects')" style="cursor:pointer;${activeProspects?'box-shadow:0 0 0 2px #3b82f6;':''}" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='${activeProspects?'0 0 0 2px #3b82f6':'0 1px 3px rgba(0,0,0,.04)'}'">
       <div class="dc-icon" style="background:#dbeafe;color:#2563eb;">&#128203;</div>
-      <div class="dc-info"><h4>${prospectsList.length}</h4><p>Prospects</p></div>
+      <div class="dc-info"><h4>${activeProspects}</h4><p>Active Prospects</p></div>
     </div>
     <div class="dash-card" onclick="navTo('clients')" style="cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
       <div class="dc-icon green">&#128101;</div>
