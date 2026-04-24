@@ -219,7 +219,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.26.3</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.26.4</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -3333,6 +3333,12 @@ function couplesIntakeSaveIndex(idx){localStorage.setItem('couplesIntakeIndex',J
 
 let currentCouplesIntakeId=null;
 let currentCouplesIntakeClientId='';
+let currentCouplesIntakeStep=0;
+window.setCouplesIntakeStep=function(si){currentCouplesIntakeStep=si;renderCouplesIntake();};
+window.saveCouplesIntakeStep=async function(si){
+  saveCouplesIntake();
+  await fileCouplesIntakeToRecords();
+};
 
 function itemFieldId(stepIdx,secIdx,itemIdx,partner){return 'ci_'+stepIdx+'_'+secIdx+'_'+itemIdx+(partner?'_'+partner:'');}
 
@@ -3361,32 +3367,56 @@ function renderCouplesIntake(){
   const form=document.getElementById('coupIntakeForm');
   if(!form) return;
   if(!currentCouplesIntakeId) currentCouplesIntakeId=Date.now().toString();
-  const taStyle='width:100%;min-height:140px;padding:10px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;box-sizing:border-box;line-height:1.5;';
-  let html='';
+  const taStyle='width:100%;min-height:260px;padding:12px 14px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-family:inherit;resize:vertical;box-sizing:border-box;line-height:1.55;';
+
+  // Read saved step notes so we can show a completion indicator on each tab
+  let savedNotes={};
+  try{const raw=localStorage.getItem(couplesIntakeKey(currentCouplesIntakeId));if(raw){const st=JSON.parse(raw);savedNotes=st.step_notes||{};}}catch(e){}
+
+  // Tab bar across the 5 stages
+  let tabs='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #e2e8f0;">';
   couplesIntakeConfig.forEach((step,si)=>{
-    const open=si<3; // Steps 1-3 open by default; 4-5 collapsed
-    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid ${step.color};border-radius:10px;margin-bottom:10px;overflow:hidden;">
-      <div onclick="toggleCouplesStep(${si})" style="display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;user-select:none;">
-        <span id="coup-step-arrow-${si}" style="font-size:11px;color:${step.color};font-weight:700;">${open?'▼':'▶'}</span>
-        <span style="font-family:'Quicksand',sans-serif;font-size:15px;font-weight:700;color:${step.color};flex:1;">${step.step}</span>
-        ${si>=3?'<span style="font-size:10px;color:#94a3b8;font-weight:600;">Session 2+</span>':''}
-      </div>
-      <div id="coup-step-body-${si}" style="display:${open?'block':'none'};padding:0 16px 14px;">`;
-    step.sections.forEach((sec)=>{
-      html+=`<div style="margin-bottom:12px;">
-        <div style="font-size:12px;font-weight:700;color:#1e293b;margin-bottom:6px;padding:4px 8px;background:${step.color}12;border-radius:4px;">${sec.name}</div>
-        <ul style="margin:0 0 0 18px;padding:0;font-size:12px;color:#475569;line-height:1.5;">
-          ${sec.items.map(item=>'<li style="margin-bottom:3px;">'+item+'</li>').join('')}
-        </ul>
-      </div>`;
-    });
-    html+=`<div style="margin-top:10px;padding-top:10px;border-top:1px dashed ${step.color}44;">
-      <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:${step.color};margin-bottom:6px;">Notes &mdash; ${step.step}</div>
-      <textarea id="coup-step-notes-${si}" placeholder="Type your notes for this step..." oninput="saveCouplesIntake()" style="${taStyle}"></textarea>
-    </div>`;
-    html+=`</div></div>`;
+    const active=si===currentCouplesIntakeStep;
+    const hasNotes=(savedNotes[si]||'').trim().length>0;
+    tabs+=`<button type="button" onclick="setCouplesIntakeStep(${si})" style="padding:8px 14px;border:1px solid ${active?step.color:'#e2e8f0'};background:${active?step.color:'#fff'};color:${active?'#fff':step.color};border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">
+      ${hasNotes?'<span style="font-size:10px;">&#10004;</span>':''}
+      <span>${step.step}</span>
+      ${si>=3?'<span style="font-size:9px;font-weight:500;opacity:.75;">(S2+)</span>':''}
+    </button>`;
   });
-  form.innerHTML=html;
+  tabs+='</div>';
+
+  // Current stage body
+  const step=couplesIntakeConfig[currentCouplesIntakeStep]||couplesIntakeConfig[0];
+  const si=currentCouplesIntakeStep;
+  let body=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid ${step.color};border-radius:10px;overflow:hidden;">
+    <div style="padding:14px 18px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:10px;">
+      <span style="font-family:'Quicksand',sans-serif;font-size:16px;font-weight:700;color:${step.color};flex:1;">${step.step}</span>
+      ${si>=3?'<span style="font-size:10px;color:#94a3b8;font-weight:600;">Session 2+</span>':''}
+    </div>
+    <div style="padding:16px 18px;">`;
+  step.sections.forEach((sec)=>{
+    body+=`<div style="margin-bottom:14px;">
+      <div style="font-size:12px;font-weight:700;color:#1e293b;margin-bottom:6px;padding:4px 8px;background:${step.color}12;border-radius:4px;">${sec.name}</div>
+      <ul style="margin:0 0 0 18px;padding:0;font-size:12px;color:#475569;line-height:1.55;">
+        ${sec.items.map(item=>'<li style="margin-bottom:3px;">'+item+'</li>').join('')}
+      </ul>
+    </div>`;
+  });
+  body+=`<div style="margin-top:14px;padding-top:14px;border-top:1px dashed ${step.color}44;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:${step.color};margin-bottom:6px;">Notes &mdash; ${step.step}</div>
+      <textarea id="coup-step-notes-${si}" placeholder="Type your notes for this stage..." oninput="saveCouplesIntake()" style="${taStyle}"></textarea>
+      <div style="display:flex;gap:8px;justify-content:space-between;align-items:center;margin-top:12px;flex-wrap:wrap;">
+        <div style="display:flex;gap:6px;">
+          ${si>0?`<button type="button" class="btn btn-gray" onclick="setCouplesIntakeStep(${si-1})">&larr; Previous</button>`:''}
+          ${si<couplesIntakeConfig.length-1?`<button type="button" class="btn btn-gray" onclick="setCouplesIntakeStep(${si+1})">Next &rarr;</button>`:''}
+        </div>
+        <button type="button" class="btn btn-blue" onclick="saveCouplesIntakeStep(${si})" style="background:#16a34a;">&#128193; Save this stage</button>
+      </div>
+    </div>
+  </div></div>`;
+
+  form.innerHTML=tabs+body;
   loadCouplesIntakeValues();
   refreshCouplesIntakePicker();
 }
