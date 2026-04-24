@@ -220,7 +220,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.29.1</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.29.2</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -1748,6 +1748,10 @@ function renderItDash(){
     <div onclick="navTo('agents')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #2563eb;border-radius:12px;padding:18px 20px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
       <div style="font-weight:700;color:#1e3a5f;font-size:15px;margin-bottom:6px;">&#129302; Agents</div>
       <div style="font-size:12px;color:#64748b;line-height:1.5;">${parents} parent &middot; ${children} child &middot; ${all.length-parents-children} standalone</div>
+    </div>
+    <div onclick="navTo('agentsai')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #16a34a;border-radius:12px;padding:18px 20px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
+      <div style="font-weight:700;color:#1e3a5f;font-size:15px;margin-bottom:6px;">&#10024; AI Strategy</div>
+      <div style="font-size:12px;color:#64748b;line-height:1.5;">Audit an agent, spot drift, suggest missing messages, or chat about any agent.</div>
     </div>
     <div onclick="navTo('writingpartner')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #7c3aed;border-radius:12px;padding:18px 20px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
       <div style="font-weight:700;color:#1e3a5f;font-size:15px;margin-bottom:6px;">&#9997; Writing Partner</div>
