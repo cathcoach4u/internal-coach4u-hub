@@ -41,9 +41,10 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#f0f6ff;c
 .main{margin-left:220px;flex:1;min-width:0;min-height:100vh;}
 
 /* ── HEADER ── */
-.header{background:linear-gradient(180deg,#1e3a5f 0%,#234b78 100%);padding:calc(14px + env(safe-area-inset-top)) calc(32px + env(safe-area-inset-right)) 14px calc(32px + env(safe-area-inset-left));display:flex;align-items:center;justify-content:space-between;}
-.header h2{font-family:'Quicksand','Inter',sans-serif;font-size:20px;font-weight:700;color:#fff;}
-.header-right{display:flex;align-items:center;gap:12px;font-size:13px;color:rgba(255,255,255,.7);font-weight:500;}
+.header{background:linear-gradient(180deg,#1e3a5f 0%,#234b78 100%);padding:calc(14px + env(safe-area-inset-top)) calc(32px + env(safe-area-inset-right)) 14px calc(32px + env(safe-area-inset-left));display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0;}
+.header > div{min-width:0;}
+.header h2{font-family:'Quicksand','Inter',sans-serif;font-size:20px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
+.header-right{display:flex;align-items:center;gap:12px;font-size:13px;color:rgba(255,255,255,.7);font-weight:500;flex-shrink:0;}
 
 /* ── CONTENT ── */
 .content{padding:28px 32px;}
@@ -125,7 +126,10 @@ td .actions button{padding:8px 14px;font-size:12px;}
   .mobile-overlay.show{display:block;}
   .area-tabs{display:none;}
   .content{padding:14px max(16px, env(safe-area-inset-right)) calc(14px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));}
-  .header{padding:calc(12px + env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 12px max(16px, env(safe-area-inset-left));position:sticky;top:0;z-index:30;}
+  .header{padding:calc(12px + env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 12px max(16px, env(safe-area-inset-left));position:sticky;top:0;z-index:30;gap:8px;}
+  .header h2{font-size:17px;}
+  .header-right{gap:8px;font-size:11px;}
+  .header-right span[id="headerDate"]{font-size:11px;}
   .modal{padding:18px;max-width:92vw;}
   .dash-cards{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));}
   .mob-grid-2{grid-template-columns:1fr;}
@@ -220,7 +224,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.29.2</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.29.3</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
