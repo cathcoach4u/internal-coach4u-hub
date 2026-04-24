@@ -220,7 +220,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.28.7</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.29.0</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -531,6 +531,11 @@ td .actions button{padding:8px 14px;font-size:12px;}
         <button class="btn btn-blue" onclick="openAgentForm()">+ Add Agent</button>
       </div>
       <div id="agentContent"></div>
+    </div>
+
+    <!-- AGENTS AI STRATEGY -->
+    <div class="screen" id="screen-agentsai">
+      <div id="agentsAIContent"></div>
     </div>
 
     <!-- WRITING PARTNER -->
@@ -1369,7 +1374,7 @@ window.navTo = function(tab,btn){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+tab).classList.add('active');
   window.scrollTo(0,0);
-  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ',thqintake:'Intake Forms',strdash:'Strengths',opsdash:'Admin',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Strengths Hub',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Task Management',playbook:'Lou\'s Playbook',itprojects:'IT Projects',agents:'Agents',writingpartner:'Writing Partner',findash:'Finance',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fintxns:'Transactions',thqbrainpulse:'Brain Pulse',clibrainpulse:'Brain Pulse',thqpulse:'SAFEty Pulse',clipulse:'SAFE Pulse',pulsesdash:'Pulses Dashboard',couplesintake:'Couples Intake',couplesdash:'Couples Dashboard',itdash:'IT Dashboard',resourcesdash:'Resources'};
+  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ',thqintake:'Intake Forms',strdash:'Strengths',opsdash:'Admin',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Strengths Hub',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Task Management',playbook:'Lou\'s Playbook',itprojects:'IT Projects',agents:'Agents',writingpartner:'Writing Partner',findash:'Finance',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fintxns:'Transactions',thqbrainpulse:'Brain Pulse',clibrainpulse:'Brain Pulse',thqpulse:'SAFEty Pulse',clipulse:'SAFE Pulse',pulsesdash:'Pulses Dashboard',couplesintake:'Couples Intake',couplesdash:'Couples Dashboard',itdash:'IT Dashboard',resourcesdash:'Resources',agentsai:'Agents AI Strategy'};
   document.getElementById('pageTitle').textContent=titles[tab]||'Coach4U';
   // Sync area tab
   const area=pageToArea[tab]||'home';
@@ -1418,6 +1423,7 @@ window.navTo = function(tab,btn){
   if(tab==='playbook') renderPlaybook();
   if(tab==='itprojects') renderITProjects();
   if(tab==='agents') renderAgents();
+  if(tab==='agentsai') renderAgentsAI();
   if(tab==='findash') renderFinDash();
   if(tab==='finincome') renderFinIncome();
   if(tab==='finspend') renderFinSpend();
@@ -1450,7 +1456,7 @@ const areaConfig={
   couples:{label:'Couples',pages:[{id:'couplesdash',icon:'&#128200;',label:'Dashboard'},{id:'couplesintake',icon:'&#128221;',label:'Couples Intake'}]},
   thrivehq:{label:'ThriveHQ',pages:[{id:'thqdash',icon:'&#128170;',label:'Dashboard'},{id:'thqtrials',icon:'&#127793;',label:'Trials'},{id:'thrivehq',icon:'&#128101;',label:'Members'},{id:'thqrenewals',icon:'&#128260;',label:'Renewals'},{id:'thqcalls',icon:'&#128222;',label:'Coaching Calls'}]},
   strengths:{label:'Strengths',pages:[{id:'strdash',icon:'&#127919;',label:'Dashboard'},{id:'strengths',icon:'&#128161;',label:'Strengths Hub'}]},
-  it:{label:'IT',pages:[{id:'itdash',icon:'&#128200;',label:'Dashboard'},{id:'itprojects',icon:'&#9881;',label:'IT Projects'},{id:'agents',icon:'&#129302;',label:'Agents'},{id:'writingpartner',icon:'&#9997;',label:'Writing Partner'}]},
+  it:{label:'IT',pages:[{id:'itdash',icon:'&#128200;',label:'Dashboard'},{id:'itprojects',icon:'&#9881;',label:'IT Projects'},{id:'agents',icon:'&#129302;',label:'Agents'},{id:'agentsai',icon:'&#10024;',label:'AI Strategy'},{id:'writingpartner',icon:'&#9997;',label:'Writing Partner'}]},
   resources:{label:'Resources',pages:[{id:'resourcesdash',icon:'&#128200;',label:'Dashboard'}]},
   operations:{label:'Admin',pages:[{id:'opsdash',icon:'&#128736;',label:'Dashboard'},{id:'tasks',icon:'&#9989;',label:'Task Management'},{id:'playbook',icon:'&#128214;',label:'Playbook'}]},
   finance:{label:'Finance',pages:[{id:'findash',icon:'&#128176;',label:'Dashboard'},{id:'finincome',icon:'&#128181;',label:'Income'},{id:'finspend',icon:'&#128200;',label:'Where Money Goes'},{id:'finbills',icon:'&#128196;',label:'Bills'},{id:'fintxns',icon:'&#128203;',label:'Transactions'}]},
@@ -6409,6 +6415,235 @@ function renderAgents(){
   el.innerHTML=html;
 }
 window.renderAgents=renderAgents;
+
+// ── AGENTS AI STRATEGY ──
+const agentsAIState={selectedAgentId:'',messages:[],working:false};
+
+function escHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function renderAgentsAI(){
+  const el=document.getElementById('agentsAIContent');
+  if(!el) return;
+  const st=agentsAIState;
+  const picked=st.selectedAgentId?agents.find(a=>a.id===st.selectedAgentId):null;
+  const keyOk=!!getAnthropicKey();
+
+  // Agent picker
+  const sortedAgents=[...(agents||[])].sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  let html=`<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px;">
+    <div style="flex:1;min-width:240px;">
+      <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:4px;">Agent in focus</div>
+      <select onchange="setAgentsAIAgent(this.value)" style="width:100%;padding:10px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
+        <option value="">— Select an agent —</option>
+        ${sortedAgents.map(a=>`<option value="${a.id}" ${a.id===st.selectedAgentId?'selected':''}>${escHtml(a.name)} ${a.type?'('+escHtml(a.type)+')':''}</option>`).join('')}
+      </select>
+    </div>
+    <button onclick="resetAgentsAI()" style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;padding:10px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">Clear chat</button>
+  </div>`;
+
+  // Agent meta card
+  if(picked){
+    const parent=picked.parent_agent_id?agents.find(a=>a.id===picked.parent_agent_id):null;
+    const stages=(agentStages||[]).filter(s=>s.agent_id===picked.id);
+    const templates=(agentTemplates||[]).filter(t=>stages.some(s=>s.id===t.stage_id));
+    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #003366;border-radius:10px;padding:14px 18px;margin-bottom:14px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;">
+      <div style="flex:1;min-width:180px;">
+        <div style="font-weight:700;color:#1e3a5f;font-size:15px;">${escHtml(picked.name)}</div>
+        <div style="font-size:12px;color:#64748b;margin-top:2px;">${escHtml(picked.type||'standalone')}${parent?' &middot; parent: '+escHtml(parent.name):''}${picked.platform?' &middot; '+escHtml(picked.platform):''}</div>
+      </div>
+      <div style="display:flex;gap:14px;font-size:11px;color:#64748b;">
+        <span><strong style="color:#003366;">${stages.length}</strong> stages</span>
+        <span><strong style="color:#003366;">${templates.length}</strong> messages</span>
+        <span><strong style="color:#003366;">${((picked.system_prompt||'').length)}</strong> prompt chars</span>
+      </div>
+    </div>`;
+  }
+
+  // Actions
+  html+=`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+    <button onclick="runAgentAudit()" ${(!picked||st.working)?'disabled':''} style="background:#003366;color:#fff;border:none;padding:10px 18px;border-radius:8px;font-size:12px;font-weight:700;cursor:${picked&&!st.working?'pointer':'not-allowed'};opacity:${picked&&!st.working?1:.5};">&#128269; Audit this agent</button>
+    <button onclick="runAgentSuggestMissing()" ${(!picked||st.working)?'disabled':''} style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;padding:10px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:${picked&&!st.working?'pointer':'not-allowed'};opacity:${picked&&!st.working?1:.5};">Suggest missing messages</button>
+    <button onclick="runAgentCompareParent()" ${(!picked||!picked.parent_agent_id||st.working)?'disabled':''} style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;padding:10px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:${picked&&picked.parent_agent_id&&!st.working?'pointer':'not-allowed'};opacity:${picked&&picked.parent_agent_id&&!st.working?1:.5};">Compare to parent</button>
+  </div>`;
+
+  // API key notice
+  if(!keyOk){
+    html+=`<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#92400e;">
+      &#9888; Anthropic API key needed. Set it in C4U Bot settings first — uses the same key.
+    </div>`;
+  }
+
+  // Conversation
+  if(st.messages.length){
+    html+=`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin-bottom:12px;">`;
+    st.messages.forEach(m=>{
+      const isUser=m.role==='user';
+      html+=`<div style="margin-bottom:10px;">
+        <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:${isUser?'#64748b':'#003366'};font-weight:700;margin-bottom:4px;">${isUser?'You':'AI'}${m.action?' &middot; '+escHtml(m.action):''}</div>
+        <div style="background:${isUser?'#fff':'#eff6ff'};border:1px solid ${isUser?'#e2e8f0':'#bfdbfe'};border-radius:8px;padding:10px 14px;font-size:13px;line-height:1.6;color:#1e293b;white-space:pre-wrap;">${escHtml(m.content)}</div>
+      </div>`;
+    });
+    if(st.working){
+      html+=`<div style="font-size:12px;color:#64748b;padding:8px 14px;">AI thinking…</div>`;
+    }
+    html+=`</div>`;
+  }
+
+  // Free-form input
+  html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px;">
+    <textarea id="agentsAIInput" rows="2" placeholder="${picked?'Ask a question about '+escHtml(picked.name)+' — e.g. "how could stage 2 be warmer?"':'Select an agent above to start.'}" style="width:100%;border:none;outline:none;resize:vertical;font-family:inherit;font-size:13px;line-height:1.5;color:#1e293b;background:transparent;" ${!picked?'disabled':''}></textarea>
+    <div style="display:flex;justify-content:flex-end;margin-top:6px;">
+      <button onclick="sendAgentsAIMessage()" ${(!picked||st.working)?'disabled':''} style="background:#003366;color:#fff;border:none;padding:8px 18px;border-radius:6px;font-size:12px;font-weight:600;cursor:${picked&&!st.working?'pointer':'not-allowed'};opacity:${picked&&!st.working?1:.5};">Send</button>
+    </div>
+  </div>
+  <div style="height:80px;"></div>`;
+
+  el.innerHTML=html;
+}
+window.renderAgentsAI=renderAgentsAI;
+
+window.setAgentsAIAgent=function(id){agentsAIState.selectedAgentId=id||'';agentsAIState.messages=[];renderAgentsAI();};
+window.resetAgentsAI=function(){agentsAIState.messages=[];renderAgentsAI();};
+
+function buildAgentContextBlock(agent){
+  if(!agent) return '';
+  const parent=agent.parent_agent_id?agents.find(a=>a.id===agent.parent_agent_id):null;
+  const stages=(agentStages||[]).filter(s=>s.agent_id===agent.id).sort((a,b)=>(a.stage_order||0)-(b.stage_order||0));
+  const templates=(agentTemplates||[]).filter(t=>stages.some(s=>s.id===t.stage_id));
+  let out='=== AGENT ===\n';
+  out+='Name: '+(agent.name||'')+'\n';
+  out+='Type: '+(agent.type||'standalone')+'\n';
+  if(agent.platform) out+='Platform: '+agent.platform+'\n';
+  if(agent.description) out+='Description: '+agent.description+'\n';
+  if(parent){out+='\n=== PARENT AGENT PROMPT ===\n'+(parent.system_prompt||'(empty)')+'\n';}
+  out+='\n=== SYSTEM PROMPT ===\n'+(agent.system_prompt||'(empty)')+'\n';
+  if(agent.stages_content){out+='\n=== STAGES DOC (free-form markdown) ===\n'+agent.stages_content+'\n';}
+  if(stages.length){
+    out+='\n=== STAGES ('+stages.length+') ===\n';
+    stages.forEach((s,i)=>{
+      out+='\nSTAGE '+(s.stage_order||(i+1))+': '+(s.name||'')+'\n';
+      if(s.trigger_phrase) out+='  Trigger: '+s.trigger_phrase+'\n';
+      if(s.default_sender) out+='  Default sender: '+s.default_sender+'\n';
+      if(s.purpose) out+='  Purpose: '+s.purpose+'\n';
+      if(s.platform_rule) out+='  Platform rule: '+s.platform_rule+'\n';
+      const msgs=templates.filter(t=>t.stage_id===s.id);
+      msgs.forEach(m=>{
+        out+='  ['+(m.persona||'?')+' / '+(m.platform||'?')+']';
+        if(m.subject) out+=' Subject: '+m.subject;
+        out+='\n    '+String(m.body||'').replace(/\n/g,'\n    ')+'\n';
+      });
+    });
+  }
+  return out;
+}
+
+async function callAnthropic(systemPrompt,userMessage,maxTokens){
+  const resp=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'x-api-key':getAnthropicKey(),
+      'anthropic-version':'2023-06-01',
+      'anthropic-dangerous-direct-browser-access':'true'
+    },
+    body:JSON.stringify({
+      model:'claude-haiku-4-5-20251001',
+      max_tokens:maxTokens||2048,
+      system:systemPrompt,
+      messages:[{role:'user',content:userMessage}]
+    })
+  });
+  if(!resp.ok){
+    const txt=await resp.text();
+    throw new Error('API '+resp.status+': '+txt.slice(0,200));
+  }
+  const json=await resp.json();
+  const text=(json.content||[]).filter(c=>c.type==='text').map(c=>c.text).join('\n');
+  return {text,usage:json.usage||{}};
+}
+
+async function logAgentAiSession(agentId,action,input,output,usage){
+  try{
+    await supabase.from('agent_ai_sessions').insert({
+      agent_id:agentId||null,
+      action,
+      input:typeof input==='string'?{prompt:input}:input,
+      output:typeof output==='string'?{text:output}:output,
+      model:'claude-haiku-4-5-20251001',
+      tokens_in:usage?.input_tokens||null,
+      tokens_out:usage?.output_tokens||null
+    });
+  }catch(e){console.warn('agent_ai_sessions log failed:',e);}
+}
+
+async function runAgentAIAction(actionLabel,systemPrompt,userPrompt){
+  if(!getAnthropicKey()){toast('Set Anthropic API key in C4U Bot first','error');return;}
+  const agent=agents.find(a=>a.id===agentsAIState.selectedAgentId);
+  if(!agent){toast('Pick an agent first','error');return;}
+  agentsAIState.working=true;
+  agentsAIState.messages.push({role:'user',content:userPrompt.slice(0,400)+(userPrompt.length>400?'…':''),action:actionLabel});
+  renderAgentsAI();
+  try{
+    const {text,usage}=await callAnthropic(systemPrompt,userPrompt,3000);
+    agentsAIState.messages.push({role:'assistant',content:text,action:actionLabel});
+    logAgentAiSession(agent.id,actionLabel,{systemPrompt,userPrompt},{text},usage);
+  }catch(e){
+    agentsAIState.messages.push({role:'assistant',content:'Error: '+e.message,action:actionLabel});
+  }finally{
+    agentsAIState.working=false;
+    renderAgentsAI();
+  }
+}
+
+window.runAgentAudit=function(){
+  const agent=agents.find(a=>a.id===agentsAIState.selectedAgentId);
+  if(!agent) return;
+  const sys=`You are a senior AI agent reviewer for Coach4U, a coaching and counselling practice.
+You will be given an agent's configuration (name, type, parent prompt if any, system prompt, stages, messages).
+Produce a concise, actionable audit report in Markdown with these sections:
+1. **Summary** — 2-3 sentences on overall quality.
+2. **Drift & inconsistencies** — e.g. "Which stage?" menu options in the system prompt vs actual stage count; stage names in prompt vs stages data.
+3. **Missing messages** — persona × platform (Cath/Other × Text/WhatsApp/Email/Teams) combinations that look missing given the agent's purpose.
+4. **Tone & clarity** — per-stage notes; quote the specific text where relevant.
+5. **Contradictions with parent** (only if a parent prompt is provided).
+6. **Top 3 fixes** — numbered, each one specific (quote location + suggested rewrite).
+Keep each finding to 1-2 lines. No filler.`;
+  const user=buildAgentContextBlock(agent);
+  runAgentAIAction('Audit',sys,user);
+};
+
+window.runAgentSuggestMissing=function(){
+  const agent=agents.find(a=>a.id===agentsAIState.selectedAgentId);
+  if(!agent) return;
+  const sys=`You are helping Coach4U complete an AI agent's message library.
+Given the agent's purpose, stages, and existing messages, list the messages that are missing and should be written.
+For each missing message, give: stage name, persona (Cath or Other), platform (Text/WhatsApp/Email/Teams), subject (if email), and a suggested body (≤80 words for Text/WhatsApp, ≤200 words for Email/Teams).
+Group by stage. Only include genuine gaps; don't invent stages.`;
+  const user=buildAgentContextBlock(agent);
+  runAgentAIAction('Missing messages',sys,user);
+};
+
+window.runAgentCompareParent=function(){
+  const agent=agents.find(a=>a.id===agentsAIState.selectedAgentId);
+  if(!agent||!agent.parent_agent_id) return;
+  const sys=`You are auditing a child AI agent against its parent for Coach4U.
+Identify: (a) rules from the parent this child should inherit but appears to have dropped, (b) contradictions between parent and child instructions, (c) parent-defined personas/platforms that the child doesn't implement.
+Return a short Markdown list. Quote specific lines where relevant.`;
+  const user=buildAgentContextBlock(agent);
+  runAgentAIAction('Compare to parent',sys,user);
+};
+
+window.sendAgentsAIMessage=async function(){
+  const input=document.getElementById('agentsAIInput');
+  const q=(input?.value||'').trim();
+  if(!q) return;
+  const agent=agents.find(a=>a.id===agentsAIState.selectedAgentId);
+  if(!agent){toast('Pick an agent first','error');return;}
+  input.value='';
+  const sys=`You are an AI agent strategist for Coach4U. You will be given the current configuration of one agent, then a question from the practitioner. Answer specifically about this agent, quoting its own text where helpful. Prefer concrete edits over abstract advice. If asked to rewrite something, provide the full rewrite in a code block.`;
+  const user='AGENT CONTEXT:\n'+buildAgentContextBlock(agent)+'\n\nQUESTION:\n'+q;
+  runAgentAIAction('Chat',sys,user);
+};
 
 window.viewAgentDetail=function(id){
   agentDetailId=id;
