@@ -249,7 +249,7 @@ if('serviceWorker' in navigator){
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.36.0</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.37.0</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -3437,6 +3437,8 @@ function renderStrengthsCard(c){
   html+=group('Top 5 — Signature Themes',top5);
   if(bottom5.length) html+=group('Themes 6–10',bottom5);
   html+=renderStrengthsInsightsBlock(c);
+  html+=renderBringNeedBlock(c);
+  html+=renderAdaptationTipsBlock(c);
   return html;
 }
 
@@ -3462,6 +3464,183 @@ function renderStrengthsInsightsBlock(c){
   h+='</div>';
   return h;
 }
+
+function renderBringNeedBlock(c){
+  const insights=(strengthsInsights||[]).filter(r=>r.contact_id===c.id&&r.insight_type==='bring_need').sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+  const latest=insights[0]||null;
+  const keyOk=!!getAnthropicKey();
+  let h=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px 20px;margin-bottom:12px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+      <div style="font-family:'Quicksand','Inter',sans-serif;font-size:13px;font-weight:700;color:#1e3a5f;letter-spacing:.5px;text-transform:uppercase;">What You Bring &amp; Need</div>
+      <div class="no-print" style="display:flex;gap:6px;align-items:center;">
+        ${latest?`<span style="font-size:11px;color:#94a3b8;">${new Date(latest.created_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'})}</span>`:''}
+        <button id="genBN-${c.id}" onclick="generateBringNeed('${c.id}')" ${keyOk?'':'disabled'} style="background:${keyOk?'#003366':'#cbd5e1'};color:#fff;border:none;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:${keyOk?'pointer':'not-allowed'};">${latest?'Regenerate':'Generate'}</button>
+      </div>
+    </div>`;
+  if(!keyOk){
+    h+=`<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px 14px;font-size:12px;color:#92400e;">Anthropic API key needed. Set it in C4U Bot settings first.</div>`;
+  } else if(!latest){
+    h+=`<div style="font-size:12px;color:#64748b;line-height:1.6;">No reading yet. Click <strong>Generate</strong> for a short take on what this person brings to a team and what they need from one — written in Cath's voice.</div>`;
+  } else {
+    h+=`<div style="font-size:13px;line-height:1.7;color:#1e293b;white-space:pre-wrap;">${(latest.content||'').replace(/</g,'&lt;')}</div>`;
+  }
+  h+='</div>';
+  return h;
+}
+
+window.generateBringNeed=async function(contactId){
+  const c=contacts.find(x=>x.id===contactId);
+  if(!c){toast('Contact not found','error');return;}
+  if(!getAnthropicKey()){toast('Set Anthropic API key first','error');return;}
+  const list=getContactStrengths(c);
+  if(!list.length){toast('No strengths recorded','error');return;}
+  const btn=document.getElementById('genBN-'+contactId);
+  if(btn){btn.disabled=true;btn.textContent='Generating…';}
+  try{
+    const themes=list.map(s=>`#${s.rank} ${s.name}${CS_THEME_DESC[s.name]?' — '+CS_THEME_DESC[s.name]:''}`).join('\n');
+    const sys=`You are drafting a "Bring & Need" reading for a Coach4U client based on their CliftonStrengths top-10. The reading is for the client to read.
+
+WRITE IN CATH'S VOICE. The voice reference is the source of truth for tone:
+
+${CATH_VOICE_REFERENCE}
+
+STRUCTURE — exactly two short labelled paragraphs, no headings beyond the bold inline labels:
+**What you bring** — one paragraph on what this person reliably contributes when they're in a team. Concrete, observable behaviours, not adjectives.
+**What you need** — one paragraph on what they need from a team to be at their best. Practical conditions, not wishes.
+
+RULES:
+- Australian English, no exclamation marks, no emojis
+- Plain English, short to medium sentences, one idea per sentence
+- Strengths-based — patterns, not deficits
+- Talk to the reader as "you"
+- Total length 160–220 words across both paragraphs
+- Don't list themes verbatim; weave them in naturally
+- No "I" from Cath; this is a reading prepared for the client`;
+    const user=`Client first name: ${c.preferred_name||c.first_name||'Friend'}
+Top 10 themes (with descriptions):
+${themes}`;
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':getAnthropicKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:1000,system:sys,messages:[{role:'user',content:user}]})
+    });
+    if(!resp.ok){const t=await resp.text();throw new Error('API '+resp.status+': '+t.slice(0,200));}
+    const json=await resp.json();
+    const text=(json.content||[]).filter(p=>p.type==='text').map(p=>p.text).join('\n').trim();
+    const usage=json.usage||{};
+    const snapshot={};
+    list.forEach(s=>{snapshot['strength_'+s.rank]=s.name;});
+    const ins={contact_id:contactId,insight_type:'bring_need',content:text,strengths_snapshot:snapshot,model:'claude-haiku-4-5-20251001',tokens_in:usage.input_tokens||null,tokens_out:usage.output_tokens||null};
+    const {error}=await supabase.from('strengths_insights').insert(ins);
+    if(error){console.error(error);toast('Saved locally but DB write failed: '+error.message,'error');}
+    await loadStrengthsInsights();
+    renderStrengthsReports();
+    toast('Bring &amp; Need generated','success');
+  }catch(e){
+    console.error(e);
+    toast('Failed: '+e.message,'error');
+    if(btn){btn.disabled=false;btn.textContent='Generate';}
+  }
+};
+
+function findPractitionerContact(){
+  // Look for Cath by exact name first; fall back to known email if needed
+  const byName=(contacts||[]).find(c=>(c.first_name||'').toLowerCase()==='cath'&&(c.last_name||'').toLowerCase()==='baker'&&c.strength_1);
+  if(byName) return byName;
+  // Generic fallback: any "Cath" with strengths
+  return (contacts||[]).find(c=>(c.first_name||'').toLowerCase()==='cath'&&c.strength_1)||null;
+}
+
+function renderAdaptationTipsBlock(c){
+  const cath=findPractitionerContact();
+  if(!cath) return '';
+  if(cath.id===c.id) return ''; // Don't show on Cath's own report
+  const insights=(strengthsInsights||[]).filter(r=>r.contact_id===c.id&&r.insight_type==='adaptation_tips').sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+  const latest=insights[0]||null;
+  const keyOk=!!getAnthropicKey();
+  let h=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px 20px;margin-bottom:12px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+      <div style="font-family:'Quicksand','Inter',sans-serif;font-size:13px;font-weight:700;color:#1e3a5f;letter-spacing:.5px;text-transform:uppercase;">Adaptation Tips for Cath</div>
+      <div class="no-print" style="display:flex;gap:6px;align-items:center;">
+        ${latest?`<span style="font-size:11px;color:#94a3b8;">${new Date(latest.created_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'})}</span>`:''}
+        <button id="genAd-${c.id}" onclick="generateAdaptationTips('${c.id}')" ${keyOk?'':'disabled'} style="background:${keyOk?'#003366':'#cbd5e1'};color:#fff;border:none;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:${keyOk?'pointer':'not-allowed'};">${latest?'Regenerate':'Generate'}</button>
+      </div>
+    </div>`;
+  if(!keyOk){
+    h+=`<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px 14px;font-size:12px;color:#92400e;">Anthropic API key needed.</div>`;
+  } else if(!latest){
+    h+=`<div style="font-size:12px;color:#64748b;line-height:1.6;">No tips yet. Click <strong>Generate</strong> for a short note on where Cath and ${c.first_name||'this client'} differ in dominant patterns and how Cath can adapt for the session.</div>`;
+  } else {
+    h+=`<div style="font-size:13px;line-height:1.7;color:#1e293b;white-space:pre-wrap;">${(latest.content||'').replace(/</g,'&lt;')}</div>`;
+  }
+  h+='</div>';
+  return h;
+}
+
+window.generateAdaptationTips=async function(contactId){
+  const c=contacts.find(x=>x.id===contactId);
+  const cath=findPractitionerContact();
+  if(!c||!cath){toast('Could not find practitioner or contact','error');return;}
+  if(!getAnthropicKey()){toast('Set Anthropic API key first','error');return;}
+  const cathList=getContactStrengths(cath);
+  const cliList=getContactStrengths(c);
+  if(!cathList.length){toast("Cath's own strengths aren't recorded yet — add them first",'error');return;}
+  if(!cliList.length){toast('No strengths recorded for this contact','error');return;}
+  const btn=document.getElementById('genAd-'+contactId);
+  if(btn){btn.disabled=true;btn.textContent='Generating…';}
+  try{
+    function fmt(list){return list.map(s=>`#${s.rank} ${s.name}${CS_THEME_DESC[s.name]?' — '+CS_THEME_DESC[s.name]:''}`).join('\n');}
+    function dom(list){const dc={Executing:0,Influencing:0,Relationship:0,Strategic:0};list.forEach(s=>{const d=getDomain(s.name);if(d)dc[d]++;});return Object.entries(dc).sort((a,b)=>b[1]-a[1]).map(([d,n])=>d+': '+n).join(', ');}
+    const sys=`You are writing a short adaptation note for Cath (the practitioner) ahead of a session with a client. The note compares Cath's own CliftonStrengths profile to the client's, and gives Cath practical guidance on how to adapt her natural style.
+
+WRITE IN CATH'S VOICE (this note is for her, but in the same plain register):
+
+${CATH_VOICE_REFERENCE}
+
+STRUCTURE — three short labelled sections:
+**Where you're similar** — one sentence or two. Where Cath and the client share dominant themes or domain.
+**Where you're different** — one short paragraph naming the most notable difference (domain skew or specific themes), as a pattern not a deficit.
+**How to adapt** — three numbered, practical, in-session moves Cath can make to meet the client where they are. Each one short. Each one a verb.
+
+RULES:
+- Australian English, no exclamation marks, no emojis, no clinical language
+- Plain English, short to medium sentences
+- Strengths-based framing throughout
+- Address Cath as "you"
+- Keep it under 220 words across all three sections
+- Don't list themes verbatim; weave them in naturally
+- Skip preamble; go straight in`;
+    const user=`PRACTITIONER (Cath):
+Domain mix: ${dom(cathList)}
+Top 10:
+${fmt(cathList)}
+
+CLIENT (${c.preferred_name||c.first_name||'Friend'}):
+Domain mix: ${dom(cliList)}
+Top 10:
+${fmt(cliList)}`;
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':getAnthropicKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:1200,system:sys,messages:[{role:'user',content:user}]})
+    });
+    if(!resp.ok){const t=await resp.text();throw new Error('API '+resp.status+': '+t.slice(0,200));}
+    const json=await resp.json();
+    const text=(json.content||[]).filter(p=>p.type==='text').map(p=>p.text).join('\n').trim();
+    const usage=json.usage||{};
+    const snap={practitioner_id:cath.id,practitioner_top:cathList.map(s=>s.name),client_top:cliList.map(s=>s.name)};
+    const row={contact_id:contactId,insight_type:'adaptation_tips',content:text,strengths_snapshot:snap,model:'claude-haiku-4-5-20251001',tokens_in:usage.input_tokens||null,tokens_out:usage.output_tokens||null};
+    const {error}=await supabase.from('strengths_insights').insert(row);
+    if(error){console.error(error);toast('Saved locally but DB write failed: '+error.message,'error');}
+    await loadStrengthsInsights();
+    renderStrengthsReports();
+    toast('Adaptation tips generated','success');
+  }catch(e){
+    console.error(e);
+    toast('Failed: '+e.message,'error');
+    if(btn){btn.disabled=false;btn.textContent='Generate';}
+  }
+};
 
 window.generateStrengthsInsights=async function(contactId){
   const c=contacts.find(x=>x.id===contactId);
@@ -3573,7 +3752,10 @@ function domainBar(list,height){
 
 function renderPreSessionBriefIndividual(c){
   const list=getContactStrengths(c);
-  const ins=(strengthsInsights||[]).filter(r=>r.contact_id===c.id&&r.insight_type==='personal_insights').sort((a,b)=>new Date(b.created_at)-new Date(a.created_at))[0];
+  const allIns=(strengthsInsights||[]).filter(r=>r.contact_id===c.id);
+  const ins=allIns.filter(r=>r.insight_type==='personal_insights').sort((a,b)=>new Date(b.created_at)-new Date(a.created_at))[0];
+  const bn=allIns.filter(r=>r.insight_type==='bring_need').sort((a,b)=>new Date(b.created_at)-new Date(a.created_at))[0];
+  const adapt=allIns.filter(r=>r.insight_type==='adaptation_tips').sort((a,b)=>new Date(b.created_at)-new Date(a.created_at))[0];
   const sp=(c.sharepoint_link||'').trim();
   const todayStr=new Date().toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   let html=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #003366;border-radius:12px;padding:16px 18px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
@@ -3591,14 +3773,18 @@ function renderPreSessionBriefIndividual(c){
   </div>`;
   // Pulses
   html+=pulseSnapshotFor(c.id);
-  // AI insight
-  if(ins){
-    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;margin-bottom:12px;">
-      <div style="font-family:'Quicksand','Inter',sans-serif;font-size:12px;font-weight:700;color:#1e3a5f;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px;">Personal Insights</div>
-      <div style="font-size:12.5px;line-height:1.65;color:#1e293b;white-space:pre-wrap;">${(ins.content||'').replace(/</g,'&lt;')}</div>
+  // AI insights — render whichever exist
+  function aiBlock(title,body){
+    return `<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;margin-bottom:12px;">
+      <div style="font-family:'Quicksand','Inter',sans-serif;font-size:12px;font-weight:700;color:#1e3a5f;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px;">${title}</div>
+      <div style="font-size:12.5px;line-height:1.65;color:#1e293b;white-space:pre-wrap;">${(body||'').replace(/</g,'&lt;')}</div>
     </div>`;
-  } else {
-    html+=`<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#92400e;">No Personal Insights generated yet. Switch off Brief mode to generate one.</div>`;
+  }
+  if(ins) html+=aiBlock('Personal Insights',ins.content);
+  if(bn) html+=aiBlock('What You Bring &amp; Need',bn.content);
+  if(adapt) html+=aiBlock('Adaptation Tips for Cath',adapt.content);
+  if(!ins&&!bn&&!adapt){
+    html+=`<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#92400e;">No AI readings generated yet. Switch off Brief mode and use the Generate buttons.</div>`;
   }
   // Quick links
   if(sp&&sp.startsWith('http')){
