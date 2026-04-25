@@ -249,7 +249,7 @@ if('serviceWorker' in navigator){
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.34.1</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.35.0</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -3697,10 +3697,113 @@ function renderPairComparison(p1,p2){
   </div>`;
 
   // Side-by-side columns
-  html+=`<div class="pulse-quad" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">${renderColumn(p1,list1,set2)}${renderColumn(p2,list2,set1)}</div>`;
+  html+=`<div class="pulse-quad" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">${renderColumn(p1,list1,set2)}${renderColumn(p2,list2,set1)}</div>`;
+
+  // AI Couple Dynamics block (uses Cath voice)
+  html+=renderCoupleDynamicsBlock(p1,p2);
 
   return html;
 }
+
+function findCoupleInsight(p1Id,p2Id){
+  return (strengthsInsights||[]).find(r=>{
+    if(r.insight_type!=='couple_dynamics') return false;
+    const snap=r.strengths_snapshot||{};
+    const ids=[snap.p1_id,snap.p2_id];
+    return ids.includes(p1Id)&&ids.includes(p2Id);
+  });
+}
+
+function renderCoupleDynamicsBlock(p1,p2){
+  const list1=getContactStrengths(p1);
+  const list2=getContactStrengths(p2);
+  if(!list1.length||!list2.length){
+    return `<div style="background:#f8fafc;border:1px dashed #cbd5e1;border-radius:12px;padding:14px 18px;font-size:12px;color:#64748b;">AI Couple Dynamics needs both partners to have strengths recorded.</div>`;
+  }
+  const keyOk=!!getAnthropicKey();
+  const existing=findCoupleInsight(p1.id,p2.id);
+  let h=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px 20px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+      <div style="font-family:'Quicksand','Inter',sans-serif;font-size:13px;font-weight:700;color:#1e3a5f;letter-spacing:.5px;text-transform:uppercase;">Couple Dynamics</div>
+      <div class="no-print" style="display:flex;gap:6px;align-items:center;">
+        ${existing?`<span style="font-size:11px;color:#94a3b8;">${new Date(existing.created_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'})}</span>`:''}
+        <button id="genCpl-${p1.id}-${p2.id}" onclick="generateCoupleDynamics('${p1.id}','${p2.id}')" ${keyOk?'':'disabled'} style="background:${keyOk?'#003366':'#cbd5e1'};color:#fff;border:none;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:${keyOk?'pointer':'not-allowed'};">${existing?'Regenerate':'Generate'}</button>
+      </div>
+    </div>`;
+  if(!keyOk){
+    h+=`<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px 14px;font-size:12px;color:#92400e;">Anthropic API key needed. Set it in C4U Bot settings first.</div>`;
+  } else if(!existing){
+    h+=`<div style="font-size:12px;color:#64748b;line-height:1.6;">No insight generated yet. Click <strong>Generate</strong> for a short reading on where this pair complements, where friction is likely, and a couple of coaching prompts &mdash; written in Cath's voice.</div>`;
+  } else {
+    h+=`<div style="font-size:13px;line-height:1.7;color:#1e293b;white-space:pre-wrap;">${(existing.content||'').replace(/</g,'&lt;')}</div>`;
+  }
+  h+='</div>';
+  return h;
+}
+
+window.generateCoupleDynamics=async function(p1Id,p2Id){
+  const p1=contacts.find(c=>c.id===p1Id);
+  const p2=contacts.find(c=>c.id===p2Id);
+  if(!p1||!p2){toast('Partner not found','error');return;}
+  if(!getAnthropicKey()){toast('Set Anthropic API key first','error');return;}
+  const list1=getContactStrengths(p1);
+  const list2=getContactStrengths(p2);
+  if(!list1.length||!list2.length){toast('Both partners need strengths recorded','error');return;}
+  const btn=document.getElementById('genCpl-'+p1Id+'-'+p2Id);
+  if(btn){btn.disabled=true;btn.textContent='Generating…';}
+  try{
+    function n(c){return (c.preferred_name||c.first_name||'').trim()||'Partner';}
+    function fmt(list){return list.map(s=>`#${s.rank} ${s.name}${CS_THEME_DESC[s.name]?' — '+CS_THEME_DESC[s.name]:''}`).join('\n');}
+    const sharedNames=list1.filter(s=>list2.some(t=>t.name===s.name)).map(s=>s.name);
+    const sys=`You are drafting a Couple Dynamics reading for a Coach4U practitioner working with this couple in session. The reading is for the practitioner (Cath), not for the clients.
+
+WRITE IN CATH'S VOICE. The voice reference is the source of truth for tone:
+
+${CATH_VOICE_REFERENCE}
+
+STRUCTURE — three short sections, each with a bold inline label:
+**Where they complement** — one short paragraph on how their differences could serve them as a pair.
+**Where friction is likely** — one short paragraph naming the most probable rub-point as a pattern, not a fault.
+**Coaching prompts** — exactly three numbered questions Cath could use in session, each on its own line, plain English.
+
+RULES:
+- Australian English, no exclamation marks, no emojis
+- Strengths-based framing — patterns not labels, never deficits
+- Reference the partners by first name (use the names provided)
+- Don't list themes verbatim; weave them in naturally
+- Total length 200–280 words across all three sections
+- Do not start with "Here is" or any preamble; go straight in`;
+    const user=`Partner 1: ${n(p1)}
+Top 10:
+${fmt(list1)}
+
+Partner 2: ${n(p2)}
+Top 10:
+${fmt(list2)}
+
+Themes both partners share: ${sharedNames.length?sharedNames.join(', '):'(none in top 10)'}`;
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':getAnthropicKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:1500,system:sys,messages:[{role:'user',content:user}]})
+    });
+    if(!resp.ok){const t=await resp.text();throw new Error('API '+resp.status+': '+t.slice(0,200));}
+    const json=await resp.json();
+    const text=(json.content||[]).filter(p=>p.type==='text').map(p=>p.text).join('\n').trim();
+    const usage=json.usage||{};
+    const snap={p1_id:p1Id,p1_name:n(p1),p2_id:p2Id,p2_name:n(p2),p1_top:list1.map(s=>s.name),p2_top:list2.map(s=>s.name)};
+    const row={contact_id:p1Id,insight_type:'couple_dynamics',content:text,strengths_snapshot:snap,model:'claude-haiku-4-5-20251001',tokens_in:usage.input_tokens||null,tokens_out:usage.output_tokens||null};
+    const {error}=await supabase.from('strengths_insights').insert(row);
+    if(error){console.error(error);toast('Saved locally but DB write failed: '+error.message,'error');}
+    await loadStrengthsInsights();
+    renderStrengthsReports();
+    toast('Couple Dynamics generated','success');
+  }catch(e){
+    console.error(e);
+    toast('Failed: '+e.message,'error');
+    if(btn){btn.disabled=false;btn.textContent='Generate';}
+  }
+};
 
 function renderStrengthsReports(){
   const el=document.getElementById('strReportsContent');
