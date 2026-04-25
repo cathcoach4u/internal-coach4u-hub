@@ -249,7 +249,7 @@ if('serviceWorker' in navigator){
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.29.7</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.30.0</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -1111,10 +1111,6 @@ if('serviceWorker' in navigator){
         <input id="clFileNotes" placeholder="https://netorgft4053847.sharepoint.com/..." style="flex:1;">
         <a id="clFileNotesOpen" href="#" target="_blank" onclick="event.preventDefault();const u=document.getElementById('clFileNotes').value.trim();if(u)window.open(u,'_blank');" style="display:flex;align-items:center;padding:0 12px;font-size:12px;color:#3b82f6;text-decoration:none;font-weight:600;white-space:nowrap;">Open &#8599;</a>
       </div>
-    </div>
-    <div class="form-group" id="clReportsSection" style="display:none;">
-      <label>Strengths Reports</label>
-      <div id="clReportsArea" style="display:flex;flex-direction:column;gap:12px;"></div>
     </div>
     <div class="form-group"><label>Notes</label><textarea id="clNotes"></textarea></div>
     <div class="modal-actions">
@@ -3105,51 +3101,7 @@ window.openClientModal=function(id){
   refSel.innerHTML='<option value="">-- None --</option>'+referrals.map(r=>'<option value="'+r.id+'"'+(c&&c.referred_by===r.id?' selected':'')+'>'+r.name+'</option>').join('');
   renderMemberSelect();
   renderTempMembers();
-  const reportsSection=document.getElementById('clReportsSection');
-  if(c){
-    reportsSection.style.display='block';
-    renderClientReports();
-  } else {
-    reportsSection.style.display='none';
-  }
   document.getElementById('clientModal').classList.add('open');
-};
-
-function renderClientReports(){
-  const area=document.getElementById('clReportsArea');
-  if(!tempMembers||!tempMembers.length){
-    area.innerHTML='<div style="font-size:12px;color:#94a3b8;padding:8px 0;">Link a member above to upload their strengths reports.</div>';
-    return;
-  }
-  area.innerHTML=tempMembers.map(mid=>{
-    const name=getContactName(mid);
-    const rows=reportTypes.map(rt=>{
-      const report=contactReports.find(r=>r.contact_id===mid&&r.report_type===rt.key);
-      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border:1px solid #f1f5f9;border-radius:8px;background:#f8fafc;gap:8px;">
-        <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">
-          <span style="font-size:14px;">&#128196;</span>
-          <span style="font-size:12px;font-weight:600;color:#1e293b;white-space:nowrap;">${rt.label}</span>
-          ${report?'<a href="'+report.url+'" target="_blank" style="font-size:11px;color:#3b82f6;text-decoration:none;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;" onmouseover="this.style.textDecoration=\'underline\'" onmouseout="this.style.textDecoration=\'none\'">'+report.filename+'</a>':'<span style="font-size:11px;color:#94a3b8;">Not uploaded</span>'}
-        </div>
-        <div style="flex-shrink:0;display:flex;gap:6px;align-items:center;">
-          ${report?'<a href="'+report.url+'" target="_blank" style="background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;border-radius:6px;padding:6px 10px;font-size:11px;font-weight:600;text-decoration:none;">View</a>':''}
-          <label style="background:${report?'#f1f5f9':'#1e3a5f'};color:${report?'#64748b':'#fff'};border:none;border-radius:6px;padding:7px 12px;font-size:11px;font-weight:600;cursor:pointer;">
-            ${report?'Replace':'Upload'}
-            <input type="file" accept=".pdf" style="display:none;" onchange="uploadClientReport('${mid}','${rt.key}',this.files[0],this)">
-          </label>
-        </div>
-      </div>`;
-    }).join('');
-    return `<div style="border:1px solid #e2e8f0;border-radius:8px;padding:10px;background:#fff;">
-      <div style="font-weight:700;font-size:12px;color:#1e3a5f;margin-bottom:8px;">${name}</div>
-      <div style="display:flex;flex-direction:column;gap:6px;">${rows}</div>
-    </div>`;
-  }).join('');
-}
-
-window.uploadClientReport=async function(contactId,reportType,file,input){
-  await uploadReport(contactId,reportType,file,input);
-  renderClientReports();
 };
 
 function renderMemberSelect(){
@@ -3170,13 +3122,11 @@ window.addMemberToClient=function(){
   tempMembers.push(val);
   sel.value='';
   renderTempMembers();
-  if(document.getElementById('clReportsSection').style.display==='block') renderClientReports();
 };
 
 window.removeTempMember=function(mid){
   tempMembers=tempMembers.filter(m=>m!==mid);
   renderTempMembers();
-  if(document.getElementById('clReportsSection').style.display==='block') renderClientReports();
 };
 
 window.saveClient=async function(){
