@@ -249,7 +249,7 @@ if('serviceWorker' in navigator){
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.33.2</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.34.0</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -3347,11 +3347,24 @@ window.uploadStrengthReportFromPanel=async function(){
 };
 
 // ── STRENGTHS REPORTS ── (Phase 1: Individual + foundation; Pair/Team/AI in follow-ups)
-let strReportsState={mode:'client',clientId:'',contactId:'',roleFilter:''};
+let strReportsState={mode:'client',clientId:'',contactId:'',roleFilter:'',teamIds:[]};
 window.setStrReportsMode=function(m){strReportsState.mode=m;strReportsState.clientId='';strReportsState.contactId='';renderStrengthsReports();};
 window.setStrReportsRoleFilter=function(v){strReportsState.roleFilter=v;strReportsState.clientId='';renderStrengthsReports();};
 window.setStrReportsClient=function(id){strReportsState.clientId=id;renderStrengthsReports();};
 window.setStrReportsContact=function(id){strReportsState.contactId=id;renderStrengthsReports();};
+window.addStrReportsTeamMember=function(){
+  const sel=document.getElementById('strTeamPicker');
+  const id=sel?.value;
+  if(!id) return;
+  if(!strReportsState.teamIds.includes(id)) strReportsState.teamIds.push(id);
+  if(sel) sel.value='';
+  renderStrengthsReports();
+};
+window.removeStrReportsTeamMember=function(id){
+  strReportsState.teamIds=strReportsState.teamIds.filter(x=>x!==id);
+  renderStrengthsReports();
+};
+window.clearStrReportsTeam=function(){strReportsState.teamIds=[];renderStrengthsReports();};
 
 function getContactStrengths(c){
   if(!c) return [];
@@ -3490,6 +3503,100 @@ ${themes}`;
   }
 };
 
+function renderTeamHeatmap(teamLabel,members){
+  const withStr=members.filter(m=>m.strength_1);
+  if(!members.length){
+    return `<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:24px;text-align:center;color:#94a3b8;">No members in this team.</div>`;
+  }
+  // Pool all themes from all members' top-10
+  const themeFreq={};
+  const memberThemeMap={}; // member.id -> Set of themes
+  members.forEach(m=>{
+    const set=new Set();
+    for(let i=1;i<=10;i++){
+      const s=m['strength_'+i];
+      if(s){set.add(s);themeFreq[s]=(themeFreq[s]||0)+1;}
+    }
+    memberThemeMap[m.id]=set;
+  });
+  // Domain counts
+  const dc={Executing:0,Influencing:0,Relationship:0,Strategic:0};
+  Object.entries(themeFreq).forEach(([name,n])=>{const d=getDomain(name);if(d)dc[d]+=n;});
+  const totalDom=Object.values(dc).reduce((a,b)=>a+b,0)||1;
+  const missingDomains=Object.entries(dc).filter(([_,n])=>n===0).map(([d])=>d);
+  // Most common (>=2 share it)
+  const sortedThemes=Object.entries(themeFreq).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));
+  const shared=sortedThemes.filter(([_,n])=>n>=2);
+  const unique=sortedThemes.filter(([_,n])=>n===1);
+
+  function nameOf(c){return ((c.preferred_name||c.first_name||'')+' '+(c.last_name||'')).trim()||'(no name)';}
+
+  let html='';
+  // Header
+  html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #003366;border-radius:12px;padding:14px 18px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+    <div>
+      <div style="font-family:'Quicksand','Inter',sans-serif;font-weight:700;color:#1e3a5f;font-size:16px;">${teamLabel}</div>
+      <div style="font-size:12px;color:#64748b;margin-top:2px;">Team heatmap &middot; ${members.length} member${members.length===1?'':'s'} &middot; ${withStr.length} with strengths recorded${missingDomains.length?' &middot; missing: '+missingDomains.join(', '):''}</div>
+    </div>
+    <button onclick="window.print()" class="no-print" style="background:#003366;color:#fff;border:none;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">&#128424; Print</button>
+  </div>`;
+
+  if(!withStr.length){
+    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:24px;text-align:center;color:#94a3b8;">No strengths recorded for any member yet. Upload a Gallup PDF on the Strengths Dashboard, or add their top 10 manually.</div>`;
+    return html;
+  }
+
+  // Combined domain balance
+  html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;margin-bottom:14px;">
+    <div style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:8px;">Domain balance &mdash; combined</div>
+    <div style="display:flex;border-radius:6px;overflow:hidden;height:24px;margin-bottom:8px;">
+      ${Object.entries(dc).map(([d,n])=>n?`<div style="background:${domainColors[d]};width:${(n/totalDom*100).toFixed(1)}%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;">${d.slice(0,3).toUpperCase()} ${n}</div>`:'').join('')}
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:#64748b;">
+      ${Object.entries(dc).map(([d,n])=>`<span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:2px;background:${domainColors[d]};"></span>${d}: ${n}${dc[d]===0?' <strong style="color:#dc2626;">(gap)</strong>':''}</span>`).join('')}
+    </div>
+  </div>`;
+
+  // Shared themes (2+ members)
+  if(shared.length){
+    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;margin-bottom:14px;">
+      <div style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:8px;">Shared themes (in ${shared.length===1?'1 theme':shared.length+' themes'})</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">
+        ${shared.map(([name,n])=>`<span style="background:${csColor(name)};color:#fff;padding:4px 10px;border-radius:4px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px;">${name} <span style="background:rgba(255,255,255,.25);padding:1px 6px;border-radius:99px;font-weight:700;">${n}</span></span>`).join('')}
+      </div>
+    </div>`;
+  } else {
+    html+=`<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:14px 18px;margin-bottom:14px;font-size:12px;color:#92400e;">No themes appear in more than one member's top-10. The team has high diversity &mdash; complementary rather than overlapping.</div>`;
+  }
+
+  // Member breakdown — each row: name + their top-10 chips with shared marker
+  const sharedSet=new Set(shared.map(([n])=>n));
+  html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;margin-bottom:14px;">
+    <div style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:10px;">Members (${members.length})</div>`;
+  members.forEach(m=>{
+    const list=getContactStrengths(m);
+    html+=`<div style="padding:10px 0;border-top:1px solid #f1f5f9;">
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:baseline;flex-wrap:wrap;margin-bottom:6px;">
+        <div style="font-weight:700;color:#1e3a5f;font-size:14px;">${nameOf(m)}</div>
+        <div style="font-size:11px;color:#94a3b8;">${list.length?list.length+' themes':'no strengths'}</div>
+      </div>
+      ${list.length?`<div style="display:flex;flex-wrap:wrap;gap:4px;">${list.map(s=>`<span style="background:${csColor(s.name)};color:#fff;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:600;${sharedSet.has(s.name)?'box-shadow:0 0 0 2px #15803d;':''}">${s.rank}. ${s.name}</span>`).join('')}</div>`:''}
+    </div>`;
+  });
+  html+='</div>';
+
+  // Theme frequency table (compact)
+  if(sortedThemes.length){
+    html+=`<details style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;">
+      <summary style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#64748b;font-weight:700;cursor:pointer;">Theme frequency &mdash; full list (${sortedThemes.length})</summary>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px;margin-top:10px;">
+        ${sortedThemes.map(([name,n])=>`<div style="display:flex;align-items:center;gap:8px;font-size:12px;"><span style="background:${csColor(name)};color:#fff;padding:2px 8px;border-radius:3px;font-weight:600;min-width:90px;">${name}</span><span style="color:#64748b;">${n} ${n===1?'member':'members'}</span></div>`).join('')}
+      </div>
+    </details>`;
+  }
+  return html;
+}
+
 function renderPairComparison(p1,p2){
   const list1=getContactStrengths(p1);
   const list2=getContactStrengths(p2);
@@ -3594,6 +3701,7 @@ function renderStrengthsReports(){
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
       <button onclick="setStrReportsMode('client')" style="background:${st.mode==='client'?'#003366':'#f0f4f8'};color:${st.mode==='client'?'#fff':'#003366'};border:1px solid ${st.mode==='client'?'#003366':'#e2e8f0'};padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">By Client</button>
       <button onclick="setStrReportsMode('contact')" style="background:${st.mode==='contact'?'#003366':'#f0f4f8'};color:${st.mode==='contact'?'#fff':'#003366'};border:1px solid ${st.mode==='contact'?'#003366':'#e2e8f0'};padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">By Contact</button>
+      <button onclick="setStrReportsMode('team')" style="background:${st.mode==='team'?'#003366':'#f0f4f8'};color:${st.mode==='team'?'#fff':'#003366'};border:1px solid ${st.mode==='team'?'#003366':'#e2e8f0'};padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">Team</button>
     </div>`;
 
   if(st.mode==='client'){
@@ -3607,6 +3715,17 @@ function renderStrengthsReports(){
         ${filteredClients.map(c=>`<option value="${c.id}" ${c.id===st.clientId?'selected':''}>${c.relationship_name} (${c.role||'Other'})</option>`).join('')}
       </select>
     </div>`;
+  } else if(st.mode==='team'){
+    const pickedNames=st.teamIds.map(id=>{const c=contacts.find(x=>x.id===id);return c?`<span style="background:#dbeafe;color:#1e3a5f;padding:4px 10px;border-radius:99px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px;">${c.first_name} ${c.last_name}<span onclick="removeStrReportsTeamMember('${id}')" style="cursor:pointer;color:#dc2626;font-weight:700;">&times;</span></span>`:'';}).join('');
+    html+=`<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <select id="strTeamPicker" style="flex:1;min-width:220px;padding:9px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
+        <option value="">&mdash; Add a contact to the team &mdash;</option>
+        ${allContactsSorted.filter(c=>!st.teamIds.includes(c.id)).map(c=>`<option value="${c.id}">${c.first_name} ${c.last_name}</option>`).join('')}
+      </select>
+      <button onclick="addStrReportsTeamMember()" style="background:#003366;color:#fff;border:none;padding:9px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">Add</button>
+      ${st.teamIds.length?`<button onclick="clearStrReportsTeam()" style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;padding:9px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">Clear</button>`:''}
+    </div>
+    ${st.teamIds.length?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;">${pickedNames}</div>`:'<div style="font-size:11px;color:#94a3b8;margin-top:8px;">Add at least 2 contacts to see a team heatmap. Add 6+ for richer overlap.</div>'}`;
   } else {
     html+=`<select onchange="setStrReportsContact(this.value)" style="width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
       <option value="">&mdash; Select a contact (with strengths) &mdash;</option>
@@ -3633,18 +3752,19 @@ function renderStrengthsReports(){
       } else if(memberContacts.length===2){
         html+=renderPairComparison(memberContacts[0],memberContacts[1]);
       } else {
-        html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px;margin-bottom:14px;text-align:center;color:#64748b;font-size:13px;">
-          <div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">Team/group heatmap coming next</div>
-          For now, individual profiles are shown below for each member.
-        </div>`;
-        memberContacts.forEach(m=>{html+=renderStrengthsCard(m);});
+        html+=renderTeamHeatmap(cl.relationship_name||'Team',memberContacts);
       }
     }
   } else if(st.mode==='contact'&&st.contactId){
     const c=contacts.find(x=>x.id===st.contactId);
     html+=renderStrengthsCard(c);
+  } else if(st.mode==='team'&&st.teamIds.length){
+    const teamMembers=st.teamIds.map(id=>contacts.find(c=>c.id===id)).filter(Boolean);
+    if(teamMembers.length===1) html+=renderStrengthsCard(teamMembers[0]);
+    else if(teamMembers.length===2) html+=renderPairComparison(teamMembers[0],teamMembers[1]);
+    else html+=renderTeamHeatmap('Ad-hoc team',teamMembers);
   } else {
-    html+=`<div style="background:#fff;border:1px dashed #cbd5e1;border-radius:12px;padding:30px;text-align:center;color:#94a3b8;font-size:13px;">Pick a client or contact above to load their strengths report.</div>`;
+    html+=`<div style="background:#fff;border:1px dashed #cbd5e1;border-radius:12px;padding:30px;text-align:center;color:#94a3b8;font-size:13px;">Pick a client, contact, or build a team above to load their strengths report.</div>`;
   }
 
   el.innerHTML=html;
