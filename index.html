@@ -249,7 +249,7 @@ if('serviceWorker' in navigator){
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.32.0</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.33.0</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -1442,7 +1442,7 @@ async function loadAgents(){
   }
 }
 async function loadAll(){
-  await Promise.all([loadContacts(), loadClients(), loadTasks(), loadProspects(), loadProspectNotes(), loadReferrers(), loadRefPayments(), loadRenewals(), loadContactReports(), loadTrials(), loadTaskLogs(), loadFinanceTransactions(), loadBills(), loadIntakeSubmissions(), loadPulseResults(), loadBrainPulseSubmissions(), loadAgents()]);
+  await Promise.all([loadContacts(), loadClients(), loadTasks(), loadProspects(), loadProspectNotes(), loadReferrers(), loadRefPayments(), loadRenewals(), loadContactReports(), loadStrengthsInsights(), loadTrials(), loadTaskLogs(), loadFinanceTransactions(), loadBills(), loadIntakeSubmissions(), loadPulseResults(), loadBrainPulseSubmissions(), loadAgents()]);
   renderSidebarNav('home');
   renderDashboard();
   document.getElementById('appLoader').style.display='none';
@@ -2968,6 +2968,14 @@ window.autoRenewalDate=function(){
 
 // ── CONTACT REPORTS (PDF uploads) ──
 let contactReports=[];
+let strengthsInsights=[];
+async function loadStrengthsInsights(){
+  try{
+    const {data,error}=await supabase.from('strengths_insights').select('*').order('created_at',{ascending:false});
+    if(data) strengthsInsights=data;
+    if(error&&error.code!=='42P01') console.warn('Load strengths_insights error:',error);
+  }catch(e){console.warn('loadStrengthsInsights failed:',e);}
+}
 async function loadContactReports(){
   const {data,error}=await supabase.from('contact_reports').select('*');
   if(data) contactReports=data;
@@ -3360,8 +3368,90 @@ function renderStrengthsCard(c){
   }
   html+=group('Top 5 — Signature Themes',top5);
   if(bottom5.length) html+=group('Themes 6–10',bottom5);
+  html+=renderStrengthsInsightsBlock(c);
   return html;
 }
+
+function renderStrengthsInsightsBlock(c){
+  const insights=(strengthsInsights||[]).filter(r=>r.contact_id===c.id&&r.insight_type==='personal_insights').sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+  const latest=insights[0]||null;
+  const keyOk=!!getAnthropicKey();
+  let h=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px 20px;margin-bottom:12px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+      <div style="font-family:'Quicksand','Inter',sans-serif;font-size:13px;font-weight:700;color:#1e3a5f;letter-spacing:.5px;text-transform:uppercase;">Personal Insights</div>
+      <div class="no-print" style="display:flex;gap:6px;align-items:center;">
+        ${latest?`<span style="font-size:11px;color:#94a3b8;">${new Date(latest.created_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'})}</span>`:''}
+        <button id="genIns-${c.id}" onclick="generateStrengthsInsights('${c.id}')" ${keyOk?'':'disabled'} style="background:${keyOk?'#003366':'#cbd5e1'};color:#fff;border:none;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:${keyOk?'pointer':'not-allowed'};">${latest?'Regenerate':'Generate'}</button>
+      </div>
+    </div>`;
+  if(!keyOk){
+    h+=`<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px 14px;font-size:12px;color:#92400e;">Anthropic API key needed. Set it in C4U Bot settings first.</div>`;
+  } else if(!latest){
+    h+=`<div style="font-size:12px;color:#64748b;line-height:1.6;">No insight generated yet. Click <strong>Generate</strong> to draft a 4-paragraph reading of this person's themes, written in Cath's voice.</div>`;
+  } else {
+    h+=`<div id="ins-body-${c.id}" style="font-size:13px;line-height:1.7;color:#1e293b;white-space:pre-wrap;">${(latest.content||'').replace(/</g,'&lt;')}</div>`;
+  }
+  h+='</div>';
+  return h;
+}
+
+window.generateStrengthsInsights=async function(contactId){
+  const c=contacts.find(x=>x.id===contactId);
+  if(!c){toast('Contact not found','error');return;}
+  if(!getAnthropicKey()){toast('Set Anthropic API key first','error');return;}
+  const list=getContactStrengths(c);
+  if(!list.length){toast('No strengths recorded for this contact','error');return;}
+  const btn=document.getElementById('genIns-'+contactId);
+  if(btn){btn.disabled=true;btn.textContent='Generating…';}
+  try{
+    const themes=list.map(s=>`#${s.rank} ${s.name}${CS_THEME_DESC[s.name]?' — '+CS_THEME_DESC[s.name]:''}`).join('\n');
+    const sys=`You are drafting a Personal Insights report for a Coach4U client based on their CliftonStrengths top-10.
+
+WRITE IN CATH'S VOICE. The voice reference is the source of truth for tone:
+
+${CATH_VOICE_REFERENCE}
+
+STRUCTURE — exactly 4 short paragraphs, in this order, no headings:
+1. What pulls this person forward (their top themes' direction)
+2. How they show up at their best
+3. Where the same patterns may overdo or get them stuck (frame as patterns, not deficits)
+4. One or two practical things to lean into next
+
+RULES:
+- Australian English
+- No exclamation marks, no emojis, no clinical language
+- Plain English, short to medium sentences
+- Strengths-based framing — describe patterns, not labels
+- Talk to the reader as "you"
+- Keep total length around 220–280 words
+- Do not list the themes verbatim — weave them in naturally
+- No "I" from Cath; write as if it's a reading prepared for the client to read on their own`;
+    const user=`Client first name: ${c.preferred_name||c.first_name||'Friend'}
+Top 10 themes (with descriptions):
+${themes}`;
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':getAnthropicKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:1200,system:sys,messages:[{role:'user',content:user}]})
+    });
+    if(!resp.ok){const t=await resp.text();throw new Error('API '+resp.status+': '+t.slice(0,200));}
+    const json=await resp.json();
+    const text=(json.content||[]).filter(p=>p.type==='text').map(p=>p.text).join('\n').trim();
+    const usage=json.usage||{};
+    const snapshot={};
+    list.forEach(s=>{snapshot['strength_'+s.rank]=s.name;});
+    const ins={contact_id:contactId,insight_type:'personal_insights',content:text,strengths_snapshot:snapshot,model:'claude-haiku-4-5-20251001',tokens_in:usage.input_tokens||null,tokens_out:usage.output_tokens||null};
+    const {error}=await supabase.from('strengths_insights').insert(ins);
+    if(error){console.error(error);toast('Saved locally but DB write failed: '+error.message,'error');}
+    await loadStrengthsInsights();
+    renderStrengthsReports();
+    toast('Personal Insights generated','success');
+  }catch(e){
+    console.error(e);
+    toast('Failed: '+e.message,'error');
+    if(btn){btn.disabled=false;btn.textContent='Generate';}
+  }
+};
 
 function renderPairComparison(p1,p2){
   const list1=getContactStrengths(p1);
@@ -3390,9 +3480,11 @@ function renderPairComparison(p1,p2){
     const dc={Executing:0,Influencing:0,Relationship:0,Strategic:0};
     list.forEach(s=>{const d=getDomain(s.name);if(d)dc[d]++;});
     const total=Object.values(dc).reduce((a,b)=>a+b,0)||1;
-    let h=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;flex:1;min-width:0;">
-      <div style="font-family:'Quicksand','Inter',sans-serif;font-weight:700;color:#1e3a5f;font-size:15px;margin-bottom:4px;">${nameOf(c)}</div>
-      ${c.email?`<div style="font-size:11px;color:#94a3b8;margin-bottom:10px;">${c.email}</div>`:'<div style="height:6px;"></div>'}`;
+    let h=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;flex:1;min-width:0;display:flex;flex-direction:column;">
+      <div style="min-height:62px;">
+        <div style="font-family:'Quicksand','Inter',sans-serif;font-weight:700;color:#1e3a5f;font-size:15px;line-height:1.25;">${nameOf(c)}</div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:4px;min-height:14px;">${c.email||''}</div>
+      </div>`;
     if(!list.length){
       h+=`<div style="font-size:12px;color:#94a3b8;padding:14px 0;">No strengths recorded yet.</div></div>`;
       return h;
@@ -3402,9 +3494,9 @@ function renderPairComparison(p1,p2){
     </div>`;
     list.forEach(s=>{
       const isShared=sharedSet.has(s.name);
-      h+=`<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #f1f5f9;">
+      h+=`<div style="display:flex;align-items:center;gap:10px;padding:0 0 0 ${isShared?'6px':'0'};border-left:${isShared?'3px solid #15803d':'3px solid transparent'};background:${isShared?'#f0fdf4':'transparent'};border-radius:${isShared?'4px':'0'};margin-bottom:2px;height:36px;border-bottom:1px solid #f1f5f9;">
         <div style="background:${csColor(s.name)};color:#fff;font-weight:700;font-size:11px;padding:4px 8px;border-radius:4px;min-width:30px;text-align:center;flex-shrink:0;">#${s.rank}</div>
-        <div style="flex:1;font-size:13px;font-weight:${isShared?'700':'500'};color:#1e293b;">${s.name}${isShared?' <span style="display:inline-block;font-size:9px;padding:1px 6px;border-radius:99px;background:#dcfce7;color:#15803d;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-left:4px;">Shared</span>':''}</div>
+        <div style="flex:1;min-width:0;font-size:13px;font-weight:${isShared?'700':'500'};color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${s.name}</div>
       </div>`;
     });
     h+='</div>';
