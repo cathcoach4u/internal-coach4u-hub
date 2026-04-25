@@ -23,7 +23,7 @@ Single-page CRM app hosted on GitHub Pages with a Supabase backend. All CRM func
 
 - **URL**: `https://uoixetfvboevjxlkfyqy.supabase.co`
 - **Client init**: Line ~1018 of `index.html`
-- **Tables**: contacts, clients, client_members, tasks, prospects, prospect_notes, pulse_results, brain_pulse_submissions, intake_submissions, trials, renewals, task_logs, referrers, referrer_payments, finance_transactions, bills, contact_reports, agents, agent_versions, agent_issues, agent_stages, agent_templates
+- **Tables**: contacts, clients, client_members, tasks, prospects, prospect_notes, pulse_results, brain_pulse_submissions, intake_submissions, trials, renewals, task_logs, referrers, referrer_payments, finance_transactions, bills, contact_reports, agents, agent_versions, agent_issues, agent_stages, agent_templates, agent_ai_sessions, couples_intake_sessions, strengths_insights
 - **RLS**: Enabled on all tables via Supabase policies
 - **Auth**: Anonymous key (publishable) — no user auth, RLS relies on anon role
 
@@ -37,9 +37,9 @@ Areas and their pages (defined at line ~1423):
 - **Pulses**: Dashboard, SAFE Pulse, Brain Pulse (client selector for per-client mini-portal view)
 - **Couples**: Dashboard, Couples Intake (Port Institute stage-by-stage worksheet; drafts in localStorage, filed to Supabase `couples_intake_sessions`; session linked to Couple client)
 - **ThriveHQ**: Dashboard, Trials, Members, Renewals, Coaching Calls
-- **Strengths**: Dashboard, Strengths Hub
-- **IT**: Dashboard, IT Projects, Agents, Writing Partner
-- **Resources**: Dashboard (shareable public links — intake forms, cancellation policy)
+- **Strengths**: Dashboard (with Open Reports CTA + SharePoint folder link + Upload-a-Report panel), Reports (Individual / Pair / Team Heatmap with Pre-session brief toggle and four AI readings), Strengths Hub
+- **IT**: Dashboard, IT Projects, Agents, AI Strategy (cross-agent audit + chat), Writing Partner
+- **Resources**: Dashboard (shareable public links — Linktree, intake forms, cancellation policy)
 - **Admin**: Dashboard, Task Management, Playbook (Lou's operational work)
 - **Finance**: Dashboard, Income, Where Money Goes, Bills, Transactions
 - **About**: About
@@ -126,12 +126,34 @@ Parent agents represent the master system prompts for Copilot Studio. Child agen
 - **All stages**: "Copy list for SharePoint" outputs all stages with `════` title divider and `────` between sections
 - **Format**: Plain text, no markdown; designed to paste directly into SharePoint
 
+## Strengths Reports (Strengths > Reports)
+
+- **Page**: `screen-strreports`, render fn `renderStrengthsReports()`
+- **Picker modes**: By Client (filtered by role), By Contact, Team (one-tap from a client's members or build ad-hoc). Plus a **Pre-session brief** toggle for the compact print-optimised view.
+- **Report shapes**: 1 contact → Individual; 2 → Pair Comparison (shared themes, combined domain); 3+ → Team Heatmap (frequency, gaps, member breakdown).
+- **AI readings** — all use the existing Anthropic key and CATH_VOICE_REFERENCE. Logged to `strengths_insights` table:
+  - `personal_insights` — 4-paragraph reading per contact
+  - `bring_need` — what they bring / what they need from a team
+  - `adaptation_tips` — Cath vs client (looked up via `findPractitionerContact()` matching name "Cath Baker" with strengths)
+  - `couple_dynamics` — pair-level reading; key on p1.id with snapshot containing both partner ids
+- **Theme reference**: `CS_THEME_DESC` (34 themes inline) and `CS_DOMAINS` for colour mapping. Helpers `csColor`, `csPill`, `getDomain`, `domainColors`.
+- **Voice doc**: `docs/cath-voice-tone-v1.md` is the canonical version-controlled source. `CATH_VOICE_REFERENCE` constant in `index.html` is its inline summary embedded into every AI system prompt.
+
+## Cath Voice Tone Reference v1
+
+The single source of truth for tone in any Coach4U communication, human or AI-generated.
+
+- **Repo file**: `docs/cath-voice-tone-v1.md`
+- **Inline constant**: `CATH_VOICE_REFERENCE` in `index.html` — included verbatim in every Strengths AI generation prompt
+- **Mirror**: maintain a copy in SharePoint as the canonical client-facing source if needed
+- **Highlights**: Australian English; no exclamation marks, emojis, or clinical language; warm, grounded, decisive; strengths-based framing; sign-off `Thanks\nCath`
+
 ## Conventions
 
 ### Versioning
 
-- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.28.4**, line ~222)
-- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v261**)
+- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.37.1**, line ~222)
+- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v290**)
 - **Both must be bumped on every release**
 
 ### Code patterns
