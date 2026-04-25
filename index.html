@@ -249,7 +249,7 @@ if('serviceWorker' in navigator){
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.34.0</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.34.1</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -3360,6 +3360,21 @@ window.addStrReportsTeamMember=function(){
   if(sel) sel.value='';
   renderStrengthsReports();
 };
+window.addStrReportsTeamFromClient=function(){
+  const sel=document.getElementById('strTeamClientPicker');
+  const cid=sel?.value;
+  if(!cid) return;
+  const cl=(clients||[]).find(c=>c.id===cid);
+  if(!cl){toast('Client not found','error');return;}
+  let added=0;
+  (cl.members||[]).forEach(mid=>{
+    if(!strReportsState.teamIds.includes(mid)){strReportsState.teamIds.push(mid);added++;}
+  });
+  if(sel) sel.value='';
+  renderStrengthsReports();
+  if(added) toast('Added '+added+' member'+(added===1?'':'s')+' from '+cl.relationship_name,'success');
+  else toast('All members already in team','info');
+};
 window.removeStrReportsTeamMember=function(id){
   strReportsState.teamIds=strReportsState.teamIds.filter(x=>x!==id);
   renderStrengthsReports();
@@ -3717,15 +3732,23 @@ function renderStrengthsReports(){
     </div>`;
   } else if(st.mode==='team'){
     const pickedNames=st.teamIds.map(id=>{const c=contacts.find(x=>x.id===id);return c?`<span style="background:#dbeafe;color:#1e3a5f;padding:4px 10px;border-radius:99px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px;">${c.first_name} ${c.last_name}<span onclick="removeStrReportsTeamMember('${id}')" style="cursor:pointer;color:#dc2626;font-weight:700;">&times;</span></span>`:'';}).join('');
-    html+=`<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+    const clientsWithMembers=allClients.filter(c=>(c.members||[]).length);
+    html+=`<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px;">
+      <select id="strTeamClientPicker" style="flex:1;min-width:220px;padding:9px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
+        <option value="">&mdash; Add all members from a client &mdash;</option>
+        ${clientsWithMembers.map(c=>`<option value="${c.id}">${c.relationship_name} (${c.role||'Other'} &middot; ${(c.members||[]).length} member${(c.members||[]).length===1?'':'s'})</option>`).join('')}
+      </select>
+      <button onclick="addStrReportsTeamFromClient()" style="background:#15803d;color:#fff;border:none;padding:9px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">Add Members</button>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
       <select id="strTeamPicker" style="flex:1;min-width:220px;padding:9px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
-        <option value="">&mdash; Add a contact to the team &mdash;</option>
+        <option value="">&mdash; Or add a single contact &mdash;</option>
         ${allContactsSorted.filter(c=>!st.teamIds.includes(c.id)).map(c=>`<option value="${c.id}">${c.first_name} ${c.last_name}</option>`).join('')}
       </select>
       <button onclick="addStrReportsTeamMember()" style="background:#003366;color:#fff;border:none;padding:9px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">Add</button>
       ${st.teamIds.length?`<button onclick="clearStrReportsTeam()" style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;padding:9px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">Clear</button>`:''}
     </div>
-    ${st.teamIds.length?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;">${pickedNames}</div>`:'<div style="font-size:11px;color:#94a3b8;margin-top:8px;">Add at least 2 contacts to see a team heatmap. Add 6+ for richer overlap.</div>'}`;
+    ${st.teamIds.length?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;">${pickedNames}</div>`:'<div style="font-size:11px;color:#94a3b8;margin-top:8px;">Add a client to pull all its members in, then refine. Or add contacts one at a time. 2 = pair view, 3+ = team heatmap.</div>'}`;
   } else {
     html+=`<select onchange="setStrReportsContact(this.value)" style="width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
       <option value="">&mdash; Select a contact (with strengths) &mdash;</option>
