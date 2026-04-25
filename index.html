@@ -249,7 +249,7 @@ if('serviceWorker' in navigator){
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.30.1</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.30.2</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -1950,6 +1950,14 @@ function renderStrDash(){
   const withStr=contacts.filter(c=>c.strength_1);
   const withoutStr=contacts.filter(c=>!c.strength_1);
 
+  // Report stats across people-with-strengths
+  const reportStats={};
+  reportTypes.forEach(rt=>{
+    reportStats[rt.key]=withStr.filter(c=>(contactReports||[]).some(r=>r.contact_id===c.id&&r.report_type===rt.key)).length;
+  });
+  const anyReport=withStr.filter(c=>(contactReports||[]).some(r=>r.contact_id===c.id)).length;
+  const noReport=withStr.length-anyReport;
+
   // Domain counts across all contacts
   const domainCount={Executing:0,Influencing:0,Relationship:0,Strategic:0};
   const strengthFreq={};
@@ -1968,9 +1976,27 @@ function renderStrDash(){
   const topStrengths=Object.entries(strengthFreq).sort((a,b)=>b[1]-a[1]).slice(0,10);
 
   let html=`<div class="dash-cards">
-    <div class="dash-card"><div class="dc-icon green">&#127919;</div><div class="dc-info"><h4>${withStr.length}</h4><p>Profiles Complete</p></div></div>
-    <div class="dash-card"><div class="dc-icon amber">&#9888;</div><div class="dc-info"><h4>${withoutStr.length}</h4><p>No Strengths Yet</p></div></div>
+    <div class="dash-card" onclick="navTo('strengths')" style="cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'"><div class="dc-icon green">&#127919;</div><div class="dc-info"><h4>${withStr.length}</h4><p>Profiles Complete</p></div></div>
+    <div class="dash-card" onclick="navTo('strengths')" style="cursor:pointer;${withoutStr.length?'box-shadow:0 0 0 2px #eab308;':''}" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='${withoutStr.length?'0 0 0 2px #eab308':'0 1px 3px rgba(0,0,0,.04)'}'"><div class="dc-icon amber">&#9888;</div><div class="dc-info"><h4>${withoutStr.length}</h4><p>Awaiting Strengths</p></div></div>
+    <div class="dash-card" onclick="navTo('strengths')" style="cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'"><div class="dc-icon" style="background:#dbeafe;color:#2563eb;">&#128196;</div><div class="dc-info"><h4>${anyReport}</h4><p>Have a Report</p></div></div>
+    <div class="dash-card" onclick="navTo('strengths')" style="cursor:pointer;${noReport?'box-shadow:0 0 0 2px #f59e0b;':''}" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='${noReport?'0 0 0 2px #f59e0b':'0 1px 3px rgba(0,0,0,.04)'}'"><div class="dc-icon" style="background:#fef3c7;color:#d97706;">&#128427;</div><div class="dc-info"><h4>${noReport}</h4><p>Missing All Reports</p></div></div>
   </div>`;
+
+  // Reports breakdown by type (matches Strengths Hub upload buttons)
+  html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:20px;">
+    <div style="font-family:'Quicksand','Inter',sans-serif;font-size:16px;font-weight:700;color:#1e3a5f;margin-bottom:14px;">Reports Uploaded</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;">`;
+  reportTypes.forEach(rt=>{
+    const n=reportStats[rt.key]||0;
+    const pct=withStr.length?Math.round(n/withStr.length*100):0;
+    html+=`<div onclick="navTo('strengths')" style="cursor:pointer;background:#f8fafc;border:1px solid #f1f5f9;border-radius:10px;padding:12px 14px;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#f8fafc'">
+      <div style="font-size:11px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">${rt.label}</div>
+      <div style="font-size:20px;font-weight:800;color:#1e3a5f;margin-top:2px;">${n} <span style="font-size:11px;color:#94a3b8;font-weight:500;">/ ${withStr.length}</span></div>
+      <div style="height:6px;background:#e2e8f0;border-radius:3px;margin-top:6px;overflow:hidden;"><div style="background:#3b82f6;height:100%;width:${pct}%;"></div></div>
+      <div style="font-size:11px;color:#64748b;margin-top:4px;">${pct}% uploaded</div>
+    </div>`;
+  });
+  html+='</div></div>';
 
   // Domain balance across all contacts
   html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:20px;">
@@ -3185,26 +3211,7 @@ function renderStrengths(){
     return hasStr&&searchStr.includes(q);
   });
 
-  // Stats summary
-  const allWithStr=contacts.filter(c=>c.strength_1);
-  const stats={gallup:0,personal_insights:0,bring_need:0};
-  allWithStr.forEach(c=>{
-    reportTypes.forEach(rt=>{
-      if((contactReports||[]).find(r=>r.contact_id===c.id&&r.report_type===rt.key)) stats[rt.key]++;
-    });
-  });
-
-  let html=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:14px;">`;
-  reportTypes.forEach(rt=>{
-    const pct=allWithStr.length?Math.round(stats[rt.key]/allWithStr.length*100):0;
-    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px;">
-      <div style="font-size:11px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">${rt.label}</div>
-      <div style="font-size:20px;font-weight:800;color:#1e3a5f;margin-top:2px;">${stats[rt.key]} <span style="font-size:11px;color:#94a3b8;font-weight:500;">/ ${allWithStr.length}</span></div>
-      <div style="font-size:11px;color:#64748b;">${pct}% uploaded</div>
-    </div>`;
-  });
-  html+='</div>';
-
+  let html=`<div style="font-size:12px;color:#64748b;margin-bottom:12px;">Search to find a contact, or click a row to view their full profile. Use the Upload buttons to attach Gallup, Personal Insights, and Bring Need PDFs — these stay against the contact and appear in the Strengths Dashboard summary.</div>`;
   html+=`<div style="border:1px solid #e2e8f0;border-radius:10px;background:#fff;overflow:hidden;">
     <div style="padding:12px 16px;background:#f8fafc;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:10px;">
       <span style="font-weight:700;font-size:14px;color:#1e293b;">Strengths Profiles</span>
