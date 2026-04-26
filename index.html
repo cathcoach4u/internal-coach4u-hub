@@ -249,7 +249,7 @@ if('serviceWorker' in navigator){
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.43.2</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.43.3</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -838,12 +838,13 @@ if('serviceWorker' in navigator){
   <div class="modal" style="max-width:640px;">
     <h3 id="gallupReqTitle">New Code Request</h3>
     <input type="hidden" id="gallupReqId">
-    <div class="form-group">
-      <label>Mode</label>
-      <div style="display:flex;gap:8px;flex-direction:column;">
-        <span style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#1e3a5f;text-transform:none;letter-spacing:0;cursor:pointer;" onclick="document.querySelector('input[name=gallupReqMode][value=contact]').click();"><input type="radio" name="gallupReqMode" value="contact" checked onchange="gallupReqSwitchMode('contact')" style="width:auto;margin:0;padding:0;flex-shrink:0;">Single contact</span>
-        <span style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#1e3a5f;text-transform:none;letter-spacing:0;cursor:pointer;" onclick="document.querySelector('input[name=gallupReqMode][value=couple]').click();"><input type="radio" name="gallupReqMode" value="couple" onchange="gallupReqSwitchMode('couple')" style="width:auto;margin:0;padding:0;flex-shrink:0;">Couple (one request per linked member)</span>
+    <div style="margin-bottom:14px;">
+      <div style="font-size:12px;font-weight:600;color:#64748b;margin-bottom:6px;text-transform:uppercase;letter-spacing:.3px;">Mode</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button type="button" id="gallupModeContactBtn" onclick="gallupReqSwitchMode('contact')" style="flex:1;min-width:0;background:#003366;color:#fff;border:1px solid #003366;padding:9px 12px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">Single contact</button>
+        <button type="button" id="gallupModeCoupleBtn" onclick="gallupReqSwitchMode('couple')" style="flex:1;min-width:0;background:#fff;color:#1e3a5f;border:1px solid #e2e8f0;padding:9px 12px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">Couple (per linked member)</button>
       </div>
+      <input type="hidden" id="gallupReqMode" value="contact">
     </div>
     <div class="form-group" id="gallupReqContactRow">
       <label>Contact</label>
@@ -2514,9 +2515,7 @@ window.openGallupRequest=function(id){
   const couples=(clients||[]).filter(c=>c.role==='Couple').sort((a,b)=>a.relationship_name.localeCompare(b.relationship_name));
   coupleSel.innerHTML='<option value="">— Pick a Couple client —</option>'+couples.map(c=>`<option value="${c.id}">${c.relationship_name}</option>`).join('');
   coupleSel.value='';
-  // Reset radio to single contact mode (couple mode is for new requests only)
-  document.querySelector('input[name="gallupReqMode"][value="contact"]').checked=true;
-  document.querySelector('input[name="gallupReqMode"][value="couple"]').disabled=!!r;
+  // Reset to single contact mode (couple mode is for new requests only)
   gallupReqSwitchMode('contact');
   // Populate other fields
   document.getElementById('gallupReqProduct').value=r?r.product_type||'Top 34':'Top 34';
@@ -2528,12 +2527,29 @@ window.openGallupRequest=function(id){
   document.getElementById('gallupReqModal').classList.add('open');
 };
 window.gallupReqSwitchMode=function(mode){
+  document.getElementById('gallupReqMode').value=mode;
   document.getElementById('gallupReqContactRow').style.display=mode==='contact'?'block':'none';
   document.getElementById('gallupReqCoupleRow').style.display=mode==='couple'?'block':'none';
+  const cBtn=document.getElementById('gallupModeContactBtn');
+  const pBtn=document.getElementById('gallupModeCoupleBtn');
+  const editing=!!document.getElementById('gallupReqId').value;
+  if(cBtn){
+    cBtn.style.background=mode==='contact'?'#003366':'#fff';
+    cBtn.style.color=mode==='contact'?'#fff':'#1e3a5f';
+    cBtn.style.borderColor=mode==='contact'?'#003366':'#e2e8f0';
+  }
+  if(pBtn){
+    pBtn.style.background=mode==='couple'?'#003366':'#fff';
+    pBtn.style.color=mode==='couple'?'#fff':'#1e3a5f';
+    pBtn.style.borderColor=mode==='couple'?'#003366':'#e2e8f0';
+    pBtn.disabled=editing;
+    pBtn.style.opacity=editing?'0.4':'1';
+    pBtn.style.cursor=editing?'not-allowed':'pointer';
+  }
 };
 window.saveGallupRequest=async function(){
   const id=document.getElementById('gallupReqId').value;
-  const mode=document.querySelector('input[name="gallupReqMode"]:checked').value;
+  const mode=document.getElementById('gallupReqMode').value;
   const product=document.getElementById('gallupReqProduct').value;
   const source=document.getElementById('gallupReqSource').value;
   const status=document.getElementById('gallupReqStatus').value;
