@@ -249,7 +249,7 @@ if('serviceWorker' in navigator){
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.40.0</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.40.1</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -3380,9 +3380,11 @@ window.deleteClient=async function(id){
 };
 
 // ── STRENGTHS HUB ──
+let shShowAllState=false;
+window.toggleShShowAll=function(el){shShowAllState=!!el.checked;renderStrengths();};
 function renderStrengths(){
   const q=document.getElementById('shSearch').value.toLowerCase();
-  const showAll=document.getElementById('shShowAll')?.checked;
+  const showAll=shShowAllState;
   const filtered=contacts.filter(c=>{
     const hasStr=!!c.strength_1;
     if(!showAll&&!hasStr) return false;
@@ -3397,7 +3399,7 @@ function renderStrengths(){
   let html=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
     <div style="font-size:12px;color:#64748b;">Edit a contact's strengths in place, or upload a Gallup PDF to extract them automatically. Editing is locked behind the Edit button so they can't be changed by accident.</div>
     <label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#1e3a5f;font-weight:600;cursor:pointer;flex-shrink:0;">
-      <input type="checkbox" id="shShowAll" ${showAll?'checked':''} onchange="renderStrengths()">Show contacts without strengths
+      <input type="checkbox" id="shShowAll" ${showAll?'checked':''} onchange="toggleShShowAll(this)">Show contacts without strengths
     </label>
   </div>`;
   html+=`<div style="border:1px solid #e2e8f0;border-radius:10px;background:#fff;overflow:hidden;">
