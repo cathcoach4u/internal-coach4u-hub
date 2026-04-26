@@ -249,7 +249,7 @@ if('serviceWorker' in navigator){
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.38.1</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.38.2</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -3400,25 +3400,23 @@ function renderStrengths(){
     const spLink=(c.sharepoint_link||'').trim();
     const spBtn=spLink&&spLink.startsWith('http')?`<a href="${spLink}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;gap:6px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:5px 8px;font-size:11px;color:#15803d;font-weight:600;text-decoration:none;flex-shrink:0;"><span style="font-size:12px;">&#128193;</span>View Gallup PDF (SharePoint)</a>`:'';
     const hasStrengths=!!c.strength_1;
+    const viewChips=spBtn+reports;
     return `<div style="background:#fff;border:1px solid #e2e8f0;border-left:3px solid ${hasStrengths?'#3b82f6':'#cbd5e1'};border-radius:8px;padding:12px 16px;">
-      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
-        <div style="width:220px;flex-shrink:0;">
+      <div style="display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:${hasStrengths?'8':'0'}px;">
+        <div style="flex:1;min-width:160px;">
           <div style="font-weight:600;font-size:14px;color:#1e293b;">${c.first_name} ${c.last_name}</div>
           ${c.email?'<div style="font-size:11px;color:#94a3b8;margin-top:2px;">'+c.email+'</div>':''}
         </div>
-        <div style="flex:1;min-width:0;">
-          ${hasStrengths?(
-            (top5.length?'<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:'+(bottom5.length?'4px':'0')+';">'+top5.map(s=>csPill(s.rank,s.name)).join('')+'</div>':'')+
-            (bottom5.length?'<div style="display:flex;flex-wrap:wrap;gap:4px;">'+bottom5.map(s=>csPill(s.rank,s.name)).join('')+'</div>':'')
-          ):'<div style="font-size:12px;color:#94a3b8;">No strengths recorded yet.</div>'}
+        <div style="display:flex;gap:6px;flex-shrink:0;">
+          <button onclick="openStrEdit('${c.id}')" style="background:${hasStrengths?'#f0f4f8':'#003366'};color:${hasStrengths?'#003366':'#fff'};border:1px solid ${hasStrengths?'#e2e8f0':'#003366'};border-radius:6px;padding:7px 12px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">${hasStrengths?'&#9998; Edit':'+ Add Strengths'}</button>
+          <label style="background:#15803d;color:#fff;border-radius:6px;padding:7px 12px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;">&#10024; Auto-extract<input type="file" accept=".pdf" style="display:none;" onchange="extractStrengthsFromPDF('${c.id}',this.files[0],this)"></label>
         </div>
       </div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;padding-top:10px;border-top:1px dashed #f1f5f9;align-items:center;">
-        ${spBtn}${reports}
-        <span style="flex:1;"></span>
-        <label style="background:#15803d;color:#fff;border-radius:6px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;">&#10024; Upload Gallup PDF<input type="file" accept=".pdf" style="display:none;" onchange="extractStrengthsFromPDF('${c.id}',this.files[0],this)"></label>
-        <button onclick="openStrEdit('${c.id}')" style="background:${hasStrengths?'#f0f4f8':'#003366'};color:${hasStrengths?'#003366':'#fff'};border:1px solid ${hasStrengths?'#e2e8f0':'#003366'};border-radius:6px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;">${hasStrengths?'Edit':'Add Strengths'}</button>
-      </div>
+      ${hasStrengths?(
+        (top5.length?'<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:'+(bottom5.length?'4px':'0')+';">'+top5.map(s=>csPill(s.rank,s.name)).join('')+'</div>':'')+
+        (bottom5.length?'<div style="display:flex;flex-wrap:wrap;gap:4px;">'+bottom5.map(s=>csPill(s.rank,s.name)).join('')+'</div>':'')
+      ):'<div style="font-size:12px;color:#94a3b8;">No strengths recorded yet. Use <strong>Auto-extract</strong> to pull from a Gallup PDF, or <strong>Add Strengths</strong> to type them in.</div>'}
+      ${viewChips?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;padding-top:10px;border-top:1px dashed #f1f5f9;">${viewChips}</div>`:''}
     </div>`;
   }).join('');
   html+='</div></div>';
