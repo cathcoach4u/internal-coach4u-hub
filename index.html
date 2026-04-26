@@ -249,7 +249,7 @@ if('serviceWorker' in navigator){
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.38.2</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.39.0</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -2129,10 +2129,25 @@ function renderStrDash(){
     <span style="color:#0070CD;font-size:13px;font-weight:600;flex-shrink:0;">Open &#8599;</span>
   </a>`;
 
+  // Standalone Auto-extract panel (Gallup PDF -> AI extracts -> review modal)
+  html+=`<div style="background:linear-gradient(135deg,#0f3d2e 0%,#15803d 100%);border-radius:14px;padding:20px 22px;margin-bottom:14px;color:#fff;">
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+      <span style="font-size:32px;flex-shrink:0;">&#10024;</span>
+      <div style="flex:1;min-width:180px;">
+        <div style="font-family:'Quicksand','Inter',sans-serif;font-weight:700;font-size:17px;">Auto-extract from a Gallup PDF</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.85);margin-top:2px;">Drop a PDF and Claude reads the top 10 themes for you. Pick the contact afterwards. No typing.</div>
+      </div>
+      <label style="background:#fff;color:#15803d;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;display:inline-flex;align-items:center;gap:6px;">
+        Choose PDF
+        <input type="file" accept=".pdf" style="display:none;" onchange="extractStandalonePDF(this.files[0],this)">
+      </label>
+    </div>
+  </div>`;
+
   // Upload-first panel: pick a file, then pick the contact + report type
   const allContactsForPick=[...contacts].filter(c=>c.first_name||c.last_name).sort((a,b)=>(a.first_name+' '+a.last_name).localeCompare(b.first_name+' '+b.last_name));
   html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #15803d;border-radius:12px;padding:16px 18px;margin-bottom:20px;">
-    <div style="font-family:'Quicksand','Inter',sans-serif;font-size:13px;font-weight:700;color:#1e3a5f;letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px;">Upload a Report</div>
+    <div style="font-family:'Quicksand','Inter',sans-serif;font-size:13px;font-weight:700;color:#1e3a5f;letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px;">Manually Upload a Report</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;align-items:end;">
       <div>
         <div style="font-size:11px;color:#64748b;margin-bottom:4px;">PDF file</div>
@@ -3409,13 +3424,12 @@ function renderStrengths(){
         </div>
         <div style="display:flex;gap:6px;flex-shrink:0;">
           <button onclick="openStrEdit('${c.id}')" style="background:${hasStrengths?'#f0f4f8':'#003366'};color:${hasStrengths?'#003366':'#fff'};border:1px solid ${hasStrengths?'#e2e8f0':'#003366'};border-radius:6px;padding:7px 12px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">${hasStrengths?'&#9998; Edit':'+ Add Strengths'}</button>
-          <label style="background:#15803d;color:#fff;border-radius:6px;padding:7px 12px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;">&#10024; Auto-extract<input type="file" accept=".pdf" style="display:none;" onchange="extractStrengthsFromPDF('${c.id}',this.files[0],this)"></label>
         </div>
       </div>
       ${hasStrengths?(
         (top5.length?'<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:'+(bottom5.length?'4px':'0')+';">'+top5.map(s=>csPill(s.rank,s.name)).join('')+'</div>':'')+
         (bottom5.length?'<div style="display:flex;flex-wrap:wrap;gap:4px;">'+bottom5.map(s=>csPill(s.rank,s.name)).join('')+'</div>':'')
-      ):'<div style="font-size:12px;color:#94a3b8;">No strengths recorded yet. Use <strong>Auto-extract</strong> to pull from a Gallup PDF, or <strong>Add Strengths</strong> to type them in.</div>'}
+      ):'<div style="font-size:12px;color:#94a3b8;">No strengths recorded yet. Use <strong>+ Add Strengths</strong> to type them in, or use the <strong>Auto-extract from Gallup PDF</strong> panel on the Strengths Hub Dashboard.</div>'}
       ${viewChips?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;padding-top:10px;border-top:1px dashed #f1f5f9;">${viewChips}</div>`:''}
     </div>`;
   }).join('');
@@ -3507,6 +3521,131 @@ function fileToBase64(file){
     r.readAsDataURL(file);
   });
 }
+// Standalone Auto-extract: PDF first, then pick contact in the modal
+window.extractStandalonePDF=async function(file,input){
+  if(!file) return;
+  if(!getAnthropicKey()){toast('Set Anthropic API key first (C4U Bot settings)','error');if(input)input.value='';return;}
+  const lbl=input?.parentElement;
+  const origText=lbl?lbl.innerText:'';
+  if(lbl) lbl.innerText='Extracting…';
+  try{
+    const b64=await fileToBase64(file);
+    const sys=`You are extracting CliftonStrengths theme order from a Gallup PDF report.
+
+Return ONLY a JSON object with this exact shape (no prose, no code fences):
+{"top10":["Theme1","Theme2","Theme3","Theme4","Theme5","Theme6","Theme7","Theme8","Theme9","Theme10"],"name":"<full name from the PDF if present, else empty string>"}
+
+Rules:
+- Themes must be from this set only: Achiever, Activator, Adaptability, Analytical, Arranger, Belief, Command, Communication, Competition, Connectedness, Consistency, Context, Deliberative, Developer, Discipline, Empathy, Focus, Futuristic, Harmony, Ideation, Includer, Individualization, Input, Intellection, Learner, Maximizer, Positivity, Relator, Responsibility, Restorative, Self-Assurance, Significance, Strategic, Woo
+- Use exact spelling and capitalisation as listed (Self-Assurance has a hyphen)
+- Order is rank 1 → rank 10 (signature themes first)
+- If only top 5 are visible, return what you find and pad with empty strings ""
+- Do not invent themes
+- name = the person's full name as printed on the report, if visible (helps the human pick the right contact); otherwise ""`;
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':getAnthropicKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({
+        model:'claude-haiku-4-5-20251001',
+        max_tokens:500,
+        system:sys,
+        messages:[{role:'user',content:[
+          {type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}},
+          {type:'text',text:'Extract this person\'s top 10 CliftonStrengths themes in rank order, plus their name if shown.'}
+        ]}]
+      })
+    });
+    if(!resp.ok){const t=await resp.text();throw new Error('API '+resp.status+': '+t.slice(0,200));}
+    const json=await resp.json();
+    const text=(json.content||[]).filter(p=>p.type==='text').map(p=>p.text).join('\n').trim();
+    let parsed=null;
+    try{const m=text.match(/\{[\s\S]*\}/);parsed=m?JSON.parse(m[0]):null;}catch(e){}
+    if(!parsed||!Array.isArray(parsed.top10)) throw new Error('Could not parse theme list from response');
+    const lookup={};CS34.forEach(t=>{if(t)lookup[t.toLowerCase()]=t;});
+    const cleaned=parsed.top10.map(t=>lookup[(t||'').toLowerCase().trim()]||'').slice(0,10);
+    while(cleaned.length<10) cleaned.push('');
+    if(!cleaned.filter(Boolean).length) throw new Error('No recognised themes found in the PDF');
+    if(lbl) lbl.innerText=origText;
+    if(input) input.value='';
+    // Cache the file + extracted data, then open the picker modal
+    window._pendingStandaloneExtract={file,themes:cleaned,extractedName:(parsed.name||'').trim()};
+    openStandaloneExtractPicker();
+    toast('Extracted '+cleaned.filter(Boolean).length+' theme'+(cleaned.filter(Boolean).length===1?'':'s')+' — pick the contact','success');
+  }catch(e){
+    console.error(e);
+    toast('Extract failed: '+e.message,'error');
+    if(lbl) lbl.innerText=origText;
+    if(input) input.value='';
+  }
+};
+
+function openStandaloneExtractPicker(){
+  const data=window._pendingStandaloneExtract;
+  if(!data){toast('No extracted data to pick a contact for','error');return;}
+  const sorted=[...contacts].filter(c=>c.first_name||c.last_name).sort((a,b)=>(a.first_name+' '+a.last_name).localeCompare(b.first_name+' '+b.last_name));
+  // Suggest a contact by matching extractedName against name
+  let suggested='';
+  if(data.extractedName){
+    const ln=data.extractedName.toLowerCase();
+    const match=sorted.find(c=>ln.includes((c.first_name||'').toLowerCase())&&ln.includes((c.last_name||'').toLowerCase())&&c.first_name&&c.last_name);
+    if(match) suggested=match.id;
+  }
+  const themesPreview=data.themes.filter(Boolean).map((t,i)=>`<span style="background:${csColor(t)};color:#fff;padding:3px 8px;border-radius:3px;font-size:11px;font-weight:600;margin:2px;">${i+1}. ${t}</span>`).join('');
+  const html=`
+    <div style="font-size:12px;color:#64748b;margin-bottom:8px;">Extracted from the PDF${data.extractedName?` (named: <strong>${data.extractedName}</strong>)`:''}:</div>
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px;margin-bottom:14px;">${themesPreview}</div>
+    <div class="form-group">
+      <label>Save these themes to which contact?</label>
+      <select id="standaloneExtractContact" style="width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
+        <option value="">&mdash; Select a contact &mdash;</option>
+        ${sorted.map(c=>`<option value="${c.id}" ${c.id===suggested?'selected':''}>${c.first_name} ${c.last_name}${c.email?' — '+c.email:''}</option>`).join('')}
+      </select>
+      ${suggested?'<div style="font-size:11px;color:#15803d;margin-top:4px;font-weight:600;">&#10004; Auto-matched by the name on the PDF. Change if wrong.</div>':''}
+    </div>
+  `;
+  // Re-use the strEditModal as a host: stash the prefill values, then open targeting the chosen contact
+  document.getElementById('strEditTitle').textContent='Auto-extracted Strengths';
+  document.getElementById('strEditSubtitle').innerHTML=html;
+  document.getElementById('strEditContactId').value='';
+  document.getElementById('strEditPaste').value='';
+  strEditBuildDropdowns(data.themes);
+  document.getElementById('strEditWarning').style.display='none';
+  document.getElementById('strEditClearBtn').style.display='none';
+  // Override Save: pick contact, then save + upload PDF
+  const saveBtn=document.querySelector('#strEditModal .btn.btn-green');
+  saveBtn.setAttribute('onclick','saveStandaloneExtract()');
+  document.getElementById('strEditModal').classList.add('open');
+}
+
+window.saveStandaloneExtract=async function(){
+  const sel=document.getElementById('standaloneExtractContact');
+  const contactId=sel?sel.value:'';
+  const data=window._pendingStandaloneExtract;
+  if(!contactId){toast('Pick a contact first','error');return;}
+  if(!data){toast('No extract data','error');return;}
+  // Read current dropdown values (user may have tweaked)
+  const list=[];const patch={};
+  for(let i=1;i<=10;i++){
+    const v=(document.getElementById('strEdit'+i)||{}).value||'';
+    patch['strength_'+i]=v||null;
+    if(v) list.push(v);
+  }
+  patch.strengths=list.join(', ')||null;
+  // Update contact strengths
+  const {error}=await supabase.from('contacts').update(patch).eq('id',contactId);
+  if(error){toast('Save failed: '+error.message,'error');return;}
+  // Upload the PDF as a Gallup contact_report so the original is preserved
+  try{await uploadReport(contactId,'gallup',data.file,null);await loadContactReports();}catch(e){console.warn('PDF upload failed:',e);}
+  await loadContacts();
+  // Restore Save handler for normal Edit modal use
+  const saveBtn=document.querySelector('#strEditModal .btn.btn-green');
+  if(saveBtn) saveBtn.setAttribute('onclick','saveStrEdit()');
+  window._pendingStandaloneExtract=null;
+  closeModal('strEditModal');
+  renderStrengths();
+  toast('Saved — '+list.filter(Boolean).length+' themes filed against contact','success');
+};
+
 window.extractStrengthsFromPDF=async function(contactId,file,input){
   if(!file) return;
   if(!getAnthropicKey()){toast('Set Anthropic API key first (C4U Bot settings)','error');if(input)input.value='';return;}
