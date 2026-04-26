@@ -249,7 +249,7 @@ if('serviceWorker' in navigator){
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.44.0</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.45.0</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -482,6 +482,11 @@ if('serviceWorker' in navigator){
     <!-- STRENGTHS CODE TRACKER -->
     <div class="screen" id="screen-strcodes">
       <div id="strCodesContent"></div>
+    </div>
+
+    <!-- STRENGTHS WORKFLOW SOP -->
+    <div class="screen" id="screen-strsop">
+      <div id="strSopContent"></div>
     </div>
 
     <!-- THRIVEHQ DASHBOARD -->
@@ -1633,7 +1638,7 @@ window.navTo = function(tab,btn){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+tab).classList.add('active');
   window.scrollTo(0,0);
-  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ',thqintake:'Intake Forms',strdash:'Strengths Hub',opsdash:'Admin',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Profiles',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Task Management',playbook:'Lou\'s Playbook',itprojects:'IT Projects',agents:'Agents',writingpartner:'Writing Partner',findash:'Finance',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fintxns:'Transactions',thqbrainpulse:'Brain Pulse',clibrainpulse:'Brain Pulse',thqpulse:'SAFE Pulse',clipulse:'SAFE Pulse',pulsesdash:'Pulses',couplesintake:'Couples Intake',couplesdash:'Couples',itdash:'IT',resourcesdash:'Resources',agentsai:'AI Strategy',strreports:'Strengths Reports',strdomains:'Domain Balance',strupload:'Upload Report',strcodes:'Gallup Code Tracker'};
+  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ',thqintake:'Intake Forms',strdash:'Strengths Hub',opsdash:'Admin',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Profiles',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Task Management',playbook:'Lou\'s Playbook',itprojects:'IT Projects',agents:'Agents',writingpartner:'Writing Partner',findash:'Finance',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fintxns:'Transactions',thqbrainpulse:'Brain Pulse',clibrainpulse:'Brain Pulse',thqpulse:'SAFE Pulse',clipulse:'SAFE Pulse',pulsesdash:'Pulses',couplesintake:'Couples Intake',couplesdash:'Couples',itdash:'IT',resourcesdash:'Resources',agentsai:'AI Strategy',strreports:'Strengths Reports',strdomains:'Domain Balance',strupload:'Upload Report',strcodes:'Gallup Code Tracker',strsop:'Gallup Workflow SOP'};
   document.getElementById('pageTitle').textContent=titles[tab]||'Coach4U';
   // Sync area tab
   const area=pageToArea[tab]||'home';
@@ -1664,6 +1669,7 @@ window.navTo = function(tab,btn){
   if(tab==='strdomains') renderStrDomains();
   if(tab==='strupload') renderStrUpload();
   if(tab==='strcodes') renderStrCodes();
+  if(tab==='strsop') renderStrSop();
   if(tab==='opsdash') renderOpsDash();
   if(tab==='masterlist') renderMasterList();
   if(tab==='clients') renderClients();
@@ -1718,7 +1724,7 @@ const areaConfig={
   pulses:{label:'Pulses',pages:[{id:'pulsesdash',icon:'&#128200;',label:'Dashboard'},{id:'clipulse',icon:'&#128147;',label:'SAFE Pulse'},{id:'clibrainpulse',icon:'&#129504;',label:'Brain Pulse'}]},
   couples:{label:'Couples',pages:[{id:'couplesdash',icon:'&#128200;',label:'Dashboard'},{id:'couplesintake',icon:'&#128221;',label:'Couples Intake'}]},
   thrivehq:{label:'ThriveHQ',pages:[{id:'thqdash',icon:'&#128170;',label:'Dashboard'},{id:'thqtrials',icon:'&#127793;',label:'Trials'},{id:'thrivehq',icon:'&#128101;',label:'Members'},{id:'thqrenewals',icon:'&#128260;',label:'Renewals'},{id:'thqcalls',icon:'&#128222;',label:'Coaching Calls'}]},
-  strengths:{label:'Strengths Hub',pages:[{id:'strdash',icon:'&#127919;',label:'Dashboard'},{id:'strcodes',icon:'&#128273;',label:'Code Tracker'},{id:'strreports',icon:'&#128203;',label:'Reports'},{id:'strengths',icon:'&#128161;',label:'Profiles'},{id:'strdomains',icon:'&#127912;',label:'Domain Balance'},{id:'strupload',icon:'&#10024;',label:'Upload Report'}]},
+  strengths:{label:'Strengths Hub',pages:[{id:'strdash',icon:'&#127919;',label:'Dashboard'},{id:'strsop',icon:'&#128218;',label:'Workflow SOP'},{id:'strcodes',icon:'&#128273;',label:'Code Tracker'},{id:'strreports',icon:'&#128203;',label:'Reports'},{id:'strengths',icon:'&#128161;',label:'Profiles'},{id:'strdomains',icon:'&#127912;',label:'Domain Balance'},{id:'strupload',icon:'&#10024;',label:'Upload Report'}]},
   it:{label:'IT',pages:[{id:'itdash',icon:'&#128200;',label:'Dashboard'},{id:'itprojects',icon:'&#9881;',label:'IT Projects'},{id:'agents',icon:'&#129302;',label:'Agents'},{id:'agentsai',icon:'&#10024;',label:'AI Strategy'},{id:'writingpartner',icon:'&#9997;',label:'Writing Partner'}]},
   resources:{label:'Resources',pages:[{id:'resourcesdash',icon:'&#128200;',label:'Dashboard'}]},
   operations:{label:'Admin',pages:[{id:'opsdash',icon:'&#128736;',label:'Dashboard'},{id:'tasks',icon:'&#9989;',label:'Task Management'},{id:'playbook',icon:'&#128214;',label:'Playbook'}]},
@@ -2204,10 +2210,18 @@ function renderStrDash(){
   });
   const topStrengths=Object.entries(strengthFreq).sort((a,b)=>b[1]-a[1]).slice(0,10);
 
-  // Cards ordered to match the Strengths Hub sidebar: Code Tracker → Reports → Profiles → Domain Balance → Upload Report
+  // Cards ordered to match the Strengths Hub sidebar: Workflow SOP → Code Tracker → Reports → Profiles → Domain Balance → Upload Report
   const awaitingCount=(gallupRequests||[]).filter(r=>r.status==='Awaiting Completion').length;
   const inFlightCount=(gallupRequests||[]).filter(r=>r.status&&r.status!=='Filed').length;
-  let html=`<div onclick="navTo('strcodes')" style="display:flex;align-items:center;gap:14px;background:#fff;border:1px solid #e2e8f0;border-left:4px solid #d97706;border-radius:12px;padding:14px 18px;margin-bottom:14px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
+  let html=`<div onclick="navTo('strsop')" style="display:flex;align-items:center;gap:14px;background:#fff;border:1px solid #e2e8f0;border-left:4px solid #1e3a5f;border-radius:12px;padding:14px 18px;margin-bottom:14px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
+    <span style="font-size:24px;flex-shrink:0;">&#128218;</span>
+    <div style="flex:1;min-width:0;">
+      <div style="font-family:'Quicksand','Inter',sans-serif;font-weight:700;color:#1e3a5f;font-size:15px;">Gallup Workflow SOP</div>
+      <div style="font-size:12px;color:#64748b;margin-top:2px;">The single source of truth for the full intake → file pipeline. Read before doing anything Gallup.</div>
+    </div>
+    <span style="color:#1e3a5f;font-size:13px;font-weight:600;flex-shrink:0;">Open &rarr;</span>
+  </div>
+  <div onclick="navTo('strcodes')" style="display:flex;align-items:center;gap:14px;background:#fff;border:1px solid #e2e8f0;border-left:4px solid #d97706;border-radius:12px;padding:14px 18px;margin-bottom:14px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
     <span style="font-size:24px;flex-shrink:0;">&#128273;</span>
     <div style="flex:1;min-width:0;">
       <div style="font-family:'Quicksand','Inter',sans-serif;font-weight:700;color:#1e3a5f;font-size:15px;">Gallup Code Tracker</div>
@@ -2598,6 +2612,152 @@ window.deleteGallupRequest=async function(){
   closeModal('gallupReqModal');
   toast('Deleted','success');
 };
+
+// ── STRENGTHS WORKFLOW SOP ──
+function renderStrSop(){
+  const sec=(title,body)=>`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px 20px;margin-bottom:14px;">
+    <div style="font-family:'Quicksand','Inter',sans-serif;font-size:15px;font-weight:700;color:#1e3a5f;margin-bottom:10px;">${title}</div>
+    <div style="font-size:13px;color:#1e293b;line-height:1.6;">${body}</div>
+  </div>`;
+  const stage=(n,title,body)=>`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #003366;border-radius:12px;padding:14px 18px;margin-bottom:10px;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+      <span style="background:#003366;color:#fff;font-weight:700;font-size:12px;padding:3px 10px;border-radius:99px;">Stage ${n}</span>
+      <span style="font-family:'Quicksand','Inter',sans-serif;font-weight:700;color:#1e3a5f;font-size:14px;">${title}</span>
+    </div>
+    <div style="font-size:13px;color:#1e293b;line-height:1.6;">${body}</div>
+  </div>`;
+  const list=items=>'<ul style="margin:6px 0 0 18px;padding:0;">'+items.map(i=>`<li style="margin-bottom:4px;">${i}</li>`).join('')+'</ul>';
+
+  let html=`<div style="background:linear-gradient(135deg,#003366 0%,#0070CD 100%);border-radius:14px;padding:20px 24px;margin-bottom:16px;color:#fff;">
+    <div style="font-family:'Quicksand','Inter',sans-serif;font-size:20px;font-weight:700;margin-bottom:4px;">Coach4U Gallup CliftonStrengths Full Workflow</div>
+    <div style="font-size:13px;color:rgba(255,255,255,.9);">Single Source of Truth &middot; Internal Use</div>
+    <div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:8px;">Owner: Cath Baker &middot; Maintained by: Coach4U Ops &middot; Applies to: All Gallup CliftonStrengths assessments &middot; Last reviewed: April 2026</div>
+  </div>`;
+
+  html+=sec('Purpose',`This document defines the end-to-end operational workflow for Gallup CliftonStrengths at Coach4U. It exists to ensure consistency, pricing and discount integrity, clear handover between staff, and zero reliance on email history or memory.<br><br><strong>If it is not documented here, it does not exist.</strong>`);
+
+  html+=sec('System Overview &mdash; Where Things Live',list([
+    '<strong>This hub</strong> &mdash; the authoritative workflow and rules. Read-only for staff.',
+    '<strong>SharePoint</strong> &mdash; client files, Cascade reports, Gallup Top 34 PDFs, internal tracking lists.',
+    '<strong>Gallup Access &amp; Gallup Store</strong> &mdash; purchase and distribution of assessment codes; export of results.',
+    '<strong>Cascade</strong> (Excel, licensed) &mdash; strengths data repository; report generation.'
+  ]));
+
+  html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #15803d;border-radius:12px;padding:18px 20px;margin-bottom:14px;">
+    <div style="font-family:'Quicksand','Inter',sans-serif;font-size:15px;font-weight:700;color:#15803d;margin-bottom:8px;">&#9989; Authoritative Discount Code</div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px;">
+      <span style="font-family:'Segoe UI',monospace;font-size:18px;font-weight:700;background:#f0fdf4;color:#15803d;padding:6px 14px;border-radius:8px;border:1px solid #bbf7d0;">DH7HGTMAZ</span>
+      <button onclick="navigator.clipboard.writeText('DH7HGTMAZ');toast('Copied','success');" style="background:#15803d;color:#fff;border:none;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">Copy</button>
+    </div>
+    <div style="font-size:13px;color:#1e293b;line-height:1.6;">${list([
+      'Platform: Gallup Store',
+      'Use: Purchasing CliftonStrengths assessments',
+      'Owner: Gallup Certified Coach account (Cath Baker)',
+      'Status: Active'
+    ])}</div>
+    <div style="font-size:12px;color:#64748b;margin-top:8px;font-style:italic;">This is the only approved discount code. No other discount codes are authorised for use.</div>
+  </div>`;
+
+  html+=sec('Roles and Accountability',`<strong>Cath Baker</strong>${list([
+    'Owns Gallup certification and account',
+    'Approves pricing changes',
+    'Owns this workflow document',
+    'Uses results in coaching'
+  ])}<br><strong>Lou, Operations</strong>${list([
+    'Executes the workflow end to end',
+    'Tracks each request',
+    'Purchases and distributes codes',
+    'Exports and files results',
+    'Updates Cascade'
+  ])}<div style="font-size:12px;color:#64748b;margin-top:10px;font-style:italic;">No steps are skipped or improvised.</div>`);
+
+  html+=`<div style="font-family:'Quicksand','Inter',sans-serif;font-size:18px;font-weight:700;color:#1e3a5f;margin:20px 0 10px;">End-to-End Workflow</div>`;
+
+  html+=stage(1,'Request Intake',`A Gallup request may originate from Cath, a referral partner, a client enquiry, or a program requirement (e.g. ThriveHQ, Couples).<br><br><strong>Required information before proceeding:</strong>${list([
+    'Client full name',
+    'Client email address',
+    'Product type: CliftonStrengths Top 34 / Top 5 to Top 34 upgrade / Sales and Management Report'
+  ])}<div style="font-size:12px;color:#dc2626;margin-top:8px;font-weight:600;">If any of these are missing, stop. Create or update the internal request record.</div>`);
+
+  html+=stage(2,'Payment Gate',`No purchase occurs without confirmed payment.<br><br><strong>Approved payment paths:</strong>${list([
+    'Stripe payment link via Linktree',
+    'Approved Stripe checkout link'
+  ])}<br>Once payment is confirmed: mark payment as complete and proceed to purchase.`);
+
+  html+=stage(3,'Purchase Gallup Code',list([
+    'Go to the Gallup Store',
+    'Log in using the Coach4U Gallup account',
+    'Navigate to the required assessment',
+    'Create a new bundle if applicable',
+    'Apply discount code <strong>DH7HGTMAZ</strong>',
+    'Select Business Purchase',
+    'Enter ABN: <strong>64637831335</strong>',
+    'Complete purchase'
+  ])+`<div style="font-size:12px;color:#dc2626;margin-top:8px;font-weight:600;">Do not proceed without applying the discount code.</div>`);
+
+  html+=stage(4,'Distribute Code to Client',list([
+    'Open Gallup Code Management',
+    'Locate a code where USED = 0',
+    'Select Distribute Code',
+    'Enter the client’s email address',
+    'Send the code'
+  ])+`<br><strong>Immediately record:</strong>${list([
+    'Distribution date',
+    'Client email used'
+  ])}`);
+
+  html+=stage(5,'Client Notification',`Send the standard notification email from <strong>admin@coach4u.com.au</strong>:
+  <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px;margin-top:8px;font-size:13px;line-height:1.6;font-family:'Segoe UI',system-ui,sans-serif;color:#1e293b;">
+    Hi [Client name],<br><br>
+    You will shortly receive an email from Gallup with your CliftonStrengths assessment link. Please check your spam folder if you do not see it.<br><br>
+    The assessment takes around 30 to 45 minutes. Go with your first instinct, there are no right or wrong answers.<br><br>
+    Please let us know once you have completed it.<br><br>
+    Thanks<br>Coach4U
+  </div>
+  <div style="font-size:12px;color:#64748b;margin-top:8px;font-style:italic;">No additional wording is added.</div>`);
+
+  html+=stage(6,'Completion and Export',`Once the client confirms completion:${list([
+    'Log into Gallup Access',
+    'Navigate to Connections',
+    'Search for the client',
+    'Export the CliftonStrengths report',
+    'Download the Top 34 PDF'
+  ])}<br>Save the PDF to the client’s SharePoint folder.`);
+
+  html+=stage(7,'Cascade Update',list([
+    'Open the Cascade workbook',
+    'Add or confirm the client exists in the Theme Table',
+    'Enter or import the Top 34 themes',
+    'Generate Personal Insights and Bring &amp; Need reports',
+    'Export all reports as PDF'
+  ]));
+
+  html+=stage(8,'Filing and Closure',`Save all documents to SharePoint:${list([
+    'Gallup Top 34 report',
+    'Cascade reports'
+  ])}<br><strong>Final checklist before closing:</strong>${list([
+    'Payment confirmed',
+    'Code distributed',
+    'Results exported',
+    'Cascade updated',
+    'Files saved'
+  ])}<div style="font-size:12px;color:#15803d;margin-top:8px;font-weight:600;">Only then is the request marked complete.</div>`);
+
+  html+=sec('Change Control',list([
+    'All changes to pricing, discount codes, or flow steps must be updated here first',
+    'Out-of-date emails, SOPs, or messages are not valid',
+    'Version history must be maintained'
+  ]));
+
+  html+=`<div style="background:#1e3a5f;color:#fff;border-radius:12px;padding:18px 22px;margin-bottom:14px;text-align:center;font-family:'Quicksand','Inter',sans-serif;font-size:14px;font-weight:700;letter-spacing:.5px;">One hub &middot; One flow &middot; One discount code &middot; No exceptions</div>`;
+
+  html+=`<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px;">
+    <button onclick="navTo('strcodes')" style="background:#003366;color:#fff;border:none;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">Open Code Tracker &rarr;</button>
+    <button onclick="window.print()" style="background:#fff;color:#1e3a5f;border:1px solid #e2e8f0;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">Print this SOP</button>
+  </div>`;
+
+  document.getElementById('strSopContent').innerHTML=html;
+}
 
 // ── OPERATIONS DASHBOARD (Daily Briefing) ──
 function renderOpsDash(){
