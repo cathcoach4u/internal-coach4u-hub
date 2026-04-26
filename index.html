@@ -249,7 +249,7 @@ if('serviceWorker' in navigator){
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.37.3</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.38.0</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -783,6 +783,31 @@ if('serviceWorker' in navigator){
   </div>
 </div>
 
+<!-- STRENGTHS EDIT MODAL -->
+<div class="modal-overlay" id="strEditModal">
+  <div class="modal" style="max-width:560px;">
+    <h2 id="strEditTitle" style="font-family:'Quicksand',sans-serif;color:#1e3a5f;margin-bottom:6px;">Edit Strengths</h2>
+    <div style="font-size:12px;color:#64748b;margin-bottom:14px;" id="strEditSubtitle"></div>
+    <input type="hidden" id="strEditContactId">
+    <div class="form-group">
+      <label>Quick paste — top 10 in order</label>
+      <textarea id="strEditPaste" rows="2" placeholder="e.g. Achiever, Strategic, Learner, Responsibility, Communication, Consistency, Relator, Self-Assurance, Includer, Focus" style="width:100%;font-family:inherit;font-size:13px;padding:10px;border:1px solid #e2e8f0;border-radius:8px;resize:vertical;"></textarea>
+      <div style="font-size:11px;color:#94a3b8;margin-top:4px;">Paste a comma-separated list. Hit Apply to populate the dropdowns below.</div>
+      <button type="button" onclick="strEditApplyPaste()" style="margin-top:6px;background:#15803d;color:#fff;border:none;padding:7px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">Apply paste &darr;</button>
+    </div>
+    <div class="form-group">
+      <label>Top 10 (rank order)</label>
+      <div id="strEditDropdowns" style="display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center;"></div>
+    </div>
+    <div id="strEditWarning" style="display:none;background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:8px 12px;font-size:12px;color:#92400e;margin-bottom:10px;">This contact already has strengths recorded. Saving will replace them.</div>
+    <div class="modal-actions">
+      <button class="btn btn-gray" onclick="closeModal('strEditModal')">Cancel</button>
+      <button class="btn btn-red" onclick="strEditClear()" id="strEditClearBtn" style="display:none;">Clear All</button>
+      <button class="btn btn-green" onclick="saveStrEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- TASK MODAL -->
 <div class="modal-overlay" id="taskModal">
   <div class="modal">
@@ -1115,8 +1140,10 @@ if('serviceWorker' in navigator){
     <div class="form-group"><label>Type</label>
       <select id="cType"><option>Individual</option><option>Organisation</option><option>Referrer</option></select>
     </div>
-    <div class="form-group"><label>CliftonStrengths Top 10</label>
-      <div id="cStrengthsGrid" style="display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center;"></div>
+    <div class="form-group" id="cStrengthsSummary" style="display:none;">
+      <label>CliftonStrengths</label>
+      <div id="cStrengthsSummaryBody" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;font-size:12px;color:#1e293b;"></div>
+      <div style="font-size:11px;color:#94a3b8;margin-top:6px;">Edit strengths from <strong>Strengths &rarr; Strengths Hub</strong>. Upload a Gallup PDF there to auto-extract.</div>
     </div>
     <div class="form-group"><label>ThriveHQ Membership Start</label><input id="cMemberStart" type="date" onchange="autoRenewalDate()"></div>
     <div class="form-group"><label>ThriveHQ Renewal Date</label><input id="cRenewal" type="date"></div>
@@ -2982,21 +3009,23 @@ window.openContactModal=function(id){
   document.getElementById('cLink1').value=c?c.link_1||'':'';
   document.getElementById('cLink2').value=c?c.link_2||'':'';
   document.getElementById('cNotes').value=c?c.notes:'';
-  // Build 10 strength dropdowns
-  const grid=document.getElementById('cStrengthsGrid');
-  grid.innerHTML='';
-  for(let i=1;i<=10;i++){
-    const label=document.createElement('span');
-    label.style.cssText='font-size:13px;font-weight:700;color:'+(i<=5?'#3b82f6':'#93c5fd')+';';
-    label.textContent='#'+i;
-    const sel=document.createElement('select');
-    sel.id='cStr'+i;
-    sel.style.cssText='padding:6px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;';
-    sel.innerHTML=CS34.map(s=>'<option value="'+s+'"'+(c&&c['strength_'+i]===s?' selected':'')+'>'+( s||'-- Select --')+'</option>').join('');
-    grid.appendChild(label);
-    grid.appendChild(sel);
+  // Strengths summary — read-only here, edit happens in Strengths Hub
+  const summary=document.getElementById('cStrengthsSummary');
+  const summaryBody=document.getElementById('cStrengthsSummaryBody');
+  if(c){
+    const list=[];
+    for(let i=1;i<=10;i++) if(c['strength_'+i]) list.push({rank:i,name:c['strength_'+i]});
+    if(list.length){
+      summary.style.display='block';
+      summaryBody.innerHTML='<div style="display:flex;flex-wrap:wrap;gap:4px;">'+list.map(s=>`<span style="background:${csColor(s.name)};color:#fff;padding:2px 8px;border-radius:3px;font-size:11px;font-weight:600;">${s.rank}. ${s.name}</span>`).join('')+'</div>';
+    } else {
+      summary.style.display='block';
+      summaryBody.innerHTML='<div style="color:#94a3b8;">No strengths recorded yet.</div>';
+    }
+  } else {
+    summary.style.display='none';
   }
-  // Reports moved to Strengths > Strengths Hub (centralised upload + view)
+  // Reports + strengths editing moved to Strengths > Strengths Hub
   const pulseSection=document.getElementById('cPulseLinkSection');
   if(c){
     pulseSection.style.display='block';
@@ -3009,7 +3038,6 @@ window.openContactModal=function(id){
 
 window.saveContact=async function(){
   const id=document.getElementById('contactId').value;
-  const strengths=[];
   const data={
     first_name:document.getElementById('cFirst').value.trim(),
     last_name:document.getElementById('cLast').value.trim(),
@@ -3023,12 +3051,6 @@ window.saveContact=async function(){
     link_2:document.getElementById('cLink2').value.trim()||null,
     notes:document.getElementById('cNotes').value.trim()
   };
-  for(let i=1;i<=10;i++){
-    const v=document.getElementById('cStr'+i).value;
-    data['strength_'+i]=v||null;
-    if(v) strengths.push(v);
-  }
-  data.strengths=strengths.join(', ')||null;
   if(!data.first_name||!data.last_name){toast('First and last name required','error');return;}
   if(id){
     const {error}=await supabase.from('contacts').update(data).eq('id',id);
@@ -3343,15 +3365,22 @@ window.deleteClient=async function(id){
 // ── STRENGTHS HUB ──
 function renderStrengths(){
   const q=document.getElementById('shSearch').value.toLowerCase();
+  const showAll=document.getElementById('shShowAll')?.checked;
   const filtered=contacts.filter(c=>{
     const hasStr=c.strength_1;
+    if(!showAll&&!hasStr) return false;
     const reports=(contactReports||[]).filter(r=>r.contact_id===c.id);
     const reportFilenames=reports.map(r=>(r.filename||'').toLowerCase()).join(' ');
     const searchStr=(c.first_name+' '+c.last_name+' '+(c.strengths||'')+' '+reportFilenames).toLowerCase();
-    return hasStr&&searchStr.includes(q);
+    return searchStr.includes(q);
   });
 
-  let html=`<div style="font-size:12px;color:#64748b;margin-bottom:12px;">Search to find a contact, or click a row to view their full profile. To upload a new report, use the <strong>Upload a Report</strong> panel on the Strengths Dashboard.</div>`;
+  let html=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+    <div style="font-size:12px;color:#64748b;">Edit a contact's strengths in place, or upload a Gallup PDF to extract them automatically. Editing is locked behind the Edit button so they can't be changed by accident.</div>
+    <label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#1e3a5f;font-weight:600;cursor:pointer;flex-shrink:0;">
+      <input type="checkbox" id="shShowAll" ${showAll?'checked':''} onchange="renderStrengths()">Show contacts without strengths
+    </label>
+  </div>`;
   html+=`<div style="border:1px solid #e2e8f0;border-radius:10px;background:#fff;overflow:hidden;">
     <div style="padding:12px 16px;background:#f8fafc;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:10px;">
       <span style="font-weight:700;font-size:14px;color:#1e293b;">Strengths Profiles</span>
@@ -3370,28 +3399,177 @@ function renderStrengths(){
     }).filter(Boolean).join('');
     const spLink=(c.sharepoint_link||'').trim();
     const spBtn=spLink&&spLink.startsWith('http')?`<a href="${spLink}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;gap:6px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:5px 8px;font-size:11px;color:#15803d;font-weight:600;text-decoration:none;flex-shrink:0;"><span style="font-size:12px;">&#128193;</span>View Gallup PDF (SharePoint)</a>`:'';
-    return `<div style="background:#fff;border:1px solid #e2e8f0;border-left:3px solid #3b82f6;border-radius:8px;padding:12px 16px;cursor:pointer;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'" onclick="openContactModal('${c.id}')">
+    const hasStrengths=!!c.strength_1;
+    return `<div style="background:#fff;border:1px solid #e2e8f0;border-left:3px solid ${hasStrengths?'#3b82f6':'#cbd5e1'};border-radius:8px;padding:12px 16px;">
       <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
         <div style="width:220px;flex-shrink:0;">
           <div style="font-weight:600;font-size:14px;color:#1e293b;">${c.first_name} ${c.last_name}</div>
           ${c.email?'<div style="font-size:11px;color:#94a3b8;margin-top:2px;">'+c.email+'</div>':''}
         </div>
         <div style="flex:1;min-width:0;">
-          ${top5.length?'<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:'+(bottom5.length?'4px':'0')+';">'+top5.map(s=>csPill(s.rank,s.name)).join('')+'</div>':''}
-          ${bottom5.length?'<div style="display:flex;flex-wrap:wrap;gap:4px;">'+bottom5.map(s=>csPill(s.rank,s.name)).join('')+'</div>':''}
+          ${hasStrengths?(
+            (top5.length?'<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:'+(bottom5.length?'4px':'0')+';">'+top5.map(s=>csPill(s.rank,s.name)).join('')+'</div>':'')+
+            (bottom5.length?'<div style="display:flex;flex-wrap:wrap;gap:4px;">'+bottom5.map(s=>csPill(s.rank,s.name)).join('')+'</div>':'')
+          ):'<div style="font-size:12px;color:#94a3b8;">No strengths recorded yet.</div>'}
         </div>
       </div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;padding-top:10px;border-top:1px dashed #f1f5f9;">${spBtn}${reports}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;padding-top:10px;border-top:1px dashed #f1f5f9;align-items:center;">
+        ${spBtn}${reports}
+        <span style="flex:1;"></span>
+        <label style="background:#15803d;color:#fff;border-radius:6px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;">&#10024; Upload Gallup PDF<input type="file" accept=".pdf" style="display:none;" onchange="extractStrengthsFromPDF('${c.id}',this.files[0],this)"></label>
+        <button onclick="openStrEdit('${c.id}')" style="background:${hasStrengths?'#f0f4f8':'#003366'};color:${hasStrengths?'#003366':'#fff'};border:1px solid ${hasStrengths?'#e2e8f0':'#003366'};border-radius:6px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;">${hasStrengths?'Edit':'Add Strengths'}</button>
+      </div>
     </div>`;
   }).join('');
   html+='</div></div>';
-  document.getElementById('shCards').innerHTML=filtered.length?html:'<div style="padding:20px;text-align:center;color:#94a3b8;">No contacts with strengths found.</div>';
+  document.getElementById('shCards').innerHTML=filtered.length?html:'<div style="padding:20px;text-align:center;color:#94a3b8;">No contacts found.</div>';
 }
 window.filterStrengths=function(){renderStrengths();};
 window.uploadStrengthReport=async function(contactId,reportType,file,input){
   await uploadReport(contactId,reportType,file,input);
   await loadContactReports();
   renderStrengths();
+};
+
+// ── Strengths edit modal ──
+function strEditBuildDropdowns(values){
+  const grid=document.getElementById('strEditDropdowns');
+  grid.innerHTML='';
+  for(let i=1;i<=10;i++){
+    const label=document.createElement('span');
+    label.style.cssText='font-size:13px;font-weight:700;color:'+(i<=5?'#3b82f6':'#93c5fd')+';';
+    label.textContent='#'+i;
+    const sel=document.createElement('select');
+    sel.id='strEdit'+i;
+    sel.style.cssText='padding:7px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;background:#fff;';
+    sel.innerHTML=CS34.map(s=>'<option value="'+s+'"'+((values[i-1]||'')===s?' selected':'')+'>'+(s||'-- Select --')+'</option>').join('');
+    grid.appendChild(label);
+    grid.appendChild(sel);
+  }
+}
+window.openStrEdit=function(contactId,prefillValues){
+  const c=contacts.find(x=>x.id===contactId);
+  if(!c){toast('Contact not found','error');return;}
+  document.getElementById('strEditTitle').textContent=`Edit Strengths — ${c.first_name} ${c.last_name}`;
+  document.getElementById('strEditSubtitle').textContent=c.email||'';
+  document.getElementById('strEditContactId').value=contactId;
+  document.getElementById('strEditPaste').value='';
+  const existing=[];
+  for(let i=1;i<=10;i++) existing.push(c['strength_'+i]||'');
+  const values=prefillValues||existing;
+  strEditBuildDropdowns(values);
+  document.getElementById('strEditWarning').style.display=existing.some(Boolean)?'block':'none';
+  document.getElementById('strEditClearBtn').style.display=existing.some(Boolean)?'inline-block':'none';
+  document.getElementById('strEditModal').classList.add('open');
+};
+window.strEditApplyPaste=function(){
+  const txt=document.getElementById('strEditPaste').value;
+  const list=txt.split(/[,\n]/).map(s=>s.trim()).filter(Boolean);
+  // Match each entry to a known theme (case-insensitive) — ignore unknowns
+  const lookup={};
+  CS34.forEach(t=>{if(t)lookup[t.toLowerCase()]=t;});
+  const matched=list.map(item=>lookup[item.toLowerCase()]||'').filter(Boolean).slice(0,10);
+  while(matched.length<10) matched.push('');
+  strEditBuildDropdowns(matched);
+  if(list.length>matched.filter(Boolean).length){
+    toast('Some pasted items did not match a known theme — review the dropdowns','info');
+  } else {
+    toast('Pasted '+matched.filter(Boolean).length+' theme'+(matched.filter(Boolean).length===1?'':'s'),'success');
+  }
+};
+window.strEditClear=function(){
+  if(!confirm('Clear all 10 strength positions for this contact?')) return;
+  strEditBuildDropdowns(['','','','','','','','','','']);
+};
+window.saveStrEdit=async function(){
+  const id=document.getElementById('strEditContactId').value;
+  if(!id){toast('No contact','error');return;}
+  const data={};
+  const list=[];
+  for(let i=1;i<=10;i++){
+    const v=(document.getElementById('strEdit'+i)||{}).value||'';
+    data['strength_'+i]=v||null;
+    if(v) list.push(v);
+  }
+  data.strengths=list.join(', ')||null;
+  const {error}=await supabase.from('contacts').update(data).eq('id',id);
+  if(error){toast('Save failed: '+error.message,'error');return;}
+  await loadContacts();
+  renderStrengths();
+  closeModal('strEditModal');
+  toast('Strengths saved','success');
+};
+
+// ── PDF auto-extract via Claude ──
+function fileToBase64(file){
+  return new Promise((resolve,reject)=>{
+    const r=new FileReader();
+    r.onload=()=>{const s=r.result||'';const i=s.indexOf(',');resolve(i>=0?s.slice(i+1):s);};
+    r.onerror=reject;
+    r.readAsDataURL(file);
+  });
+}
+window.extractStrengthsFromPDF=async function(contactId,file,input){
+  if(!file) return;
+  if(!getAnthropicKey()){toast('Set Anthropic API key first (C4U Bot settings)','error');if(input)input.value='';return;}
+  const c=contacts.find(x=>x.id===contactId);
+  if(!c){toast('Contact not found','error');return;}
+  const lbl=input?.parentElement;
+  const origText=lbl?lbl.innerText:'';
+  if(lbl) lbl.innerText='Uploading…';
+  try{
+    // 1. Upload PDF as a Gallup contact_report (existing pipeline)
+    await uploadReport(contactId,'gallup',file,null);
+    await loadContactReports();
+    if(lbl) lbl.innerText='Extracting…';
+    // 2. Send the PDF to Claude for theme extraction
+    const b64=await fileToBase64(file);
+    const sys=`You are extracting CliftonStrengths theme order from a Gallup PDF report.
+
+Return ONLY a JSON object with this exact shape (no prose, no code fences):
+{"top10":["Theme1","Theme2","Theme3","Theme4","Theme5","Theme6","Theme7","Theme8","Theme9","Theme10"]}
+
+Rules:
+- Themes must be from this set only: Achiever, Activator, Adaptability, Analytical, Arranger, Belief, Command, Communication, Competition, Connectedness, Consistency, Context, Deliberative, Developer, Discipline, Empathy, Focus, Futuristic, Harmony, Ideation, Includer, Individualization, Input, Intellection, Learner, Maximizer, Positivity, Relator, Responsibility, Restorative, Self-Assurance, Significance, Strategic, Woo
+- Use exact spelling and capitalisation as listed (Self-Assurance has a hyphen)
+- Order is rank 1 → rank 10 (signature themes first)
+- If only top 5 are visible, return what you find and pad with empty strings ""
+- Do not invent themes`;
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':getAnthropicKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({
+        model:'claude-haiku-4-5-20251001',
+        max_tokens:400,
+        system:sys,
+        messages:[{role:'user',content:[
+          {type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}},
+          {type:'text',text:'Extract this person\'s top 10 CliftonStrengths themes in rank order from the attached PDF.'}
+        ]}]
+      })
+    });
+    if(!resp.ok){const t=await resp.text();throw new Error('API '+resp.status+': '+t.slice(0,200));}
+    const json=await resp.json();
+    const text=(json.content||[]).filter(p=>p.type==='text').map(p=>p.text).join('\n').trim();
+    let parsed=null;
+    try{const m=text.match(/\{[\s\S]*\}/);parsed=m?JSON.parse(m[0]):null;}catch(e){}
+    if(!parsed||!Array.isArray(parsed.top10)) throw new Error('Could not parse theme list from response');
+    // Validate against known themes
+    const lookup={};CS34.forEach(t=>{if(t)lookup[t.toLowerCase()]=t;});
+    const cleaned=parsed.top10.map(t=>lookup[(t||'').toLowerCase().trim()]||'').slice(0,10);
+    while(cleaned.length<10) cleaned.push('');
+    if(!cleaned.filter(Boolean).length) throw new Error('No recognised themes found in the PDF');
+    if(lbl) lbl.innerText=origText;
+    if(input) input.value='';
+    // Open Edit modal with the extracted themes pre-filled for review
+    openStrEdit(contactId,cleaned);
+    toast('Extracted '+cleaned.filter(Boolean).length+' theme'+(cleaned.filter(Boolean).length===1?'':'s')+' — review and Save','success');
+  }catch(e){
+    console.error(e);
+    toast('PDF extract failed: '+e.message,'error');
+    if(lbl) lbl.innerText=origText;
+    if(input) input.value='';
+  }
 };
 window.uploadStrengthReportFromPanel=async function(){
   const fileInput=document.getElementById('shUploadFile');
