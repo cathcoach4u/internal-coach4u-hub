@@ -129,7 +129,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
   .header{padding:calc(12px + env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 12px max(16px, env(safe-area-inset-left));position:sticky;top:0;z-index:30;gap:8px;}
   .header h2{font-size:17px;}
   .header-right{gap:8px;font-size:11px;}
-  .header-right span[id="headerDate"]{font-size:11px;}
+  .header-right #headerDate{display:none;}
   .modal{padding:18px;max-width:92vw;}
   .dash-cards{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));}
   .mob-grid-2{grid-template-columns:1fr;}
@@ -249,7 +249,7 @@ if('serviceWorker' in navigator){
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.41.1</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.42.0</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -472,6 +472,11 @@ if('serviceWorker' in navigator){
     <!-- STRENGTHS DOMAIN BALANCE -->
     <div class="screen" id="screen-strdomains">
       <div id="strDomainsContent"></div>
+    </div>
+
+    <!-- STRENGTHS UPLOAD REPORT -->
+    <div class="screen" id="screen-strupload">
+      <div id="strUploadContent"></div>
     </div>
 
     <!-- THRIVEHQ DASHBOARD -->
@@ -1548,7 +1553,7 @@ window.navTo = function(tab,btn){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+tab).classList.add('active');
   window.scrollTo(0,0);
-  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ',thqintake:'Intake Forms',strdash:'Strengths Hub',opsdash:'Admin',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Profiles',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Task Management',playbook:'Lou\'s Playbook',itprojects:'IT Projects',agents:'Agents',writingpartner:'Writing Partner',findash:'Finance',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fintxns:'Transactions',thqbrainpulse:'Brain Pulse',clibrainpulse:'Brain Pulse',thqpulse:'SAFEty Pulse',clipulse:'SAFE Pulse',pulsesdash:'Pulses Dashboard',couplesintake:'Couples Intake',couplesdash:'Couples Dashboard',itdash:'IT Dashboard',resourcesdash:'Resources',agentsai:'Agents AI Strategy',strreports:'Strengths Reports',strdomains:'Domain Balance'};
+  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ',thqintake:'Intake Forms',strdash:'Strengths Hub',opsdash:'Admin',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Profiles',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Task Management',playbook:'Lou\'s Playbook',itprojects:'IT Projects',agents:'Agents',writingpartner:'Writing Partner',findash:'Finance',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fintxns:'Transactions',thqbrainpulse:'Brain Pulse',clibrainpulse:'Brain Pulse',thqpulse:'SAFE Pulse',clipulse:'SAFE Pulse',pulsesdash:'Pulses',couplesintake:'Couples Intake',couplesdash:'Couples',itdash:'IT',resourcesdash:'Resources',agentsai:'AI Strategy',strreports:'Strengths Reports',strdomains:'Domain Balance',strupload:'Upload Report'};
   document.getElementById('pageTitle').textContent=titles[tab]||'Coach4U';
   // Sync area tab
   const area=pageToArea[tab]||'home';
@@ -1577,6 +1582,7 @@ window.navTo = function(tab,btn){
   if(tab==='strdash') renderStrDash();
   if(tab==='strreports') renderStrengthsReports();
   if(tab==='strdomains') renderStrDomains();
+  if(tab==='strupload') renderStrUpload();
   if(tab==='opsdash') renderOpsDash();
   if(tab==='masterlist') renderMasterList();
   if(tab==='clients') renderClients();
@@ -1631,7 +1637,7 @@ const areaConfig={
   pulses:{label:'Pulses',pages:[{id:'pulsesdash',icon:'&#128200;',label:'Dashboard'},{id:'clipulse',icon:'&#128147;',label:'SAFE Pulse'},{id:'clibrainpulse',icon:'&#129504;',label:'Brain Pulse'}]},
   couples:{label:'Couples',pages:[{id:'couplesdash',icon:'&#128200;',label:'Dashboard'},{id:'couplesintake',icon:'&#128221;',label:'Couples Intake'}]},
   thrivehq:{label:'ThriveHQ',pages:[{id:'thqdash',icon:'&#128170;',label:'Dashboard'},{id:'thqtrials',icon:'&#127793;',label:'Trials'},{id:'thrivehq',icon:'&#128101;',label:'Members'},{id:'thqrenewals',icon:'&#128260;',label:'Renewals'},{id:'thqcalls',icon:'&#128222;',label:'Coaching Calls'}]},
-  strengths:{label:'Strengths Hub',pages:[{id:'strdash',icon:'&#127919;',label:'Dashboard'},{id:'strreports',icon:'&#128203;',label:'Reports'},{id:'strengths',icon:'&#128161;',label:'Profiles'},{id:'strdomains',icon:'&#127912;',label:'Domain Balance'}]},
+  strengths:{label:'Strengths Hub',pages:[{id:'strdash',icon:'&#127919;',label:'Dashboard'},{id:'strreports',icon:'&#128203;',label:'Reports'},{id:'strengths',icon:'&#128161;',label:'Profiles'},{id:'strdomains',icon:'&#127912;',label:'Domain Balance'},{id:'strupload',icon:'&#10024;',label:'Upload Report'}]},
   it:{label:'IT',pages:[{id:'itdash',icon:'&#128200;',label:'Dashboard'},{id:'itprojects',icon:'&#9881;',label:'IT Projects'},{id:'agents',icon:'&#129302;',label:'Agents'},{id:'agentsai',icon:'&#10024;',label:'AI Strategy'},{id:'writingpartner',icon:'&#9997;',label:'Writing Partner'}]},
   resources:{label:'Resources',pages:[{id:'resourcesdash',icon:'&#128200;',label:'Dashboard'}]},
   operations:{label:'Admin',pages:[{id:'opsdash',icon:'&#128736;',label:'Dashboard'},{id:'tasks',icon:'&#9989;',label:'Task Management'},{id:'playbook',icon:'&#128214;',label:'Playbook'}]},
@@ -2137,42 +2143,15 @@ function renderStrDash(){
     <span style="color:#0070CD;font-size:13px;font-weight:600;flex-shrink:0;">Open &#8599;</span>
   </a>`;
 
-  // Combined upload + auto-extract panel
-  const allContactsForPick=[...contacts].filter(c=>c.first_name||c.last_name).sort((a,b)=>(a.first_name+' '+a.last_name).localeCompare(b.first_name+' '+b.last_name));
-  html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #15803d;border-radius:12px;padding:18px 20px;margin-bottom:20px;">
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-      <span style="font-size:20px;">&#10024;</span>
-      <div style="font-family:'Quicksand','Inter',sans-serif;font-size:15px;font-weight:700;color:#1e3a5f;">Upload a Report</div>
+  // Upload a Report moved to its own page — link card
+  html+=`<div onclick="navTo('strupload')" style="display:flex;align-items:center;gap:14px;background:#fff;border:1px solid #e2e8f0;border-left:4px solid #15803d;border-radius:12px;padding:14px 18px;margin-bottom:14px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
+    <span style="font-size:24px;flex-shrink:0;">&#10024;</span>
+    <div style="flex:1;min-width:0;">
+      <div style="font-family:'Quicksand','Inter',sans-serif;font-weight:700;color:#1e3a5f;font-size:15px;">Upload a Report</div>
+      <div style="font-size:12px;color:#64748b;margin-top:2px;">Add a Gallup PDF or other report. Auto-extract top 10 themes from Gallup PDFs.</div>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;align-items:end;">
-      <div>
-        <div style="font-size:11px;color:#64748b;margin-bottom:4px;">PDF file</div>
-        <input type="file" id="shUploadFile" accept=".pdf" style="width:100%;font-size:12px;">
-      </div>
-      <div>
-        <div style="font-size:11px;color:#64748b;margin-bottom:4px;">Contact (optional for Gallup auto-extract)</div>
-        <select id="shUploadContact" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;background:#fff;">
-          <option value="">— Auto-match from PDF name —</option>
-          ${allContactsForPick.map(c=>`<option value="${c.id}">${c.first_name} ${c.last_name}${c.email?' — '+c.email:''}</option>`).join('')}
-        </select>
-      </div>
-      <div>
-        <div style="font-size:11px;color:#64748b;margin-bottom:4px;">Report type</div>
-        <select id="shUploadType" onchange="updateAutoExtractVisibility()" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;background:#fff;">
-          ${reportTypes.map(rt=>`<option value="${rt.key}">${rt.label}</option>`).join('')}
-        </select>
-      </div>
-      <div>
-        <button onclick="uploadStrengthReportFromPanel()" style="width:100%;background:#15803d;color:#fff;border:none;padding:9px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">Upload</button>
-      </div>
-    </div>
-    <label id="shAutoExtractRow" style="display:flex;align-items:center;gap:8px;margin-top:10px;padding:10px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:12px;color:#15803d;font-weight:600;cursor:pointer;">
-      <input type="checkbox" id="shAutoExtract" checked style="margin:0;accent-color:#15803d;">
-      &#10024; Auto-extract top 10 themes from this Gallup PDF (uses Claude — about 5c)
-    </label>
-    <div style="font-size:11px;color:#94a3b8;margin-top:8px;">Pick the PDF, choose the contact (or leave blank to auto-match by the name on the PDF if it's a Gallup), choose the report type, and Upload.</div>
+    <span style="color:#15803d;font-size:13px;font-weight:600;flex-shrink:0;">Open &rarr;</span>
   </div>`;
-
 
   // Domain balance moved to its own page — link card
   html+=`<div onclick="navTo('strdomains')" style="display:flex;align-items:center;gap:14px;background:#fff;border:1px solid #e2e8f0;border-left:4px solid #8b5cf6;border-radius:12px;padding:14px 18px;margin-bottom:14px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
@@ -2256,6 +2235,45 @@ function renderStrDomains(){
   html+=`</div>`;
 
   document.getElementById('strDomainsContent').innerHTML=html;
+}
+
+// ── STRENGTHS UPLOAD REPORT ──
+function renderStrUpload(){
+  const allContactsForPick=[...contacts].filter(c=>c.first_name||c.last_name).sort((a,b)=>(a.first_name+' '+a.last_name).localeCompare(b.first_name+' '+b.last_name));
+  let html=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #15803d;border-radius:12px;padding:18px 20px;margin-bottom:20px;">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+      <span style="font-size:20px;">&#10024;</span>
+      <div style="font-family:'Quicksand','Inter',sans-serif;font-size:15px;font-weight:700;color:#1e3a5f;">Upload a Report</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;align-items:end;">
+      <div>
+        <div style="font-size:11px;color:#64748b;margin-bottom:4px;">PDF file</div>
+        <input type="file" id="shUploadFile" accept=".pdf" style="width:100%;font-size:12px;">
+      </div>
+      <div>
+        <div style="font-size:11px;color:#64748b;margin-bottom:4px;">Contact (optional for Gallup auto-extract)</div>
+        <select id="shUploadContact" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;background:#fff;">
+          <option value="">— Auto-match from PDF name —</option>
+          ${allContactsForPick.map(c=>`<option value="${c.id}">${c.first_name} ${c.last_name}${c.email?' — '+c.email:''}</option>`).join('')}
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:#64748b;margin-bottom:4px;">Report type</div>
+        <select id="shUploadType" onchange="updateAutoExtractVisibility()" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;background:#fff;">
+          ${reportTypes.map(rt=>`<option value="${rt.key}">${rt.label}</option>`).join('')}
+        </select>
+      </div>
+      <div>
+        <button onclick="uploadStrengthReportFromPanel()" style="width:100%;background:#15803d;color:#fff;border:none;padding:9px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">Upload</button>
+      </div>
+    </div>
+    <label id="shAutoExtractRow" style="display:flex;align-items:center;gap:8px;margin-top:10px;padding:10px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:12px;color:#15803d;font-weight:600;cursor:pointer;">
+      <input type="checkbox" id="shAutoExtract" checked style="margin:0;accent-color:#15803d;">
+      &#10024; Auto-extract top 10 themes from this Gallup PDF (uses Claude — about 5c)
+    </label>
+    <div style="font-size:11px;color:#94a3b8;margin-top:8px;">Pick the PDF, choose the contact (or leave blank to auto-match by the name on the PDF if it's a Gallup), choose the report type, and Upload.</div>
+  </div>`;
+  document.getElementById('strUploadContent').innerHTML=html;
 }
 
 // ── OPERATIONS DASHBOARD (Daily Briefing) ──
