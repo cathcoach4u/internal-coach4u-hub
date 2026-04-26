@@ -37,7 +37,7 @@ Areas and their pages (defined at line ~1423):
 - **Pulses**: Dashboard, SAFE Pulse, Brain Pulse (client selector for per-client mini-portal view)
 - **Couples**: Dashboard, Couples Intake (Port Institute stage-by-stage worksheet; drafts in localStorage, filed to Supabase `couples_intake_sessions`; session linked to Couple client)
 - **ThriveHQ**: Dashboard, Trials, Members, Renewals, Coaching Calls
-- **Strengths**: Dashboard (with Open Reports CTA + SharePoint folder link + Upload-a-Report panel), Reports (Individual / Pair / Team Heatmap with Pre-session brief toggle and four AI readings), Strengths Hub
+- **Strengths Hub** (top-level area): Dashboard (with Open Reports CTA + SharePoint folder link + Upload-a-Report panel), Reports (Individual / Pair / Team Heatmap with Pre-session brief toggle and four AI readings), Profiles (single editor: quick-paste, dropdowns, or PDF auto-extract via Claude)
 - **IT**: Dashboard, IT Projects, Agents, AI Strategy (cross-agent audit + chat), Writing Partner
 - **Resources**: Dashboard (shareable public links — Linktree, intake forms, cancellation policy)
 - **Admin**: Dashboard, Task Management, Playbook (Lou's operational work)

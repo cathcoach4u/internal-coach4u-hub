@@ -249,7 +249,7 @@ if('serviceWorker' in navigator){
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.38.0</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.38.1</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -259,7 +259,7 @@ if('serviceWorker' in navigator){
     <button class="area-tab" onclick="switchArea('pulses')"><span class="tab-icon">&#128147;</span>Pulses</button>
     <button class="area-tab" onclick="switchArea('couples')"><span class="tab-icon">&#128149;</span>Couples</button>
     <button class="area-tab" onclick="switchArea('thrivehq')"><span class="tab-icon">&#128170;</span>ThriveHQ</button>
-    <button class="area-tab" onclick="switchArea('strengths')"><span class="tab-icon">&#127919;</span>Strengths</button>
+    <button class="area-tab" onclick="switchArea('strengths')"><span class="tab-icon">&#127919;</span>Strengths Hub</button>
     <button class="area-tab" onclick="switchArea('it')"><span class="tab-icon">&#128187;</span>IT</button>
     <button class="area-tab" onclick="switchArea('resources')"><span class="tab-icon">&#128279;</span>Resources</button>
     <button class="area-tab" onclick="switchArea('operations')"><span class="tab-icon">&#128736;</span>Admin</button>
@@ -330,8 +330,8 @@ if('serviceWorker' in navigator){
         </button>
         <button onclick="switchArea('strengths')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #00945B;border-radius:10px;padding:14px 12px;font-family:inherit;text-align:left;cursor:pointer;transition:box-shadow .15s;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
           <div style="font-size:22px;margin-bottom:4px;">&#127919;</div>
-          <div style="font-weight:700;color:#1e3a5f;font-size:13px;">Strengths</div>
-          <div style="font-size:11px;color:#64748b;margin-top:2px;">Reports, AI insights, Hub</div>
+          <div style="font-weight:700;color:#1e3a5f;font-size:13px;">Strengths Hub</div>
+          <div style="font-size:11px;color:#64748b;margin-top:2px;">Reports, AI insights, profiles</div>
         </button>
         <button onclick="switchArea('it')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #475569;border-radius:10px;padding:14px 12px;font-family:inherit;text-align:left;cursor:pointer;transition:box-shadow .15s;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
           <div style="font-size:22px;margin-bottom:4px;">&#128187;</div>
@@ -1533,7 +1533,7 @@ window.navTo = function(tab,btn){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+tab).classList.add('active');
   window.scrollTo(0,0);
-  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ',thqintake:'Intake Forms',strdash:'Strengths',opsdash:'Admin',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Strengths Hub',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Task Management',playbook:'Lou\'s Playbook',itprojects:'IT Projects',agents:'Agents',writingpartner:'Writing Partner',findash:'Finance',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fintxns:'Transactions',thqbrainpulse:'Brain Pulse',clibrainpulse:'Brain Pulse',thqpulse:'SAFEty Pulse',clipulse:'SAFE Pulse',pulsesdash:'Pulses Dashboard',couplesintake:'Couples Intake',couplesdash:'Couples Dashboard',itdash:'IT Dashboard',resourcesdash:'Resources',agentsai:'Agents AI Strategy',strreports:'Strengths Reports'};
+  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ',thqintake:'Intake Forms',strdash:'Strengths Hub',opsdash:'Admin',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Profiles',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Task Management',playbook:'Lou\'s Playbook',itprojects:'IT Projects',agents:'Agents',writingpartner:'Writing Partner',findash:'Finance',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fintxns:'Transactions',thqbrainpulse:'Brain Pulse',clibrainpulse:'Brain Pulse',thqpulse:'SAFEty Pulse',clipulse:'SAFE Pulse',pulsesdash:'Pulses Dashboard',couplesintake:'Couples Intake',couplesdash:'Couples Dashboard',itdash:'IT Dashboard',resourcesdash:'Resources',agentsai:'Agents AI Strategy',strreports:'Strengths Reports'};
   document.getElementById('pageTitle').textContent=titles[tab]||'Coach4U';
   // Sync area tab
   const area=pageToArea[tab]||'home';
@@ -1615,7 +1615,7 @@ const areaConfig={
   pulses:{label:'Pulses',pages:[{id:'pulsesdash',icon:'&#128200;',label:'Dashboard'},{id:'clipulse',icon:'&#128147;',label:'SAFE Pulse'},{id:'clibrainpulse',icon:'&#129504;',label:'Brain Pulse'}]},
   couples:{label:'Couples',pages:[{id:'couplesdash',icon:'&#128200;',label:'Dashboard'},{id:'couplesintake',icon:'&#128221;',label:'Couples Intake'}]},
   thrivehq:{label:'ThriveHQ',pages:[{id:'thqdash',icon:'&#128170;',label:'Dashboard'},{id:'thqtrials',icon:'&#127793;',label:'Trials'},{id:'thrivehq',icon:'&#128101;',label:'Members'},{id:'thqrenewals',icon:'&#128260;',label:'Renewals'},{id:'thqcalls',icon:'&#128222;',label:'Coaching Calls'}]},
-  strengths:{label:'Strengths',pages:[{id:'strdash',icon:'&#127919;',label:'Dashboard'},{id:'strreports',icon:'&#128203;',label:'Reports'},{id:'strengths',icon:'&#128161;',label:'Strengths Hub'}]},
+  strengths:{label:'Strengths Hub',pages:[{id:'strdash',icon:'&#127919;',label:'Dashboard'},{id:'strreports',icon:'&#128203;',label:'Reports'},{id:'strengths',icon:'&#128161;',label:'Profiles'}]},
   it:{label:'IT',pages:[{id:'itdash',icon:'&#128200;',label:'Dashboard'},{id:'itprojects',icon:'&#9881;',label:'IT Projects'},{id:'agents',icon:'&#129302;',label:'Agents'},{id:'agentsai',icon:'&#10024;',label:'AI Strategy'},{id:'writingpartner',icon:'&#9997;',label:'Writing Partner'}]},
   resources:{label:'Resources',pages:[{id:'resourcesdash',icon:'&#128200;',label:'Dashboard'}]},
   operations:{label:'Admin',pages:[{id:'opsdash',icon:'&#128736;',label:'Dashboard'},{id:'tasks',icon:'&#9989;',label:'Task Management'},{id:'playbook',icon:'&#128214;',label:'Playbook'}]},
@@ -9361,7 +9361,7 @@ function renderAbout(){
     listItem('Pulses','Dashboard, SAFE Pulse, Brain Pulse — per-client mini portal with printable reports')+
     listItem('Couples','Dashboard and live Couples Intake worksheet (Port Institute 5-stage, stage-by-stage with per-stage save to records, linked to a Couple client)')+
     listItem('ThriveHQ','Dashboard, Trials, Members, Renewals, Coaching Calls')+
-    listItem('Strengths','Dashboard with Open Reports CTA + SharePoint folder link + Upload-a-Report panel; Reports page (Individual / Pair / Team Heatmap with Pre-session brief toggle); Strengths Hub for browsing')+
+    listItem('Strengths Hub','Top-level area. Dashboard with Open Reports CTA + SharePoint folder link + Upload-a-Report panel. Reports page (Individual / Pair / Team Heatmap with Pre-session brief toggle). Profiles page (single editor for each contact: quick-paste, dropdowns, or PDF auto-extract via Claude)')+
     listItem('Strengths AI','Personal Insights, What You Bring &amp; Need, Couple Dynamics, and Adaptation Tips for Cath — all written in Cath\'s voice (CATH_VOICE_REFERENCE) using the existing Anthropic key')+
     listItem('IT','Dashboard, IT Projects, Agents (parent/child with versioning + SharePoint export), AI Strategy (cross-agent audit + chat), Writing Partner')+
     listItem('Resources','Dashboard with shareable public links — Linktree, Intake Forms, Cancellation Policy (copy/open)')+
