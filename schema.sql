@@ -78,3 +78,30 @@ CREATE POLICY "Authenticated read tasks" ON tasks FOR SELECT TO authenticated US
 CREATE POLICY "Authenticated insert tasks" ON tasks FOR INSERT TO authenticated WITH CHECK (true);
 CREATE POLICY "Authenticated update tasks" ON tasks FOR UPDATE TO authenticated USING (true);
 CREATE POLICY "Authenticated delete tasks" ON tasks FOR DELETE TO authenticated USING (true);
+
+-- GALLUP CODE REQUESTS — workflow tracker for CliftonStrengths assessment requests
+CREATE TABLE gallup_code_requests (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  contact_id UUID REFERENCES contacts(id) ON DELETE CASCADE,
+  client_id UUID REFERENCES clients(id) ON DELETE SET NULL,
+  product_type TEXT,
+  source TEXT,
+  status TEXT NOT NULL DEFAULT 'New',
+  discount_code TEXT DEFAULT 'DH7HGTMAZ',
+  code_value TEXT,
+  payment_confirmed_at TIMESTAMPTZ,
+  purchased_at TIMESTAMPTZ,
+  code_sent_at TIMESTAMPTZ,
+  notified_at TIMESTAMPTZ,
+  completed_at TIMESTAMPTZ,
+  exported_at TIMESTAMPTZ,
+  filed_at TIMESTAMPTZ,
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+ALTER TABLE gallup_code_requests ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "anon read gallup_code_requests" ON gallup_code_requests FOR SELECT TO anon USING (true);
+CREATE POLICY "anon insert gallup_code_requests" ON gallup_code_requests FOR INSERT TO anon WITH CHECK (true);
+CREATE POLICY "anon update gallup_code_requests" ON gallup_code_requests FOR UPDATE TO anon USING (true);
+CREATE POLICY "anon delete gallup_code_requests" ON gallup_code_requests FOR DELETE TO anon USING (true);
