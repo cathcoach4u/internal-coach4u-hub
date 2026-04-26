@@ -249,7 +249,7 @@ if('serviceWorker' in navigator){
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.39.0</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.39.1</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -2129,40 +2129,28 @@ function renderStrDash(){
     <span style="color:#0070CD;font-size:13px;font-weight:600;flex-shrink:0;">Open &#8599;</span>
   </a>`;
 
-  // Standalone Auto-extract panel (Gallup PDF -> AI extracts -> review modal)
-  html+=`<div style="background:linear-gradient(135deg,#0f3d2e 0%,#15803d 100%);border-radius:14px;padding:20px 22px;margin-bottom:14px;color:#fff;">
-    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
-      <span style="font-size:32px;flex-shrink:0;">&#10024;</span>
-      <div style="flex:1;min-width:180px;">
-        <div style="font-family:'Quicksand','Inter',sans-serif;font-weight:700;font-size:17px;">Auto-extract from a Gallup PDF</div>
-        <div style="font-size:12px;color:rgba(255,255,255,.85);margin-top:2px;">Drop a PDF and Claude reads the top 10 themes for you. Pick the contact afterwards. No typing.</div>
-      </div>
-      <label style="background:#fff;color:#15803d;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;display:inline-flex;align-items:center;gap:6px;">
-        Choose PDF
-        <input type="file" accept=".pdf" style="display:none;" onchange="extractStandalonePDF(this.files[0],this)">
-      </label>
-    </div>
-  </div>`;
-
-  // Upload-first panel: pick a file, then pick the contact + report type
+  // Combined upload + auto-extract panel
   const allContactsForPick=[...contacts].filter(c=>c.first_name||c.last_name).sort((a,b)=>(a.first_name+' '+a.last_name).localeCompare(b.first_name+' '+b.last_name));
-  html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #15803d;border-radius:12px;padding:16px 18px;margin-bottom:20px;">
-    <div style="font-family:'Quicksand','Inter',sans-serif;font-size:13px;font-weight:700;color:#1e3a5f;letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px;">Manually Upload a Report</div>
+  html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #15803d;border-radius:12px;padding:18px 20px;margin-bottom:20px;">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+      <span style="font-size:20px;">&#10024;</span>
+      <div style="font-family:'Quicksand','Inter',sans-serif;font-size:15px;font-weight:700;color:#1e3a5f;">Upload a Report</div>
+    </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;align-items:end;">
       <div>
         <div style="font-size:11px;color:#64748b;margin-bottom:4px;">PDF file</div>
         <input type="file" id="shUploadFile" accept=".pdf" style="width:100%;font-size:12px;">
       </div>
       <div>
-        <div style="font-size:11px;color:#64748b;margin-bottom:4px;">Contact</div>
+        <div style="font-size:11px;color:#64748b;margin-bottom:4px;">Contact (optional for Gallup auto-extract)</div>
         <select id="shUploadContact" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;background:#fff;">
-          <option value="">— Select —</option>
+          <option value="">— Auto-match from PDF name —</option>
           ${allContactsForPick.map(c=>`<option value="${c.id}">${c.first_name} ${c.last_name}${c.email?' — '+c.email:''}</option>`).join('')}
         </select>
       </div>
       <div>
         <div style="font-size:11px;color:#64748b;margin-bottom:4px;">Report type</div>
-        <select id="shUploadType" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;background:#fff;">
+        <select id="shUploadType" onchange="updateAutoExtractVisibility()" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;background:#fff;">
           ${reportTypes.map(rt=>`<option value="${rt.key}">${rt.label}</option>`).join('')}
         </select>
       </div>
@@ -2170,7 +2158,11 @@ function renderStrDash(){
         <button onclick="uploadStrengthReportFromPanel()" style="width:100%;background:#15803d;color:#fff;border:none;padding:9px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">Upload</button>
       </div>
     </div>
-    <div style="font-size:11px;color:#94a3b8;margin-top:8px;">Pick the PDF first, then choose the contact and report type.</div>
+    <label id="shAutoExtractRow" style="display:flex;align-items:center;gap:8px;margin-top:10px;padding:10px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:12px;color:#15803d;font-weight:600;cursor:pointer;">
+      <input type="checkbox" id="shAutoExtract" checked style="margin:0;accent-color:#15803d;">
+      &#10024; Auto-extract top 10 themes from this Gallup PDF (uses Claude — about 5c)
+    </label>
+    <div style="font-size:11px;color:#94a3b8;margin-top:8px;">Pick the PDF, choose the contact (or leave blank to auto-match by the name on the PDF if it's a Gallup), choose the report type, and Upload.</div>
   </div>`;
 
 
@@ -3708,19 +3700,45 @@ Rules:
     if(input) input.value='';
   }
 };
+window.updateAutoExtractVisibility=function(){
+  const sel=document.getElementById('shUploadType');
+  const row=document.getElementById('shAutoExtractRow');
+  if(!sel||!row) return;
+  row.style.display=sel.value==='gallup'?'flex':'none';
+};
+
 window.uploadStrengthReportFromPanel=async function(){
   const fileInput=document.getElementById('shUploadFile');
-  const contactId=document.getElementById('shUploadContact').value;
+  const contactSel=document.getElementById('shUploadContact');
+  const contactId=contactSel?contactSel.value:'';
   const reportType=document.getElementById('shUploadType').value;
+  const autoExtractEl=document.getElementById('shAutoExtract');
+  const autoExtract=autoExtractEl?autoExtractEl.checked:false;
   const file=fileInput?.files?.[0];
   if(!file){toast('Pick a PDF first','error');return;}
-  if(!contactId){toast('Choose the contact','error');return;}
   if(!reportType){toast('Choose the report type','error');return;}
+  // Gallup + auto-extract: PDF first, name auto-match if no contact picked
+  if(reportType==='gallup'&&autoExtract){
+    if(!getAnthropicKey()){toast('Set Anthropic API key first (C4U Bot settings)','error');return;}
+    if(contactId){
+      // Contact picked — extract themes for them, then upload PDF, opens Edit modal pre-filled
+      await extractStrengthsFromPDF(contactId,file,fileInput);
+      if(fileInput) fileInput.value='';
+      return;
+    }
+    // No contact picked — run standalone extract (modal lets user pick contact, including name auto-match)
+    await extractStandalonePDF(file,fileInput?.parentElement);
+    if(fileInput) fileInput.value='';
+    return;
+  }
+  // Plain manual upload
+  if(!contactId){toast('Choose the contact for a manual upload','error');return;}
   await uploadReport(contactId,reportType,file,null);
   await loadContactReports();
   if(fileInput) fileInput.value='';
   if(document.getElementById('screen-strdash')?.classList.contains('active')) renderStrDash();
   else if(document.getElementById('screen-strengths')?.classList.contains('active')) renderStrengths();
+  toast('Uploaded','success');
 };
 
 // ── STRENGTHS REPORTS ── (Phase 1: Individual + foundation; Pair/Team/AI in follow-ups)
