@@ -249,7 +249,7 @@ if('serviceWorker' in navigator){
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.42.1</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.42.2</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -2164,8 +2164,10 @@ function renderStrDash(){
   </div>`;
 
   // Top 10 most common strengths
+  const totalThemesCounted=Object.values(strengthFreq).reduce((a,b)=>a+b,0);
   html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:20px;">
-    <div style="font-family:'Quicksand','Inter',sans-serif;font-size:16px;font-weight:700;color:#1e3a5f;margin-bottom:14px;">Most Common Strengths</div>
+    <div style="font-family:'Quicksand','Inter',sans-serif;font-size:16px;font-weight:700;color:#1e3a5f;margin-bottom:6px;">Most Common Strengths</div>
+    <div style="font-size:12px;color:#64748b;margin-bottom:14px;">Across the top 10 themes of every profile &middot; ${withStr.length} profiles &middot; ${totalThemesCounted} themes counted</div>
     <div style="display:flex;flex-direction:column;gap:6px;">
       ${topStrengths.map(([name,count])=>{
         const pct=(count/withStr.length*100).toFixed(0);
@@ -3582,6 +3584,8 @@ window.saveStrEdit=async function(){
   if(error){toast('Save failed: '+error.message,'error');return;}
   await loadContacts();
   renderStrengths();
+  if(document.getElementById('screen-strdash')?.classList.contains('active')) renderStrDash();
+  if(document.getElementById('screen-strdomains')?.classList.contains('active')) renderStrDomains();
   closeModal('strEditModal');
   toast('Strengths saved','success');
 };
