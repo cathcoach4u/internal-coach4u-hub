@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Coach4U — Your Portal</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#f0f4f8;color:#1e293b;min-height:100vh}
+.header{background:#003366;color:#fff;padding:20px 24px;text-align:center;border-bottom:4px solid #c9a646}
+.header h1{font-size:22px;font-weight:700;margin-bottom:2px}
+.header .sub{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#8aaac8}
+.container{max-width:640px;margin:0 auto;padding:20px 16px 40px}
+.welcome{background:#fff;border-radius:12px;padding:20px 24px;margin-bottom:20px;border-left:4px solid #003366}
+.welcome h2{font-size:18px;color:#003366;margin-bottom:4px}
+.welcome p{font-size:13px;color:#64748b}
+.error-card{background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:24px;text-align:center;color:#dc2626;font-size:14px}
+.tile{display:flex;align-items:center;gap:14px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px 22px;margin-bottom:14px;text-decoration:none;color:#1e293b;cursor:pointer;transition:box-shadow .15s,transform .15s}
+.tile:hover{box-shadow:0 6px 20px rgba(0,0,0,.08);transform:translateY(-1px)}
+.tile-icon{font-size:32px;flex-shrink:0;width:48px;height:48px;border-radius:10px;display:flex;align-items:center;justify-content:center}
+.tile-body{flex:1;min-width:0}
+.tile-title{font-size:16px;font-weight:700;color:#1e3a5f;margin-bottom:2px}
+.tile-desc{font-size:12px;color:#64748b;line-height:1.5}
+.tile-arrow{color:#94a3b8;font-size:18px;font-weight:700;flex-shrink:0}
+.tile-safe{border-left:4px solid #003366}
+.tile-safe .tile-icon{background:#eff4f1;color:#5c8a7a}
+.tile-brain{border-left:4px solid #7c3aed}
+.tile-brain .tile-icon{background:#ede9fe;color:#7c3aed}
+.loading{text-align:center;padding:40px 20px;color:#94a3b8;font-size:13px}
+.footer{text-align:center;font-size:11px;color:#94a3b8;margin-top:24px}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>Coach4U</h1>
+  <div class="sub">Your Portal</div>
+</div>
+<div class="container" id="app">
+  <div class="loading">Loading...</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+var CONF={url:'https://uoixetfvboevjxlkfyqy.supabase.co',key:'sb_publishable_m3qgSGvWF0n2TePf6vhqMw_9obUvJEJ'};
+function tile(href,extraClass,icon,title,desc){
+  return '<a href="'+href+'" class="tile '+extraClass+'"><div class="tile-icon">'+icon+'</div><div class="tile-body"><div class="tile-title">'+title+'</div><div class="tile-desc">'+desc+'</div></div><div class="tile-arrow">&rarr;</div></a>';
+}
+function render(name,cid){
+  var greeting=name?'Hi '+name+',':'Hi there,';
+  var qs=cid?'?c='+encodeURIComponent(cid):'';
+  document.getElementById('app').innerHTML=
+    '<div class="welcome"><h2>'+greeting+'</h2><p>Welcome to your Coach4U portal. Pick what you\'d like to do today.</p></div>'+
+    tile('safe/'+qs,'tile-safe','&#127807;','SAFE Pulse','Check in with the four pillars: Self Awareness, Aim, Foundation, Emotion.')+
+    tile('brain/'+qs,'tile-brain','&#129504;','Brain Pulse','Check in with your four rooms: Capacity, Wellbeing, Strengths, Execution.')+
+    '<div class="footer">Coach4U &middot; coach4u.com.au</div>';
+}
+async function init(){
+  var p=new URLSearchParams(window.location.search),c=p.get('c');
+  if(!c){render(null,null);return;}
+  try{
+    var sb=window.supabase.createClient(CONF.url,CONF.key);
+    var res=await sb.from('contacts').select('first_name').eq('id',c).single();
+    if(res.error){render(null,c);return;}
+    render(res.data.first_name||null,c);
+  }catch(e){render(null,c);}
+}
+init();
+</script>
+</body>
+</html>
