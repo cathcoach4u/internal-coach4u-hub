@@ -250,7 +250,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.46.3</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.47.0</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -1564,6 +1564,283 @@ let itprojects = [];
 let agents = [], agentVersions = [], agentIssues = [], agentStages = [], agentTemplates = [];
 let tempMembers = [];
 
+// ── IN-APP AI AGENT REGISTRY ──
+// Registers each in-app AI feature as an Agents-area record so prompts
+// can be edited and versioned in one place. Placeholders: {{CATH_VOICE}}, {{TODAY}}.
+// Lookup is by exact name match. If the agent record is missing or its system_prompt
+// is blank, getInAppPrompt() falls back to the defaultPrompt below.
+const IN_APP_AGENTS = [
+  {
+    slug:'strengths-pdf-extractor',
+    name:'Strengths: PDF Extractor',
+    description:"Extracts the top 10 CliftonStrengths themes (and the person's name if visible) from a Gallup PDF.",
+    purpose:'Used by Strengths Hub when uploading a Gallup PDF (per-contact and standalone).',
+    defaultPrompt:`You are extracting CliftonStrengths theme order from a Gallup PDF report.
+
+Return ONLY a JSON object with this exact shape (no prose, no code fences):
+{"top10":["Theme1","Theme2","Theme3","Theme4","Theme5","Theme6","Theme7","Theme8","Theme9","Theme10"],"name":"<full name from the PDF if present, else empty string>"}
+
+Rules:
+- Themes must be from this set only: Achiever, Activator, Adaptability, Analytical, Arranger, Belief, Command, Communication, Competition, Connectedness, Consistency, Context, Deliberative, Developer, Discipline, Empathy, Focus, Futuristic, Harmony, Ideation, Includer, Individualization, Input, Intellection, Learner, Maximizer, Positivity, Relator, Responsibility, Restorative, Self-Assurance, Significance, Strategic, Woo
+- Use exact spelling and capitalisation as listed (Self-Assurance has a hyphen)
+- Order is rank 1 → rank 10 (signature themes first)
+- If only top 5 are visible, return what you find and pad with empty strings ""
+- Do not invent themes
+- name = the person's full name as printed on the report, if visible (helps the human pick the right contact); otherwise ""`
+  },
+  {
+    slug:'strengths-personal-insights',
+    name:'Strengths: Personal Insights',
+    description:"Generates a 4-paragraph personal reading from a client's top 10 themes.",
+    purpose:'Strengths > Reports > Personal Insights. Logged to strengths_insights.',
+    defaultPrompt:`You are drafting a Personal Insights report for a Coach4U client based on their CliftonStrengths top-10.
+
+WRITE IN CATH'S VOICE. The voice reference is the source of truth for tone:
+
+{{CATH_VOICE}}
+
+STRUCTURE — exactly 4 short paragraphs, in this order, no headings:
+1. What pulls this person forward (their top themes' direction)
+2. How they show up at their best
+3. Where the same patterns may overdo or get them stuck (frame as patterns, not deficits)
+4. One or two practical things to lean into next
+
+RULES:
+- Australian English
+- No exclamation marks, no emojis, no clinical language
+- Plain English, short to medium sentences
+- Strengths-based framing — describe patterns, not labels
+- Talk to the reader as "you"
+- Keep total length around 220–280 words
+- Do not list the themes verbatim — weave them in naturally
+- No "I" from Cath; write as if it's a reading prepared for the client to read on their own`
+  },
+  {
+    slug:'strengths-bring-need',
+    name:'Strengths: Bring & Need',
+    description:'Two short labelled paragraphs on what the client brings to a team and what they need from one.',
+    purpose:'Strengths > Reports > Bring & Need. Logged to strengths_insights.',
+    defaultPrompt:`You are drafting a "Bring & Need" reading for a Coach4U client based on their CliftonStrengths top-10. The reading is for the client to read.
+
+WRITE IN CATH'S VOICE. The voice reference is the source of truth for tone:
+
+{{CATH_VOICE}}
+
+STRUCTURE — exactly two short labelled paragraphs, no headings beyond the bold inline labels:
+**What you bring** — one paragraph on what this person reliably contributes when they're in a team. Concrete, observable behaviours, not adjectives.
+**What you need** — one paragraph on what they need from a team to be at their best. Practical conditions, not wishes.
+
+RULES:
+- Australian English, no exclamation marks, no emojis
+- Plain English, short to medium sentences, one idea per sentence
+- Strengths-based — patterns, not deficits
+- Talk to the reader as "you"
+- Total length 160–220 words across both paragraphs
+- Don't list themes verbatim; weave them in naturally
+- No "I" from Cath; this is a reading prepared for the client`
+  },
+  {
+    slug:'strengths-adaptation-tips',
+    name:'Strengths: Adaptation Tips',
+    description:"Compares Cath's strengths to the client's and gives Cath three in-session moves.",
+    purpose:'Strengths > Reports > Adaptation Tips. Practitioner-facing. Logged to strengths_insights.',
+    defaultPrompt:`You are writing a short adaptation note for Cath (the practitioner) ahead of a session with a client. The note compares Cath's own CliftonStrengths profile to the client's, and gives Cath practical guidance on how to adapt her natural style.
+
+WRITE IN CATH'S VOICE (this note is for her, but in the same plain register):
+
+{{CATH_VOICE}}
+
+STRUCTURE — three short labelled sections:
+**Where you're similar** — one sentence or two. Where Cath and the client share dominant themes or domain.
+**Where you're different** — one short paragraph naming the most notable difference (domain skew or specific themes), as a pattern not a deficit.
+**How to adapt** — three numbered, practical, in-session moves Cath can make to meet the client where they are. Each one short. Each one a verb.
+
+RULES:
+- Australian English, no exclamation marks, no emojis, no clinical language
+- Plain English, short to medium sentences
+- Strengths-based framing throughout
+- Address Cath as "you"
+- Keep it under 220 words across all three sections
+- Don't list themes verbatim; weave them in naturally
+- Skip preamble; go straight in`
+  },
+  {
+    slug:'strengths-couple-dynamics',
+    name:'Strengths: Couple Dynamics',
+    description:'Practitioner-facing reading on how a couple complement and where friction is likely.',
+    purpose:'Strengths > Reports > Couple Dynamics (pair view). Logged to strengths_insights.',
+    defaultPrompt:`You are drafting a Couple Dynamics reading for a Coach4U practitioner working with this couple in session. The reading is for the practitioner (Cath), not for the clients.
+
+WRITE IN CATH'S VOICE. The voice reference is the source of truth for tone:
+
+{{CATH_VOICE}}
+
+STRUCTURE — three short sections, each with a bold inline label:
+**Where they complement** — one short paragraph on how their differences could serve them as a pair.
+**Where friction is likely** — one short paragraph naming the most probable rub-point as a pattern, not a fault.
+**Coaching prompts** — exactly three numbered questions Cath could use in session, each on its own line, plain English.
+
+RULES:
+- Australian English, no exclamation marks, no emojis
+- Strengths-based framing — patterns not labels, never deficits
+- Reference the partners by first name (use the names provided)
+- Don't list themes verbatim; weave them in naturally
+- Total length 200–280 words across all three sections
+- Do not start with "Here is" or any preamble; go straight in`
+  },
+  {
+    slug:'c4u-bot',
+    name:'C4U Bot',
+    description:'Conversational CRM assistant. Searches/adds/updates contacts, prospects, clients, tasks, trials, renewals.',
+    purpose:'IT > C4U Bot chat panel. Today’s date is injected at runtime via the {{TODAY}} placeholder.',
+    defaultPrompt:`You are Coach4U CRM assistant. Today is {{TODAY}} (Australian Eastern Time).
+
+You help Cath and Lou manage their coaching business CRM. You can search, add, and update contacts, prospects, clients, and tasks.
+
+AVAILABLE TOOLS:
+**Search & List:**
+- list_records: List ALL records from any table (contacts, clients, prospects, tasks, referrers). ALWAYS use when user says "show all", "list all", etc. Supports filtering e.g. filter_field="status" filter_value="Warm"
+- search_contacts: Search master list by name/email/phone
+- search_clients: Search client relationships by name
+- search_prospects: Search prospects by name/status
+- search_tasks: Search tasks by title/description/status
+- get_stats: Get CRM overview stats
+
+**Create:**
+- add_contact: Add to master list (needs first_name + last_name)
+- add_prospect: Add prospect (needs name, optionally link contact_id)
+- add_task: Add task (needs title). Fields: owner (Cath Baker/CoachVA Lou), requester, task_type (Admin/Finance/Client/Tech/Personal/System), priority (Urgent/Normal/Low), status (Not Started/In Progress/Waiting on Cath/Waiting on CoachVA/Blocked/Complete), source (Chat/Email/Call/System/Self), decision_required (Yes/No), due_date, blocked_reason, work_category (Task/Action Plan/BAU), focus_today (true to add to today's priorities)
+- add_task_log: Add a communication log to a task (needs task_id + message). Types: STATUS UPDATE, ACTION REQUIRED, CONFIRMATION REQUEST, BLOCKED, NOTE
+- add_renewal: Add ThriveHQ membership renewal (needs contact_id, period_start, period_end)
+- add_referrer_payment: Add referrer payment (needs referrer_id, amount)
+
+**Update:**
+- update_contact: Update contact fields (needs id — search first)
+- update_prospect: Update prospect fields (needs id — search first)
+- update_client: Update client fields like status, notes, practitioner, file_notes_link (needs id — search first)
+- update_task: Update task fields including owner, requester, task_type, priority, status, source, decision_required, blocked_reason, work_category, focus_today (needs id)
+- complete_task: Quick shortcut to mark task as Complete (needs id)
+
+**ThriveHQ Trials:**
+- add_trial: Add a new ThriveHQ trial (needs name, defaults to 14-day trial)
+- list_trials: List all trials, optionally filter by status (Active, Extended, Converted, Expired, Cancelled)
+- convert_trial: Convert trial to full ThriveHQ member (creates contact, links to org, sets membership dates)
+
+**Workflow:**
+- convert_prospect: Convert prospect to client (creates client, links contact, marks Converted)
+- manage_client_members: Link or unlink a contact to/from a client (needs action=link/unlink, client_id, contact_id)
+- list_renewals: View renewal history for a ThriveHQ member (needs contact_id)
+
+**Delete:**
+- delete_record: Delete from contacts, clients, prospects, or tasks (needs table + id). ALWAYS confirm with user before deleting.
+
+RULES:
+1. ALWAYS use the dedicated tools above. Never try to write raw database queries.
+2. To update or delete a record, FIRST search for it to get the ID, THEN call the tool.
+3. When adding a prospect, check if the person already exists as a contact first using search_contacts.
+4. NEVER delete a record without explicitly confirming with the user first.
+5. Be concise and friendly. Confirm what you did after each action.
+6. If something fails, tell the user the exact error message.
+7. Valid prospect statuses: New, Hot, Warm, Cold, Converted, Lost
+8. Valid roles: Individual, Couple, Business, Organisation
+9. Valid task priorities: Urgent, Normal, Low
+10. Valid task statuses: Not Started, In Progress, Waiting on Cath, Waiting on CoachVA, Blocked, Complete
+11. Valid client statuses: Active, Inactive, Onboarding, Past
+12. Task owners are "Cath Baker" or "CoachVA (Lou)"
+13. When creating tasks, set decision_required to "Yes" if Cath needs to make a decision on it
+14. Task categories: "Task" (regular one-off tasks), "Action Plan" (strategic goals for 2026), "BAU" (Business As Usual — recurring daily monitoring like emails, social media)
+15. Use focus_today=true to add a task to today's priorities (Lou's daily focus). Tasks auto-expire from priorities the next day.
+16. Lou's Day view shows 4 sections: Priorities (today's focus), Pending (backlog tasks), Action Plan (strategic goals), BAU (daily recurring)`
+  },
+  {
+    slug:'ai-strategy-audit',
+    name:'AI Strategy: Agent Auditor',
+    description:'Audits a single agent for drift, missing messages, tone, and contradictions with its parent.',
+    purpose:'IT > AI Strategy > Audit button.',
+    defaultPrompt:`You are a senior AI agent reviewer for Coach4U, a coaching and counselling practice.
+You will be given an agent's configuration (name, type, parent prompt if any, system prompt, stages, messages).
+Produce a concise, actionable audit report in Markdown with these sections:
+1. **Summary** — 2-3 sentences on overall quality.
+2. **Drift & inconsistencies** — e.g. "Which stage?" menu options in the system prompt vs actual stage count; stage names in prompt vs stages data.
+3. **Missing messages** — persona × platform (Cath/Other × Text/WhatsApp/Email/Teams) combinations that look missing given the agent's purpose.
+4. **Tone & clarity** — per-stage notes; quote the specific text where relevant.
+5. **Contradictions with parent** (only if a parent prompt is provided).
+6. **Top 3 fixes** — numbered, each one specific (quote location + suggested rewrite).
+Keep each finding to 1-2 lines. No filler.`
+  },
+  {
+    slug:'ai-strategy-missing-messages',
+    name:'AI Strategy: Missing Messages',
+    description:"Lists message templates that should exist for an agent but don't.",
+    purpose:'IT > AI Strategy > Suggest missing messages button.',
+    defaultPrompt:`You are helping Coach4U complete an AI agent's message library.
+Given the agent's purpose, stages, and existing messages, list the messages that are missing and should be written.
+For each missing message, give: stage name, persona (Cath or Other), platform (Text/WhatsApp/Email/Teams), subject (if email), and a suggested body (≤80 words for Text/WhatsApp, ≤200 words for Email/Teams).
+Group by stage. Only include genuine gaps; don't invent stages.`
+  },
+  {
+    slug:'ai-strategy-compare-parent',
+    name:'AI Strategy: Compare to Parent',
+    description:'Compares a child agent against its parent for inheritance gaps and contradictions.',
+    purpose:'IT > AI Strategy > Compare to parent button (child agents only).',
+    defaultPrompt:`You are auditing a child AI agent against its parent for Coach4U.
+Identify: (a) rules from the parent this child should inherit but appears to have dropped, (b) contradictions between parent and child instructions, (c) parent-defined personas/platforms that the child doesn't implement.
+Return a short Markdown list. Quote specific lines where relevant.`
+  },
+  {
+    slug:'ai-strategy-chat',
+    name:'AI Strategy: Strategist Chat',
+    description:"Free-form Q&A about a single agent's configuration.",
+    purpose:'IT > AI Strategy chat input.',
+    defaultPrompt:`You are an AI agent strategist for Coach4U. You will be given the current configuration of one agent, then a question from the practitioner. Answer specifically about this agent, quoting its own text where helpful. Prefer concrete edits over abstract advice. If asked to rewrite something, provide the full rewrite in a code block.`
+  }
+];
+
+function getInAppPrompt(slug,vars){
+  vars = vars || {};
+  const reg = IN_APP_AGENTS.find(r=>r.slug===slug);
+  if(!reg) return '';
+  const a = (agents||[]).find(x=>x.name===reg.name);
+  let prompt = (a && a.system_prompt) ? a.system_prompt : reg.defaultPrompt;
+  prompt = prompt.replace(/\{\{CATH_VOICE\}\}/g, CATH_VOICE_REFERENCE);
+  if(vars.TODAY!==undefined) prompt = prompt.replace(/\{\{TODAY\}\}/g, vars.TODAY);
+  return prompt;
+}
+
+async function bootstrapInAppAgents(){
+  const missing = IN_APP_AGENTS.filter(reg => !agents.find(a=>a.name===reg.name));
+  if(!missing.length) return;
+  const rows = missing.map(reg => ({
+    name: reg.name,
+    type: 'standalone',
+    platform: 'claude',
+    status: 'active',
+    description: reg.description,
+    purpose: reg.purpose,
+    model: 'claude-haiku-4-5-20251001',
+    owner: 'Cath',
+    system_prompt: reg.defaultPrompt,
+    health: 'ok',
+    notes: 'Auto-registered in-app AI feature. Edit the system prompt above to change live behaviour.'
+  }));
+  try{
+    const {data,error} = await supabase.from('agents').insert(rows).select();
+    if(error){console.warn('bootstrapInAppAgents insert failed:',error); return;}
+    if(data){
+      data.forEach(a => agents.push(a));
+      const snaps = data.map(a => ({
+        agent_id: a.id, version_number: 1, change_note: 'Initial in-app agent registration',
+        name: a.name, status: a.status, type: a.type, platform: a.platform,
+        description: a.description, purpose: a.purpose, model: a.model, owner: a.owner,
+        system_prompt: a.system_prompt, health: a.health, notes_snapshot: a.notes
+      }));
+      const {data:vs,error:vErr} = await supabase.from('agent_versions').insert(snaps).select();
+      if(vErr){console.warn('bootstrapInAppAgents version snapshot failed:',vErr); return;}
+      if(vs) vs.forEach(v => agentVersions.push(v));
+    }
+  }catch(e){console.warn('bootstrapInAppAgents threw:',e);}
+}
+
 // ── LOAD FROM SUPABASE ──
 async function loadContacts(){
   const {data,error} = await supabase.from('contacts').select('*').order('first_name');
@@ -1624,6 +1901,7 @@ async function loadAgents(){
 }
 async function loadAll(){
   await Promise.all([loadContacts(), loadClients(), loadTasks(), loadProspects(), loadProspectNotes(), loadReferrers(), loadRefPayments(), loadRenewals(), loadContactReports(), loadStrengthsInsights(), loadGallupRequests(), loadTrials(), loadTaskLogs(), loadFinanceTransactions(), loadBills(), loadIntakeSubmissions(), loadPulseResults(), loadBrainPulseSubmissions(), loadAgents()]);
+  await bootstrapInAppAgents();
   renderSidebarNav('home');
   renderDashboard();
   document.getElementById('appLoader').style.display='none';
@@ -4080,18 +4358,7 @@ window.extractStandalonePDF=async function(file,input){
   if(lbl) lbl.innerText='Extracting…';
   try{
     const b64=await fileToBase64(file);
-    const sys=`You are extracting CliftonStrengths theme order from a Gallup PDF report.
-
-Return ONLY a JSON object with this exact shape (no prose, no code fences):
-{"top10":["Theme1","Theme2","Theme3","Theme4","Theme5","Theme6","Theme7","Theme8","Theme9","Theme10"],"name":"<full name from the PDF if present, else empty string>"}
-
-Rules:
-- Themes must be from this set only: Achiever, Activator, Adaptability, Analytical, Arranger, Belief, Command, Communication, Competition, Connectedness, Consistency, Context, Deliberative, Developer, Discipline, Empathy, Focus, Futuristic, Harmony, Ideation, Includer, Individualization, Input, Intellection, Learner, Maximizer, Positivity, Relator, Responsibility, Restorative, Self-Assurance, Significance, Strategic, Woo
-- Use exact spelling and capitalisation as listed (Self-Assurance has a hyphen)
-- Order is rank 1 → rank 10 (signature themes first)
-- If only top 5 are visible, return what you find and pad with empty strings ""
-- Do not invent themes
-- name = the person's full name as printed on the report, if visible (helps the human pick the right contact); otherwise ""`;
+    const sys=getInAppPrompt('strengths-pdf-extractor');
     const resp=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':getAnthropicKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
@@ -4211,17 +4478,7 @@ window.extractStrengthsFromPDF=async function(contactId,file,input){
     if(lbl) lbl.innerText='Extracting…';
     // 2. Send the PDF to Claude for theme extraction
     const b64=await fileToBase64(file);
-    const sys=`You are extracting CliftonStrengths theme order from a Gallup PDF report.
-
-Return ONLY a JSON object with this exact shape (no prose, no code fences):
-{"top10":["Theme1","Theme2","Theme3","Theme4","Theme5","Theme6","Theme7","Theme8","Theme9","Theme10"]}
-
-Rules:
-- Themes must be from this set only: Achiever, Activator, Adaptability, Analytical, Arranger, Belief, Command, Communication, Competition, Connectedness, Consistency, Context, Deliberative, Developer, Discipline, Empathy, Focus, Futuristic, Harmony, Ideation, Includer, Individualization, Input, Intellection, Learner, Maximizer, Positivity, Relator, Responsibility, Restorative, Self-Assurance, Significance, Strategic, Woo
-- Use exact spelling and capitalisation as listed (Self-Assurance has a hyphen)
-- Order is rank 1 → rank 10 (signature themes first)
-- If only top 5 are visible, return what you find and pad with empty strings ""
-- Do not invent themes`;
+    const sys=getInAppPrompt('strengths-pdf-extractor');
     const resp=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':getAnthropicKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
@@ -4451,24 +4708,7 @@ window.generateBringNeed=async function(contactId){
   if(btn){btn.disabled=true;btn.textContent='Generating…';}
   try{
     const themes=list.map(s=>`#${s.rank} ${s.name}${CS_THEME_DESC[s.name]?' — '+CS_THEME_DESC[s.name]:''}`).join('\n');
-    const sys=`You are drafting a "Bring & Need" reading for a Coach4U client based on their CliftonStrengths top-10. The reading is for the client to read.
-
-WRITE IN CATH'S VOICE. The voice reference is the source of truth for tone:
-
-${CATH_VOICE_REFERENCE}
-
-STRUCTURE — exactly two short labelled paragraphs, no headings beyond the bold inline labels:
-**What you bring** — one paragraph on what this person reliably contributes when they're in a team. Concrete, observable behaviours, not adjectives.
-**What you need** — one paragraph on what they need from a team to be at their best. Practical conditions, not wishes.
-
-RULES:
-- Australian English, no exclamation marks, no emojis
-- Plain English, short to medium sentences, one idea per sentence
-- Strengths-based — patterns, not deficits
-- Talk to the reader as "you"
-- Total length 160–220 words across both paragraphs
-- Don't list themes verbatim; weave them in naturally
-- No "I" from Cath; this is a reading prepared for the client`;
+    const sys=getInAppPrompt('strengths-bring-need');
     const user=`Client first name: ${c.preferred_name||c.first_name||'Friend'}
 Top 10 themes (with descriptions):
 ${themes}`;
@@ -4544,25 +4784,7 @@ window.generateAdaptationTips=async function(contactId){
   try{
     function fmt(list){return list.map(s=>`#${s.rank} ${s.name}${CS_THEME_DESC[s.name]?' — '+CS_THEME_DESC[s.name]:''}`).join('\n');}
     function dom(list){const dc={Executing:0,Influencing:0,Relationship:0,Strategic:0};list.forEach(s=>{const d=getDomain(s.name);if(d)dc[d]++;});return Object.entries(dc).sort((a,b)=>b[1]-a[1]).map(([d,n])=>d+': '+n).join(', ');}
-    const sys=`You are writing a short adaptation note for Cath (the practitioner) ahead of a session with a client. The note compares Cath's own CliftonStrengths profile to the client's, and gives Cath practical guidance on how to adapt her natural style.
-
-WRITE IN CATH'S VOICE (this note is for her, but in the same plain register):
-
-${CATH_VOICE_REFERENCE}
-
-STRUCTURE — three short labelled sections:
-**Where you're similar** — one sentence or two. Where Cath and the client share dominant themes or domain.
-**Where you're different** — one short paragraph naming the most notable difference (domain skew or specific themes), as a pattern not a deficit.
-**How to adapt** — three numbered, practical, in-session moves Cath can make to meet the client where they are. Each one short. Each one a verb.
-
-RULES:
-- Australian English, no exclamation marks, no emojis, no clinical language
-- Plain English, short to medium sentences
-- Strengths-based framing throughout
-- Address Cath as "you"
-- Keep it under 220 words across all three sections
-- Don't list themes verbatim; weave them in naturally
-- Skip preamble; go straight in`;
+    const sys=getInAppPrompt('strengths-adaptation-tips');
     const user=`PRACTITIONER (Cath):
 Domain mix: ${dom(cathList)}
 Top 10:
@@ -4605,27 +4827,7 @@ window.generateStrengthsInsights=async function(contactId){
   if(btn){btn.disabled=true;btn.textContent='Generating…';}
   try{
     const themes=list.map(s=>`#${s.rank} ${s.name}${CS_THEME_DESC[s.name]?' — '+CS_THEME_DESC[s.name]:''}`).join('\n');
-    const sys=`You are drafting a Personal Insights report for a Coach4U client based on their CliftonStrengths top-10.
-
-WRITE IN CATH'S VOICE. The voice reference is the source of truth for tone:
-
-${CATH_VOICE_REFERENCE}
-
-STRUCTURE — exactly 4 short paragraphs, in this order, no headings:
-1. What pulls this person forward (their top themes' direction)
-2. How they show up at their best
-3. Where the same patterns may overdo or get them stuck (frame as patterns, not deficits)
-4. One or two practical things to lean into next
-
-RULES:
-- Australian English
-- No exclamation marks, no emojis, no clinical language
-- Plain English, short to medium sentences
-- Strengths-based framing — describe patterns, not labels
-- Talk to the reader as "you"
-- Keep total length around 220–280 words
-- Do not list the themes verbatim — weave them in naturally
-- No "I" from Cath; write as if it's a reading prepared for the client to read on their own`;
+    const sys=getInAppPrompt('strengths-personal-insights');
     const user=`Client first name: ${c.preferred_name||c.first_name||'Friend'}
 Top 10 themes (with descriptions):
 ${themes}`;
@@ -5037,24 +5239,7 @@ window.generateCoupleDynamics=async function(p1Id,p2Id){
     function n(c){return (c.preferred_name||c.first_name||'').trim()||'Partner';}
     function fmt(list){return list.map(s=>`#${s.rank} ${s.name}${CS_THEME_DESC[s.name]?' — '+CS_THEME_DESC[s.name]:''}`).join('\n');}
     const sharedNames=list1.filter(s=>list2.some(t=>t.name===s.name)).map(s=>s.name);
-    const sys=`You are drafting a Couple Dynamics reading for a Coach4U practitioner working with this couple in session. The reading is for the practitioner (Cath), not for the clients.
-
-WRITE IN CATH'S VOICE. The voice reference is the source of truth for tone:
-
-${CATH_VOICE_REFERENCE}
-
-STRUCTURE — three short sections, each with a bold inline label:
-**Where they complement** — one short paragraph on how their differences could serve them as a pair.
-**Where friction is likely** — one short paragraph naming the most probable rub-point as a pattern, not a fault.
-**Coaching prompts** — exactly three numbered questions Cath could use in session, each on its own line, plain English.
-
-RULES:
-- Australian English, no exclamation marks, no emojis
-- Strengths-based framing — patterns not labels, never deficits
-- Reference the partners by first name (use the names provided)
-- Don't list themes verbatim; weave them in naturally
-- Total length 200–280 words across all three sections
-- Do not start with "Here is" or any preamble; go straight in`;
+    const sys=getInAppPrompt('strengths-couple-dynamics');
     const user=`Partner 1: ${n(p1)}
 Top 10:
 ${fmt(list1)}
@@ -8558,16 +8743,7 @@ async function runAgentAIAction(actionLabel,systemPrompt,userPrompt){
 window.runAgentAudit=function(){
   const agent=agents.find(a=>a.id===agentsAIState.selectedAgentId);
   if(!agent) return;
-  const sys=`You are a senior AI agent reviewer for Coach4U, a coaching and counselling practice.
-You will be given an agent's configuration (name, type, parent prompt if any, system prompt, stages, messages).
-Produce a concise, actionable audit report in Markdown with these sections:
-1. **Summary** — 2-3 sentences on overall quality.
-2. **Drift & inconsistencies** — e.g. "Which stage?" menu options in the system prompt vs actual stage count; stage names in prompt vs stages data.
-3. **Missing messages** — persona × platform (Cath/Other × Text/WhatsApp/Email/Teams) combinations that look missing given the agent's purpose.
-4. **Tone & clarity** — per-stage notes; quote the specific text where relevant.
-5. **Contradictions with parent** (only if a parent prompt is provided).
-6. **Top 3 fixes** — numbered, each one specific (quote location + suggested rewrite).
-Keep each finding to 1-2 lines. No filler.`;
+  const sys=getInAppPrompt('ai-strategy-audit');
   const user=buildAgentContextBlock(agent);
   runAgentAIAction('Audit',sys,user);
 };
@@ -8575,10 +8751,7 @@ Keep each finding to 1-2 lines. No filler.`;
 window.runAgentSuggestMissing=function(){
   const agent=agents.find(a=>a.id===agentsAIState.selectedAgentId);
   if(!agent) return;
-  const sys=`You are helping Coach4U complete an AI agent's message library.
-Given the agent's purpose, stages, and existing messages, list the messages that are missing and should be written.
-For each missing message, give: stage name, persona (Cath or Other), platform (Text/WhatsApp/Email/Teams), subject (if email), and a suggested body (≤80 words for Text/WhatsApp, ≤200 words for Email/Teams).
-Group by stage. Only include genuine gaps; don't invent stages.`;
+  const sys=getInAppPrompt('ai-strategy-missing-messages');
   const user=buildAgentContextBlock(agent);
   runAgentAIAction('Missing messages',sys,user);
 };
@@ -8586,9 +8759,7 @@ Group by stage. Only include genuine gaps; don't invent stages.`;
 window.runAgentCompareParent=function(){
   const agent=agents.find(a=>a.id===agentsAIState.selectedAgentId);
   if(!agent||!agent.parent_agent_id) return;
-  const sys=`You are auditing a child AI agent against its parent for Coach4U.
-Identify: (a) rules from the parent this child should inherit but appears to have dropped, (b) contradictions between parent and child instructions, (c) parent-defined personas/platforms that the child doesn't implement.
-Return a short Markdown list. Quote specific lines where relevant.`;
+  const sys=getInAppPrompt('ai-strategy-compare-parent');
   const user=buildAgentContextBlock(agent);
   runAgentAIAction('Compare to parent',sys,user);
 };
@@ -8600,7 +8771,7 @@ window.sendAgentsAIMessage=async function(){
   const agent=agents.find(a=>a.id===agentsAIState.selectedAgentId);
   if(!agent){toast('Pick an agent first','error');return;}
   input.value='';
-  const sys=`You are an AI agent strategist for Coach4U. You will be given the current configuration of one agent, then a question from the practitioner. Answer specifically about this agent, quoting its own text where helpful. Prefer concrete edits over abstract advice. If asked to rewrite something, provide the full rewrite in a code block.`;
+  const sys=getInAppPrompt('ai-strategy-chat');
   const user='AGENT CONTEXT:\n'+buildAgentContextBlock(agent)+'\n\nQUESTION:\n'+q;
   runAgentAIAction('Chat',sys,user);
 };
@@ -10757,64 +10928,7 @@ async function handleToolCall(name,input){
 function getSystemPrompt(){
   const today=new Date();
   const dateStr=today.toLocaleDateString('en-AU',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-  return `You are Coach4U CRM assistant. Today is ${dateStr} (Australian Eastern Time).
-
-You help Cath and Lou manage their coaching business CRM. You can search, add, and update contacts, prospects, clients, and tasks.
-
-AVAILABLE TOOLS:
-**Search & List:**
-- list_records: List ALL records from any table (contacts, clients, prospects, tasks, referrers). ALWAYS use when user says "show all", "list all", etc. Supports filtering e.g. filter_field="status" filter_value="Warm"
-- search_contacts: Search master list by name/email/phone
-- search_clients: Search client relationships by name
-- search_prospects: Search prospects by name/status
-- search_tasks: Search tasks by title/description/status
-- get_stats: Get CRM overview stats
-
-**Create:**
-- add_contact: Add to master list (needs first_name + last_name)
-- add_prospect: Add prospect (needs name, optionally link contact_id)
-- add_task: Add task (needs title). Fields: owner (Cath Baker/CoachVA Lou), requester, task_type (Admin/Finance/Client/Tech/Personal/System), priority (Urgent/Normal/Low), status (Not Started/In Progress/Waiting on Cath/Waiting on CoachVA/Blocked/Complete), source (Chat/Email/Call/System/Self), decision_required (Yes/No), due_date, blocked_reason, work_category (Task/Action Plan/BAU), focus_today (true to add to today's priorities)
-- add_task_log: Add a communication log to a task (needs task_id + message). Types: STATUS UPDATE, ACTION REQUIRED, CONFIRMATION REQUEST, BLOCKED, NOTE
-- add_renewal: Add ThriveHQ membership renewal (needs contact_id, period_start, period_end)
-- add_referrer_payment: Add referrer payment (needs referrer_id, amount)
-
-**Update:**
-- update_contact: Update contact fields (needs id — search first)
-- update_prospect: Update prospect fields (needs id — search first)
-- update_client: Update client fields like status, notes, practitioner, file_notes_link (needs id — search first)
-- update_task: Update task fields including owner, requester, task_type, priority, status, source, decision_required, blocked_reason, work_category, focus_today (needs id)
-- complete_task: Quick shortcut to mark task as Complete (needs id)
-
-**ThriveHQ Trials:**
-- add_trial: Add a new ThriveHQ trial (needs name, defaults to 14-day trial)
-- list_trials: List all trials, optionally filter by status (Active, Extended, Converted, Expired, Cancelled)
-- convert_trial: Convert trial to full ThriveHQ member (creates contact, links to org, sets membership dates)
-
-**Workflow:**
-- convert_prospect: Convert prospect to client (creates client, links contact, marks Converted)
-- manage_client_members: Link or unlink a contact to/from a client (needs action=link/unlink, client_id, contact_id)
-- list_renewals: View renewal history for a ThriveHQ member (needs contact_id)
-
-**Delete:**
-- delete_record: Delete from contacts, clients, prospects, or tasks (needs table + id). ALWAYS confirm with user before deleting.
-
-RULES:
-1. ALWAYS use the dedicated tools above. Never try to write raw database queries.
-2. To update or delete a record, FIRST search for it to get the ID, THEN call the tool.
-3. When adding a prospect, check if the person already exists as a contact first using search_contacts.
-4. NEVER delete a record without explicitly confirming with the user first.
-5. Be concise and friendly. Confirm what you did after each action.
-6. If something fails, tell the user the exact error message.
-7. Valid prospect statuses: New, Hot, Warm, Cold, Converted, Lost
-8. Valid roles: Individual, Couple, Business, Organisation
-9. Valid task priorities: Urgent, Normal, Low
-10. Valid task statuses: Not Started, In Progress, Waiting on Cath, Waiting on CoachVA, Blocked, Complete
-11. Valid client statuses: Active, Inactive, Onboarding, Past
-12. Task owners are "Cath Baker" or "CoachVA (Lou)"
-13. When creating tasks, set decision_required to "Yes" if Cath needs to make a decision on it
-14. Task categories: "Task" (regular one-off tasks), "Action Plan" (strategic goals for 2026), "BAU" (Business As Usual — recurring daily monitoring like emails, social media)
-15. Use focus_today=true to add a task to today's priorities (Lou's daily focus). Tasks auto-expire from priorities the next day.
-16. Lou's Day view shows 4 sections: Priorities (today's focus), Pending (backlog tasks), Action Plan (strategic goals), BAU (daily recurring)`;
+  return getInAppPrompt('c4u-bot',{TODAY:dateStr});
 }
 
 window.sendAiChat=async function(){
