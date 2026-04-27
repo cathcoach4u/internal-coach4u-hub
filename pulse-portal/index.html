@@ -51,7 +51,7 @@ function render(name,cid){
     '<div class="welcome"><h2>'+greeting+'</h2><p>Welcome to your Coach4U portal. Pick what you\'d like to do today.</p></div>'+
     tile('safe/'+qs,'tile-safe','&#127807;','SAFE Pulse','Check in with the four pillars: Self Awareness, Aim, Foundation, Emotion.')+
     tile('brain/'+qs,'tile-brain','&#129504;','Brain Pulse','Check in with your four rooms: Capacity, Wellbeing, Strengths, Execution.')+
-    '<div class="footer">Coach4U &middot; coach4u.com.au</div>';
+    '<div class="footer"><div style="font-weight:600;color:#475569;margin-bottom:2px;">Coach4U</div><div>SARUBA PTY LTD trading as Coach4U</div><div>ACN 632 545 656 &middot; ABN 54 632 545 656</div><div><a href="https://coach4u.com.au" style="color:#94a3b8;text-decoration:none;">coach4u.com.au</a></div></div>';
 }
 async function init(){
   var p=new URLSearchParams(window.location.search),c=p.get('c');

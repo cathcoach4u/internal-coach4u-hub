@@ -249,7 +249,7 @@ if('serviceWorker' in navigator){
     </div>
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.45.0</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.46.0</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -363,6 +363,11 @@ if('serviceWorker' in navigator){
           <div style="font-weight:700;color:#1e3a5f;font-size:13px;">Finance</div>
           <div style="font-size:11px;color:#64748b;margin-top:2px;">Income, bills, transactions</div>
         </button>
+      </div>
+
+      <div onclick="switchArea('about')" style="margin-top:24px;padding:14px 18px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;cursor:pointer;font-size:11px;color:#64748b;line-height:1.6;text-align:center;">
+        <div style="font-weight:700;color:#1e3a5f;margin-bottom:2px;">SARUBA PTY LTD trading as Coach4U</div>
+        <div>ACN 632 545 656 &middot; ABN 54 632 545 656 &middot; Belrose NSW 2085</div>
       </div>
     </div>
 
@@ -10074,6 +10079,31 @@ function renderAbout(){
   const tableItem=(name,desc)=>`<li style="margin:6px 0;font-size:14px;"><code style="background:#f1f5f9;padding:2px 8px;border-radius:4px;font-size:13px;color:#1e3a5f;font-weight:600;">${name}</code> — <span style="color:#64748b;">${desc}</span></li>`;
 
   let html=`<div style="font-family:'Quicksand','Inter',sans-serif;font-size:22px;font-weight:700;color:#1e3a5f;margin-bottom:20px;">About Coach4U CRM</div>`;
+
+  const detailRow=(label,value)=>`<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px;">
+    <div style="flex:0 0 170px;color:#64748b;font-weight:600;">${label}</div>
+    <div style="flex:1;color:#1e293b;">${value}</div>
+  </div>`;
+  const tradingRow=(name,date)=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f1f5f9;font-size:13px;">
+    <div style="color:#1e293b;font-weight:600;">${name}</div>
+    <div style="color:#94a3b8;">${date}</div>
+  </div>`;
+  html+=card('Business Details',
+    detailRow('Name','SARUBA PTY LTD')+
+    detailRow('ACN','632 545 656')+
+    detailRow('ABN','54 632 545 656')+
+    detailRow('Type','Australian Proprietary Company, Limited By Shares')+
+    detailRow('Status','Registered')+
+    detailRow('Registration Date','27/03/2019')+
+    detailRow('Next Review Date','27/03/2027')+
+    detailRow('Registered Office','Belrose NSW 2085')+
+    detailRow('Regulator','Australian Securities &amp; Investments Commission')+
+    `<div style="margin-top:14px;font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:6px;">Trading Names</div>`+
+    tradingRow('Neurodiverse Navigators','20 Dec 2023')+
+    tradingRow('Coach4U','22 Jun 2023')+
+    tradingRow('Coaching With Cath','06 May 2019')+
+    tradingRow('ANDREW BAKER MARKETING SERVICES','01 Apr 2019')
+  );
 
   html+=card('','<div style="font-weight:700;font-size:15px;color:#1e293b;margin-bottom:4px;">cathcoach4u/internal-coach4u-hub</div><div style="font-size:13px;color:#64748b;">Coaching business CRM for managing contacts, prospects, clients, ThriveHQ members, referrers, finances, and operations.</div>');
 
