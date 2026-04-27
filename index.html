@@ -250,7 +250,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.46.1</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.46.2</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -1245,11 +1245,6 @@ if('serviceWorker' in navigator){
     <div class="form-group"><label>Phone</label><input id="cPhone"></div>
     <div class="form-group"><label>Type</label>
       <select id="cType"><option>Individual</option><option>Organisation</option><option>Referrer</option></select>
-    </div>
-    <div class="form-group" id="cStrengthsSummary" style="display:none;">
-      <label>CliftonStrengths</label>
-      <div id="cStrengthsSummaryBody" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;font-size:12px;color:#1e293b;"></div>
-      <div style="font-size:11px;color:#94a3b8;margin-top:6px;">Edit strengths from <strong>Strengths &rarr; Strengths Hub</strong>. Upload a Gallup PDF there to auto-extract.</div>
     </div>
     <div class="form-group"><label>ThriveHQ Membership Start</label><input id="cMemberStart" type="date" onchange="autoRenewalDate()"></div>
     <div class="form-group"><label>ThriveHQ Renewal Date</label><input id="cRenewal" type="date"></div>
@@ -3577,22 +3572,6 @@ window.openContactModal=function(id){
   document.getElementById('cLink1').value=c?c.link_1||'':'';
   document.getElementById('cLink2').value=c?c.link_2||'':'';
   document.getElementById('cNotes').value=c?c.notes:'';
-  // Strengths summary — read-only here, edit happens in Strengths Hub
-  const summary=document.getElementById('cStrengthsSummary');
-  const summaryBody=document.getElementById('cStrengthsSummaryBody');
-  if(c){
-    const list=[];
-    for(let i=1;i<=10;i++) if(c['strength_'+i]) list.push({rank:i,name:c['strength_'+i]});
-    if(list.length){
-      summary.style.display='block';
-      summaryBody.innerHTML='<div style="display:flex;flex-wrap:wrap;gap:4px;">'+list.map(s=>`<span style="background:${csColor(s.name)};color:#fff;padding:2px 8px;border-radius:3px;font-size:11px;font-weight:600;">${s.rank}. ${s.name}</span>`).join('')+'</div>';
-    } else {
-      summary.style.display='block';
-      summaryBody.innerHTML='<div style="color:#94a3b8;">No strengths recorded yet.</div>';
-    }
-  } else {
-    summary.style.display='none';
-  }
   // Reports + strengths editing moved to Strengths > Strengths Hub
   const pulseSection=document.getElementById('cPulseLinkSection');
   if(c){
