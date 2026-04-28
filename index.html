@@ -10452,20 +10452,20 @@ function getAnthropicKey(){return localStorage.getItem('coach4u_anthropic_key')|
 function setAnthropicKey(key){localStorage.setItem('coach4u_anthropic_key',key);}
 async function hardRefresh(){
   try{
-    if('caches' in window){
-      const keys = await caches.keys();
-      for(const k of keys){await caches.delete(k);}
-    }
     if('serviceWorker' in navigator){
       const regs = await navigator.serviceWorker.getRegistrations();
       for(const r of regs){await r.unregister();}
     }
+    if('caches' in window){
+      const keys = await caches.keys();
+      for(const k of keys){await caches.delete(k);}
+    }
   }catch(e){console.warn('hardRefresh cleanup:',e);}
+  const url = new URL(window.location);
+  url.searchParams.set('_bust', Date.now());
   setTimeout(() => {
-    fetch(window.location.href, {cache: 'no-store', headers: {'Cache-Control': 'no-cache, no-store, must-revalidate'}}).catch(()=>{}).finally(()=>{
-      window.location.reload(true);
-    });
-  }, 150);
+    window.location.replace(url.toString());
+  }, 200);
 }
 
 // Teams Webhook URL stored in localStorage (supports both legacy Incoming Webhooks and new Workflows)
