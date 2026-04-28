@@ -2031,7 +2031,7 @@ const areaConfig={
   crm:{label:'CRM',pages:[{id:'crmdash',icon:'&#128200;',label:'Dashboard'},{id:'masterlist',icon:'&#128209;',label:'Master List'},{id:'prospects',icon:'&#128203;',label:'Prospect List'},{id:'clidash',icon:'&#129309;',label:'Clients Dashboard'},{id:'clients',icon:'&#128101;',label:'Client List'},{id:'thqintake',icon:'&#128221;',label:'Intake Forms'},{id:'clinvoices',icon:'&#128206;',label:'Invoices'}]},
   referrers:{label:'Referrers',pages:[{id:'referrals',icon:'&#128200;',label:'Dashboard'},{id:'refpayments',icon:'&#128176;',label:'Payments'}]},
   pulses:{label:'Pulses',pages:[{id:'pulsesdash',icon:'&#128200;',label:'Dashboard'},{id:'clipulse',icon:'&#128147;',label:'SAFE Pulse'},{id:'clibrainpulse',icon:'&#129504;',label:'Brain Pulse'},{id:'cliconnection',icon:'&#128151;',label:'Connection Pulse'}]},
-  hubs:{label:'Hubs',pages:[{id:'modulesdash',icon:'&#128200;',label:'Dashboard'},{id:'couplesdash',icon:'&#128149;',label:'Couples Hub'},{id:'thqdash',icon:'&#128170;',label:'ThriveHQ Hub'},{id:'strdash',icon:'&#127919;',label:'Strengths Hub'},{id:'strsop',icon:'&#128218;',label:'Workflow SOP'},{id:'strcodes',icon:'&#128273;',label:'Code Tracker'},{id:'strreports',icon:'&#128203;',label:'Reports'},{id:'strengths',icon:'&#128161;',label:'Profiles'},{id:'strdomains',icon:'&#127912;',label:'Domain Balance'},{id:'strupload',icon:'&#10024;',label:'Upload Report'}]},
+  hubs:{label:'Hubs',pages:[{id:'modulesdash',icon:'&#128200;',label:'Dashboard'},{id:'couplesintake',icon:'&#128221;',label:'Couples Intake'},{id:'couplestimelines',icon:'&#9202;',label:'Therapy Timelines'},{id:'couplesbetrayal',icon:'&#128737;',label:'Betrayal First Aid'},{id:'thqtrials',icon:'&#127793;',label:'Trials'},{id:'thrivehq',icon:'&#128101;',label:'Members'},{id:'thqrenewals',icon:'&#128260;',label:'Renewals'},{id:'thqcalls',icon:'&#128222;',label:'Coaching Calls'},{id:'strsop',icon:'&#128218;',label:'Workflow SOP'},{id:'strcodes',icon:'&#128273;',label:'Code Tracker'},{id:'strreports',icon:'&#128203;',label:'Reports'},{id:'strengths',icon:'&#128161;',label:'Profiles'},{id:'strdomains',icon:'&#127912;',label:'Domain Balance'},{id:'strupload',icon:'&#10024;',label:'Upload Report'}]},
   it:{label:'IT',pages:[{id:'itdash',icon:'&#128200;',label:'Dashboard'},{id:'itprojects',icon:'&#9881;',label:'IT Projects'},{id:'agents',icon:'&#129302;',label:'Agents'},{id:'agentsai',icon:'&#10024;',label:'AI Strategy'},{id:'writingpartner',icon:'&#9997;',label:'Writing Partner'}]},
   operations:{label:'Admin',pages:[{id:'opsdash',icon:'&#128736;',label:'Dashboard'},{id:'tasks',icon:'&#9989;',label:'Task Management'},{id:'playbook',icon:'&#128214;',label:'Playbook'},{id:'resourcesdash',icon:'&#128279;',label:'Company Resources'}]},
   finance:{label:'Finance',pages:[{id:'findash',icon:'&#128176;',label:'Dashboard'},{id:'finincome',icon:'&#128181;',label:'Income'},{id:'finspend',icon:'&#128200;',label:'Where Money Goes'},{id:'finbills',icon:'&#128196;',label:'Bills'},{id:'fintxns',icon:'&#128203;',label:'Transactions'}]},
@@ -2052,9 +2052,7 @@ function renderSidebarNav(area){
         cfg.pages.forEach((p,idx)=>{
           const pageActive=p.id===getCurrentPage();
           const isSubPage=idx>0;
-          const isStrengthsSubPage=p.id.startsWith('str')&&p.id!=='strdash';
-          const padding=!isSubPage?'36':isStrengthsSubPage?'68':'52';
-          html+=`<button class="nav-item${pageActive?' active':''}" data-page="${p.id}" onclick="navTo('${p.id}',this);closeMobile();" style="padding-left:${padding}px;"><span class="icon">${p.icon}</span> ${p.label}</button>`;
+          html+=`<button class="nav-item${pageActive?' active':''}" data-page="${p.id}" onclick="navTo('${p.id}',this);closeMobile();" style="padding-left:${isSubPage?'52':'36'}px;"><span class="icon">${p.icon}</span> ${p.label}</button>`;
         });
       }
       html+=`</div>`;
@@ -2063,9 +2061,7 @@ function renderSidebarNav(area){
     const pages=areaConfig[area]?.pages||[];
     html=pages.map((p,idx)=>{
       const isSubPage=idx>0;
-      const isStrengthsSubPage=p.id.startsWith('str')&&p.id!=='strdash';
-      const padding=!isSubPage?'20':isStrengthsSubPage?'52':'36';
-      return `<button class="nav-item${p.id===getCurrentPage()?' active':''}" data-page="${p.id}" onclick="navTo('${p.id}',this)" style="padding-left:${padding}px;"><span class="icon">${p.icon}</span> ${p.label}</button>`;
+      return `<button class="nav-item${p.id===getCurrentPage()?' active':''}" data-page="${p.id}" onclick="navTo('${p.id}',this)" style="padding-left:${isSubPage?'36':'20'}px;"><span class="icon">${p.icon}</span> ${p.label}</button>`;
     }).join('');
   }
   document.getElementById('sidebarNav').innerHTML=html;
