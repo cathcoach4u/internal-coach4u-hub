@@ -250,7 +250,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.50.4</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.50.5</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -8742,13 +8742,22 @@ function renderAgents(){
     </div>`;
       return row;
     };
+    if(!window.agentPlatformCollapse) window.agentPlatformCollapse={};
     platforms.forEach(platformKey=>{
       const platformAgents=list.filter(a=>a.platform===platformKey);
       if(!platformAgents.length) return;
+      const isOpen=window.agentPlatformCollapse[platformKey]!==false;
       const parents=platformAgents.filter(a=>a.type==='parent');
       const orphans=platformAgents.filter(a=>a.type!=='parent'&&!parents.some(p=>p.id===a.parent_agent_id));
-      html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px 20px;margin-bottom:16px;">
-        <div style="font-size:11px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">${platformLabels[platformKey]}</div>`;
+      html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;margin-bottom:16px;overflow:hidden;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:16px 20px;cursor:pointer;user-select:none;" onclick="window.toggleAgentPlatform('${platformKey}')">
+          <div style="display:flex;align-items:center;gap:8px;flex:1;">
+            <span style="font-size:14px;color:#64748b;font-weight:600;">${isOpen?'▼':'▶'}</span>
+            <div style="font-size:11px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">${platformLabels[platformKey]}</div>
+          </div>
+          <span style="font-size:10px;color:#cbd5e1;font-weight:600;">${platformAgents.length}</span>
+        </div>
+        <div style="display:${isOpen?'block':'none'};padding:0 20px 16px 20px;border-top:1px solid #f1f5f9;">`;
       parents.forEach(p=>{
         const kids=platformAgents.filter(c=>c.parent_agent_id===p.id);
         html+=renderAgentRow(p);
@@ -8761,7 +8770,7 @@ function renderAgents(){
         const isLast=i===orphans.length-1;
         html+=renderAgentRow(a,false,isLast);
       });
-      html+='</div>';
+      html+='</div></div>';
     });
   }
   if(!list.length){
@@ -8771,6 +8780,12 @@ function renderAgents(){
   el.innerHTML=html;
 }
 window.renderAgents=renderAgents;
+
+window.toggleAgentPlatform=function(platformKey){
+  if(!window.agentPlatformCollapse) window.agentPlatformCollapse={};
+  window.agentPlatformCollapse[platformKey]=!window.agentPlatformCollapse[platformKey];
+  renderAgents();
+};
 
 // ── AGENTS AI STRATEGY ──
 const agentsAIState={selectedAgentId:'',messages:[],working:false};
