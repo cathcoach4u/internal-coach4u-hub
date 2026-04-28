@@ -1,4 +1,4 @@
-const CACHE_NAME = 'coach4u-crm-v321';
+const CACHE_NAME = 'coach4u-crm-v322';
 const ASSETS = [
   '/internal-coach4u-hub/',
   '/internal-coach4u-hub/index.html',
