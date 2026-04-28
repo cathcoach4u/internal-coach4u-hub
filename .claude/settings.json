@@ -1,5 +1,6 @@
 {
   "instructions": "Always work directly on the main branch. Never create or switch to feature branches. All commits and pushes go to main. After every change, bump the version number: update v{major}.{minor}.{patch} in index.html (line ~253) and bump the cache version in sw.js (CACHE_NAME). Create a new commit and push to main.",
+  "model": "claude-sonnet-4-6",
   "hooks": {
     "SessionStart": [
       {
