@@ -250,7 +250,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.50.9</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.0</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -3055,7 +3055,7 @@ function renderStrSop(){
     ])}<div style="font-size:12px;color:#dc2626;margin-top:8px;font-weight:600;">If any of these are missing, stop. Create or update the internal request record.</div>
     <div style="margin-top:12px;padding-top:12px;border-top:1px solid #e2e8f0;">
       <button onclick="navTo('strcodes')" style="background:#003366;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">Open Code Tracker &#8594;</button>
-      <span style="font-size:12px;color:#64748b;margin-left:10px;">Log the request there before proceeding.</span>
+      <span style="font-size:12px;color:#64748b;margin-left:10px;">Complete the form to mark this request as in flight before moving to Stage 2.</span>
     </div>`);
 
     html+=stage(2,'Payment Gate',`No purchase occurs without confirmed payment.<br><br><strong>Approved payment paths:</strong>${list([
