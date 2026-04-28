@@ -105,3 +105,14 @@ CREATE POLICY "anon read gallup_code_requests" ON gallup_code_requests FOR SELEC
 CREATE POLICY "anon insert gallup_code_requests" ON gallup_code_requests FOR INSERT TO anon WITH CHECK (true);
 CREATE POLICY "anon update gallup_code_requests" ON gallup_code_requests FOR UPDATE TO anon USING (true);
 CREATE POLICY "anon delete gallup_code_requests" ON gallup_code_requests FOR DELETE TO anon USING (true);
+
+-- PULSE TABLES — client-facing portals use the anon key, so INSERT must allow anon role.
+-- pulse_results: SAFE Pulse check-in submissions
+-- brain_pulse_submissions: ThriveHQ Brain Pulse check-in submissions
+-- If clients get "new row violates row-level security policy" on submission, run these in Supabase SQL Editor:
+--
+-- CREATE POLICY "anon insert pulse_results" ON pulse_results FOR INSERT TO anon WITH CHECK (true);
+-- CREATE POLICY "anon select pulse_results" ON pulse_results FOR SELECT TO anon USING (true);
+--
+-- CREATE POLICY "anon insert brain_pulse_submissions" ON brain_pulse_submissions FOR INSERT TO anon WITH CHECK (true);
+-- CREATE POLICY "anon select brain_pulse_submissions" ON brain_pulse_submissions FOR SELECT TO anon USING (true);
