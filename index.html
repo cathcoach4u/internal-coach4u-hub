@@ -250,7 +250,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.50.5</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.50.6</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -2865,7 +2865,7 @@ function stampBtn(r,field,label,nextStatus,color){
   return `<button onclick="stampGallupStage('${r.id}','${field}',${nextStatus?"'"+nextStatus+"'":'null'})" style="background:${bg};color:${fg};border:1px solid ${border};padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">${tick}${label}</button>`;
 }
 window.stampGallupStage=async function(id,field,nextStatus){
-  const r=gallupRequests.find(x=>x.id===id);
+  const r=gallupRequests.find(x=>x.id==id);
   if(!r) return;
   const patch={};
   patch[field]=r[field]?null:new Date().toISOString();
@@ -2877,7 +2877,7 @@ window.stampGallupStage=async function(id,field,nextStatus){
   renderStrCodes();
 };
 window.openGallupRequest=function(id){
-  const r=id?gallupRequests.find(x=>x.id===id):null;
+  const r=id?gallupRequests.find(x=>x.id==id):null;
   document.getElementById('gallupReqId').value=r?r.id:'';
   document.getElementById('gallupReqTitle').textContent=r?'Edit Code Request':'New Code Request';
   document.getElementById('gallupReqDeleteBtn').style.display=r?'inline-block':'none';
