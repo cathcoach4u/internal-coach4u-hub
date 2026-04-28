@@ -250,7 +250,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.48.0</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.48.1</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -376,6 +376,9 @@ if('serviceWorker' in navigator){
     </div>
     <div class="screen" id="screen-couplestimelines">
       <div id="couplesTimelinesContent"></div>
+    </div>
+    <div class="screen" id="screen-couplesbetrayal">
+      <div id="couplesBetrayalContent"></div>
     </div>
     <div class="screen" id="screen-itdash">
       <div id="itDashContent"></div>
@@ -1939,7 +1942,7 @@ window.navTo = function(tab,btn){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+tab).classList.add('active');
   window.scrollTo(0,0);
-  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ',thqintake:'Intake Forms',strdash:'Strengths Hub',opsdash:'Admin',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Profiles',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Task Management',playbook:'Lou\'s Playbook',itprojects:'IT Projects',agents:'Agents',writingpartner:'Writing Partner',findash:'Finance',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fintxns:'Transactions',thqbrainpulse:'Brain Pulse',clibrainpulse:'Brain Pulse',thqpulse:'SAFE Pulse',clipulse:'SAFE Pulse',pulsesdash:'Pulses',couplesintake:'Couples Intake',couplesdash:'Couples',couplestimelines:'Therapy Timelines',itdash:'IT',resourcesdash:'Resources',agentsai:'AI Strategy',strreports:'Strengths Reports',strdomains:'Domain Balance',strupload:'Upload Report',strcodes:'Gallup Code Tracker',strsop:'Gallup Workflow SOP'};
+  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ',thqintake:'Intake Forms',strdash:'Strengths Hub',opsdash:'Admin',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Profiles',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Task Management',playbook:'Lou\'s Playbook',itprojects:'IT Projects',agents:'Agents',writingpartner:'Writing Partner',findash:'Finance',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fintxns:'Transactions',thqbrainpulse:'Brain Pulse',clibrainpulse:'Brain Pulse',thqpulse:'SAFE Pulse',clipulse:'SAFE Pulse',pulsesdash:'Pulses',couplesintake:'Couples Intake',couplesdash:'Couples',couplestimelines:'Therapy Timelines',couplesbetrayal:'Betrayal First Aid',itdash:'IT',resourcesdash:'Resources',agentsai:'AI Strategy',strreports:'Strengths Reports',strdomains:'Domain Balance',strupload:'Upload Report',strcodes:'Gallup Code Tracker',strsop:'Gallup Workflow SOP'};
   document.getElementById('pageTitle').textContent=titles[tab]||'Coach4U';
   // Sync area tab
   const area=pageToArea[tab]||'home';
@@ -1960,6 +1963,7 @@ window.navTo = function(tab,btn){
   if(tab==='pulsesdash') renderPulsesDash();
   if(tab==='couplesdash') renderCouplesDash();
   if(tab==='couplestimelines') renderCouplesTimelines();
+  if(tab==='couplesbetrayal') renderCouplesBetrayal();
   if(tab==='itdash') renderItDash();
   if(tab==='resourcesdash') renderResourcesDash();
   if(tab==='crmdash') renderCrmDash();
@@ -2024,7 +2028,7 @@ const areaConfig={
   crm:{label:'CRM',pages:[{id:'crmdash',icon:'&#128200;',label:'Dashboard'},{id:'masterlist',icon:'&#128209;',label:'Master List'},{id:'prospects',icon:'&#128203;',label:'Prospect List'},{id:'clidash',icon:'&#129309;',label:'Clients Dashboard'},{id:'clients',icon:'&#128101;',label:'Client List'},{id:'thqintake',icon:'&#128221;',label:'Intake Forms'},{id:'clinvoices',icon:'&#128206;',label:'Invoices'}]},
   referrers:{label:'Referrers',pages:[{id:'referrals',icon:'&#128200;',label:'Dashboard'},{id:'refpayments',icon:'&#128176;',label:'Payments'}]},
   pulses:{label:'Pulses',pages:[{id:'pulsesdash',icon:'&#128200;',label:'Dashboard'},{id:'clipulse',icon:'&#128147;',label:'SAFE Pulse'},{id:'clibrainpulse',icon:'&#129504;',label:'Brain Pulse'}]},
-  couples:{label:'Couples',pages:[{id:'couplesdash',icon:'&#128200;',label:'Dashboard'},{id:'couplesintake',icon:'&#128221;',label:'Couples Intake'},{id:'couplestimelines',icon:'&#9202;',label:'Therapy Timelines'}]},
+  couples:{label:'Couples',pages:[{id:'couplesdash',icon:'&#128200;',label:'Dashboard'},{id:'couplesintake',icon:'&#128221;',label:'Couples Intake'},{id:'couplestimelines',icon:'&#9202;',label:'Therapy Timelines'},{id:'couplesbetrayal',icon:'&#128737;',label:'Betrayal First Aid'}]},
   thrivehq:{label:'ThriveHQ',pages:[{id:'thqdash',icon:'&#128170;',label:'Dashboard'},{id:'thqtrials',icon:'&#127793;',label:'Trials'},{id:'thrivehq',icon:'&#128101;',label:'Members'},{id:'thqrenewals',icon:'&#128260;',label:'Renewals'},{id:'thqcalls',icon:'&#128222;',label:'Coaching Calls'}]},
   strengths:{label:'Strengths Hub',pages:[{id:'strdash',icon:'&#127919;',label:'Dashboard'},{id:'strsop',icon:'&#128218;',label:'Workflow SOP'},{id:'strcodes',icon:'&#128273;',label:'Code Tracker'},{id:'strreports',icon:'&#128203;',label:'Reports'},{id:'strengths',icon:'&#128161;',label:'Profiles'},{id:'strdomains',icon:'&#127912;',label:'Domain Balance'},{id:'strupload',icon:'&#10024;',label:'Upload Report'}]},
   it:{label:'IT',pages:[{id:'itdash',icon:'&#128200;',label:'Dashboard'},{id:'itprojects',icon:'&#9881;',label:'IT Projects'},{id:'agents',icon:'&#129302;',label:'Agents'},{id:'agentsai',icon:'&#10024;',label:'AI Strategy'},{id:'writingpartner',icon:'&#9997;',label:'Writing Partner'}]},
@@ -2324,6 +2328,91 @@ function renderCouplesTimelines(){
     +therapyTimelinesHTML({tightTop:true,subtitle:'Use this to frame psychological expectations early. Timelines are estimates; the work is establishing the boundaries, not predicting the date.'});
 }
 window.renderCouplesTimelines=renderCouplesTimelines;
+
+function renderCouplesBetrayal(){
+  const el=document.getElementById('couplesBetrayalContent');
+  if(!el) return;
+  const phases=[
+    {n:'Phase 1',title:'Stabilise the system',body:'Stop the bleeding. Reduce shock and chaos. Use structure, scripts, one-word feelings and daily safety check-ins.'},
+    {n:'Phase 2',title:'Work the injury',body:'Move beyond containment into deeper betrayal treatment and direct work with the attachment injury.'},
+    {n:'Phase 3',title:'Rebuild trust',body:'Turn insight into repeated, observable repair. Build accountability, responsiveness and reliability.'},
+    {n:'Phase 4',title:'Move forward',body:'Consolidate repair into a more stable future. Integrate the betrayal without letting it define the relationship.'}
+  ];
+  const phasesHtml=phases.map(p=>`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;display:flex;flex-direction:column;">
+    <div style="background:#dbeafe;color:#1e3a5f;padding:12px 14px;text-align:center;border-bottom:1px solid #bfdbfe;">
+      <div style="font-size:13px;font-weight:700;letter-spacing:.5px;">${p.n}</div>
+      <div style="font-size:14px;font-weight:700;margin-top:2px;">${p.title}</div>
+    </div>
+    <div style="padding:14px 16px;font-size:13px;color:#334155;line-height:1.55;flex:1;">${p.body}</div>
+  </div>`).join('');
+
+  const sectionTitle=t=>`<div style="font-family:'Quicksand','Inter',sans-serif;font-size:18px;font-weight:700;color:#1e3a5f;margin:24px 0 12px;">${t}</div>`;
+
+  el.innerHTML=`
+    <div style="font-family:'Quicksand','Inter',sans-serif;font-size:14px;font-weight:700;color:#1e3a5f;letter-spacing:.5px;text-transform:uppercase;margin:0 0 10px;">Reference</div>
+    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:24px 24px 8px;">
+      <div style="text-align:center;margin-bottom:20px;">
+        <div style="font-family:'Quicksand','Inter',sans-serif;font-size:24px;font-weight:800;color:#1e3a5f;line-height:1.25;">PORT Betrayal First Aid: Participant Exercise Guide</div>
+        <div style="font-size:13px;color:#64748b;margin-top:4px;">One-page handout for practice roles, scripts and the four-phase recovery frame</div>
+      </div>
+
+      <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:14px 18px;margin-bottom:20px;">
+        <div style="font-size:12px;font-weight:800;color:#1e3a5f;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Purpose</div>
+        <div style="font-size:13px;color:#334155;line-height:1.55;">These exercises are betrayal first aid, not full betrayal recovery treatment. The aim is to reduce distress, increase regulation and create short, structured interactions that build immediate safety.</div>
+      </div>
+
+      ${sectionTitle('PORT 4-Phase Recovery Model')}
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;">${phasesHtml}</div>
+
+      ${sectionTitle('Exercise Summary')}
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;">
+        <div>
+          <div style="font-size:14px;font-weight:700;color:#1e3a5f;margin-bottom:6px;">Rules for all exercises</div>
+          <div style="font-size:13px;color:#334155;line-height:1.55;margin-bottom:14px;">
+            <div><strong>Do</strong>: keep to headlines and facts, use short specific language, use one-word feelings, make concrete time-limited requests and commitments.</div>
+            <div style="margin-top:6px;"><strong>Do not</strong>: tell the full story, justify, defend, make vague promises or flood the interaction with emotional detail.</div>
+          </div>
+
+          <div style="font-size:14px;font-weight:700;color:#1e3a5f;margin-bottom:6px;">Exercise 1: Context setting</div>
+          <ul style="font-size:13px;color:#334155;line-height:1.55;margin:0 0 14px 18px;padding:0;">
+            <li>2-minute peer check-in each way</li>
+            <li>5-minute overview of the 4-phase model</li>
+            <li>Orient to the process, not the whole narrative</li>
+          </ul>
+
+          <div style="font-size:14px;font-weight:700;color:#1e3a5f;margin-bottom:6px;">Exercise 2: Total apology practice</div>
+          <div style="font-size:13px;color:#334155;line-height:1.55;">
+            <div><strong>Roles</strong>: Betrayed Partner, Betrayer/Sender, Therapist, Observer.</div>
+            <div style="margin-top:4px;"><strong>Script</strong>: &ldquo;I&rsquo;m so sorry you&rsquo;re feeling like this because of my behaviour. It&rsquo;s not fair, and it&rsquo;s not your fault.&rdquo;</div>
+            <div style="margin-top:4px;"><strong>Instruction</strong>: Repeat exactly as needed until regulation begins. No explanation, context or self-protection.</div>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size:14px;font-weight:700;color:#1e3a5f;margin-bottom:6px;">Exercise 3: Daily safety check-in</div>
+          <div style="font-size:13px;color:#334155;line-height:1.55;margin-bottom:14px;">
+            <div><strong>Betrayer sequence</strong>: Initiate. Specific apology. Acknowledge impact. One-word feelings. Learnings and restoration with concrete repair steps.</div>
+            <div style="margin-top:4px;"><strong>Betrayed sequence</strong>: Safety number 0 to 10. Safest moment. Main feelings. Hardest time. SMART request.</div>
+            <div style="margin-top:4px;"><strong>Core line</strong>: &ldquo;I&rsquo;d like to do a safety check-in. Is now a good time?&rdquo;</div>
+          </div>
+
+          <div style="font-size:14px;font-weight:700;color:#1e3a5f;margin-bottom:6px;">Exercise 4: Telling on yourself</div>
+          <div style="font-size:13px;color:#334155;line-height:1.55;">
+            <div>Give a brief, factual, headline-style disclosure of the attachment breach.</div>
+            <div style="margin-top:4px;"><strong>Include</strong>: what happened, how long, how discovered, what happened next and what corrective action has started.</div>
+            <div style="margin-top:4px;"><strong>Avoid</strong>: long backstory, justification, minimising and blame shifting.</div>
+            <div style="margin-top:4px;"><strong>Practice scenario</strong>: affair with a coworker, emotional closeness over 1 to 1.5 years, sexual affair from March, discovered on a connected iPad, denied for about 1.5 weeks, therapy started 10 days later.</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:14px 18px;margin:20px 0 0;">
+        <div style="font-size:13px;color:#334155;line-height:1.55;"><strong>Overall aim</strong>: Replace chaotic, dysregulated exchanges with short, contained interactions that increase agency, co-regulation and predictable safety.</div>
+      </div>
+    </div>
+    <div style="height:60px;"></div>`;
+}
+window.renderCouplesBetrayal=renderCouplesBetrayal;
 
 // ── IT DASHBOARD ──
 function renderItDash(){
