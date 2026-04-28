@@ -2045,7 +2045,7 @@ const areaConfig={
   crm:{label:'CRM',pages:[{id:'crmdash',icon:'&#128200;',label:'Dashboard'},{id:'masterlist',icon:'&#128209;',label:'Master List'},{id:'prospects',icon:'&#128203;',label:'Prospect List'},{id:'clidash',icon:'&#129309;',label:'Clients Dashboard'},{id:'clients',icon:'&#128101;',label:'Client List'},{id:'thqintake',icon:'&#128221;',label:'Intake Forms'},{id:'clinvoices',icon:'&#128206;',label:'Invoices'}]},
   referrers:{label:'Referrers',pages:[{id:'referrals',icon:'&#128200;',label:'Dashboard'},{id:'refpayments',icon:'&#128176;',label:'Payments'}]},
   pulses:{label:'Pulses',pages:[{id:'pulsesdash',icon:'&#128200;',label:'Dashboard'},{id:'clipulse',icon:'&#128147;',label:'SAFE Pulse'},{id:'clibrainpulse',icon:'&#129504;',label:'Brain Pulse'},{id:'cliconnection',icon:'&#128151;',label:'Connection Pulse'}]},
-  modules:{label:'Modules',pages:[{id:'modulesdash',icon:'&#128200;',label:'Dashboard'},{id:'couplesdash',icon:'&#128200;',label:'Couples Dashboard'},{id:'couplesintake',icon:'&#128221;',label:'Couples Intake'},{id:'couplestimelines',icon:'&#9202;',label:'Therapy Timelines'},{id:'couplesbetrayal',icon:'&#128737;',label:'Betrayal First Aid'},{id:'thqdash',icon:'&#128170;',label:'ThriveHQ Dashboard'},{id:'thqtrials',icon:'&#127793;',label:'Trials'},{id:'thrivehq',icon:'&#128101;',label:'Members'},{id:'thqrenewals',icon:'&#128260;',label:'Renewals'},{id:'thqcalls',icon:'&#128222;',label:'Coaching Calls'}]},
+  modules:{label:'Modules',pages:[{id:'modulesdash',icon:'&#128200;',label:'Dashboard'},{id:'couplesdash',icon:'&#128149;',label:'Couples'},{id:'thqdash',icon:'&#128170;',label:'ThriveHQ'}]},
   strengths:{label:'Strengths Hub',pages:[{id:'strdash',icon:'&#127919;',label:'Dashboard'},{id:'strsop',icon:'&#128218;',label:'Workflow SOP'},{id:'strcodes',icon:'&#128273;',label:'Code Tracker'},{id:'strreports',icon:'&#128203;',label:'Reports'},{id:'strengths',icon:'&#128161;',label:'Profiles'},{id:'strdomains',icon:'&#127912;',label:'Domain Balance'},{id:'strupload',icon:'&#10024;',label:'Upload Report'}]},
   it:{label:'IT',pages:[{id:'itdash',icon:'&#128200;',label:'Dashboard'},{id:'itprojects',icon:'&#9881;',label:'IT Projects'},{id:'agents',icon:'&#129302;',label:'Agents'},{id:'agentsai',icon:'&#10024;',label:'AI Strategy'},{id:'writingpartner',icon:'&#9997;',label:'Writing Partner'}]},
   operations:{label:'Admin',pages:[{id:'opsdash',icon:'&#128736;',label:'Dashboard'},{id:'tasks',icon:'&#9989;',label:'Task Management'},{id:'playbook',icon:'&#128214;',label:'Playbook'},{id:'resourcesdash',icon:'&#128279;',label:'Company Resources'}]},
@@ -2304,29 +2304,23 @@ function renderCrmDash(){
 function renderCouplesDash(){
   const el=document.getElementById('couplesDashContent');
   if(!el) return;
-  const activeClients=(clients||[]).filter(c=>c.status==='Active');
-  const coupleClients=activeClients.filter(c=>c.role==='Couple');
-  const draftCount=couplesIntakeIndex().length;
-
-  let html=`<div class="dash-cards" style="margin-bottom:20px;">
-    <div class="dash-card" onclick="navTo('couplesintake')" style="cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
-      <div class="dc-icon" style="background:#fce7f3;color:#b87a90;">&#128147;</div>
-      <div class="dc-info"><h4>${coupleClients.length}</h4><p>Couple Clients</p></div>
-    </div>
-    <div class="dash-card" onclick="navTo('couplesintake')" style="cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
-      <div class="dc-icon" style="background:#dbeafe;color:#2563eb;">&#128221;</div>
-      <div class="dc-info"><h4>${draftCount}</h4><p>Session Drafts</p></div>
-    </div>
-  </div>`;
-
-  html+=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;">
+  let html=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">
     <div onclick="navTo('couplesintake')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #b87a90;border-radius:12px;padding:18px 20px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
-      <div style="font-weight:700;color:#1e3a5f;font-size:15px;margin-bottom:6px;">&#128221; Couples Intake Worksheet</div>
-      <div style="font-size:12px;color:#64748b;line-height:1.5;">Port Institute assessment &amp; formulation across 5 stages. Stage-by-stage notes saved to records.</div>
+      <div style="font-size:24px;margin-bottom:8px;">&#128221;</div>
+      <div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">Couples Intake</div>
+      <div style="font-size:11px;color:#64748b;">Port Institute assessment worksheet</div>
+    </div>
+    <div onclick="navTo('couplestimelines')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #b87a90;border-radius:12px;padding:18px 20px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
+      <div style="font-size:24px;margin-bottom:8px;">&#9202;</div>
+      <div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">Therapy Timelines</div>
+      <div style="font-size:11px;color:#64748b;">Recovery phases & expectations</div>
+    </div>
+    <div onclick="navTo('couplesbetrayal')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #b87a90;border-radius:12px;padding:18px 20px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
+      <div style="font-size:24px;margin-bottom:8px;">&#128737;</div>
+      <div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">Betrayal First Aid</div>
+      <div style="font-size:11px;color:#64748b;">PORT recovery framework</div>
     </div>
   </div>`;
-
-  html+=therapyTimelinesHTML({subtitle:'A reference for setting psychological expectations early in couples work.'});
   el.innerHTML=html;
 }
 
@@ -2372,7 +2366,8 @@ function therapyTimelinesHTML(opts){
 function renderCouplesTimelines(){
   const el=document.getElementById('couplesTimelinesContent');
   if(!el) return;
-  el.innerHTML=`<div style="font-family:'Quicksand','Inter',sans-serif;font-size:14px;font-weight:700;color:#1e3a5f;letter-spacing:.5px;text-transform:uppercase;margin:0 0 10px;">Reference</div>`
+  el.innerHTML=`<div onclick="navTo('couplesdash')" style="font-size:13px;color:#b87a90;font-weight:600;cursor:pointer;margin-bottom:16px;display:inline-block;">&larr; Back to Couples</div>
+    <div style="font-family:'Quicksand','Inter',sans-serif;font-size:14px;font-weight:700;color:#1e3a5f;letter-spacing:.5px;text-transform:uppercase;margin:0 0 10px;">Reference</div>`
     +therapyTimelinesHTML({tightTop:true,subtitle:'Use this to frame psychological expectations early. Timelines are estimates; the work is establishing the boundaries, not predicting the date.'});
 }
 window.renderCouplesTimelines=renderCouplesTimelines;
@@ -2397,6 +2392,7 @@ function renderCouplesBetrayal(){
   const sectionTitle=t=>`<div style="font-family:'Quicksand','Inter',sans-serif;font-size:18px;font-weight:700;color:#1e3a5f;margin:24px 0 12px;">${t}</div>`;
 
   el.innerHTML=`
+    <div onclick="navTo('couplesdash')" style="font-size:13px;color:#b87a90;font-weight:600;cursor:pointer;margin-bottom:16px;display:inline-block;">&larr; Back to Couples</div>
     <div style="font-family:'Quicksand','Inter',sans-serif;font-size:14px;font-weight:700;color:#1e3a5f;letter-spacing:.5px;text-transform:uppercase;margin:0 0 10px;">Reference</div>
     <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:24px 24px 8px;">
       <div style="text-align:center;margin-bottom:20px;">
@@ -2598,82 +2594,31 @@ function renderResourcesDash(){
 
 // ── THRIVEHQ DASHBOARD ──
 function renderThqDash(){
-  const members=getThqMembers('');
-  const total=members.length;
-  const withStrengths=members.filter(m=>m.contact.strength_1).length;
-  const withoutStrengths=total-withStrengths;
-  const now=new Date();
-  const overdue=members.filter(m=>m.contact.renewal_date&&new Date(m.contact.renewal_date)<now);
-  const dueSoon=members.filter(m=>{const r=m.contact.renewal_date?new Date(m.contact.renewal_date):null;return r&&r>=now&&(r-now)/(1000*60*60*24)<=30;});
-  const upToDate=members.filter(m=>{const r=m.contact.renewal_date?new Date(m.contact.renewal_date):null;return r&&r>=now&&(r-now)/(1000*60*60*24)>30;});
-
-  let html=`<div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
-    <button class="btn btn-blue" onclick="openNewMemberChoice()" style="font-size:14px;padding:10px 20px;">+ New Member</button>
-  </div>
-  <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
-    <div style="flex:1;min-width:200px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 18px;display:flex;align-items:center;gap:10px;">
-      <span style="font-size:18px;">&#128194;</span>
-      <a href="https://netorgft4053847.sharepoint.com/:f:/s/Clients/IgCvrdCt_QJ3Q4duGfiHWxWmATOFwyLG_YdMRsorhU_jsuI?e=FiDtiW" target="_blank" style="font-weight:600;color:#3b82f6;text-decoration:none;font-size:14px;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">ThriveHQ Folders, Files &amp; Recordings</a>
-      <span style="font-size:11px;color:#94a3b8;">SharePoint</span>
+  const el=document.getElementById('thqDashContent');
+  if(!el) return;
+  let html=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">
+    <div onclick="navTo('thqtrials')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #16a34a;border-radius:12px;padding:18px 20px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
+      <div style="font-size:24px;margin-bottom:8px;">&#127793;</div>
+      <div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">Trials</div>
+      <div style="font-size:11px;color:#64748b;">Trial management</div>
     </div>
-    <div style="flex:1;min-width:200px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 18px;display:flex;align-items:center;gap:10px;">
-      <span style="font-size:18px;">&#127795;</span>
-      <a href="https://linktr.ee/thrivehq" target="_blank" style="font-weight:600;color:#3b82f6;text-decoration:none;font-size:14px;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">ThriveHQ Linktree</a>
-      <span style="font-size:11px;color:#94a3b8;">External link for clients</span>
+    <div onclick="navTo('thrivehq')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #16a34a;border-radius:12px;padding:18px 20px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
+      <div style="font-size:24px;margin-bottom:8px;">&#128101;</div>
+      <div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">Members</div>
+      <div style="font-size:11px;color:#64748b;">Member onboarding</div>
     </div>
-  </div>`;
-
-  const activeTrials=thqTrials.filter(t=>t.status==='Active'||t.status==='Extended').length;
-  const newIntake=intakeSubmissions.filter(s=>s.status==='New').length;
-  html+=`<div class="dash-cards">
-    <div class="dash-card" onclick="navTo('thrivehq')" style="cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'"><div class="dc-icon blue">&#128101;</div><div class="dc-info"><h4>${total}</h4><p>Total Members</p></div></div>
-    <div class="dash-card" onclick="navTo('thqintake')" style="cursor:pointer;${newIntake?'box-shadow:0 0 0 2px #3b82f6;':''}" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='${newIntake?'0 0 0 2px #3b82f6':'0 1px 3px rgba(0,0,0,.04)'}'""><div class="dc-icon" style="background:${newIntake?'#dbeafe':'#f1f5f9'};color:${newIntake?'#2563eb':'#64748b'};">&#128221;</div><div class="dc-info"><h4>${newIntake}</h4><p>New Intake Forms</p></div></div>
-    <div class="dash-card" onclick="navTo('thqtrials')" style="cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'"><div class="dc-icon" style="background:#eff6ff;color:#2563eb;">&#127793;</div><div class="dc-info"><h4>${activeTrials}</h4><p>Active Trials</p></div></div>
-    <div class="dash-card" onclick="navTo('strengths')" style="cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'"><div class="dc-icon green">&#127919;</div><div class="dc-info"><h4>${withStrengths}</h4><p>Strengths Complete</p></div></div>
-    <div class="dash-card" onclick="navTo('strengths')" style="cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'"><div class="dc-icon amber">&#9888;</div><div class="dc-info"><h4>${withoutStrengths}</h4><p>Awaiting Strengths</p></div></div>
-    <div class="dash-card" onclick="navTo('thqrenewals')" style="cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'"><div class="dc-icon" style="background:#fef2f2;color:#dc2626;">&#128344;</div><div class="dc-info"><h4>${overdue.length}</h4><p>Renewals Overdue</p></div></div>
-  </div>`;
-
-  // Renewal status
-  if(overdue.length){
-    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #dc2626;border-radius:12px;padding:16px 20px;margin-bottom:16px;">
-      <div style="font-weight:700;font-size:14px;color:#dc2626;margin-bottom:8px;">Overdue Renewals</div>
-      <div style="display:flex;flex-wrap:wrap;gap:8px;">
-        ${overdue.map(m=>`<span onclick="openContactModal('${m.contact.id}')" style="background:#fef2f2;color:#dc2626;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">${m.contact.first_name} ${m.contact.last_name} — ${m.contact.renewal_date}</span>`).join('')}
-      </div>
-    </div>`;
-  }
-  if(dueSoon.length){
-    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #d97706;border-radius:12px;padding:16px 20px;margin-bottom:16px;">
-      <div style="font-weight:700;font-size:14px;color:#d97706;margin-bottom:8px;">Due Within 30 Days</div>
-      <div style="display:flex;flex-wrap:wrap;gap:8px;">
-        ${dueSoon.map(m=>`<span onclick="openContactModal('${m.contact.id}')" style="background:#fef3c7;color:#92400e;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">${m.contact.first_name} ${m.contact.last_name} — ${m.contact.renewal_date}</span>`).join('')}
-      </div>
-    </div>`;
-  }
-
-  // Member list quick view
-  html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;">
-    <div style="font-family:'Quicksand','Inter',sans-serif;font-size:16px;font-weight:700;color:#1e3a5f;margin-bottom:14px;">All Members</div>
-    <div style="display:flex;flex-direction:column;gap:6px;">
-      ${members.map(m=>{
-        const c=m.contact;
-        const hasStr=!!c.strength_1;
-        const renew=c.renewal_date?new Date(c.renewal_date):null;
-        const isOverdue=renew&&renew<now;
-        const isDueSoon=renew&&!isOverdue&&(renew-now)/(1000*60*60*24)<=30;
-        return `<div onclick="openContactModal('${c.id}')" style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border:1px solid #f1f5f9;border-radius:8px;cursor:pointer;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
-          <span style="font-weight:600;font-size:13px;color:#1e293b;">${c.first_name} ${c.last_name}</span>
-          <div style="display:flex;gap:6px;align-items:center;">
-            ${hasStr?'<span style="background:#dcfce7;color:#15803d;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;">Strengths</span>':'<span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;">No Strengths</span>'}
-            ${isOverdue?'<span style="background:#fef2f2;color:#dc2626;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;">Overdue</span>':isDueSoon?'<span style="background:#fef3c7;color:#d97706;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;">Due Soon</span>':renew?'<span style="background:#dcfce7;color:#15803d;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;">'+c.renewal_date+'</span>':''}
-          </div>
-        </div>`;
-      }).join('')}
+    <div onclick="navTo('thqrenewals')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #16a34a;border-radius:12px;padding:18px 20px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
+      <div style="font-size:24px;margin-bottom:8px;">&#128260;</div>
+      <div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">Renewals</div>
+      <div style="font-size:11px;color:#64748b;">Renewal tracking</div>
+    </div>
+    <div onclick="navTo('thqcalls')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #16a34a;border-radius:12px;padding:18px 20px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
+      <div style="font-size:24px;margin-bottom:8px;">&#128222;</div>
+      <div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">Coaching Calls</div>
+      <div style="font-size:11px;color:#64748b;">Call scheduling</div>
     </div>
   </div>`;
-
-  document.getElementById('thqDashContent').innerHTML=html;
+  el.innerHTML=html;
 }
 
 // ── STRENGTHS DASHBOARD ──
@@ -6005,7 +5950,7 @@ function renderCouplesIntake(){
   try{const raw=localStorage.getItem(couplesIntakeKey(currentCouplesIntakeId));if(raw){const st=JSON.parse(raw);savedNotes=st.step_notes||{};}}catch(e){}
 
   // Tab bar across the 5 stages
-  let tabs='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #e2e8f0;">';
+  let tabs='<div onclick="navTo(\'couplesdash\')" style="font-size:13px;color:#b87a90;font-weight:600;cursor:pointer;margin-bottom:16px;display:inline-block;">&larr; Back to Couples</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #e2e8f0;">';
   couplesIntakeConfig.forEach((step,si)=>{
     const active=si===currentCouplesIntakeStep;
     const hasNotes=(savedNotes[si]||'').trim().length>0;
@@ -6205,7 +6150,8 @@ function renderThqTrials(){
   const converted=items.filter(t=>t.status==='Converted');
   const expired=items.filter(t=>t.status==='Expired'||t.status==='Cancelled');
 
-  let html=`<div class="dash-cards">
+  let html=`<div onclick="navTo('thqdash')" style="font-size:13px;color:#16a34a;font-weight:600;cursor:pointer;margin-bottom:16px;display:inline-block;">&larr; Back to ThriveHQ</div>
+    <div class="dash-cards">
     <div class="dash-card"><div class="dc-icon" style="background:#eff6ff;color:#2563eb;">&#127793;</div><div class="dc-info"><h4>${active.length}</h4><p>Active Trials</p></div></div>
     <div class="dash-card"><div class="dc-icon" style="background:#f0fdf4;color:#16a34a;">&#9989;</div><div class="dc-info"><h4>${converted.length}</h4><p>Converted</p></div></div>
     <div class="dash-card"><div class="dc-icon" style="background:#fef2f2;color:#dc2626;">&#128683;</div><div class="dc-info"><h4>${expired.length}</h4><p>Expired / Cancelled</p></div></div>
@@ -6616,7 +6562,8 @@ function renderThriveHQ(){
   const overdueCount=members.filter(m=>m.contact.renewal_date&&new Date(m.contact.renewal_date)<new Date()).length;
   const awaitingProfile=members.filter(m=>!m.contact.strength_1).length;
 
-  let html=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:20px;">
+  let html=`<div onclick="navTo('thqdash')" style="font-size:13px;color:#16a34a;font-weight:600;cursor:pointer;margin-bottom:16px;display:inline-block;">&larr; Back to ThriveHQ</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:20px;">
     <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px;text-align:center;border-top:3px solid #16a34a;">
       <div style="font-size:30px;font-weight:700;color:#1e293b;">${totalMembers}</div>
       <div style="font-size:12px;color:#64748b;font-weight:500;">Active Members</div>
@@ -6764,7 +6711,8 @@ function renderThqRenewals(){
   const dueSoon=members.filter(m=>{const r=m.contact.renewal_date?new Date(m.contact.renewal_date):null;return r&&r>=now&&(r-now)/(1000*60*60*24)<=30;});
   const upToDate=members.filter(m=>{const r=m.contact.renewal_date?new Date(m.contact.renewal_date):null;return r&&r>=now&&(r-now)/(1000*60*60*24)>30;});
 
-  let html=`<div class="dash-cards">
+  let html=`<div onclick="navTo('thqdash')" style="font-size:13px;color:#16a34a;font-weight:600;cursor:pointer;margin-bottom:16px;display:inline-block;">&larr; Back to ThriveHQ</div>
+    <div class="dash-cards">
     <div class="dash-card"><div class="dc-icon" style="background:#fef2f2;color:#dc2626;">&#9888;</div><div class="dc-info"><h4>${overdue.length}</h4><p>Overdue</p></div></div>
     <div class="dash-card"><div class="dc-icon amber">&#9203;</div><div class="dc-info"><h4>${dueSoon.length}</h4><p>Due Soon</p></div></div>
     <div class="dash-card"><div class="dc-icon green">&#9989;</div><div class="dc-info"><h4>${upToDate.length}</h4><p>Up to Date</p></div></div>
@@ -6965,7 +6913,8 @@ function renderCoachingCalls(){
   }
 
   // Member cards with checkboxes
-  let html=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;">`;
+  let html=`<div onclick="navTo('thqdash')" style="font-size:13px;color:#16a34a;font-weight:600;cursor:pointer;margin-bottom:16px;display:inline-block;">&larr; Back to ThriveHQ</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;">`;
   members.forEach(m=>{
     const c=m.contact;
     const sel=thqSelected.has(c.id);
