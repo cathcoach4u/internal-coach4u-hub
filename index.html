@@ -10529,8 +10529,8 @@ async function hardRefresh(){
     }
   }catch(e){console.warn('hardRefresh cleanup failed:',e);}
   setTimeout(() => {
-    location.reload(true);
-  }, 50);
+    window.location.href = window.location.origin + window.location.pathname + window.location.search + (window.location.search ? '&' : '?') + '_refresh=' + Date.now();
+  }, 100);
 }
 
 // Teams Webhook URL stored in localStorage (supports both legacy Incoming Webhooks and new Workflows)
