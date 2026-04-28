@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Coach4U – Connection Pulse</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Montserrat','Inter',system-ui,sans-serif;background:#fff;color:#2D2D2D;min-height:100vh;line-height:1.1}
+.header{background:#704214;color:#fff;padding:24px;text-align:center;border-bottom:4px solid #a85c2c}
+.header h1{font-family:'Inter',sans-serif;font-size:24px;font-weight:700;margin-bottom:4px}
+.header .sub{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:#a85c2c}
+.container{max-width:640px;margin:0 auto;padding:24px 16px 40px}
+.welcome{background:#fff;border-radius:12px;padding:24px;margin-bottom:24px;border-left:4px solid #704214}
+.welcome h2{font-family:'Inter',sans-serif;font-size:20px;font-weight:700;color:#704214;margin-bottom:8px}
+.welcome p{font-size:15px;color:#2D2D2D;line-height:1.6;margin-bottom:12px}
+.legend{background:#faf8f5;border:1px solid #d9cfc4;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:12px;color:#666;line-height:1.5}
+.legend-item{margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.legend-item:last-child{margin-bottom:0}
+.legend-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;font-size:9px}
+.question-card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:12px}
+.question-text{font-size:15px;color:#2D2D2D;margin-bottom:12px;line-height:1.5;font-weight:600}
+.rating-group{display:flex;gap:2px;justify-content:space-between;margin-bottom:8px}
+.rating-btn{flex:1;height:40px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;font-size:13px;font-weight:700;color:#2D2D2D;cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent;font-family:'Inter',sans-serif}
+.rating-btn:hover{border-color:#704214;background:#faf8f5}
+.rating-btn.r1{color:#fff;background:#dc2626;border-color:#dc2626}
+.rating-btn.r1.selected{background:#b91c1c}
+.rating-btn.r2{color:#fff;background:#ea580c;border-color:#ea580c}
+.rating-btn.r2.selected{background:#c2410c}
+.rating-btn.r3{color:#1e3a5f;background:#d97706;border-color:#d97706}
+.rating-btn.r3.selected{background:#b45309}
+.rating-btn.r4{color:#fff;background:#16a34a;border-color:#16a34a}
+.rating-btn.r4.selected{background:#15803d}
+.rating-btn.r5{color:#fff;background:#2563eb;border-color:#2563eb}
+.rating-btn.r5.selected{background:#1d4ed8}
+.scale-anchor{font-size:11px;color:#999;text-align:center;margin-top:6px;display:flex;justify-content:space-between;width:100%}
+.nav-buttons{display:flex;gap:8px;justify-content:space-between;padding-top:16px;border-top:1px solid #e2e8f0;margin-top:20px}
+.btn-secondary{background:#f8fafc;color:#704214;border:1px solid #e2e8f0;padding:12px 20px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:background .2s}
+.btn-secondary:hover{background:#eef2f6}
+.btn-secondary:disabled{opacity:.5;cursor:not-allowed}
+.btn-primary{background:#704214;color:#fff;border:none;padding:12px 20px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:background .2s}
+.btn-primary:hover{background:#5a3410}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.overall-result{background:#f8f8f8;border-left:6px solid #704214;padding:16px;border-radius:8px;margin-bottom:16px}
+.stage-name{font-family:'Inter',sans-serif;font-size:20px;font-weight:700;color:#704214;margin-bottom:8px}
+.score-display{font-family:'Inter',sans-serif;font-size:48px;font-weight:700;color:#704214;line-height:1;margin-bottom:8px}
+.score-display span{font-size:16px;color:#999;font-weight:500}
+.stage-desc{font-size:13px;line-height:1.6;color:#2D2D2D}
+.module-score-card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.module-score-label{font-size:13px;font-weight:600;color:#2D2D2D}
+.module-score-value{font-family:'Inter',sans-serif;font-size:18px;font-weight:700;color:#704214}
+.intro-card{background:#fff;border-radius:12px;padding:22px 24px;margin-bottom:20px;border:1px solid #e2e8f0;border-left:4px solid #704214}
+.intro-lead{font-size:14px;line-height:1.65;color:#704214;font-weight:600;margin-bottom:16px}
+.intro-body{font-size:13px;line-height:1.7;color:#475569;margin-bottom:16px}
+.intro-body-label{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:#704214;font-weight:700;margin-bottom:8px}
+.start-btn{background:#704214;color:#fff;border:none;padding:14px 48px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:background .2s;width:100%;max-width:320px;margin:0 auto;display:block;text-align:center}
+.start-btn:hover{background:#5a3410}
+.print-btn{background:#704214;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;margin-top:16px;width:100%;display:block}
+.print-btn:hover{background:#5a3410}
+.footer{text-align:center;padding:20px;font-size:11px;color:#999;border-top:1px solid #e2e8f0;margin-top:20px}
+.loading{text-align:center;padding:40px;color:#999;font-size:14px}
+.error-card{background:#fef2f2;border:1px solid #fca5a5;border-radius:12px;padding:20px;text-align:center;color:#dc2626;font-size:14px}
+.screen{display:none}
+.screen.active{display:block}
+.module-section{margin-bottom:20px}
+.module-name{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:#704214;font-weight:700;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #e2e8f0}
+.print-only{display:none}
+@media print{
+  body{background:#fff;color-adjust:exact;-webkit-print-color-adjust:exact}
+  .header,.footer,.nav-buttons,.print-btn,.no-print{display:none}
+  .container{max-width:100%;padding:0;margin:0}
+  .module-score-card,.overall-result{break-inside:avoid;page-break-inside:avoid}
+  .print-only{display:block}
+  a{color:inherit;text-decoration:none}
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="sub">Coach4U · Couples</div>
+  <h1>Connection Pulse</h1>
+</div>
+<div class="container" id="app"><div class="loading">Loading...</div></div>
+<div class="footer">Coach4U · Strengths-Based Coaching & Counselling · www.coach4u.com.au</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL='https://uoixetfvboevjxlkfyqy.supabase.co',SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVvaXhldGZ2Ym9ldmp4bGtmeXF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE2OTg5MTEwMDAsImV4cCI6MTkxNDQyMjAwMH0.1LXTR9vwlkH5hMZPk5-3E6LnHt-D_d0nKABxL7VhLdE';let supabase=null;const MODULES=[{id:'safety',name:'Emotional Safety & Regulation',questions:[{id:3,text:'In the past 7 days, how emotionally safe and steady did you feel in your relationship — able to show up without fear or defensiveness?'},{id:4,text:'In the past 7 days, how well were you able to regulate your responses and recognise protective patterns (like shutting down, blaming, or avoiding)?'}]},{id:'trust',name:'Trust, Security & Bonding',questions:[{id:5,text:'In the past 7 days, how secure and confident did you feel in your bond — even during moments of distance or conflict?'},{id:6,text:'In the past 7 days, how emotionally close and connected did you feel to your partner — like you\'re in it together?'}]},{id:'comms',name:'Communication & Understanding',questions:[{id:7,text:'In the past 7 days, how heard, understood, and respected did you feel during conversations with your partner?'},{id:8,text:'In the past 7 days, how well did you and your partner move through tension, disconnection, or conflict and come back into repair?'}]},{id:'strengths',name:'Strengths Awareness & Appreciation',questions:[{id:9,text:'In the past 7 days, how often did you notice and appreciate strengths in yourself or your partner (e.g. effort, values, unique contributions)?'},{id:10,text:'In the past 7 days, how often did you express appreciation or affirm your partner\'s efforts or qualities?'}]},{id:'vision',name:'Shared Vision & Fairness',questions:[{id:11,text:'In the past 7 days, how aligned did you feel about what matters most — your shared values, hopes, or future direction?'},{id:12,text:'In the past 7 days, how often did you feel the emotional, mental, or practical load was fair between you and your partner?'}]},{id:'intimacy',name:'Intimacy & Affection',questions:[{id:13,text:'In the past 7 days, how emotionally connected and close did you feel through affection, touch, or intimacy?'},{id:14,text:'In the past 7 days, how well did you and your partner navigate differences in intimacy needs — emotional, physical, or relational?'}]},{id:'play',name:'Play & Joy',questions:[{id:15,text:'In the past 7 days, how often did you experience joy, laughter, or playfulness together?'},{id:16,text:'In the past 7 days, how easy or natural did it feel to enjoy each other\'s company without pressure or agenda?'}]},{id:'boundaries',name:'Boundaries & Autonomy',questions:[{id:17,text:'In the past 7 days, how respected did you feel in your personal boundaries, space, or preferences?'},{id:18,text:'In the past 7 days, how well did you support your partner\'s autonomy while staying emotionally connected?'}]}];const STAGE_COLORS={disconnected:'#dc2626',reactive:'#ea580c',intentional:'#d97706',collaboration:'#16a34a',connected:'#2563eb'};const STAGE_BANDS={disconnected:[16,44],reactive:[45,73],intentional:[74,102],collaboration:[103,131],connected:[132,160]};function getStageFromScore(score){for(const[stage,band]of Object.entries(STAGE_BANDS)){if(score>=band[0]&&score<=band[1]) return stage;}return 'connected';}function getStageLabel(stage){const labels={disconnected:'Disconnected',reactive:'Reactive',intentional:'Intentional',collaboration:'Collaboration',connected:'Connected'};return labels[stage]||'Unknown';}function getStageDescription(stage){const descs={disconnected:'The relationship feels emotionally shut down or distant. Safety and presence are missing, and connection may feel blocked by conflict, overwhelm, or silence.',reactive:'Stress and disconnection show up in repeated cycles or emotional volatility. You\'re trying to connect, but reactivity often gets in the way. There\'s growing awareness that something needs to shift.',intentional:'You\'re starting to slow down and notice what\'s happening beneath the surface. There\'s more reflection, emotional awareness, and a shared effort to respond with care rather than react automatically.',collaboration:'You\'re working as a team. Relational tools are being used more consistently. There\'s empathy, repair, and mutual effort to move through challenges together.',connected:'There\'s emotional openness, trust, and a steady rhythm of connection. You feel supported, secure, and aligned — navigating life as true partners.'};return descs[stage]||'';}async function init(){supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);const params=new URLSearchParams(location.search);const partnerId=params.get('p');const partnerCode=params.get('c');if(!partnerId||!partnerCode) return showError('Missing partner ID or code. Check your link.');const{data:partner}=await supabase.from('contacts').select('id,first_name,last_name').eq('id',partnerId).single();if(!partner) return showError('Partner not found.');showLanding(partner,partnerCode);}function showLanding(partner,code){const el=document.getElementById('app');el.innerHTML=`<div class="screen active"><div class="intro-card"><div class="intro-body-label">Weekly Relational Check-In</div><div class="intro-lead">Connection Pulse</div><div class="intro-body">This is your weekly relational pulse check — a way to tune into the emotional rhythm of your relationship and notice how things are going between you. It\'s not about judgement or getting it "right." It\'s about building awareness.</div><div class="intro-body">Each week, you\'ll reflect on how your relationship has felt across key areas like emotional safety, intimacy, communication, play, and shared vision. Your responses will generate a score out of 160, placing you somewhere along the Connection Pulse scale.</div><div style="background:#f0f4f8;border-radius:8px;padding:14px 16px;margin-bottom:16px;"><div style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#704214;font-weight:700;margin-bottom:8px;">Your Name</div><div style="font-size:14px;font-weight:600;color:#2d2d2d;">${partner.first_name} ${partner.last_name}</div></div><div class="legend"><div class="legend-item"><div class="legend-dot" style="background:#dc2626;">🔴</div><span><strong>Disconnected (16–44)</strong> – Emotionally shut down or distant</span></div><div class="legend-item"><div class="legend-dot" style="background:#ea580c;">🟧</div><span><strong>Reactive (45–73)</strong> – Stress & repeated cycles</span></div><div class="legend-item"><div class="legend-dot" style="background:#d97706;">🟨</div><span><strong>Intentional (74–102)</strong> – Slowing down & reflecting</span></div><div class="legend-item"><div class="legend-dot" style="background:#16a34a;">🟩</div><span><strong>Collaboration (103–131)</strong> – Working as a team</span></div><div class="legend-item"><div class="legend-dot" style="background:#2563eb;">🔵</div><span><strong>Connected (132–160)</strong> – Openness, trust, steady rhythm</span></div></div></div><button class="start-btn" onclick="startPulse('${partner.id}','${code}')">Start Connection Pulse</button></div>`;el.style.minHeight='100vh';}function startPulse(partnerId,code){const el=document.getElementById('app');let answers={};let currentModule=0;function renderModule(){const mod=MODULES[currentModule];let html=`<div class="module-section">`;const isFirst=currentModule===0,isLast=currentModule===MODULES.length-1;html+=`<div class="module-name">${mod.name}</div>`;mod.questions.forEach(q=>{const aid=q.id;const val=answers[aid]||null;const ratingClasses=[{class:'r1'},{class:'r2'},{class:'r3'},{class:'r4'},{class:'r5'}];html+=`<div class="question-card"><div class="question-text">${q.text}</div><div class="rating-group">`;for(let i=1;i<=10;i++){const ratingClass=i<=2?'r1':i<=4?'r2':i<=6?'r3':i<=8?'r4':'r5';const isSelected=val===i;html+=`<button class="rating-btn ${ratingClass}${isSelected?' selected':''}" onclick="setAnswer(${aid},${i});renderModule();">${i}</button>`;}html+=`</div><div class="scale-anchor"><span>Not at all</span><span>Consistently</span></div></div>`;});html+=`</div><div class="nav-buttons">`;if(!isFirst) html+=`<button class="btn-secondary" onclick="currentModule--;renderModule();">← Back</button>`;html+=`<div style="flex:1;text-align:center;font-size:12px;color:#999;align-self:center;">Module ${currentModule+1} / ${MODULES.length}</div>`;if(!isLast) html+=`<button class="btn-primary" onclick="currentModule++;renderModule();">Next →</button>`;else html+=`<button class="btn-primary" onclick="submitPulse();">Submit & View Results</button>`;html+=`</div>`;el.innerHTML=html;}window.setAnswer=function(qid,value){answers[qid]=value;};window.renderModule=renderModule;window.submitPulse=async function(){const score=Object.values(answers).reduce((a,b)=>a+b,0);const moduleScores={};MODULES.forEach(m=>{const qs=m.questions.map(q=>q.id);const mScore=qs.reduce((sum,qid)=>sum+(answers[qid]||0),0);moduleScores[m.id]=mScore;});const stage=getStageFromScore(score);const{error}=await supabase.from('connection_pulse_submissions').insert({client_id:null,partner_id:partnerId,partner_code:code,total_score:score,stage:stage,module_scores:moduleScores,answers:answers,submitted_at:new Date().toISOString()});if(error) return showError('Error saving submission: '+error.message);showResults(score,stage,moduleScores);};renderModule();}function showResults(score,stage,moduleScores){const el=document.getElementById('app');const stageLabel=getStageLabel(stage);const stageColor=STAGE_COLORS[stage];const stageDesc=getStageDescription(stage);let html=`<div class="overall-result" style="border-left-color:${stageColor};"><div class="stage-name" style="color:${stageColor};">Your Connection Pulse Score</div><div class="score-display" style="color:${stageColor};">${score}<span>/160</span></div><div style="font-weight:700;font-size:16px;margin-bottom:8px;color:${stageColor};">${stageLabel}</div><div class="stage-desc">${stageDesc}</div></div>`;html+=`<div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#704214;font-weight:700;margin-bottom:10px;">Module Scores</div>`;MODULES.forEach(m=>{const mScore=moduleScores[m.id]||0;const maxScore=m.questions.length*10;html+=`<div class="module-score-card"><div class="module-score-label">${m.name}</div><div class="module-score-value">${mScore}/${maxScore}</div></div>`;});html+=`<button class="print-btn" onclick="window.print();">🖨️ Print Report</button>`;el.innerHTML=html;}function showError(msg){document.getElementById('app').innerHTML=`<div class="error-card">${msg}</div>`;}document.addEventListener('DOMContentLoaded',init);
+</script>
+</body>
+</html>
