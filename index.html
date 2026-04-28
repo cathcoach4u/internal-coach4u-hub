@@ -250,7 +250,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.6</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.7</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -8692,16 +8692,19 @@ function renderAgents(){
       <button style="background:none;border:1px solid #fecaca;border-radius:6px;padding:4px 10px;font-size:11px;color:#dc2626;cursor:pointer;" onclick="deleteAgent('${id}')">Del</button>
     </div>`;
     };
-    const renderAgentRow=(a,isChild=false,isLast=false)=>{
+    const renderAgentRow=(a,isChild=false,isLast=false,allAgents=[])=>{
       const stageCount=countStages(a.stages_content);
       const menuCount=countMenuItems(a.system_prompt);
       const drift=menuCount!==null&&stageCount>0&&menuCount!==stageCount;
+      const hasChildren=allAgents.some(ag=>ag.parent_agent_id===a.id);
+      const hierarchyRole=a.parent_agent_id?'child':(hasChildren?'parent':'');
       const dotColor=isChild?'#b87a90':'#003366';
       const dotSize=isChild?'6px':'8px';
-      const typeLabel=a.type||'standalone';
+      const typeLabel=a.type||'in-app';
       const typeBg=isChild?'#fce7f3':'#eef2ff';
       const typeColor=isChild?'#b87a90':'#4f46e5';
       const marginL=isChild?'14px':'16px';
+      const hierarchyBadge=hierarchyRole?`<span style="font-size:10px;padding:1px 6px;border-radius:99px;background:#f3e8ff;color:#7e22ce;font-weight:600;">${hierarchyRole}</span>`:'';
       let row=`<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding:10px 0${isChild?' 10px 24px':''};border-bottom:${isLast?'none':'1px solid #f1f5f9'};position:relative;">`;
       if(isChild){
         row+=`<div style="position:absolute;left:8px;top:0;bottom:${isLast?'50%':'0'};width:2px;background:#cbd5e1;"></div>
@@ -8714,6 +8717,7 @@ function renderAgents(){
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin-top:4px;margin-left:${marginL};flex-wrap:wrap;">
           <span style="font-size:10px;padding:1px 6px;border-radius:99px;background:${typeBg};color:${typeColor};font-weight:600;">${typeLabel}</span>
+          ${hierarchyBadge}
           ${editedHtml(a.id)}
           ${drift?`<span onclick="event.stopPropagation();alert('Drift warning\\n\\nThe system prompt menu (between \\'Which stage?\\' and \\'Reply with\\') lists ${menuCount} option${menuCount===1?'':'s'}.\\n\\nThe Stages & Messages document defines ${stageCount} stage${stageCount===1?'':'s'} (lines starting with STAGE N:).\\n\\nOne is behind the other — open the agent and update whichever doesn\\'t match.')" style="font-size:10px;padding:1px 6px;border-radius:99px;background:#fef3c7;color:#a16207;font-weight:600;cursor:pointer;">&#9888; drift</span>`:''}
         </div>
@@ -8749,19 +8753,19 @@ function renderAgents(){
               <span style="font-size:9px;color:#cbd5e1;font-weight:600;">${platformAgents.length}</span>
             </div>
             <div style="display:${isPlatOpen?'block':'none'};padding:0 16px 12px 16px;border-top:1px solid #f1f5f9;">`;
-          const parents=platformAgents.filter(a=>a.type==='parent');
-          const orphans=platformAgents.filter(a=>a.type!=='parent'&&!parents.some(p=>p.id===a.parent_agent_id));
+          const parents=platformAgents.filter(a=>!a.parent_agent_id&&platformAgents.some(ag=>ag.parent_agent_id===a.id));
+          const orphans=platformAgents.filter(a=>!a.parent_agent_id&&!platformAgents.some(ag=>ag.parent_agent_id===a.id));
           parents.forEach(p=>{
             const kids=platformAgents.filter(c=>c.parent_agent_id===p.id);
-            html+=renderAgentRow(p);
+            html+=renderAgentRow(p,false,false,platformAgents);
             kids.forEach((c,i)=>{
               const isLast=i===kids.length-1;
-              html+=renderAgentRow(c,true,isLast);
+              html+=renderAgentRow(c,true,isLast,platformAgents);
             });
           });
           orphans.forEach((a,i)=>{
             const isLast=i===orphans.length-1;
-            html+=renderAgentRow(a,false,isLast);
+            html+=renderAgentRow(a,false,isLast,platformAgents);
           });
           html+='</div></div>';
         });
