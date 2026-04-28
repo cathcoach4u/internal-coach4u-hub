@@ -250,7 +250,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.47.1</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.47.2</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -2267,6 +2267,42 @@ function renderCouplesDash(){
     <div onclick="navTo('couplesintake')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #b87a90;border-radius:12px;padding:18px 20px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
       <div style="font-weight:700;color:#1e3a5f;font-size:15px;margin-bottom:6px;">&#128221; Couples Intake Worksheet</div>
       <div style="font-size:12px;color:#64748b;line-height:1.5;">Port Institute assessment &amp; formulation across 5 stages. Stage-by-stage notes saved to records.</div>
+    </div>
+  </div>`;
+
+  const matrix=[
+    {type:'Communication',timeline:'8-12 Sessions',goal:'Teach safe conversations; manage disagreement without catastrophe.'},
+    {type:'High Conflict',timeline:'+4-8 Sessions',goal:'Stop active fight patterns first before addressing deeper needs.'},
+    {type:'Trauma',timeline:'~1 Year',goal:'Up-and-down nervous system regulation; building brain flexibility.'},
+    {type:'Ambivalence',timeline:'TBD',goal:"Halt standard therapy; utilise 'Stay or Go' gatekeeping exercises."},
+    {type:'Betrayal',timeline:'1 Year+',goal:'Phase 1 First Aid (shock management), followed by structural trust rebuild.'}
+  ];
+  html+=`<div style="margin-top:24px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
+    <div style="padding:16px 20px;border-bottom:1px solid #f1f5f9;">
+      <div style="font-family:'Quicksand','Inter',sans-serif;font-size:18px;font-weight:700;color:#1e3a5f;">Therapy Timelines &amp; Interventions Matrix</div>
+      <div style="font-size:12px;color:#64748b;margin-top:2px;">A reference for setting psychological expectations early in couples work.</div>
+    </div>
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead>
+          <tr style="background:#1e3a5f;color:#fff;">
+            <th style="text-align:left;padding:12px 16px;font-weight:700;letter-spacing:.3px;">Problem Type</th>
+            <th style="text-align:left;padding:12px 16px;font-weight:700;letter-spacing:.3px;white-space:nowrap;">Estimated Timeline</th>
+            <th style="text-align:left;padding:12px 16px;font-weight:700;letter-spacing:.3px;">Primary Clinical Goal</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${matrix.map((r,i)=>`<tr style="background:${i%2?'#fff':'#f8fafc'};border-top:1px solid #f1f5f9;">
+            <td style="padding:12px 16px;font-weight:700;color:#1e3a5f;white-space:nowrap;">${r.type}</td>
+            <td style="padding:12px 16px;color:#334155;white-space:nowrap;">${r.timeline}</td>
+            <td style="padding:12px 16px;color:#334155;line-height:1.5;">${r.goal}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div style="background:#c2410c;color:#fff;padding:16px 20px;display:flex;gap:18px;align-items:center;flex-wrap:wrap;">
+      <div style="font-family:'Quicksand','Inter',sans-serif;font-size:18px;font-weight:800;letter-spacing:.5px;flex-shrink:0;">Clinical Rule</div>
+      <div style="font-size:13px;line-height:1.5;flex:1;min-width:200px;">Whatever timeline you give will likely be wrong. The goal is establishing <strong>psychological</strong> expectations and boundaries for the work required.</div>
     </div>
   </div>`;
   el.innerHTML=html;
