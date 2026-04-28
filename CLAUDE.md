@@ -29,18 +29,15 @@ Single-page CRM app hosted on GitHub Pages with a Supabase backend. All CRM func
 
 ### CRM structure (areaConfig)
 
-Areas and their pages (defined at line ~1423):
+Areas and their pages (defined at line ~2039):
 
 - **Home**: Dashboard
 - **CRM**: Dashboard, Master List, Prospect List, Clients Dashboard, Client List, Intake Forms, Invoices
 - **Referrers**: Dashboard (Referral Hub), Payments
 - **Pulses**: Dashboard, SAFE Pulse, Brain Pulse (client selector for per-client mini-portal view)
-- **Couples**: Dashboard, Couples Intake (Port Institute stage-by-stage worksheet; drafts in localStorage, filed to Supabase `couples_intake_sessions`; session linked to Couple client)
-- **ThriveHQ**: Dashboard, Trials, Members, Renewals, Coaching Calls
-- **Strengths Hub** (top-level area): Dashboard (with Open Reports CTA + SharePoint folder link + Upload-a-Report panel), Reports (Individual / Pair / Team Heatmap with Pre-session brief toggle and four AI readings), Profiles (single editor: quick-paste, dropdowns, or PDF auto-extract via Claude)
+- **Hubs**: Dashboard, Couples Hub (Intake, Timelines, Betrayal First Aid), ThriveHQ Hub (Trials, Members, Renewals, Coaching Calls), Strengths Hub (Workflow SOP, Code Tracker, Reports, Profiles, Domain Balance, Upload Report)
 - **IT**: Dashboard, IT Projects, Agents, AI Strategy (cross-agent audit + chat), Writing Partner
-- **Resources**: Dashboard (shareable public links — Linktree, intake forms, cancellation policy)
-- **Admin**: Dashboard, Task Management, Playbook (Lou's operational work)
+- **Admin**: Dashboard, Task Management, Playbook (Lou's operational work), Company Resources
 - **Finance**: Dashboard, Income, Where Money Goes, Bills, Transactions
 - **About**: About
 
@@ -64,9 +61,11 @@ All pulse pages live under the **Pulses** area. Screen IDs `clipulse`/`clibrainp
 - Each view has a client selector so a single client's results across all pulse types are visible together as a mini portal
 - Portals (`portal/index.html`, `brain-pulse/index.html`) and CRM must produce identical printed reports
 
-## Couples Intake (Port Institute Worksheet)
+## Couples Hub
 
-- **Area**: Couples > Couples Intake (screen `couplesintake`)
+### Couples Intake (Port Institute Worksheet)
+
+- **Area**: Hubs > Couples Hub > Couples Intake (screen `couplesintake`)
 - **Purpose**: live session prompt for a 2-hour couples intake, based on the Port Institute Assessment & Formulation Worksheet
 - **Config**: `couplesIntakeConfig` — 5 steps, each with sections; items shown as a read-only bullet-point guide
 - **Layout**: **stage-by-stage** — a tab bar shows all 5 steps; only the selected step's section guide + one notes textarea is visible. Tabs get a check-mark when their stage has notes. Previous / Next navigate between stages.
@@ -75,6 +74,10 @@ All pulse pages live under the **Pulses** area. Screen IDs `clipulse`/`clibrainp
   - Local draft in `localStorage` under `couplesIntake:<id>` (index under `couplesIntakeIndex`)
   - **Filed sessions in Supabase** table `couples_intake_sessions` — one row per session, upserted on `draft_id`. Columns: `draft_id` (unique), `client_id` (FK → clients), `p1_name`, `p2_name`, `session_date`, `step_notes` (JSONB keyed by step index 0–4), timestamps.
 - **Save behaviour**: toolbar has "Save Draft" (localStorage) and "Save to Records" (upsert to Supabase). Each stage also has its own "Save this stage" button that does both.
+
+### Other Couples Hub Pages
+- **Therapy Timelines**: Reference guide for therapy timeline expectations with 5-phase model
+- **Betrayal First Aid**: PORT 4-phase recovery model with exercise summary and safety guidelines
 
 ## Agents (Agents > Agents)
 
@@ -126,7 +129,9 @@ Parent agents represent the master system prompts for Copilot Studio. Child agen
 - **All stages**: "Copy list for SharePoint" outputs all stages with `════` title divider and `────` between sections
 - **Format**: Plain text, no markdown; designed to paste directly into SharePoint
 
-## Strengths Reports (Strengths > Reports)
+## Strengths Hub
+
+### Reports (Hubs > Strengths Hub > Reports)
 
 - **Page**: `screen-strreports`, render fn `renderStrengthsReports()`
 - **Picker modes**: By Client (filtered by role), By Contact, Team (one-tap from a client's members or build ad-hoc). Plus a **Pre-session brief** toggle for the compact print-optimised view.
@@ -190,13 +195,10 @@ The single source of truth for tone in any Coach4U communication, human or AI-ge
 
 - Main branch: All work merged and pushed
 - Feature branches: Create per-session, merge to main when ready
-- Active feature branches on remote (as of this update):
-  - `claude/add-prospects-dashboard-2zdj1` — in progress, ready for merge
 - Commit messages: Concise, imperative mood
 - **Version bumping protocol**:
   - Always bump both `index.html` version and `sw.js` cache on every commit
   - Include version bump + CLAUDE.md update in final commit before merge
-  - Ask user before final merge to main
 
 ## Prospect ↔ Intake linking
 
