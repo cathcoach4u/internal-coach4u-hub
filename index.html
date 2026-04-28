@@ -2616,108 +2616,41 @@ function renderThqDash(){
 
 // ── STRENGTHS DASHBOARD ──
 function renderStrDash(){
-  const withStr=contacts.filter(c=>c.strength_1);
-  const withoutStr=contacts.filter(c=>!c.strength_1);
-
-  // Report stats across people-with-strengths
-  const reportStats={};
-  reportTypes.forEach(rt=>{
-    reportStats[rt.key]=withStr.filter(c=>(contactReports||[]).some(r=>r.contact_id===c.id&&r.report_type===rt.key)).length;
-  });
-  const anyReport=withStr.filter(c=>(contactReports||[]).some(r=>r.contact_id===c.id)).length;
-  const noReport=withStr.length-anyReport;
-
-  const strengthFreq={};
-  withStr.forEach(c=>{
-    for(let i=1;i<=10;i++){
-      const s=c['strength_'+i];
-      if(s) strengthFreq[s]=(strengthFreq[s]||0)+1;
-    }
-  });
-  const topStrengths=Object.entries(strengthFreq).sort((a,b)=>b[1]-a[1]).slice(0,10);
-
-  // Cards ordered to match the Strengths Hub sidebar: Workflow SOP → Code Tracker → Reports → Profiles → Domain Balance → Upload Report
-  const awaitingCount=(gallupRequests||[]).filter(r=>r.status==='Awaiting Completion').length;
-  const inFlightCount=(gallupRequests||[]).filter(r=>r.status&&r.status!=='Filed').length;
-  let html=`<div onclick="navTo('strsop')" style="display:flex;align-items:center;gap:14px;background:#fff;border:1px solid #e2e8f0;border-left:4px solid #1e3a5f;border-radius:12px;padding:14px 18px;margin-bottom:14px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
-    <span style="font-size:24px;flex-shrink:0;">&#128218;</span>
-    <div style="flex:1;min-width:0;">
-      <div style="font-family:'Quicksand','Inter',sans-serif;font-weight:700;color:#1e3a5f;font-size:15px;">Gallup Workflow SOP</div>
-      <div style="font-size:12px;color:#64748b;margin-top:2px;">The single source of truth for the full intake → file pipeline. Read before doing anything Gallup.</div>
+  const el=document.getElementById('strDashContent');
+  if(!el) return;
+  let html=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">
+    <div onclick="navTo('strsop')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #1e3a5f;border-radius:12px;padding:18px 20px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
+      <div style="font-size:24px;margin-bottom:8px;">&#128218;</div>
+      <div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">Workflow SOP</div>
+      <div style="font-size:11px;color:#64748b;">Full intake → file pipeline</div>
     </div>
-    <span style="color:#1e3a5f;font-size:13px;font-weight:600;flex-shrink:0;">Open &rarr;</span>
-  </div>
-  <div onclick="navTo('strcodes')" style="display:flex;align-items:center;gap:14px;background:#fff;border:1px solid #e2e8f0;border-left:4px solid #d97706;border-radius:12px;padding:14px 18px;margin-bottom:14px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
-    <span style="font-size:24px;flex-shrink:0;">&#128273;</span>
-    <div style="flex:1;min-width:0;">
-      <div style="font-family:'Quicksand','Inter',sans-serif;font-weight:700;color:#1e3a5f;font-size:15px;">Gallup Code Tracker</div>
-      <div style="font-size:12px;color:#64748b;margin-top:2px;">${inFlightCount} in flight${awaitingCount?' &middot; '+awaitingCount+' waiting on client':''} &middot; full intake → file pipeline.</div>
+    <div onclick="navTo('strcodes')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #d97706;border-radius:12px;padding:18px 20px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
+      <div style="font-size:24px;margin-bottom:8px;">&#128273;</div>
+      <div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">Code Tracker</div>
+      <div style="font-size:11px;color:#64748b;">Track Gallup codes</div>
     </div>
-    <span style="color:#d97706;font-size:13px;font-weight:600;flex-shrink:0;">Open &rarr;</span>
-  </div>
-  <div onclick="navTo('strreports')" style="display:flex;align-items:center;gap:14px;background:#fff;border:1px solid #e2e8f0;border-left:4px solid #003366;border-radius:12px;padding:14px 18px;margin-bottom:14px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
-    <span style="font-size:24px;flex-shrink:0;">&#128203;</span>
-    <div style="flex:1;min-width:0;">
-      <div style="font-family:'Quicksand','Inter',sans-serif;font-weight:700;color:#1e3a5f;font-size:15px;">Open Reports</div>
-      <div style="font-size:12px;color:#64748b;margin-top:2px;">Pick a client, contact, or team to see strengths reports, AI insights, and pre-session briefs.</div>
+    <div onclick="navTo('strreports')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #003366;border-radius:12px;padding:18px 20px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
+      <div style="font-size:24px;margin-bottom:8px;">&#128203;</div>
+      <div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">Reports</div>
+      <div style="font-size:11px;color:#64748b;">Client, pair, team reports</div>
     </div>
-    <span style="color:#003366;font-size:13px;font-weight:600;flex-shrink:0;">Open &rarr;</span>
-  </div>
-  <div onclick="navTo('strengths')" style="display:flex;align-items:center;gap:14px;background:#fff;border:1px solid #e2e8f0;border-left:4px solid #16a34a;border-radius:12px;padding:14px 18px;margin-bottom:14px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
-    <span style="font-size:24px;flex-shrink:0;">&#127919;</span>
-    <div style="flex:1;min-width:0;">
-      <div style="font-family:'Quicksand','Inter',sans-serif;font-weight:700;color:#1e3a5f;font-size:15px;">Profiles</div>
-      <div style="font-size:12px;color:#64748b;margin-top:2px;">${withStr.length} profiles complete &middot; edit strengths or upload a Gallup PDF for auto-extract.</div>
+    <div onclick="navTo('strengths')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #16a34a;border-radius:12px;padding:18px 20px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
+      <div style="font-size:24px;margin-bottom:8px;">&#127919;</div>
+      <div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">Profiles</div>
+      <div style="font-size:11px;color:#64748b;">Edit strengths</div>
     </div>
-    <span style="color:#16a34a;font-size:13px;font-weight:600;flex-shrink:0;">Open &rarr;</span>
-  </div>
-  <div onclick="navTo('strdomains')" style="display:flex;align-items:center;gap:14px;background:#fff;border:1px solid #e2e8f0;border-left:4px solid #8b5cf6;border-radius:12px;padding:14px 18px;margin-bottom:14px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
-    <span style="font-size:24px;flex-shrink:0;">&#127912;</span>
-    <div style="flex:1;min-width:0;">
-      <div style="font-family:'Quicksand','Inter',sans-serif;font-weight:700;color:#1e3a5f;font-size:15px;">Overall Domain Balance</div>
-      <div style="font-size:12px;color:#64748b;margin-top:2px;">See how Executing, Influencing, Relationship and Strategic split across all profiles.</div>
+    <div onclick="navTo('strdomains')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #8b5cf6;border-radius:12px;padding:18px 20px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
+      <div style="font-size:24px;margin-bottom:8px;">&#127912;</div>
+      <div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">Domain Balance</div>
+      <div style="font-size:11px;color:#64748b;">4 domain overview</div>
     </div>
-    <span style="color:#8b5cf6;font-size:13px;font-weight:600;flex-shrink:0;">Open &rarr;</span>
-  </div>
-  <div onclick="navTo('strupload')" style="display:flex;align-items:center;gap:14px;background:#fff;border:1px solid #e2e8f0;border-left:4px solid #15803d;border-radius:12px;padding:14px 18px;margin-bottom:14px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
-    <span style="font-size:24px;flex-shrink:0;">&#10024;</span>
-    <div style="flex:1;min-width:0;">
-      <div style="font-family:'Quicksand','Inter',sans-serif;font-weight:700;color:#1e3a5f;font-size:15px;">Upload a Report</div>
-      <div style="font-size:12px;color:#64748b;margin-top:2px;">Add a Gallup PDF or other report. Auto-extract top 10 themes from Gallup PDFs.</div>
-    </div>
-    <span style="color:#15803d;font-size:13px;font-weight:600;flex-shrink:0;">Open &rarr;</span>
-  </div>
-  <a href="https://netorgft4053847.sharepoint.com/:f:/s/Clients/IgCbIcP9xvVyRbJS8UZswGbdAfxK9Dz48JxeQCkUggqJt44?e=KVa5ea" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:14px;background:#fff;border:1px solid #e2e8f0;border-left:4px solid #0070CD;border-radius:12px;padding:14px 18px;margin-bottom:14px;text-decoration:none;color:#1e293b;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
-    <span style="font-size:24px;flex-shrink:0;">&#128193;</span>
-    <div style="flex:1;min-width:0;">
-      <div style="font-family:'Quicksand','Inter',sans-serif;font-weight:700;color:#1e3a5f;font-size:15px;">Gallup Reports on SharePoint</div>
-      <div style="font-size:12px;color:#64748b;margin-top:2px;">Open the full folder of original Gallup PDFs.</div>
-    </div>
-    <span style="color:#0070CD;font-size:13px;font-weight:600;flex-shrink:0;">Open &#8599;</span>
-  </a>`;
-
-  // Top 10 most common strengths
-  const totalThemesCounted=Object.values(strengthFreq).reduce((a,b)=>a+b,0);
-  html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:20px;">
-    <div style="font-family:'Quicksand','Inter',sans-serif;font-size:16px;font-weight:700;color:#1e3a5f;margin-bottom:6px;">Most Common Strengths</div>
-    <div style="font-size:12px;color:#64748b;margin-bottom:14px;">Across the top 10 themes of every profile &middot; ${withStr.length} profiles &middot; ${totalThemesCounted} themes counted</div>
-    <div style="display:flex;flex-direction:column;gap:6px;">
-      ${topStrengths.map(([name,count])=>{
-        const pct=(count/withStr.length*100).toFixed(0);
-        return `<div style="display:flex;align-items:center;gap:10px;">
-          <span style="background:${csColor(name)};color:#fff;padding:3px 10px;border-radius:2px;font-size:11px;font-weight:700;width:140px;text-align:center;">${name}</span>
-          <div style="flex:1;background:#f1f5f9;border-radius:4px;height:18px;overflow:hidden;">
-            <div style="background:${csColor(name)};height:100%;width:${pct}%;border-radius:4px;"></div>
-          </div>
-          <span style="font-size:12px;color:#64748b;font-weight:600;width:60px;text-align:right;">${count} (${pct}%)</span>
-        </div>`;
-      }).join('')}
+    <div onclick="navTo('strupload')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #15803d;border-radius:12px;padding:18px 20px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
+      <div style="font-size:24px;margin-bottom:8px;">&#10024;</div>
+      <div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">Upload Report</div>
+      <div style="font-size:11px;color:#64748b;">Add Gallup PDFs</div>
     </div>
   </div>`;
-
-  // (Awaiting Strengths chip-list removed — strengths are added as they happen, no outstanding queue)
-
-  document.getElementById('strDashContent').innerHTML=html;
+  el.innerHTML=html;
 }
 
 // ── STRENGTHS DOMAIN BALANCE ──
