@@ -250,7 +250,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.11</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.12</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -8718,7 +8718,6 @@ function renderAgents(){
           <span style="font-size:10px;color:#94a3b8;font-weight:600;">(${platLabel})</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin-top:4px;margin-left:${marginL};flex-wrap:wrap;">
-          <span style="font-size:10px;padding:1px 6px;border-radius:99px;background:${typeBg};color:${typeColor};font-weight:600;">${typeLabel}</span>
           ${hierarchyBadge}
           ${editedHtml(a.id)}
           ${drift?`<span onclick="event.stopPropagation();alert('Drift warning\\n\\nThe system prompt menu (between \\'Which stage?\\' and \\'Reply with\\') lists ${menuCount} option${menuCount===1?'':'s'}.\\n\\nThe Stages & Messages document defines ${stageCount} stage${stageCount===1?'':'s'} (lines starting with STAGE N:).\\n\\nOne is behind the other — open the agent and update whichever doesn\\'t match.')" style="font-size:10px;padding:1px 6px;border-radius:99px;background:#fef3c7;color:#a16207;font-weight:600;cursor:pointer;">&#9888; drift</span>`:''}
