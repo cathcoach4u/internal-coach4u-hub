@@ -250,7 +250,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.48.1</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.49.0</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -594,6 +594,15 @@ if('serviceWorker' in navigator){
         <button onclick="copyPublicBrainPulseLink()" style="padding:6px 12px;border:1px solid #bfdbfe;border-radius:99px;font-size:11px;font-weight:600;color:#1e3a5f;background:#dbeafe;cursor:pointer;font-family:inherit;white-space:nowrap;" onmouseover="this.style.background='#bfdbfe'" onmouseout="this.style.background='#dbeafe'">&#128279; Brain (public)</button>
       </div>
       <div id="cliBrainPulseContent"></div>
+    </div>
+
+    <!-- CLIENT CONNECTION PULSE -->
+    <div class="screen" id="screen-cliconnection">
+      <div class="toolbar">
+        <input class="search-input" id="cliConnectionSearch" placeholder="Search submissions..." oninput="renderConnectionPulse()">
+        <button onclick="copyPublicConnectionLink()" style="padding:6px 12px;border:1px solid #fed8d8;border-radius:99px;font-size:11px;font-weight:600;color:#7c2d12;background:#fef2f2;cursor:pointer;font-family:inherit;white-space:nowrap;" onmouseover="this.style.background='#fed8d8'" onmouseout="this.style.background='#fef2f2'">&#128279; Connection (public)</button>
+      </div>
+      <div id="cliConnectionContent"></div>
     </div>
 
     <!-- OPERATIONS DASHBOARD -->
@@ -1903,6 +1912,11 @@ async function loadBrainPulseSubmissions(){
   if(data) brainPulseSubmissions=data;
   if(error&&error.code!=='42P01') console.error('Load brain pulse submissions error:',error);
 }
+async function loadConnectionPulseSubmissions(){
+  const {data,error}=await supabase.from('connection_pulse_submissions').select('*').order('created_at',{ascending:false});
+  if(data) connectionPulseSubmissions=data;
+  if(error&&error.code!=='42P01') console.error('Load connection pulse submissions error:',error);
+}
 async function loadAgents(){
   try{
     const [a,av,ai,as,at]=await Promise.all([
@@ -1927,7 +1941,7 @@ async function loadAgents(){
   }
 }
 async function loadAll(){
-  await Promise.all([loadContacts(), loadClients(), loadTasks(), loadProspects(), loadProspectNotes(), loadReferrers(), loadRefPayments(), loadRenewals(), loadContactReports(), loadStrengthsInsights(), loadGallupRequests(), loadTrials(), loadTaskLogs(), loadFinanceTransactions(), loadBills(), loadIntakeSubmissions(), loadPulseResults(), loadBrainPulseSubmissions(), loadAgents()]);
+  await Promise.all([loadContacts(), loadClients(), loadTasks(), loadProspects(), loadProspectNotes(), loadReferrers(), loadRefPayments(), loadRenewals(), loadContactReports(), loadStrengthsInsights(), loadGallupRequests(), loadTrials(), loadTaskLogs(), loadFinanceTransactions(), loadBills(), loadIntakeSubmissions(), loadPulseResults(), loadBrainPulseSubmissions(), loadConnectionPulseSubmissions(), loadAgents()]);
   await bootstrapInAppAgents();
   renderSidebarNav('home');
   renderDashboard();
@@ -1942,7 +1956,7 @@ window.navTo = function(tab,btn){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+tab).classList.add('active');
   window.scrollTo(0,0);
-  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ',thqintake:'Intake Forms',strdash:'Strengths Hub',opsdash:'Admin',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Profiles',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Task Management',playbook:'Lou\'s Playbook',itprojects:'IT Projects',agents:'Agents',writingpartner:'Writing Partner',findash:'Finance',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fintxns:'Transactions',thqbrainpulse:'Brain Pulse',clibrainpulse:'Brain Pulse',thqpulse:'SAFE Pulse',clipulse:'SAFE Pulse',pulsesdash:'Pulses',couplesintake:'Couples Intake',couplesdash:'Couples',couplestimelines:'Therapy Timelines',couplesbetrayal:'Betrayal First Aid',itdash:'IT',resourcesdash:'Resources',agentsai:'AI Strategy',strreports:'Strengths Reports',strdomains:'Domain Balance',strupload:'Upload Report',strcodes:'Gallup Code Tracker',strsop:'Gallup Workflow SOP'};
+  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ',thqintake:'Intake Forms',strdash:'Strengths Hub',opsdash:'Admin',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Profiles',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Task Management',playbook:'Lou\'s Playbook',itprojects:'IT Projects',agents:'Agents',writingpartner:'Writing Partner',findash:'Finance',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fintxns:'Transactions',thqbrainpulse:'Brain Pulse',clibrainpulse:'Brain Pulse',cliconnection:'Connection Pulse',thqpulse:'SAFE Pulse',clipulse:'SAFE Pulse',pulsesdash:'Pulses',couplesintake:'Couples Intake',couplesdash:'Couples',couplestimelines:'Therapy Timelines',couplesbetrayal:'Betrayal First Aid',itdash:'IT',resourcesdash:'Resources',agentsai:'AI Strategy',strreports:'Strengths Reports',strdomains:'Domain Balance',strupload:'Upload Report',strcodes:'Gallup Code Tracker',strsop:'Gallup Workflow SOP'};
   document.getElementById('pageTitle').textContent=titles[tab]||'Coach4U';
   // Sync area tab
   const area=pageToArea[tab]||'home';
@@ -1991,6 +2005,7 @@ window.navTo = function(tab,btn){
   if(tab==='clipulse') renderClientPulses();
   if(tab==='thqbrainpulse'){loadBrainPulseSubmissions().then(()=>renderBrainPulseThq());}
   if(tab==='clibrainpulse'){loadBrainPulseSubmissions().then(()=>renderBrainPulseClients());}
+  if(tab==='cliconnection'){loadConnectionPulseSubmissions().then(()=>renderConnectionPulse());}
   if(tab==='thqintake') renderIntakeSubmissions();
   if(tab==='couplesintake') renderCouplesIntake();
   if(tab==='tasks') renderTasks();
@@ -2027,7 +2042,7 @@ const areaConfig={
   home:{label:'Home',pages:[{id:'dashboard',icon:'&#9776;',label:'Dashboard'}]},
   crm:{label:'CRM',pages:[{id:'crmdash',icon:'&#128200;',label:'Dashboard'},{id:'masterlist',icon:'&#128209;',label:'Master List'},{id:'prospects',icon:'&#128203;',label:'Prospect List'},{id:'clidash',icon:'&#129309;',label:'Clients Dashboard'},{id:'clients',icon:'&#128101;',label:'Client List'},{id:'thqintake',icon:'&#128221;',label:'Intake Forms'},{id:'clinvoices',icon:'&#128206;',label:'Invoices'}]},
   referrers:{label:'Referrers',pages:[{id:'referrals',icon:'&#128200;',label:'Dashboard'},{id:'refpayments',icon:'&#128176;',label:'Payments'}]},
-  pulses:{label:'Pulses',pages:[{id:'pulsesdash',icon:'&#128200;',label:'Dashboard'},{id:'clipulse',icon:'&#128147;',label:'SAFE Pulse'},{id:'clibrainpulse',icon:'&#129504;',label:'Brain Pulse'}]},
+  pulses:{label:'Pulses',pages:[{id:'pulsesdash',icon:'&#128200;',label:'Dashboard'},{id:'clipulse',icon:'&#128147;',label:'SAFE Pulse'},{id:'clibrainpulse',icon:'&#129504;',label:'Brain Pulse'},{id:'cliconnection',icon:'&#128151;',label:'Connection Pulse'}]},
   couples:{label:'Couples',pages:[{id:'couplesdash',icon:'&#128200;',label:'Dashboard'},{id:'couplesintake',icon:'&#128221;',label:'Couples Intake'},{id:'couplestimelines',icon:'&#9202;',label:'Therapy Timelines'},{id:'couplesbetrayal',icon:'&#128737;',label:'Betrayal First Aid'}]},
   thrivehq:{label:'ThriveHQ',pages:[{id:'thqdash',icon:'&#128170;',label:'Dashboard'},{id:'thqtrials',icon:'&#127793;',label:'Trials'},{id:'thrivehq',icon:'&#128101;',label:'Members'},{id:'thqrenewals',icon:'&#128260;',label:'Renewals'},{id:'thqcalls',icon:'&#128222;',label:'Coaching Calls'}]},
   strengths:{label:'Strengths Hub',pages:[{id:'strdash',icon:'&#127919;',label:'Dashboard'},{id:'strsop',icon:'&#128218;',label:'Workflow SOP'},{id:'strcodes',icon:'&#128273;',label:'Code Tracker'},{id:'strreports',icon:'&#128203;',label:'Reports'},{id:'strengths',icon:'&#128161;',label:'Profiles'},{id:'strdomains',icon:'&#127912;',label:'Domain Balance'},{id:'strupload',icon:'&#10024;',label:'Upload Report'}]},
@@ -7707,11 +7722,14 @@ function renderPulsesDash(){
   weekStart.setHours(0,0,0,0);
   const safeAll=pulseResults||[];
   const brainAll=brainPulseSubmissions||[];
+  const connAll=connectionPulseSubmissions||[];
   const safeWeek=safeAll.filter(r=>new Date(r.created_at)>=weekStart).length;
   const brainWeek=brainAll.filter(r=>new Date(r.created_at)>=weekStart).length;
+  const connWeek=connAll.filter(r=>new Date(r.created_at)>=weekStart).length;
   const safeClients=new Set(safeAll.map(r=>r.contact_id)).size;
   const brainClients=new Set(brainAll.map(r=>r.contact_id)).size;
-  const combined=[...safeAll.map(r=>({...r,_type:'safe'})),...brainAll.map(r=>({...r,_type:'brain'}))]
+  const connCouples=new Set(connAll.map(r=>r.client_id)).size;
+  const combined=[...safeAll.map(r=>({...r,_type:'safe'})),...brainAll.map(r=>({...r,_type:'brain'})),...connAll.map(r=>({...r,_type:'connection'}))]
     .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at))
     .slice(0,10);
 
@@ -7745,6 +7763,11 @@ function renderPulsesDash(){
       <div style="font-size:12px;color:#64748b;line-height:1.5;margin-bottom:10px;">Four-room check-in: Capacity, Wellbeing, Strengths, Execution.</div>
       <div style="display:flex;gap:14px;font-size:11px;color:#64748b;"><span><strong style="color:#7c3aed;">${brainAll.length}</strong> check-ins</span><span><strong style="color:#7c3aed;">${brainClients}</strong> clients</span><span><strong style="color:#7c3aed;">${brainWeek}</strong> this week</span></div>
     </div>
+    <div onclick="navTo('cliconnection')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #704214;border-radius:12px;padding:18px 20px;cursor:pointer;transition:border-color .15s;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;"><span style="font-size:22px;">&#128151;</span><div style="font-weight:700;color:#1e3a5f;font-size:15px;">Connection Pulse</div></div>
+      <div style="font-size:12px;color:#64748b;line-height:1.5;margin-bottom:10px;">Weekly relational pulse check: emotional safety, intimacy, communication, play.</div>
+      <div style="display:flex;gap:14px;font-size:11px;color:#64748b;"><span><strong style="color:#704214;">${connAll.length}</strong> check-ins</span><span><strong style="color:#704214;">${connCouples}</strong> couples</span><span><strong style="color:#704214;">${connWeek}</strong> this week</span></div>
+    </div>
   </div>`;
 
   html+=`<div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:10px;">Recent Activity</div>`;
@@ -7752,18 +7775,20 @@ function renderPulsesDash(){
     html+=`<div style="padding:30px;text-align:center;color:#94a3b8;font-size:13px;background:#fff;border:1px dashed #cbd5e1;border-radius:12px;">No check-ins yet.</div>`;
   } else {
     combined.forEach(r=>{
-      const c=contacts.find(x=>x.id===r.contact_id);
+      const isConn=r._type==='connection';
+      const contactId=isConn?r.partner_id:r.contact_id;
+      const c=contacts.find(x=>x.id===contactId);
       if(!c) return;
       const d=new Date(r.created_at);
       const dateStr=d.toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'});
       const isBrain=r._type==='brain';
-      const tagBg=isBrain?'#f0e6ff':'#dbeafe';
-      const tagColor=isBrain?'#7c3aed':'#2563eb';
-      const tagLabel=isBrain?'BRAIN':'SAFE';
-      const score=isBrain?r.grand_total:r.total;
-      const stage=isBrain?((BRAIN_STAGES.find(s=>score>=s.min&&score<=s.max)||{}).name||r.stage):r.band;
-      const stageColor=isBrain?((BRAIN_STAGES.find(s=>score>=s.min&&score<=s.max)||{}).color||'#333'):((PULSE_BANDS.find(b=>b.name===r.band)||{}).color||'#333');
-      const clickHandler=isBrain?`navTo('clibrainpulse');viewBrainPulseClientResult('${r.id}')`:`navTo('clipulse');viewPulseResult('${r.id}')`;
+      const tagBg=isConn?'#fef2f2':isBrain?'#f0e6ff':'#dbeafe';
+      const tagColor=isConn?'#704214':isBrain?'#7c3aed':'#2563eb';
+      const tagLabel=isConn?'CONNECTION':isBrain?'BRAIN':'SAFE';
+      const score=isConn?r.total_score:isBrain?r.grand_total:r.total;
+      const stage=isConn?r.stage:isBrain?((BRAIN_STAGES.find(s=>score>=s.min&&score<=s.max)||{}).name||r.stage):r.band;
+      const stageColor=isConn?(CONNECTION_STAGE_COLORS[r.stage]||'#704214'):isBrain?((BRAIN_STAGES.find(s=>score>=s.min&&score<=s.max)||{}).color||'#333'):((PULSE_BANDS.find(b=>b.name===r.band)||{}).color||'#333');
+      const clickHandler=isConn?`navTo('cliconnection');viewConnectionResult('${r.id}')`:isBrain?`navTo('clibrainpulse');viewBrainPulseClientResult('${r.id}')`:`navTo('clipulse');viewPulseResult('${r.id}')`;
       html+=`<div onclick="${clickHandler}" style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 16px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;">
         <div style="flex:1;min-width:0;">
           <div style="font-weight:600;font-size:14px;color:#1e3a5f;">${c.first_name} ${c.last_name}</div>
@@ -11276,6 +11301,9 @@ function formatAiMsg(text){
     .replace(/\n/g,'<br>')
     .replace(/`([^`]+)`/g,'<code style="background:#e2e8f0;padding:1px 4px;border-radius:3px;font-size:12px;">$1</code>');
 }
+
+let cliConnectionSelectedId=null,cliConnectionDetailResultId=null,connectionPulseSubmissions=[];
+const CONNECTION_STAGE_COLORS={disconnected:'#dc2626',reactive:'#ea580c',intentional:'#d97706',collaboration:'#16a34a',connected:'#2563eb'};function getConnectionUrl(clientId){const baseUrl=window.location.origin+'/internal-coach4u-hub/connection-pulse/';const couple=clients.find(c=>c.id===clientId);if(!couple||couple.role!=='Couple') return baseUrl;const members=clientMembers.filter(cm=>cm.client_id===clientId);if(members.length<2) return baseUrl;const url1=`${baseUrl}?p=${members[0].contact_id}&c=${generateAnonymisedCode(contacts.find(c=>c.id===members[0].contact_id))}`;return url1;}function generateAnonymisedCode(contact){if(!contact) return '';const first=(contact.first_name||'').substring(0,2).toUpperCase();const last=(contact.last_name||'').substring(0,3).toUpperCase();return first+last;}window.setCliConnectionClient=function(clientId){cliConnectionSelectedId=clientId;};window.copyPublicConnectionLink=function(){if(!cliConnectionSelectedId) return toast('Select a couple first','error');const url=getConnectionUrl(cliConnectionSelectedId);navigator.clipboard.writeText(url).then(()=>toast('Connection Pulse link copied!','success')).catch(()=>toast('Failed to copy','error'));};window.openConnectionLink=function(clientId){const url=getConnectionUrl(clientId);window.open(url,'_blank');};window.viewConnectionResult=function(resultId){cliConnectionDetailResultId=resultId;renderConnectionPulse();};window.backToConnectionList=function(){cliConnectionDetailResultId=null;renderConnectionPulse();};function renderConnectionPulse(){const contentEl=document.getElementById('cliConnectionContent');if(!contentEl) return;const q=(document.getElementById('cliConnectionSearch')?.value||'').toLowerCase();const allSubs=[...connectionPulseSubmissions];const weekStart=new Date();const dayOfWeek=(weekStart.getDay()+6)%7;weekStart.setDate(weekStart.getDate()-dayOfWeek);weekStart.setHours(0,0,0,0);let filtered=allSubs;if(q) filtered=filtered.filter(r=>{const partner=contacts.find(x=>x.id===r.partner_id);if(!partner) return false;return (partner.first_name+' '+partner.last_name+' '+(r.partner_code||'')+' '+(r.stage||'')).toLowerCase().includes(q);});const weekCount=allSubs.filter(r=>new Date(r.created_at)>=weekStart).length;const uniqueCouples=new Set(allSubs.map(r=>r.client_id)).size;let html=`<div class="dash-cards" style="margin-bottom:16px;"><div class="dash-card" style="cursor:pointer;${weekCount?'box-shadow:0 0 0 2px #dc2626;':''}" onclick="document.getElementById('cliConnectionSearch').value='';renderConnectionPulse();"><div class="dc-icon" style="background:#fef2f2;color:#dc2626;">&#128197;</div><div class="dc-info"><h4>${weekCount}</h4><p>This Week</p></div></div><div class="dash-card" style="cursor:pointer;"><div class="dc-icon" style="background:#f0fdf4;color:#16a34a;">&#128101;</div><div class="dc-info"><h4>${uniqueCouples}</h4><p>Couples</p></div></div><div class="dash-card" style="cursor:pointer;"><div class="dc-icon" style="background:#f5f5f5;color:#64748b;">&#128151;</div><div class="dc-info"><h4>${allSubs.length}</h4><p>Total</p></div></div></div>`;const connSelectedCouple=cliConnectionSelectedId?clients.find(c=>c.id===cliConnectionSelectedId):null;const connAllCouples=[...clients].filter(c=>c.role==='Couple').sort((a,b)=>(a.client_name||'').localeCompare(b.client_name||''));html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;margin-bottom:16px;"><div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:10px;">Generate Connection Pulse Link</div><select onchange="setCliConnectionClient(this.value)" style="width:100%;padding:10px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#f8fafc;color:#1e3a5f;margin-bottom:${connSelectedCouple?'10':'0'}px;"><option value="">— Select a couple —</option>${connAllCouples.map(c=>`<option value="${c.id}" ${c.id===cliConnectionSelectedId?'selected':''}>${c.client_name}</option>`).join('')}</select>`;if(connSelectedCouple){const url=getConnectionUrl(connSelectedCouple.id);html+=`<div style="display:flex;gap:6px;align-items:center;margin-top:6px;flex-wrap:wrap;"><input readonly value="${url}" style="flex:1;min-width:200px;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;background:#f8fafc;color:#64748b;font-size:11px;"><button onclick="copyPublicConnectionLink()" style="background:#704214;color:#fff;border:none;padding:8px 14px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">Copy</button><button onclick="openConnectionLink('${connSelectedCouple.id}')" style="background:#f0f4f8;color:#704214;border:1px solid #e2e8f0;padding:8px 14px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">Open</button></div>`;}html+=`</div>`;if(!filtered.length){html+='<div style="padding:30px;text-align:center;color:#94a3b8;font-size:13px;background:#fff;border:1px dashed #cbd5e1;border-radius:12px;">No submissions found.</div>';}else{filtered.forEach(r=>{const partner=contacts.find(x=>x.id===r.partner_id);if(!partner) return;const d=new Date(r.created_at);const dateStr=d.toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short',year:'numeric'});const stageColor=CONNECTION_STAGE_COLORS[r.stage]||'#704214';html+=`<div onclick="viewConnectionResult('${r.id}')" style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 16px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;"><div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:14px;color:#1e3a5f;">${partner.first_name} ${partner.last_name}</div><div style="display:flex;gap:8px;align-items:center;margin-top:3px;"><span style="font-size:10px;letter-spacing:1px;text-transform:uppercase;background:#fef2f2;color:#704214;padding:1px 6px;border-radius:4px;font-weight:700;">CONNECTION</span><span style="font-size:11px;color:#94a3b8;">${dateStr}</span></div></div><div style="display:flex;align-items:center;gap:10px;flex-shrink:0;"><span style="font-size:12px;font-weight:700;color:${stageColor};">${r.stage||'—'}</span><span style="font-size:20px;font-weight:800;color:${stageColor};">${r.total_score}<span style="font-size:12px;color:#94a3b8;font-weight:400;">/160</span></span></div></div>`;});html+='<div style="height:80px;"></div>';}contentEl.innerHTML=html;if(cliConnectionDetailResultId){const r=connectionPulseSubmissions.find(x=>x.id===cliConnectionDetailResultId);if(r){const partner=contacts.find(x=>x.id===r.partner_id);if(partner){const stageColor=CONNECTION_STAGE_COLORS[r.stage]||'#704214';const stageDesc={disconnected:'The relationship feels emotionally shut down or distant.',reactive:'Stress and disconnection show up in repeated cycles or emotional volatility.',intentional:'You\'re starting to slow down and notice what\'s happening beneath the surface.',collaboration:'You\'re working as a team. Relational tools are being used more consistently.',connected:'There\'s emotional openness, trust, and a steady rhythm of connection.'}[r.stage]||'';let detailHtml=`<div style="position:relative;margin-bottom:20px;"><button onclick="backToConnectionList()" style="position:absolute;top:0;left:0;padding:8px 14px;border:1px solid #e2e8f0;background:#f8fafc;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;color:#704214;">← Back</button></div>`;detailHtml+=`<div style="background:#f8f8f8;border-left:6px solid ${stageColor};padding:16px;border-radius:8px;margin-bottom:16px;"><div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#704214;font-weight:700;margin-bottom:4px;">${partner.first_name} ${partner.last_name}</div><div style="font-size:20px;font-weight:700;color:${stageColor};margin-bottom:8px;">${r.total_score}<span style="font-size:14px;color:#999;">/160</span></div><div style="font-weight:700;color:${stageColor};margin-bottom:8px;">${r.stage}</div><div style="font-size:13px;line-height:1.6;color:#2d2d2d;">${stageDesc}</div></div>`;if(r.module_scores){detailHtml+=`<div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#704214;font-weight:700;margin-bottom:10px;">Module Scores</div>`;const MODULES=['safety','trust','comms','strengths','vision','intimacy','play','boundaries'];const MODULE_NAMES={safety:'Emotional Safety',trust:'Trust & Bonding',comms:'Communication',strengths:'Strengths Awareness',vision:'Shared Vision',intimacy:'Intimacy & Affection',play:'Play & Joy',boundaries:'Boundaries'};MODULES.forEach(mid=>{const score=r.module_scores[mid]||0;const maxScore=20;const pct=Math.round(score/maxScore*100);detailHtml+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:10px;margin-bottom:8px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><div style="font-size:13px;font-weight:600;color:#2d2d2d;">${MODULE_NAMES[mid]}</div><div style="font-size:13px;font-weight:700;color:${stageColor};">${score}/${maxScore}</div></div><div style="background:#e2e8f0;border-radius:4px;height:4px;overflow:hidden;"><div style="background:${stageColor};height:100%;width:${pct}%;">&nbsp;</div></div></div>`;});detailHtml+=`</div>`;}detailHtml+=`<button onclick="window.print()" style="width:100%;margin-top:16px;padding:10px 20px;background:#704214;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">🖨️ Print Report</button>`;contentEl.innerHTML=detailHtml;}}}}
 
 })();
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js');}
