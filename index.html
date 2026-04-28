@@ -250,7 +250,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.47.0</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.47.1</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -1575,6 +1575,7 @@ const IN_APP_AGENTS = [
     name:'Strengths: PDF Extractor',
     description:"Extracts the top 10 CliftonStrengths themes (and the person's name if visible) from a Gallup PDF.",
     purpose:'Used by Strengths Hub when uploading a Gallup PDF (per-contact and standalone).',
+    route:{tab:'strdash',label:'Open Strengths Hub'},
     defaultPrompt:`You are extracting CliftonStrengths theme order from a Gallup PDF report.
 
 Return ONLY a JSON object with this exact shape (no prose, no code fences):
@@ -1593,6 +1594,7 @@ Rules:
     name:'Strengths: Personal Insights',
     description:"Generates a 4-paragraph personal reading from a client's top 10 themes.",
     purpose:'Strengths > Reports > Personal Insights. Logged to strengths_insights.',
+    route:{tab:'strreports',label:'Open Reports'},
     defaultPrompt:`You are drafting a Personal Insights report for a Coach4U client based on their CliftonStrengths top-10.
 
 WRITE IN CATH'S VOICE. The voice reference is the source of truth for tone:
@@ -1620,6 +1622,7 @@ RULES:
     name:'Strengths: Bring & Need',
     description:'Two short labelled paragraphs on what the client brings to a team and what they need from one.',
     purpose:'Strengths > Reports > Bring & Need. Logged to strengths_insights.',
+    route:{tab:'strreports',label:'Open Reports'},
     defaultPrompt:`You are drafting a "Bring & Need" reading for a Coach4U client based on their CliftonStrengths top-10. The reading is for the client to read.
 
 WRITE IN CATH'S VOICE. The voice reference is the source of truth for tone:
@@ -1644,6 +1647,7 @@ RULES:
     name:'Strengths: Adaptation Tips',
     description:"Compares Cath's strengths to the client's and gives Cath three in-session moves.",
     purpose:'Strengths > Reports > Adaptation Tips. Practitioner-facing. Logged to strengths_insights.',
+    route:{tab:'strreports',label:'Open Reports'},
     defaultPrompt:`You are writing a short adaptation note for Cath (the practitioner) ahead of a session with a client. The note compares Cath's own CliftonStrengths profile to the client's, and gives Cath practical guidance on how to adapt her natural style.
 
 WRITE IN CATH'S VOICE (this note is for her, but in the same plain register):
@@ -1669,6 +1673,7 @@ RULES:
     name:'Strengths: Couple Dynamics',
     description:'Practitioner-facing reading on how a couple complement and where friction is likely.',
     purpose:'Strengths > Reports > Couple Dynamics (pair view). Logged to strengths_insights.',
+    route:{tab:'strreports',label:'Open Reports'},
     defaultPrompt:`You are drafting a Couple Dynamics reading for a Coach4U practitioner working with this couple in session. The reading is for the practitioner (Cath), not for the clients.
 
 WRITE IN CATH'S VOICE. The voice reference is the source of truth for tone:
@@ -1693,6 +1698,7 @@ RULES:
     name:'C4U Bot',
     description:'Conversational CRM assistant. Searches/adds/updates contacts, prospects, clients, tasks, trials, renewals.',
     purpose:'IT > C4U Bot chat panel. Today’s date is injected at runtime via the {{TODAY}} placeholder.',
+    route:{action:'toggleAiChat()',label:'Open Bot'},
     defaultPrompt:`You are Coach4U CRM assistant. Today is {{TODAY}} (Australian Eastern Time).
 
 You help Cath and Lou manage their coaching business CRM. You can search, add, and update contacts, prospects, clients, and tasks.
@@ -1757,6 +1763,7 @@ RULES:
     name:'AI Strategy: Agent Auditor',
     description:'Audits a single agent for drift, missing messages, tone, and contradictions with its parent.',
     purpose:'IT > AI Strategy > Audit button.',
+    route:{tab:'agentsai',label:'Open AI Strategy'},
     defaultPrompt:`You are a senior AI agent reviewer for Coach4U, a coaching and counselling practice.
 You will be given an agent's configuration (name, type, parent prompt if any, system prompt, stages, messages).
 Produce a concise, actionable audit report in Markdown with these sections:
@@ -1773,6 +1780,7 @@ Keep each finding to 1-2 lines. No filler.`
     name:'AI Strategy: Missing Messages',
     description:"Lists message templates that should exist for an agent but don't.",
     purpose:'IT > AI Strategy > Suggest missing messages button.',
+    route:{tab:'agentsai',label:'Open AI Strategy'},
     defaultPrompt:`You are helping Coach4U complete an AI agent's message library.
 Given the agent's purpose, stages, and existing messages, list the messages that are missing and should be written.
 For each missing message, give: stage name, persona (Cath or Other), platform (Text/WhatsApp/Email/Teams), subject (if email), and a suggested body (≤80 words for Text/WhatsApp, ≤200 words for Email/Teams).
@@ -1783,6 +1791,7 @@ Group by stage. Only include genuine gaps; don't invent stages.`
     name:'AI Strategy: Compare to Parent',
     description:'Compares a child agent against its parent for inheritance gaps and contradictions.',
     purpose:'IT > AI Strategy > Compare to parent button (child agents only).',
+    route:{tab:'agentsai',label:'Open AI Strategy'},
     defaultPrompt:`You are auditing a child AI agent against its parent for Coach4U.
 Identify: (a) rules from the parent this child should inherit but appears to have dropped, (b) contradictions between parent and child instructions, (c) parent-defined personas/platforms that the child doesn't implement.
 Return a short Markdown list. Quote specific lines where relevant.`
@@ -1792,9 +1801,21 @@ Return a short Markdown list. Quote specific lines where relevant.`
     name:'AI Strategy: Strategist Chat',
     description:"Free-form Q&A about a single agent's configuration.",
     purpose:'IT > AI Strategy chat input.',
+    route:{tab:'agentsai',label:'Open AI Strategy'},
     defaultPrompt:`You are an AI agent strategist for Coach4U. You will be given the current configuration of one agent, then a question from the practitioner. Answer specifically about this agent, quoting its own text where helpful. Prefer concrete edits over abstract advice. If asked to rewrite something, provide the full rewrite in a code block.`
   }
 ];
+
+function getInAppRouteForAgent(agentName){
+  const reg = IN_APP_AGENTS.find(r => r.name === agentName);
+  return reg && reg.route ? reg.route : null;
+}
+window.openInAppAgentRoute = function(agentName){
+  const route = getInAppRouteForAgent(agentName);
+  if(!route) return;
+  if(route.action){ try{ eval(route.action); }catch(e){ console.warn('route action failed:',e); } return; }
+  if(route.tab && typeof navTo === 'function') navTo(route.tab);
+};
 
 function getInAppPrompt(slug,vars){
   vars = vars || {};
@@ -8490,10 +8511,16 @@ function renderAgents(){
       });
       return items.length;
     };
-    const rowActions=(id)=>`<div style="display:flex;gap:4px;flex-shrink:0;" onclick="event.stopPropagation()">
+    const rowActions=(id)=>{
+      const ag=agents.find(x=>x.id===id);
+      const route=ag?getInAppRouteForAgent(ag.name):null;
+      const openBtn=route?`<button style="background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-weight:600;" onclick="openInAppAgentRoute('${(ag.name||'').replace(/'/g,"\\'")}')" title="${escHtml(route.label)}">Open &rarr;</button>`:'';
+      return `<div style="display:flex;gap:4px;flex-shrink:0;flex-wrap:wrap;" onclick="event.stopPropagation()">
+      ${openBtn}
       <button style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;" onclick="openAgentForm('${id}')">Edit</button>
       <button style="background:none;border:1px solid #fecaca;border-radius:6px;padding:4px 10px;font-size:11px;color:#dc2626;cursor:pointer;" onclick="deleteAgent('${id}')">Del</button>
     </div>`;
+    };
     html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px 20px;">
       <div style="font-size:11px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">Agents</div>`;
     parents.forEach(p=>{
