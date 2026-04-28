@@ -286,19 +286,17 @@ if('serviceWorker' in navigator){
         </div>
       </div>
 
-      <details style="margin-top:10px;margin-bottom:18px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;">
-        <summary style="font-size:12px;color:#64748b;font-weight:600;cursor:pointer;letter-spacing:.3px;">Headline numbers (contacts &middot; clients)</summary>
-        <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;">
-          <div onclick="switchArea('crm')" style="cursor:pointer;flex:1;min-width:140px;background:#f8fafc;border:1px solid #f1f5f9;border-radius:8px;padding:10px 14px;">
-            <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;font-weight:600;">Total Contacts</div>
-            <div style="font-size:22px;font-weight:800;color:#1e3a5f;margin-top:2px;"><span id="dcContacts">0</span></div>
-          </div>
-          <div onclick="navTo('clients')" style="cursor:pointer;flex:1;min-width:140px;background:#f8fafc;border:1px solid #f1f5f9;border-radius:8px;padding:10px 14px;">
-            <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;font-weight:600;">Active Clients</div>
-            <div style="font-size:22px;font-weight:800;color:#1e3a5f;margin-top:2px;"><span id="dcClients">0</span></div>
-          </div>
+      <div style="font-family:'Quicksand','Inter',sans-serif;font-size:14px;font-weight:700;color:#1e3a5f;letter-spacing:.5px;text-transform:uppercase;margin:20px 0 10px;">Headline Numbers</div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:18px;">
+        <div onclick="switchArea('crm')" style="cursor:pointer;flex:1;min-width:140px;background:#f8fafc;border:1px solid #f1f5f9;border-radius:8px;padding:14px 16px;">
+          <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;font-weight:600;">Total Contacts</div>
+          <div style="font-size:22px;font-weight:800;color:#1e3a5f;margin-top:4px;"><span id="dcContacts">0</span></div>
         </div>
-      </details>
+        <div onclick="navTo('clients')" style="cursor:pointer;flex:1;min-width:140px;background:#f8fafc;border:1px solid #f1f5f9;border-radius:8px;padding:14px 16px;">
+          <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;font-weight:600;">Active Clients</div>
+          <div style="font-size:22px;font-weight:800;color:#1e3a5f;margin-top:4px;"><span id="dcClients">0</span></div>
+        </div>
+      </div>
 
       <div style="font-family:'Quicksand','Inter',sans-serif;font-size:14px;font-weight:700;color:#1e3a5f;letter-spacing:.5px;text-transform:uppercase;margin:18px 0 10px;">Client-facing</div>
       <div onclick="navTo('resourcesdash')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #1e3a5f;border-radius:12px;padding:16px 20px;cursor:pointer;display:flex;align-items:center;gap:14px;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
