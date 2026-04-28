@@ -250,7 +250,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.47.2</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.48.0</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -373,6 +373,9 @@ if('serviceWorker' in navigator){
     </div>
     <div class="screen" id="screen-couplesdash">
       <div id="couplesDashContent"></div>
+    </div>
+    <div class="screen" id="screen-couplestimelines">
+      <div id="couplesTimelinesContent"></div>
     </div>
     <div class="screen" id="screen-itdash">
       <div id="itDashContent"></div>
@@ -1936,7 +1939,7 @@ window.navTo = function(tab,btn){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+tab).classList.add('active');
   window.scrollTo(0,0);
-  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ',thqintake:'Intake Forms',strdash:'Strengths Hub',opsdash:'Admin',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Profiles',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Task Management',playbook:'Lou\'s Playbook',itprojects:'IT Projects',agents:'Agents',writingpartner:'Writing Partner',findash:'Finance',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fintxns:'Transactions',thqbrainpulse:'Brain Pulse',clibrainpulse:'Brain Pulse',thqpulse:'SAFE Pulse',clipulse:'SAFE Pulse',pulsesdash:'Pulses',couplesintake:'Couples Intake',couplesdash:'Couples',itdash:'IT',resourcesdash:'Resources',agentsai:'AI Strategy',strreports:'Strengths Reports',strdomains:'Domain Balance',strupload:'Upload Report',strcodes:'Gallup Code Tracker',strsop:'Gallup Workflow SOP'};
+  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ',thqintake:'Intake Forms',strdash:'Strengths Hub',opsdash:'Admin',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Profiles',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Task Management',playbook:'Lou\'s Playbook',itprojects:'IT Projects',agents:'Agents',writingpartner:'Writing Partner',findash:'Finance',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fintxns:'Transactions',thqbrainpulse:'Brain Pulse',clibrainpulse:'Brain Pulse',thqpulse:'SAFE Pulse',clipulse:'SAFE Pulse',pulsesdash:'Pulses',couplesintake:'Couples Intake',couplesdash:'Couples',couplestimelines:'Therapy Timelines',itdash:'IT',resourcesdash:'Resources',agentsai:'AI Strategy',strreports:'Strengths Reports',strdomains:'Domain Balance',strupload:'Upload Report',strcodes:'Gallup Code Tracker',strsop:'Gallup Workflow SOP'};
   document.getElementById('pageTitle').textContent=titles[tab]||'Coach4U';
   // Sync area tab
   const area=pageToArea[tab]||'home';
@@ -1956,6 +1959,7 @@ window.navTo = function(tab,btn){
   if(tab==='dashboard') renderDashboard();
   if(tab==='pulsesdash') renderPulsesDash();
   if(tab==='couplesdash') renderCouplesDash();
+  if(tab==='couplestimelines') renderCouplesTimelines();
   if(tab==='itdash') renderItDash();
   if(tab==='resourcesdash') renderResourcesDash();
   if(tab==='crmdash') renderCrmDash();
@@ -2020,7 +2024,7 @@ const areaConfig={
   crm:{label:'CRM',pages:[{id:'crmdash',icon:'&#128200;',label:'Dashboard'},{id:'masterlist',icon:'&#128209;',label:'Master List'},{id:'prospects',icon:'&#128203;',label:'Prospect List'},{id:'clidash',icon:'&#129309;',label:'Clients Dashboard'},{id:'clients',icon:'&#128101;',label:'Client List'},{id:'thqintake',icon:'&#128221;',label:'Intake Forms'},{id:'clinvoices',icon:'&#128206;',label:'Invoices'}]},
   referrers:{label:'Referrers',pages:[{id:'referrals',icon:'&#128200;',label:'Dashboard'},{id:'refpayments',icon:'&#128176;',label:'Payments'}]},
   pulses:{label:'Pulses',pages:[{id:'pulsesdash',icon:'&#128200;',label:'Dashboard'},{id:'clipulse',icon:'&#128147;',label:'SAFE Pulse'},{id:'clibrainpulse',icon:'&#129504;',label:'Brain Pulse'}]},
-  couples:{label:'Couples',pages:[{id:'couplesdash',icon:'&#128200;',label:'Dashboard'},{id:'couplesintake',icon:'&#128221;',label:'Couples Intake'}]},
+  couples:{label:'Couples',pages:[{id:'couplesdash',icon:'&#128200;',label:'Dashboard'},{id:'couplesintake',icon:'&#128221;',label:'Couples Intake'},{id:'couplestimelines',icon:'&#9202;',label:'Therapy Timelines'}]},
   thrivehq:{label:'ThriveHQ',pages:[{id:'thqdash',icon:'&#128170;',label:'Dashboard'},{id:'thqtrials',icon:'&#127793;',label:'Trials'},{id:'thrivehq',icon:'&#128101;',label:'Members'},{id:'thqrenewals',icon:'&#128260;',label:'Renewals'},{id:'thqcalls',icon:'&#128222;',label:'Coaching Calls'}]},
   strengths:{label:'Strengths Hub',pages:[{id:'strdash',icon:'&#127919;',label:'Dashboard'},{id:'strsop',icon:'&#128218;',label:'Workflow SOP'},{id:'strcodes',icon:'&#128273;',label:'Code Tracker'},{id:'strreports',icon:'&#128203;',label:'Reports'},{id:'strengths',icon:'&#128161;',label:'Profiles'},{id:'strdomains',icon:'&#127912;',label:'Domain Balance'},{id:'strupload',icon:'&#10024;',label:'Upload Report'}]},
   it:{label:'IT',pages:[{id:'itdash',icon:'&#128200;',label:'Dashboard'},{id:'itprojects',icon:'&#9881;',label:'IT Projects'},{id:'agents',icon:'&#129302;',label:'Agents'},{id:'agentsai',icon:'&#10024;',label:'AI Strategy'},{id:'writingpartner',icon:'&#9997;',label:'Writing Partner'}]},
@@ -2270,6 +2274,12 @@ function renderCouplesDash(){
     </div>
   </div>`;
 
+  html+=therapyTimelinesHTML({subtitle:'A reference for setting psychological expectations early in couples work.'});
+  el.innerHTML=html;
+}
+
+function therapyTimelinesHTML(opts){
+  opts=opts||{};
   const matrix=[
     {type:'Communication',timeline:'8-12 Sessions',goal:'Teach safe conversations; manage disagreement without catastrophe.'},
     {type:'High Conflict',timeline:'+4-8 Sessions',goal:'Stop active fight patterns first before addressing deeper needs.'},
@@ -2277,10 +2287,10 @@ function renderCouplesDash(){
     {type:'Ambivalence',timeline:'TBD',goal:"Halt standard therapy; utilise 'Stay or Go' gatekeeping exercises."},
     {type:'Betrayal',timeline:'1 Year+',goal:'Phase 1 First Aid (shock management), followed by structural trust rebuild.'}
   ];
-  html+=`<div style="margin-top:24px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
+  return `<div style="margin-top:${opts.tightTop?'0':'24px'};background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
     <div style="padding:16px 20px;border-bottom:1px solid #f1f5f9;">
       <div style="font-family:'Quicksand','Inter',sans-serif;font-size:18px;font-weight:700;color:#1e3a5f;">Therapy Timelines &amp; Interventions Matrix</div>
-      <div style="font-size:12px;color:#64748b;margin-top:2px;">A reference for setting psychological expectations early in couples work.</div>
+      ${opts.subtitle?`<div style="font-size:12px;color:#64748b;margin-top:2px;">${opts.subtitle}</div>`:''}
     </div>
     <div style="overflow-x:auto;">
       <table style="width:100%;border-collapse:collapse;font-size:13px;">
@@ -2305,8 +2315,15 @@ function renderCouplesDash(){
       <div style="font-size:13px;line-height:1.5;flex:1;min-width:200px;">Whatever timeline you give will likely be wrong. The goal is establishing <strong>psychological</strong> expectations and boundaries for the work required.</div>
     </div>
   </div>`;
-  el.innerHTML=html;
 }
+
+function renderCouplesTimelines(){
+  const el=document.getElementById('couplesTimelinesContent');
+  if(!el) return;
+  el.innerHTML=`<div style="font-family:'Quicksand','Inter',sans-serif;font-size:14px;font-weight:700;color:#1e3a5f;letter-spacing:.5px;text-transform:uppercase;margin:0 0 10px;">Reference</div>`
+    +therapyTimelinesHTML({tightTop:true,subtitle:'Use this to frame psychological expectations early. Timelines are estimates; the work is establishing the boundaries, not predicting the date.'});
+}
+window.renderCouplesTimelines=renderCouplesTimelines;
 
 // ── IT DASHBOARD ──
 function renderItDash(){
@@ -10404,7 +10421,21 @@ function renderAbout(){
 // API key stored in browser localStorage for security (not in code)
 function getAnthropicKey(){return localStorage.getItem('coach4u_anthropic_key')||'';}
 function setAnthropicKey(key){localStorage.setItem('coach4u_anthropic_key',key);}
-function hardRefresh(){location.reload(true);}
+async function hardRefresh(){
+  try{
+    if('caches' in window){
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k)));
+    }
+    if('serviceWorker' in navigator){
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r => r.unregister()));
+    }
+  }catch(e){console.warn('hardRefresh cleanup failed:',e);}
+  const url = new URL(window.location.href);
+  url.searchParams.set('_r', Date.now().toString());
+  window.location.replace(url.toString());
+}
 
 // Teams Webhook URL stored in localStorage (supports both legacy Incoming Webhooks and new Workflows)
 function getTeamsWebhook(){return localStorage.getItem('coach4u_teams_webhook')||'';}
