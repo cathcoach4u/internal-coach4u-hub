@@ -250,7 +250,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.1</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.2</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -282,6 +282,10 @@ if('serviceWorker' in navigator){
         <div class="dash-card" onclick="navTo('thqtrials')" style="cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
           <div class="dc-icon" style="background:#eff6ff;color:#2563eb;">&#127793;</div>
           <div class="dc-info"><h4 id="dcTrials">0</h4><p>ThriveHQ Trials</p></div>
+        </div>
+        <div class="dash-card" onclick="navTo('strcodes')" style="cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
+          <div class="dc-icon" style="background:#fef3c7;color:#d97706;">&#127919;</div>
+          <div class="dc-info"><h4 id="dcGallupInFlight">0</h4><p>Gallup Codes In Flight</p></div>
         </div>
       </div>
 
@@ -2138,6 +2142,7 @@ function renderDashboard(){
   document.getElementById('dcContacts').textContent=contacts.length;
   document.getElementById('dcClients').textContent=clients.filter(c=>c.status==='Active').length;
   document.getElementById('dcTrials').textContent=thqTrials.filter(t=>t.status==='Active'||t.status==='Extended').length;
+  document.getElementById('dcGallupInFlight').textContent=(gallupRequests||[]).filter(r=>r.status!=='Filed').length;
   // Prospect summary — active = anyone not Lost or Converted; flag Hot/Warm in label
   const allProspects=prospects||[];
   const activeProspects=allProspects.filter(p=>p.status!=='Lost'&&p.status!=='Converted');
