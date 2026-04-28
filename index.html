@@ -365,6 +365,11 @@ if('serviceWorker' in navigator){
       </div>
     </div>
 
+    <!-- MODULES DASHBOARD -->
+    <div class="screen" id="screen-modulesdash">
+      <div id="modulesDashContent"></div>
+    </div>
+
     <!-- CRM DASHBOARD -->
     <div class="screen" id="screen-crmdash">
       <div id="crmDashContent"></div>
@@ -1978,6 +1983,7 @@ window.navTo = function(tab,btn){
   if(tab==='couplesbetrayal') renderCouplesBetrayal();
   if(tab==='itdash') renderItDash();
   if(tab==='resourcesdash') renderResourcesDash();
+  if(tab==='modulesdash') renderModulesDash();
   if(tab==='crmdash') renderCrmDash();
   if(tab==='prospdash') renderProspDash();
   if(tab==='clidash') renderCliDash();
@@ -2041,7 +2047,7 @@ const areaConfig={
   crm:{label:'CRM',pages:[{id:'crmdash',icon:'&#128200;',label:'Dashboard'},{id:'masterlist',icon:'&#128209;',label:'Master List'},{id:'prospects',icon:'&#128203;',label:'Prospect List'},{id:'clidash',icon:'&#129309;',label:'Clients Dashboard'},{id:'clients',icon:'&#128101;',label:'Client List'},{id:'thqintake',icon:'&#128221;',label:'Intake Forms'},{id:'clinvoices',icon:'&#128206;',label:'Invoices'}]},
   referrers:{label:'Referrers',pages:[{id:'referrals',icon:'&#128200;',label:'Dashboard'},{id:'refpayments',icon:'&#128176;',label:'Payments'}]},
   pulses:{label:'Pulses',pages:[{id:'pulsesdash',icon:'&#128200;',label:'Dashboard'},{id:'clipulse',icon:'&#128147;',label:'SAFE Pulse'},{id:'clibrainpulse',icon:'&#129504;',label:'Brain Pulse'},{id:'cliconnection',icon:'&#128151;',label:'Connection Pulse'}]},
-  modules:{label:'Modules',pages:[{id:'couplesdash',icon:'&#128200;',label:'Couples Dashboard'},{id:'couplesintake',icon:'&#128221;',label:'Couples Intake'},{id:'couplestimelines',icon:'&#9202;',label:'Therapy Timelines'},{id:'couplesbetrayal',icon:'&#128737;',label:'Betrayal First Aid'},{id:'thqdash',icon:'&#128170;',label:'ThriveHQ Dashboard'},{id:'thqtrials',icon:'&#127793;',label:'Trials'},{id:'thrivehq',icon:'&#128101;',label:'Members'},{id:'thqrenewals',icon:'&#128260;',label:'Renewals'},{id:'thqcalls',icon:'&#128222;',label:'Coaching Calls'}]},
+  modules:{label:'Modules',pages:[{id:'modulesdash',icon:'&#128200;',label:'Dashboard'},{id:'couplesdash',icon:'&#128200;',label:'Couples Dashboard'},{id:'couplesintake',icon:'&#128221;',label:'Couples Intake'},{id:'couplestimelines',icon:'&#9202;',label:'Therapy Timelines'},{id:'couplesbetrayal',icon:'&#128737;',label:'Betrayal First Aid'},{id:'thqdash',icon:'&#128170;',label:'ThriveHQ Dashboard'},{id:'thqtrials',icon:'&#127793;',label:'Trials'},{id:'thrivehq',icon:'&#128101;',label:'Members'},{id:'thqrenewals',icon:'&#128260;',label:'Renewals'},{id:'thqcalls',icon:'&#128222;',label:'Coaching Calls'}]},
   strengths:{label:'Strengths Hub',pages:[{id:'strdash',icon:'&#127919;',label:'Dashboard'},{id:'strsop',icon:'&#128218;',label:'Workflow SOP'},{id:'strcodes',icon:'&#128273;',label:'Code Tracker'},{id:'strreports',icon:'&#128203;',label:'Reports'},{id:'strengths',icon:'&#128161;',label:'Profiles'},{id:'strdomains',icon:'&#127912;',label:'Domain Balance'},{id:'strupload',icon:'&#10024;',label:'Upload Report'}]},
   it:{label:'IT',pages:[{id:'itdash',icon:'&#128200;',label:'Dashboard'},{id:'itprojects',icon:'&#9881;',label:'IT Projects'},{id:'agents',icon:'&#129302;',label:'Agents'},{id:'agentsai',icon:'&#10024;',label:'AI Strategy'},{id:'writingpartner',icon:'&#9997;',label:'Writing Partner'}]},
   operations:{label:'Admin',pages:[{id:'opsdash',icon:'&#128736;',label:'Dashboard'},{id:'tasks',icon:'&#9989;',label:'Task Management'},{id:'playbook',icon:'&#128214;',label:'Playbook'},{id:'resourcesdash',icon:'&#128279;',label:'Company Resources'}]},
@@ -2060,16 +2066,20 @@ function renderSidebarNav(area){
       html+=`<div style="margin:${isActive?'4px 0':'2px 0'};">
         <button onclick="mobileAreaSwitch('${key}')" style="display:flex;align-items:center;gap:10px;padding:10px 16px;margin:0 10px;font-size:13px;font-weight:${isActive?'700':'600'};color:${isActive?'#fff':'rgba(255,255,255,.6)'};background:${isActive?'rgba(59,130,246,.15)':'none'};border:none;border-radius:8px;width:calc(100% - 20px);text-align:left;cursor:pointer;font-family:inherit;">${cfg.label}</button>`;
       if(isActive){
-        cfg.pages.forEach(p=>{
+        cfg.pages.forEach((p,idx)=>{
           const pageActive=p.id===getCurrentPage();
-          html+=`<button class="nav-item${pageActive?' active':''}" data-page="${p.id}" onclick="navTo('${p.id}',this);closeMobile();" style="padding-left:36px;"><span class="icon">${p.icon}</span> ${p.label}</button>`;
+          const isSubPage=idx>0;
+          html+=`<button class="nav-item${pageActive?' active':''}" data-page="${p.id}" onclick="navTo('${p.id}',this);closeMobile();" style="padding-left:${isSubPage?'52':'36'}px;"><span class="icon">${p.icon}</span> ${p.label}</button>`;
         });
       }
       html+=`</div>`;
     });
   } else {
     const pages=areaConfig[area]?.pages||[];
-    html=pages.map(p=>`<button class="nav-item${p.id===getCurrentPage()?' active':''}" data-page="${p.id}" onclick="navTo('${p.id}',this)"><span class="icon">${p.icon}</span> ${p.label}</button>`).join('');
+    html=pages.map((p,idx)=>{
+      const isSubPage=idx>0;
+      return `<button class="nav-item${p.id===getCurrentPage()?' active':''}" data-page="${p.id}" onclick="navTo('${p.id}',this)" style="padding-left:${isSubPage?'36':'20'}px;"><span class="icon">${p.icon}</span> ${p.label}</button>`;
+    }).join('');
   }
   document.getElementById('sidebarNav').innerHTML=html;
 }
@@ -2168,6 +2178,35 @@ function renderDashboard(){
     card.querySelector('.dc-icon').style.background='#f1f5f9';
     card.querySelector('.dc-icon').style.color='#64748b';
   }
+}
+
+// ── MODULES DASHBOARD ──
+function renderModulesDash(){
+  const el=document.getElementById('modulesDashContent');
+  if(!el) return;
+  let html=`<div class="dash-cards" style="margin-bottom:16px;">
+    <div class="dash-card" onclick="navTo('couplesdash')" style="cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
+      <div class="dc-icon" style="background:#fce7f3;color:#be185d;">&#128149;</div>
+      <div class="dc-info"><h4>Couples</h4><p>Intake, timelines, exercises</p></div>
+    </div>
+    <div class="dash-card" onclick="navTo('thqdash')" style="cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
+      <div class="dc-icon" style="background:#dcfce7;color:#16a34a;">&#128170;</div>
+      <div class="dc-info"><h4>ThriveHQ</h4><p>Trials, members, renewals</p></div>
+    </div>
+  </div>`;
+  html+=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;">
+    <div onclick="navTo('couplesdash')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #be185d;border-radius:12px;padding:18px 20px;cursor:pointer;transition:border-color .15s;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;"><span style="font-size:22px;">&#128149;</span><div style="font-weight:700;color:#1e3a5f;font-size:15px;">Couples</div></div>
+      <div style="font-size:12px;color:#64748b;line-height:1.5;margin-bottom:10px;">Couples intake worksheet, therapy timelines, betrayal recovery exercises.</div>
+      <div style="font-size:11px;color:#64748b;"><strong style="color:#be185d;">4 sections</strong></div>
+    </div>
+    <div onclick="navTo('thqdash')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #16a34a;border-radius:12px;padding:18px 20px;cursor:pointer;transition:border-color .15s;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;"><span style="font-size:22px;">&#128170;</span><div style="font-weight:700;color:#1e3a5f;font-size:15px;">ThriveHQ</div></div>
+      <div style="font-size:12px;color:#64748b;line-height:1.5;margin-bottom:10px;">Trial management, member onboarding, renewals, and coaching calls tracking.</div>
+      <div style="font-size:11px;color:#64748b;"><strong style="color:#16a34a;">5 sections</strong></div>
+    </div>
+  </div>`;
+  el.innerHTML=html;
 }
 
 // ── CRM DASHBOARD ──
