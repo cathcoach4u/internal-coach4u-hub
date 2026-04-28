@@ -101,10 +101,10 @@ CREATE TABLE gallup_code_requests (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 ALTER TABLE gallup_code_requests ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "anon read gallup_code_requests" ON gallup_code_requests FOR SELECT TO anon USING (true);
-CREATE POLICY "anon insert gallup_code_requests" ON gallup_code_requests FOR INSERT TO anon WITH CHECK (true);
-CREATE POLICY "anon update gallup_code_requests" ON gallup_code_requests FOR UPDATE TO anon USING (true);
-CREATE POLICY "anon delete gallup_code_requests" ON gallup_code_requests FOR DELETE TO anon USING (true);
+CREATE POLICY "read gallup_code_requests" ON gallup_code_requests FOR SELECT USING (true);
+CREATE POLICY "insert gallup_code_requests" ON gallup_code_requests FOR INSERT WITH CHECK (true);
+CREATE POLICY "update gallup_code_requests" ON gallup_code_requests FOR UPDATE USING (true);
+CREATE POLICY "delete gallup_code_requests" ON gallup_code_requests FOR DELETE USING (true);
 
 -- PULSE TABLES — client-facing portals use the anon key, so INSERT must allow anon role.
 -- pulse_results: SAFE Pulse check-in submissions

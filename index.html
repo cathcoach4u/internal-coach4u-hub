@@ -250,7 +250,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.50.7</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.50.8</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -2788,10 +2788,62 @@ function renderStrCodes(){
     <div class="dash-card"><div class="dc-icon blue">&#128203;</div><div class="dc-info"><h4>${inFlight}</h4><p>In flight</p></div></div>
   </div>`;
 
-  // Toolbar
-  html+=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
-    <button onclick="openGallupRequest()" style="background:#003366;color:#fff;border:none;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">+ New request</button>
-    <span style="font-size:12px;color:#64748b;">Discount code: <strong style="font-family:'Segoe UI',monospace;color:#1e3a5f;">DH7HGTMAZ</strong> &middot; ABN <strong>64637831335</strong></span>
+  // Inline quick-entry form
+  const sopContacts=[...contacts].filter(c=>c.first_name||c.last_name).sort((a,b)=>(a.first_name+' '+a.last_name).localeCompare(b.first_name+' '+b.last_name));
+  const sopCouples=(clients||[]).filter(c=>c.role==='Couple').sort((a,b)=>(a.relationship_name||'').localeCompare(b.relationship_name||''));
+  html+=`<div style="background:#fff;border:2px solid #003366;border-radius:14px;padding:18px 20px;margin-bottom:16px;">
+    <div style="font-family:'Quicksand','Inter',sans-serif;font-size:14px;font-weight:700;color:#003366;margin-bottom:12px;">Log a New Code Request</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:10px;">
+      <div>
+        <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;">Request type</div>
+        <select id="sopReqMode" onchange="sopToggleMode()" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
+          <option value="contact">Single contact</option>
+          <option value="couple">Couple (both members)</option>
+        </select>
+      </div>
+      <div id="sopContactWrap">
+        <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;">Contact</div>
+        <select id="sopContact" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
+          <option value="">— Pick a contact —</option>
+          ${sopContacts.map(c=>`<option value="${c.id}">${c.first_name} ${c.last_name}${c.email?' — '+c.email:''}</option>`).join('')}
+        </select>
+      </div>
+      <div id="sopCoupleWrap" style="display:none;">
+        <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;">Couple client</div>
+        <select id="sopCouple" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
+          <option value="">— Pick a couple —</option>
+          ${sopCouples.map(c=>`<option value="${c.id}">${c.relationship_name}</option>`).join('')}
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;">Product</div>
+        <select id="sopProduct" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
+          <option value="Top 34">CliftonStrengths Top 34</option>
+          <option value="Top 5 to Top 34 upgrade">Top 5 to Top 34 upgrade</option>
+          <option value="Sales and Management Report">Sales and Management Report</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;">Source</div>
+        <select id="sopSource" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
+          <option value="Cath">Cath</option>
+          <option value="Referrer">Referrer</option>
+          <option value="Client enquiry">Client enquiry</option>
+          <option value="ThriveHQ">ThriveHQ</option>
+          <option value="Couples">Couples</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;">Status</div>
+        <select id="sopStatus" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
+          <option value="New">New</option>
+          <option value="Awaiting Payment">Awaiting Payment</option>
+          <option value="Awaiting Purchase">Awaiting Purchase</option>
+        </select>
+      </div>
+    </div>
+    <button onclick="submitGallupRequestFromSop()" style="background:#003366;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">Log Request &#43;</button>
+    <span style="font-size:12px;color:#64748b;margin-left:12px;">Code: <strong style="font-family:'Segoe UI',monospace;color:#1e3a5f;">DH7HGTMAZ</strong> &middot; ABN <strong>64637831335</strong></span>
   </div>`;
 
   if(!reqs.length){
@@ -2994,68 +3046,9 @@ function renderStrSop(){
   html+=`<div style="display:flex;gap:8px;margin-bottom:14px;">${tabBtn('workflow','Workflow')} ${tabBtn('reference','Reference info')}</div>`;
 
   if(strSopTab==='workflow'){
-    // Quick-entry form — build contact and client options from live data
-    const sopContacts=[...contacts].filter(c=>c.first_name||c.last_name).sort((a,b)=>(a.first_name+' '+a.last_name).localeCompare(b.first_name+' '+b.last_name));
-    const sopCouples=(clients||[]).filter(c=>c.role==='Couple').sort((a,b)=>(a.relationship_name||'').localeCompare(b.relationship_name||''));
-
-    html+=`<div style="background:#fff;border:2px solid #003366;border-radius:14px;padding:20px 22px;margin-bottom:18px;">
-      <div style="font-family:'Quicksand','Inter',sans-serif;font-size:15px;font-weight:700;color:#003366;margin-bottom:4px;">Log a New Code Request</div>
-      <div style="font-size:12px;color:#64748b;margin-bottom:14px;">Fill in the details below, then click <strong>Log &amp; Open Tracker</strong> — it will create the request and take you straight to the Code Tracker.</div>
-
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:10px;">
-        <div>
-          <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;">Request type</div>
-          <select id="sopReqMode" onchange="sopToggleMode()" style="width:100%;padding:9px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
-            <option value="contact">Single contact</option>
-            <option value="couple">Couple (both members)</option>
-          </select>
-        </div>
-        <div id="sopContactWrap">
-          <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;">Contact</div>
-          <select id="sopContact" style="width:100%;padding:9px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
-            <option value="">— Pick a contact —</option>
-            ${sopContacts.map(c=>`<option value="${c.id}">${c.first_name} ${c.last_name}${c.email?' — '+c.email:''}</option>`).join('')}
-          </select>
-        </div>
-        <div id="sopCoupleWrap" style="display:none;">
-          <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;">Couple client</div>
-          <select id="sopCouple" style="width:100%;padding:9px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
-            <option value="">— Pick a couple —</option>
-            ${sopCouples.map(c=>`<option value="${c.id}">${c.relationship_name}</option>`).join('')}
-          </select>
-        </div>
-      </div>
-
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:14px;">
-        <div>
-          <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;">Product type</div>
-          <select id="sopProduct" style="width:100%;padding:9px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
-            <option value="Top 34">CliftonStrengths Top 34</option>
-            <option value="Top 5 to Top 34 upgrade">Top 5 to Top 34 upgrade</option>
-            <option value="Sales and Management Report">Sales and Management Report</option>
-          </select>
-        </div>
-        <div>
-          <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;">Source</div>
-          <select id="sopSource" style="width:100%;padding:9px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
-            <option value="Cath">Cath</option>
-            <option value="Referrer">Referrer</option>
-            <option value="Client enquiry">Client enquiry</option>
-            <option value="ThriveHQ">ThriveHQ</option>
-            <option value="Couples">Couples</option>
-          </select>
-        </div>
-        <div>
-          <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;">Initial status</div>
-          <select id="sopStatus" style="width:100%;padding:9px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
-            <option value="New">New</option>
-            <option value="Awaiting Payment">Awaiting Payment</option>
-            <option value="Awaiting Purchase">Awaiting Purchase</option>
-          </select>
-        </div>
-      </div>
-
-      <button onclick="submitGallupRequestFromSop()" style="background:#003366;color:#fff;border:none;padding:11px 22px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">Log &amp; Open Tracker &#8594;</button>
+    html+=`<div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:12px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <span style="font-size:13px;color:#0369a1;">Log a new code request directly from the Code Tracker.</span>
+      <button onclick="navTo('strcodes')" style="background:#003366;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">Open Code Tracker &#8594;</button>
     </div>`;
 
     html+=`<div style="font-size:12px;color:#64748b;margin-bottom:12px;">Click a stage to expand it. Stage 1 is open by default — work through them top to bottom.</div>`;
@@ -3214,7 +3207,7 @@ window.submitGallupRequestFromSop=async function(){
     toast('Request logged','success');
   }
   await loadGallupRequests();
-  navTo('strcodes');
+  renderStrCodes();
 };
 
 // ── OPERATIONS DASHBOARD (Daily Briefing) ──
