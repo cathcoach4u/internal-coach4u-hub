@@ -82,8 +82,8 @@ CREATE POLICY "Authenticated delete tasks" ON tasks FOR DELETE TO authenticated 
 -- GALLUP CODE REQUESTS — workflow tracker for CliftonStrengths assessment requests
 CREATE TABLE gallup_code_requests (
   id BIGSERIAL PRIMARY KEY,
-  contact_id BIGINT REFERENCES contacts(id) ON DELETE CASCADE,
-  client_id BIGINT REFERENCES clients(id) ON DELETE SET NULL,
+  contact_id BIGINT,
+  client_id BIGINT,
   product_type TEXT,
   source TEXT,
   status TEXT NOT NULL DEFAULT 'New',
