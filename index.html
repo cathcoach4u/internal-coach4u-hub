@@ -250,7 +250,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.19</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.20</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -10542,30 +10542,32 @@ function renderAbout(){
   html+=card('','<div style="font-weight:700;font-size:15px;color:#1e293b;margin-bottom:4px;">cathcoach4u/internal-coach4u-hub</div><div style="font-size:13px;color:#64748b;">Coaching business CRM for managing contacts, prospects, clients, ThriveHQ members, referrers, finances, and operations.</div>');
 
   html+=card('Built With',
-    techItem('&#128187;','GitHub Pages','Hosting & deployment')+
-    techItem('&#9889;','Supabase','Backend database & storage')+
-    techItem('&#129302;','Claude Code (Anthropic)','AI-assisted coder — does not own the code')+
-    techItem('&#128172;','Claude via OpenRouter','AI provider powering C4U Bot chat')
+    techItem('&#128187;','GitHub Pages','Hosting &amp; deployment — free static site on github.io')+
+    techItem('&#9889;','Supabase','Backend database, file storage &amp; Row Level Security — $25/mo')+
+    techItem('&#129302;','Claude Code (Anthropic)','AI-assisted development tool — writes, refactors and ships the code')+
+    techItem('&#10024;','Anthropic API (Claude)','Powers Strengths AI readings, PDF extraction, AI Strategy — direct API key, $153/mo')+
+    techItem('&#128172;','Claude via OpenRouter','AI provider for C4U Bot chat assistant')
   );
 
   html+=card('Features','<ul style="list-style:disc;padding-left:20px;margin:0;">'+
-    listItem('Home','Overview dashboard: total contacts, active clients, active prospects, intake forms, ThriveHQ trials')+
+    listItem('Home','At-a-glance dashboard: active prospects, intake forms to review, ThriveHQ trials, Gallup codes in flight — plus headline numbers and quick-nav to all areas')+
     listItem('CRM','Dashboard, Master List, Prospect List, Clients Dashboard, Client List, Intake Forms, Invoices')+
     listItem('Referrers','Dashboard (Referral Hub) and referrer Payments tracking')+
-    listItem('Pulses','Dashboard, SAFE Pulse, Brain Pulse — per-client mini portal with printable reports')+
-    listItem('Couples','Dashboard and live Couples Intake worksheet (Port Institute 5-stage, stage-by-stage with per-stage save to records, linked to a Couple client)')+
-    listItem('ThriveHQ','Dashboard, Trials, Members, Renewals, Coaching Calls')+
-    listItem('Strengths Hub','Top-level area. Dashboard with Open Reports CTA + SharePoint folder link + Upload-a-Report panel. Reports page (Individual / Pair / Team Heatmap with Pre-session brief toggle). Profiles page (single editor for each contact: quick-paste, dropdowns, or PDF auto-extract via Claude)')+
-    listItem('Strengths AI','Personal Insights, What You Bring &amp; Need, Couple Dynamics, and Adaptation Tips for Cath — all written in Cath\'s voice (CATH_VOICE_REFERENCE) using the existing Anthropic key')+
+    listItem('Pulses','Dashboard, SAFE Pulse, Brain Pulse, Connection Pulse — per-client mini portal with printable reports')+
+    listItem('Couples Hub','Dashboard, live Couples Intake worksheet (Port Institute 5-stage, save-to-records), Therapy Timelines, Betrayal First Aid')+
+    listItem('ThriveHQ Hub','Dashboard, Trials, Members, Renewals, Coaching Calls')+
+    listItem('Strengths Hub','Dashboard, Reports (Individual / Pair / Team Heatmap, Pre-session brief), Profiles, Domain Balance, Upload Report, Gallup Workflow SOP, Gallup Code Tracker')+
+    listItem('Strengths AI','Personal Insights, What You Bring &amp; Need, Couple Dynamics, Adaptation Tips — all written in Cath\'s voice via direct Anthropic API')+
+    listItem('Gallup Code Tracker','Full workflow tracker for CliftonStrengths assessment requests: log requests, stamp stages (Payment → Purchased → Code Sent → Notified → Filed), inline form on Code Tracker page')+
     listItem('IT','Dashboard, IT Projects, Agents (parent/child with versioning + SharePoint export), AI Strategy (cross-agent audit + chat), Writing Partner')+
-    listItem('Resources','Dashboard with shareable public links — Linktree, Intake Forms, Cancellation Policy (copy/open)')+
-    listItem('Admin','Dashboard, Task Management, Playbook — Lou\'s operational work')+
+    listItem('Admin','Dashboard, Task Management, Playbook — Lou\'s operational work, Company Resources')+
     listItem('Finance','Dashboard, Income, Where Money Goes, Bills, Transactions (Xero CSV import)')+
-    listItem('Prospects','Sales pipeline with status tracking, dated activity logs, follow-up dates, overdue highlighting')+
-    listItem('Intake Forms','Public forms (ThriveHQ, Couples, Individual) with clarified 5–6 item consent, full address (street, suburb, postcode, state AU+NZ), partner preferred name; Couples form links session to Couple client')+
+    listItem('Development Business','Running costs (Supabase, Claude API) and possible pricing reference for development apps — 7 app tiers from Relationship to Developer Coach4U')+
+    listItem('Prospects','Sales pipeline: status tracking, dated activity logs, follow-up dates, overdue highlighting, intake form linking')+
+    listItem('Intake Forms','Public forms (ThriveHQ, Couples, Individual) — full AU/NZ address, partner preferred name, Couples form links to client session')+
     listItem('Cancellation Policy','Public branded policy page at /policies/cancellation/')+
-    listItem('Cath Voice Reference','docs/cath-voice-tone-v1.md plus inline CATH_VOICE_REFERENCE constant — single source for AI-generated text tone')+
-    listItem('C4U Bot','AI chat assistant that can add prospects, contacts, tasks, search CRM, view dashboards')+
+    listItem('Cath Voice Reference','docs/cath-voice-tone-v1.md + inline CATH_VOICE_REFERENCE constant — single source of truth for all AI-generated tone')+
+    listItem('C4U Bot','AI chat assistant — add prospects, contacts, tasks, search CRM, view dashboards')+
   '</ul>');
 
   html+=card('Stack','<ul style="list-style:disc;padding-left:20px;margin:0;">'+
