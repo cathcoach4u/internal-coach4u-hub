@@ -250,7 +250,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.21</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.22</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -9068,6 +9068,7 @@ function renderAgentDetail(){
     <div style="font-size:12px;color:#64748b;margin-bottom:12px;line-height:1.5;">${platform}${a.owner?' &middot; Owner: '+a.owner:''} &middot; Last edited: ${lastEdited}</div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;">
       ${/writing\s*partner/i.test(a.name||'')?`<a href="writing-partner/" target="_blank" rel="noopener" style="${btn}background:#16a34a;color:#fff;">Launch chat &#8599;</a>`:''}
+      ${a.copilot_url?`<a href="${a.copilot_url}" target="_blank" rel="noopener" style="${btn}background:#5b5fc7;color:#fff;">Open in Copilot Studio &#8599;</a>`:''}
       ${isParent?`<button onclick="copyAgentBundle('${a.id}')" style="${btn}background:#f0f4f8;color:#003366;border:1px solid #003366;">Copy Full Tree</button>`:''}
       ${!isParent?`<button onclick="copySystemPromptByAgent('${a.id}')" style="${btn}background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;">Copy Prompt</button>`:''}
       ${!isParent&&a.stages_content?`<button onclick="copyAgentStages('${a.id}')" style="${btn}background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;">Copy Stages</button>`:''}
