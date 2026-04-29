@@ -250,7 +250,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.17</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.18</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -689,6 +689,10 @@ if('serviceWorker' in navigator){
       <div id="finSpendContent"></div>
     </div>
 
+    <!-- DEVELOPMENT -->
+    <div class="screen" id="screen-findev">
+      <div id="finDevContent"></div>
+    </div>
     <!-- FINANCE TRANSACTIONS -->
     <div class="screen" id="screen-finbills">
       <div class="toolbar">
@@ -1946,7 +1950,7 @@ window.navTo = function(tab,btn){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+tab).classList.add('active');
   window.scrollTo(0,0);
-  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ Hub',thqintake:'Intake Forms',strdash:'Strengths Hub',opsdash:'Admin',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Profiles',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Task Management',playbook:'Lou\'s Playbook',itprojects:'IT Projects',agents:'Agents',writingpartner:'Writing Partner',findash:'Finance',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fintxns:'Transactions',thqbrainpulse:'Brain Pulse',clibrainpulse:'Brain Pulse',cliconnection:'Connection Pulse',thqpulse:'SAFE Pulse',clipulse:'SAFE Pulse',pulsesdash:'Pulses',couplesintake:'Couples Intake',couplesdash:'Couples Hub',couplestimelines:'Therapy Timelines',couplesbetrayal:'Betrayal First Aid',itdash:'IT',resourcesdash:'Resources',agentsai:'AI Strategy',strreports:'Strengths Reports',strdomains:'Domain Balance',strupload:'Upload Report',strcodes:'Gallup Code Tracker',strsop:'Gallup Workflow SOP'};
+  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ Hub',thqintake:'Intake Forms',strdash:'Strengths Hub',opsdash:'Admin',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Profiles',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Task Management',playbook:'Lou\'s Playbook',itprojects:'IT Projects',agents:'Agents',writingpartner:'Writing Partner',findash:'Finance',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fintxns:'Transactions',findev:'Development',thqbrainpulse:'Brain Pulse',clibrainpulse:'Brain Pulse',cliconnection:'Connection Pulse',thqpulse:'SAFE Pulse',clipulse:'SAFE Pulse',pulsesdash:'Pulses',couplesintake:'Couples Intake',couplesdash:'Couples Hub',couplestimelines:'Therapy Timelines',couplesbetrayal:'Betrayal First Aid',itdash:'IT',resourcesdash:'Resources',agentsai:'AI Strategy',strreports:'Strengths Reports',strdomains:'Domain Balance',strupload:'Upload Report',strcodes:'Gallup Code Tracker',strsop:'Gallup Workflow SOP'};
   document.getElementById('pageTitle').textContent=titles[tab]||'Coach4U';
   // Sync area tab
   const area=pageToArea[tab]||'home';
@@ -2010,6 +2014,7 @@ window.navTo = function(tab,btn){
   if(tab==='finspend') renderFinSpend();
   if(tab==='finbills') renderBills();
   if(tab==='fintxns') renderFinTransactions();
+  if(tab==='findev') renderFinDev();
   if(tab==='about') renderAbout();
   closeMobile();
 };
@@ -2037,7 +2042,7 @@ const areaConfig={
   hubs:{label:'Hubs',pages:[{id:'modulesdash',icon:'&#128200;',label:'Dashboard'},{id:'couplesdash',icon:'&#128149;',label:'Couples Hub'},{id:'thqdash',icon:'&#128170;',label:'ThriveHQ Hub'},{id:'strdash',icon:'&#127919;',label:'Strengths Hub'}]},
   it:{label:'IT',pages:[{id:'itdash',icon:'&#128200;',label:'Dashboard'},{id:'itprojects',icon:'&#9881;',label:'IT Projects'},{id:'agents',icon:'&#129302;',label:'Agents'},{id:'agentsai',icon:'&#10024;',label:'AI Strategy'},{id:'writingpartner',icon:'&#9997;',label:'Writing Partner'}]},
   operations:{label:'Admin',pages:[{id:'opsdash',icon:'&#128736;',label:'Dashboard'},{id:'tasks',icon:'&#9989;',label:'Task Management'},{id:'playbook',icon:'&#128214;',label:'Playbook'},{id:'resourcesdash',icon:'&#128279;',label:'Company Resources'}]},
-  finance:{label:'Finance',pages:[{id:'findash',icon:'&#128176;',label:'Dashboard'},{id:'finincome',icon:'&#128181;',label:'Income'},{id:'finspend',icon:'&#128200;',label:'Where Money Goes'},{id:'finbills',icon:'&#128196;',label:'Bills'},{id:'fintxns',icon:'&#128203;',label:'Transactions'}]},
+  finance:{label:'Finance',pages:[{id:'findash',icon:'&#128176;',label:'Dashboard'},{id:'finincome',icon:'&#128181;',label:'Income'},{id:'finspend',icon:'&#128200;',label:'Where Money Goes'},{id:'finbills',icon:'&#128196;',label:'Bills'},{id:'fintxns',icon:'&#128203;',label:'Transactions'},{id:'findev',icon:'&#128187;',label:'Development'}]},
   about:{label:'About',pages:[{id:'about',icon:'&#8505;',label:'About'}]}
 };
 let currentArea='home';
@@ -9963,60 +9968,9 @@ window.finDrillIncomeClient=function(client){
 
 function renderFinSpend(){
   const el=document.getElementById('finSpendContent');
-
-  // ── Development costs (static, always shown) ──
-  const devTotal=25+153;
-  let devHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:16px;">
-    <h3 style="margin:0 0 4px;font-size:15px;color:#1e3a5f;">Development</h3>
-    <p style="margin:0 0 14px;font-size:12px;color:#94a3b8;">Fixed monthly costs for running and building the hub</p>
-    <div style="font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;">External App Costs</div>`;
-  const devItems=[
-    {name:'Supabase',desc:'Database &amp; backend',amount:25},
-    {name:'Claude (Anthropic)',desc:'AI — CRM assistant &amp; strengths readings',amount:153},
-  ];
-  devItems.forEach(item=>{
-    devHtml+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #f1f5f9;font-size:13px;">
-      <div><span style="font-weight:600;">${item.name}</span><br><span style="font-size:11px;color:#94a3b8;">${item.desc}</span></div>
-      <div style="font-weight:700;color:#1e3a5f;white-space:nowrap;">$${item.amount}/mo</div>
-    </div>`;
-  });
-  devHtml+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #f1f5f9;font-size:13px;">
-    <div><span style="font-weight:600;">Development time</span><br><span style="font-size:11px;color:#94a3b8;">My time — design, build &amp; maintenance</span></div>
-    <div style="font-weight:700;color:#94a3b8;white-space:nowrap;">not tracked</div>
-  </div>`;
-  devHtml+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0 0;font-size:13px;">
-    <span style="font-weight:700;color:#1e3a5f;">Total (tracked)</span>
-    <span style="font-weight:700;color:#dc2626;">$${devTotal}/mo</span>
-  </div>`;
-  devHtml+='</div>';
-
-  // ── App pricing reference (static) ──
-  const pricingItems=[
-    {name:'Relationship Coach4U',pricing:'$15 / user / month',note:'Per email address',status:''},
-    {name:'ThriveHQ',pricing:'Included in group',note:'Or $15 / user / month if standalone',status:''},
-    {name:'Personal Coach4U',pricing:'$15 / user / month',note:'Per email address',status:''},
-    {name:'Business Coach4U',pricing:'$200 + GST / month',note:'3 seats included — then $80 / month per additional user',status:''},
-    {name:'Team Coach4U',pricing:'$30 / user / month',note:'',status:''},
-    {name:'Growth Coach4U',pricing:'TBD',note:'',status:'tbd'},
-    {name:'Developer Coach4U',pricing:'$80 + GST / user / month',note:'Per email address',status:''},
-  ];
-  let pricingHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:16px;">
-    <h3 style="margin:0 0 4px;font-size:15px;color:#1e3a5f;">App Pricing</h3>
-    <p style="margin:0 0 14px;font-size:12px;color:#94a3b8;">Possible pricing for development apps — for planning purposes</p>`;
-  pricingItems.forEach(item=>{
-    const isTbd=item.status==='tbd';
-    pricingHtml+=`<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:9px 0;border-bottom:1px solid #f1f5f9;font-size:13px;">
-      <div style="min-width:0;padding-right:12px;"><span style="font-weight:600;">${item.name}</span>${item.note?`<br><span style="font-size:11px;color:#94a3b8;">${item.note}</span>`:''}
-      </div>
-      <div style="white-space:nowrap;text-align:right;font-weight:700;${isTbd?'color:#94a3b8;':'color:#1e3a5f;'}">${item.pricing}</div>
-    </div>`;
-  });
-  pricingHtml+='</div>';
-  devHtml=devHtml+pricingHtml;
-
   const txns=financeTransactions.filter(t=>finIsExpense(t.account)&&!finIsBalance(t.account));
   if(!txns.length){
-    el.innerHTML=devHtml+'<div style="text-align:center;padding:40px 20px;color:#64748b;border:1px solid #e2e8f0;border-radius:12px;background:#fff;"><div style="font-size:48px;margin-bottom:16px;">&#128200;</div><h3 style="margin:0 0 8px;color:#1e3a5f;">No Xero expense data yet</h3><p>Upload your Xero CSV in the Transactions page to see full spending breakdown.</p></div>';
+    el.innerHTML='<div style="text-align:center;padding:60px 20px;color:#64748b;"><div style="font-size:48px;margin-bottom:16px;">&#128200;</div><h3 style="margin:0 0 8px;color:#1e3a5f;">No expense data yet</h3><p>Upload your Xero CSV in the Transactions page first.</p></div>';
     return;
   }
 
@@ -10078,7 +10032,53 @@ function renderFinSpend(){
   });
   html+='</div>';
 
-  el.innerHTML=devHtml+html;
+  el.innerHTML=html;
+}
+
+function renderFinDev(){
+  const el=document.getElementById('finDevContent');
+  const devTotal=25+153;
+  let html=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:16px;">
+    <h3 style="margin:0 0 4px;font-size:15px;color:#1e3a5f;">Running Costs</h3>
+    <p style="margin:0 0 14px;font-size:12px;color:#94a3b8;">Fixed monthly costs for running and building the hub</p>
+    <div style="font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;">External App Costs</div>`;
+  [{name:'Supabase',desc:'Database &amp; backend',amount:25},{name:'Claude (Anthropic)',desc:'AI — CRM assistant &amp; strengths readings',amount:153}].forEach(item=>{
+    html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #f1f5f9;font-size:13px;">
+      <div><span style="font-weight:600;">${item.name}</span><br><span style="font-size:11px;color:#94a3b8;">${item.desc}</span></div>
+      <div style="font-weight:700;color:#1e3a5f;white-space:nowrap;">$${item.amount}/mo</div>
+    </div>`;
+  });
+  html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #f1f5f9;font-size:13px;">
+    <div><span style="font-weight:600;">Development time</span><br><span style="font-size:11px;color:#94a3b8;">My time — design, build &amp; maintenance</span></div>
+    <div style="font-weight:700;color:#94a3b8;white-space:nowrap;">not tracked</div>
+  </div>
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0 0;font-size:13px;">
+    <span style="font-weight:700;color:#1e3a5f;">Total (tracked)</span>
+    <span style="font-weight:700;color:#dc2626;">$${devTotal}/mo</span>
+  </div></div>`;
+
+  const pricingItems=[
+    {name:'Relationship Coach4U',pricing:'$15 / user / month',note:'Per email address',status:''},
+    {name:'ThriveHQ',pricing:'Included in group',note:'Or $15 / user / month if standalone',status:''},
+    {name:'Personal Coach4U',pricing:'$15 / user / month',note:'Per email address',status:''},
+    {name:'Business Coach4U',pricing:'$200 + GST / month',note:'3 seats included — then $80 / month per additional user',status:''},
+    {name:'Team Coach4U',pricing:'$30 / user / month',note:'',status:''},
+    {name:'Growth Coach4U',pricing:'TBD',note:'',status:'tbd'},
+    {name:'Developer Coach4U',pricing:'$80 + GST / user / month',note:'Per email address',status:''},
+  ];
+  html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;">
+    <h3 style="margin:0 0 4px;font-size:15px;color:#1e3a5f;">App Pricing</h3>
+    <p style="margin:0 0 14px;font-size:12px;color:#94a3b8;">Possible pricing for development apps — for planning purposes</p>`;
+  pricingItems.forEach(item=>{
+    const isTbd=item.status==='tbd';
+    html+=`<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:9px 0;border-bottom:1px solid #f1f5f9;font-size:13px;">
+      <div style="min-width:0;padding-right:12px;"><span style="font-weight:600;">${item.name}</span>${item.note?`<br><span style="font-size:11px;color:#94a3b8;">${item.note}</span>`:''}
+      </div>
+      <div style="white-space:nowrap;text-align:right;font-weight:700;${isTbd?'color:#94a3b8;':'color:#1e3a5f;'}">${item.pricing}</div>
+    </div>`;
+  });
+  html+='</div>';
+  el.innerHTML=html;
 }
 
 window.finDrillCategory=function(account){
