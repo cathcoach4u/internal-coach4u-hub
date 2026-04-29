@@ -250,7 +250,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.18</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.19</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -262,6 +262,7 @@ if('serviceWorker' in navigator){
     <button class="area-tab" onclick="switchArea('it')"><span class="tab-icon">&#128187;</span>IT</button>
     <button class="area-tab" onclick="switchArea('operations')"><span class="tab-icon">&#128736;</span>Admin</button>
     <button class="area-tab" onclick="switchArea('finance')"><span class="tab-icon">&#128176;</span>Finance</button>
+    <button class="area-tab" onclick="switchArea('devbusiness')"><span class="tab-icon">&#128640;</span>Dev Biz</button>
   </div>
   <div id="screenDebug" style="display:none;background:#fef3c7;border-bottom:1px solid #fcd34d;padding:6px 10px;font-family:'Segoe UI',monospace;font-size:10px;color:#92400e;word-break:break-all;line-height:1.4;"></div>
   <div class="content">
@@ -338,6 +339,11 @@ if('serviceWorker' in navigator){
           <div style="font-size:22px;margin-bottom:4px;">&#128176;</div>
           <div style="font-weight:700;color:#1e3a5f;font-size:13px;">Finance</div>
           <div style="font-size:11px;color:#64748b;margin-top:2px;">Income, bills, transactions</div>
+        </button>
+        <button onclick="switchArea('devbusiness')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #7c3aed;border-radius:10px;padding:14px 12px;font-family:inherit;text-align:left;cursor:pointer;transition:box-shadow .15s;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
+          <div style="font-size:22px;margin-bottom:4px;">&#128640;</div>
+          <div style="font-weight:700;color:#1e3a5f;font-size:13px;">Dev Business</div>
+          <div style="font-size:11px;color:#64748b;margin-top:2px;">Running costs, app pricing</div>
         </button>
         <button onclick="switchArea('about')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #64748b;border-radius:10px;padding:14px 12px;font-family:inherit;text-align:left;cursor:pointer;transition:box-shadow .15s;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
           <div style="font-size:22px;margin-bottom:4px;">&#8505;</div>
@@ -1950,7 +1956,7 @@ window.navTo = function(tab,btn){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+tab).classList.add('active');
   window.scrollTo(0,0);
-  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ Hub',thqintake:'Intake Forms',strdash:'Strengths Hub',opsdash:'Admin',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Profiles',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Task Management',playbook:'Lou\'s Playbook',itprojects:'IT Projects',agents:'Agents',writingpartner:'Writing Partner',findash:'Finance',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fintxns:'Transactions',findev:'Development',thqbrainpulse:'Brain Pulse',clibrainpulse:'Brain Pulse',cliconnection:'Connection Pulse',thqpulse:'SAFE Pulse',clipulse:'SAFE Pulse',pulsesdash:'Pulses',couplesintake:'Couples Intake',couplesdash:'Couples Hub',couplestimelines:'Therapy Timelines',couplesbetrayal:'Betrayal First Aid',itdash:'IT',resourcesdash:'Resources',agentsai:'AI Strategy',strreports:'Strengths Reports',strdomains:'Domain Balance',strupload:'Upload Report',strcodes:'Gallup Code Tracker',strsop:'Gallup Workflow SOP'};
+  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ Hub',thqintake:'Intake Forms',strdash:'Strengths Hub',opsdash:'Admin',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Profiles',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Task Management',playbook:'Lou\'s Playbook',itprojects:'IT Projects',agents:'Agents',writingpartner:'Writing Partner',findash:'Finance',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fintxns:'Transactions',findev:'Development Business',thqbrainpulse:'Brain Pulse',clibrainpulse:'Brain Pulse',cliconnection:'Connection Pulse',thqpulse:'SAFE Pulse',clipulse:'SAFE Pulse',pulsesdash:'Pulses',couplesintake:'Couples Intake',couplesdash:'Couples Hub',couplestimelines:'Therapy Timelines',couplesbetrayal:'Betrayal First Aid',itdash:'IT',resourcesdash:'Resources',agentsai:'AI Strategy',strreports:'Strengths Reports',strdomains:'Domain Balance',strupload:'Upload Report',strcodes:'Gallup Code Tracker',strsop:'Gallup Workflow SOP'};
   document.getElementById('pageTitle').textContent=titles[tab]||'Coach4U';
   // Sync area tab
   const area=pageToArea[tab]||'home';
@@ -2042,7 +2048,8 @@ const areaConfig={
   hubs:{label:'Hubs',pages:[{id:'modulesdash',icon:'&#128200;',label:'Dashboard'},{id:'couplesdash',icon:'&#128149;',label:'Couples Hub'},{id:'thqdash',icon:'&#128170;',label:'ThriveHQ Hub'},{id:'strdash',icon:'&#127919;',label:'Strengths Hub'}]},
   it:{label:'IT',pages:[{id:'itdash',icon:'&#128200;',label:'Dashboard'},{id:'itprojects',icon:'&#9881;',label:'IT Projects'},{id:'agents',icon:'&#129302;',label:'Agents'},{id:'agentsai',icon:'&#10024;',label:'AI Strategy'},{id:'writingpartner',icon:'&#9997;',label:'Writing Partner'}]},
   operations:{label:'Admin',pages:[{id:'opsdash',icon:'&#128736;',label:'Dashboard'},{id:'tasks',icon:'&#9989;',label:'Task Management'},{id:'playbook',icon:'&#128214;',label:'Playbook'},{id:'resourcesdash',icon:'&#128279;',label:'Company Resources'}]},
-  finance:{label:'Finance',pages:[{id:'findash',icon:'&#128176;',label:'Dashboard'},{id:'finincome',icon:'&#128181;',label:'Income'},{id:'finspend',icon:'&#128200;',label:'Where Money Goes'},{id:'finbills',icon:'&#128196;',label:'Bills'},{id:'fintxns',icon:'&#128203;',label:'Transactions'},{id:'findev',icon:'&#128187;',label:'Development'}]},
+  finance:{label:'Finance',pages:[{id:'findash',icon:'&#128176;',label:'Dashboard'},{id:'finincome',icon:'&#128181;',label:'Income'},{id:'finspend',icon:'&#128200;',label:'Where Money Goes'},{id:'finbills',icon:'&#128196;',label:'Bills'},{id:'fintxns',icon:'&#128203;',label:'Transactions'}]},
+  devbusiness:{label:'Development Business',pages:[{id:'findev',icon:'&#128640;',label:'Overview'}]},
   about:{label:'About',pages:[{id:'about',icon:'&#8505;',label:'About'}]}
 };
 let currentArea='home';
