@@ -116,3 +116,6 @@ CREATE POLICY "delete gallup_code_requests" ON gallup_code_requests FOR DELETE U
 --
 -- CREATE POLICY "anon insert brain_pulse_submissions" ON brain_pulse_submissions FOR INSERT TO anon WITH CHECK (true);
 -- CREATE POLICY "anon select brain_pulse_submissions" ON brain_pulse_submissions FOR SELECT TO anon USING (true);
+
+-- AGENTS — add copilot_url column (run in Supabase SQL Editor if column does not exist)
+-- ALTER TABLE agents ADD COLUMN IF NOT EXISTS copilot_url TEXT;
