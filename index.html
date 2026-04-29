@@ -250,7 +250,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.16</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.17</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -9989,6 +9989,30 @@ function renderFinSpend(){
     <span style="font-weight:700;color:#dc2626;">$${devTotal}/mo</span>
   </div>`;
   devHtml+='</div>';
+
+  // ── App pricing reference (static) ──
+  const pricingItems=[
+    {name:'Relationship Coach4U',pricing:'$15 / user / month',note:'Per email address',status:''},
+    {name:'ThriveHQ',pricing:'Included in group',note:'Or $15 / user / month if standalone',status:''},
+    {name:'Personal Coach4U',pricing:'$15 / user / month',note:'Per email address',status:''},
+    {name:'Business Coach4U',pricing:'$200 + GST / month',note:'3 seats included — then $80 / month per additional user',status:''},
+    {name:'Team Coach4U',pricing:'$30 / user / month',note:'',status:''},
+    {name:'Growth Coach4U',pricing:'TBD',note:'',status:'tbd'},
+    {name:'Developer Coach4U',pricing:'$80 + GST / user / month',note:'Per email address',status:''},
+  ];
+  let pricingHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:16px;">
+    <h3 style="margin:0 0 4px;font-size:15px;color:#1e3a5f;">App Pricing</h3>
+    <p style="margin:0 0 14px;font-size:12px;color:#94a3b8;">Possible pricing for development apps — for planning purposes</p>`;
+  pricingItems.forEach(item=>{
+    const isTbd=item.status==='tbd';
+    pricingHtml+=`<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:9px 0;border-bottom:1px solid #f1f5f9;font-size:13px;">
+      <div style="min-width:0;padding-right:12px;"><span style="font-weight:600;">${item.name}</span>${item.note?`<br><span style="font-size:11px;color:#94a3b8;">${item.note}</span>`:''}
+      </div>
+      <div style="white-space:nowrap;text-align:right;font-weight:700;${isTbd?'color:#94a3b8;':'color:#1e3a5f;'}">${item.pricing}</div>
+    </div>`;
+  });
+  pricingHtml+='</div>';
+  devHtml=devHtml+pricingHtml;
 
   const txns=financeTransactions.filter(t=>finIsExpense(t.account)&&!finIsBalance(t.account));
   if(!txns.length){
