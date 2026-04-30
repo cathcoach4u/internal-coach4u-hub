@@ -250,7 +250,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.25</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.26</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -8754,31 +8754,16 @@ function renderAgents(){
           <span style="font-size:10px;color:#cbd5e1;font-weight:600;">${categoryAgents.length}</span>
         </div>`;
       if(isCatOpen){
-        const allTypeKeys=[...new Set(categoryAgents.map(a=>a.type||'standalone'))];
-        const typeOrder=['in-app','external','parent','child','standalone'];
-        const sortedTypes=typeOrder.filter(t=>allTypeKeys.includes(t)).concat(allTypeKeys.filter(t=>!typeOrder.includes(t)));
-        sortedTypes.forEach(typeKey=>{
-          const typeAgents=categoryAgents.filter(a=>(a.type||'standalone')===typeKey);
-          if(!typeAgents.length) return;
-          html+=`<div style="margin-left:16px;margin-bottom:16px;">
-            <div style="font-size:11px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">${typeKey}</div>
-            <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:0 16px;overflow:hidden;">`;
-          const parents=typeAgents.filter(a=>!a.parent_agent_id&&typeAgents.some(ag=>ag.parent_agent_id===a.id));
-          const orphans=typeAgents.filter(a=>!a.parent_agent_id&&!typeAgents.some(ag=>ag.parent_agent_id===a.id));
-          parents.forEach(p=>{
-            const kids=typeAgents.filter(c=>c.parent_agent_id===p.id);
-            html+=renderAgentRow(p,false,false,typeAgents);
-            kids.forEach((c,i)=>{
-              const isLast=i===kids.length-1;
-              html+=renderAgentRow(c,true,isLast,typeAgents);
-            });
-          });
-          orphans.forEach((a,i)=>{
-            const isLast=i===orphans.length-1;
-            html+=renderAgentRow(a,false,isLast,typeAgents);
-          });
-          html+='</div></div>';
+        html+='<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:0 16px;overflow:hidden;">';
+        const parents=categoryAgents.filter(a=>!a.parent_agent_id&&categoryAgents.some(ag=>ag.parent_agent_id===a.id));
+        const orphans=categoryAgents.filter(a=>!a.parent_agent_id&&!categoryAgents.some(ag=>ag.parent_agent_id===a.id));
+        parents.forEach(p=>{
+          const kids=categoryAgents.filter(c=>c.parent_agent_id===p.id);
+          html+=renderAgentRow(p,false,false,categoryAgents);
+          kids.forEach((c,i)=>{ html+=renderAgentRow(c,true,i===kids.length-1,categoryAgents); });
         });
+        orphans.forEach((a,i)=>{ html+=renderAgentRow(a,false,i===orphans.length-1,categoryAgents); });
+        html+='</div>';
       }
       html+='</div>';
     });
