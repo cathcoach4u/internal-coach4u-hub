@@ -250,7 +250,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.26</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.27</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -8709,17 +8709,16 @@ function renderAgents(){
       const stageCount=countStages(a.stages_content);
       const menuCount=countMenuItems(a.system_prompt);
       const drift=menuCount!==null&&stageCount>0&&menuCount!==stageCount;
-      const hasChildren=allAgents.some(ag=>ag.parent_agent_id===a.id);
-      const hierarchyRole=a.parent_agent_id?'child':(hasChildren?'parent':'');
-      const dotColor=isChild?'#b87a90':'#003366';
-      const dotSize=isChild?'6px':'8px';
-      const typeLabel=a.type||'in-app';
-      const typeBg=isChild?'#fce7f3':'#eef2ff';
-      const typeColor=isChild?'#b87a90':'#4f46e5';
-      const marginL=isChild?'14px':'16px';
+      const isCopilot=a.platform==='copilot_studio';
+      const hasChildren=isCopilot&&allAgents.some(ag=>ag.parent_agent_id===a.id);
+      const showAsChild=isCopilot&&isChild;
+      const hierarchyRole=isCopilot?(a.parent_agent_id?'child':(hasChildren?'parent':'')):'';
+      const dotColor=showAsChild?'#b87a90':'#003366';
+      const dotSize=showAsChild?'6px':'8px';
+      const marginL=showAsChild?'14px':'16px';
       const hierarchyBadge=hierarchyRole?`<span style="font-size:10px;padding:1px 6px;border-radius:99px;background:#f3e8ff;color:#7e22ce;font-weight:600;">${hierarchyRole}</span>`:'';
-      let row=`<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding:10px 0${isChild?' 10px 24px':''};border-bottom:${isLast?'none':'1px solid #f1f5f9'};position:relative;">`;
-      if(isChild){
+      let row=`<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding:10px 0${showAsChild?' 10px 24px':''};border-bottom:${isLast?'none':'1px solid #f1f5f9'};position:relative;">`;
+      if(showAsChild){
         row+=`<div style="position:absolute;left:8px;top:0;bottom:${isLast?'50%':'0'};width:2px;background:#cbd5e1;"></div>
           <div style="position:absolute;left:8px;top:22px;width:14px;height:2px;background:#cbd5e1;"></div>`;
       }
@@ -8727,7 +8726,7 @@ function renderAgents(){
       row+=`<div onclick="viewAgentDetail('${a.id}')" onmouseover="this.querySelector('.agentNameLink').style.textDecoration='underline';this.querySelector('.agentNameLink').style.color='#0891b2';" onmouseout="this.querySelector('.agentNameLink').style.textDecoration='none';this.querySelector('.agentNameLink').style.color='#1e3a5f';" style="min-width:0;flex:1;cursor:pointer;">
         <div style="display:flex;align-items:center;gap:8px;min-width:0;">
           <span style="width:${dotSize};height:${dotSize};border-radius:99px;background:${dotColor};flex-shrink:0;"></span>
-          <span class="agentNameLink" style="font-weight:${isChild?'600':'700'};font-size:13px;color:#1e3a5f;word-break:break-word;transition:all .15s;">${a.name}</span>
+          <span class="agentNameLink" style="font-weight:${showAsChild?'600':'700'};font-size:13px;color:#1e3a5f;word-break:break-word;transition:all .15s;">${a.name}</span>
           <span style="font-size:10px;color:#94a3b8;font-weight:600;">(${platLabel})</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin-top:4px;margin-left:${marginL};flex-wrap:wrap;">
@@ -8755,14 +8754,19 @@ function renderAgents(){
         </div>`;
       if(isCatOpen){
         html+='<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:0 16px;overflow:hidden;">';
-        const parents=categoryAgents.filter(a=>!a.parent_agent_id&&categoryAgents.some(ag=>ag.parent_agent_id===a.id));
-        const orphans=categoryAgents.filter(a=>!a.parent_agent_id&&!categoryAgents.some(ag=>ag.parent_agent_id===a.id));
-        parents.forEach(p=>{
-          const kids=categoryAgents.filter(c=>c.parent_agent_id===p.id);
-          html+=renderAgentRow(p,false,false,categoryAgents);
-          kids.forEach((c,i)=>{ html+=renderAgentRow(c,true,i===kids.length-1,categoryAgents); });
+        const copilotAgents=categoryAgents.filter(a=>a.platform==='copilot_studio');
+        const nonCopilotAgents=categoryAgents.filter(a=>a.platform!=='copilot_studio');
+        // Copilot agents: show parent→child tree
+        const copilotParents=copilotAgents.filter(a=>!a.parent_agent_id&&copilotAgents.some(ag=>ag.parent_agent_id===a.id));
+        const copilotOrphans=copilotAgents.filter(a=>!a.parent_agent_id&&!copilotAgents.some(ag=>ag.parent_agent_id===a.id));
+        copilotParents.forEach(p=>{
+          const kids=copilotAgents.filter(c=>c.parent_agent_id===p.id);
+          html+=renderAgentRow(p,false,false,copilotAgents);
+          kids.forEach((c,i)=>{ html+=renderAgentRow(c,true,i===kids.length-1,copilotAgents); });
         });
-        orphans.forEach((a,i)=>{ html+=renderAgentRow(a,false,i===orphans.length-1,categoryAgents); });
+        copilotOrphans.forEach((a,i)=>{ html+=renderAgentRow(a,false,i===copilotOrphans.length-1&&!nonCopilotAgents.length,copilotAgents); });
+        // Non-Copilot agents: always flat, no hierarchy
+        nonCopilotAgents.forEach((a,i)=>{ html+=renderAgentRow(a,false,i===nonCopilotAgents.length-1,[]); });
         html+='</div>';
       }
       html+='</div>';
