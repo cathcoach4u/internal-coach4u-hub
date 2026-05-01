@@ -74,7 +74,7 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#f0f6ff;c
     <h1><span class="icon">&#127919;</span> Coach4U Strengths Hub</h1>
     <div class="header-right">
       <button class="refresh-btn" onclick="hardRefresh()" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span class="version">v0.3.6</span>
+      <span class="version">v0.3.7</span>
     </div>
   </div>
   <div class="tab-bar" id="tabBar"></div>
@@ -1346,11 +1346,9 @@ window.sendAiChat=function(){
 
 // ── INIT ──
 async function init(){
-  // 1. Make the dashboard screen visible immediately with a Loading state
-  //    so the user always sees something even before data resolves.
+  // 1. The static HTML already has #screen-dashboard active with the bootMsg + bootStatus
+  //    panel inside #dashContent — do NOT overwrite it here, or the per-table status disappears.
   activeTab='dashboard';
-  document.getElementById('screen-dashboard').classList.add('active');
-  document.getElementById('dashContent').innerHTML='<div style="padding:40px;text-align:center;color:#64748b;font-size:13px;">Loading Strengths Hub data…</div>';
   // 2. Render tabs synchronously so navigation works even if data load fails.
   try{ renderTabs(); }catch(e){ console.error('renderTabs failed:',e); }
   // 3. Load + render the dashboard.
