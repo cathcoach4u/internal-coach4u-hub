@@ -1,0 +1,11 @@
+{
+  "name": "Coach4U Strengths Hub",
+  "short_name": "Strengths Hub",
+  "description": "CliftonStrengths workspace — profiles, reports, code tracker, domain balance.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f0f6ff",
+  "theme_color": "#15803d"
+}

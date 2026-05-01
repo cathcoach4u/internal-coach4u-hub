@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<title>Coach4U Strengths Hub</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#15803d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Strengths Hub">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html{overflow-x:hidden}
+body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#f0f6ff;color:#1e293b;min-height:100vh;letter-spacing:-0.01em;overflow-x:hidden}
+.app{display:flex;flex-direction:column;min-height:100vh;max-width:100%}
+.header{background:linear-gradient(180deg,#15803d 0%,#16a34a 100%);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:10px;color:#fff;flex-wrap:wrap}
+.header h1{font-family:'Quicksand','Inter',sans-serif;font-size:18px;font-weight:700;display:flex;align-items:center;gap:10px}
+.header h1 span.icon{font-size:22px}
+.header-right{display:flex;align-items:center;gap:8px;font-size:11px}
+.version{padding:3px 11px;border-radius:99px;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);font-weight:600}
+.refresh-btn{background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px}
+.refresh-btn:hover{background:rgba(255,255,255,.15);color:#fff}
+.tab-bar{display:flex;gap:2px;padding:0 16px;background:#fff;border-bottom:1px solid #e2e8f0;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tab{flex-shrink:0;padding:12px 16px;font-size:13px;font-weight:600;cursor:pointer;color:#64748b;border-bottom:2px solid transparent;background:none;border-top:none;border-left:none;border-right:none;font-family:inherit;white-space:nowrap}
+.tab:hover{color:#15803d}
+.tab.active{color:#15803d;border-bottom-color:#15803d}
+.content{padding:20px max(16px,env(safe-area-inset-right)) calc(40px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));min-width:0;max-width:100%;overflow-x:clip}
+.screen{display:none;min-width:0}
+.screen.active{display:block;min-width:0}
+.screen table{display:block;max-width:100%;overflow-x:auto}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:12px 18px;border-radius:10px;font-size:13px;font-weight:500;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.2);opacity:0;transition:opacity .2s}
+.toast.show{opacity:1}
+.toast.success{background:#15803d}
+.toast.error{background:#dc2626}
+.search-input{padding:10px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:14px;width:100%;max-width:380px;background:#fff;font-family:inherit;outline:none}
+.search-input:focus{border-color:#15803d}
+.btn{display:inline-block;padding:8px 14px;font-size:13px;font-weight:600;border-radius:8px;cursor:pointer;border:none;font-family:inherit;text-decoration:none}
+.btn-green{background:#15803d;color:#fff}
+.btn-blue{background:#003366;color:#fff}
+.btn-gray{background:#f0f4f8;color:#475569;border:1px solid #e2e8f0}
+.btn-red{background:#dc2626;color:#fff}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:14px;padding:24px;width:100%;max-width:600px;max-height:90dvh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal h3{font-family:'Quicksand','Inter',sans-serif;font-size:18px;font-weight:700;color:#1e3a5f;margin-bottom:16px}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:12px;font-weight:600;color:#1e3a5f;margin-bottom:6px}
+.form-group input,.form-group textarea,.form-group select{width:100%;padding:10px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;font-family:inherit;background:#fff;outline:none}
+.form-group input:focus,.form-group textarea:focus,.form-group select:focus{border-color:#15803d}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}
+
+/* AI bot widget */
+#aiChatBtn{position:fixed;bottom:20px;right:20px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#15803d,#16a34a);color:#fff;border:none;cursor:pointer;box-shadow:0 4px 16px rgba(21,128,61,.4);z-index:90;font-size:22px;display:flex;align-items:center;justify-content:center}
+#aiChatPanel{display:none;position:fixed;bottom:calc(86px + env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));width:340px;max-width:calc(100vw - 40px);height:min(440px,calc(100dvh - 140px - env(safe-area-inset-bottom) - env(safe-area-inset-top)));background:#fff;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.15);z-index:90;flex-direction:column;overflow:hidden}
+
+@media(max-width:640px){
+  .header{padding:12px 16px}
+  .header h1{font-size:16px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1><span class="icon">&#127919;</span> Coach4U Strengths Hub</h1>
+    <div class="header-right">
+      <button class="refresh-btn" onclick="hardRefresh()" title="Hard refresh (bypass cache)">&#128260;</button>
+      <span class="version">v0.1.0</span>
+    </div>
+  </div>
+  <div class="tab-bar" id="tabBar"></div>
+  <div class="content">
+    <div class="screen" id="screen-dashboard"><div id="dashContent"></div></div>
+    <div class="screen" id="screen-profiles"><div id="profilesContent"></div></div>
+    <div class="screen" id="screen-upload"><div id="uploadContent"></div></div>
+    <div class="screen" id="screen-domains"><div id="domainsContent"></div></div>
+    <div class="screen" id="screen-codes"><div id="codesContent"></div></div>
+    <div class="screen" id="screen-reports"><div id="reportsContent"></div></div>
+    <div class="screen" id="screen-sop"><div id="sopContent"></div></div>
+  </div>
+</div>
+
+<!-- Strengths Edit Modal -->
+<div class="modal-overlay" id="strEditModal">
+  <div class="modal">
+    <h3 id="strEditTitle">Edit Strengths</h3>
+    <div id="strEditSubtitle" style="font-size:12px;color:#64748b;margin-bottom:14px;"></div>
+    <input type="hidden" id="strEditContactId">
+    <div id="strEditWarning" style="display:none;background:#fef3c7;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;font-size:12px;color:#92400e;margin-bottom:12px;">Editing existing strengths. Make sure this is intentional.</div>
+    <div class="form-group">
+      <label>Paste 5-10 themes (comma or newline separated)</label>
+      <textarea id="strEditPaste" rows="3" placeholder="Achiever, Strategic, Learner, ..."></textarea>
+      <button type="button" onclick="strEditApplyPaste()" style="margin-top:6px;background:#f0f4f8;border:1px solid #e2e8f0;border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;font-weight:600;">Apply paste</button>
+    </div>
+    <div class="form-group">
+      <label>Top 10 themes (#1 = signature)</label>
+      <div id="strEditDropdowns" style="display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:center;"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-red" id="strEditClearBtn" onclick="strEditClear()" style="margin-right:auto;display:none;">Clear all</button>
+      <button class="btn btn-gray" onclick="closeModal('strEditModal')">Cancel</button>
+      <button class="btn btn-green" onclick="saveStrEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- AI Chat Bot -->
+<button id="aiChatBtn" onclick="toggleAiChat()">&#129302;</button>
+<div id="aiChatPanel">
+  <div style="background:linear-gradient(135deg,#15803d,#16a34a);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;">
+    <span style="color:#fff;font-weight:700;font-size:14px;">&#129302; Strengths Assistant</span>
+    <button onclick="toggleAiChat()" style="background:none;border:none;color:rgba(255,255,255,.7);cursor:pointer;font-size:18px;">&times;</button>
+  </div>
+  <div id="aiChatMessages" style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;">
+    <div style="background:#f0fdf4;border-radius:12px;padding:10px 14px;font-size:13px;color:#15803d;max-width:90%;align-self:flex-start;">
+      Paste your <strong>sk-ant-…</strong> Anthropic key as a message and I'll save it for the auto-extract feature.
+    </div>
+  </div>
+  <div style="padding:10px 14px;border-top:1px solid #e2e8f0;display:flex;gap:8px;">
+    <input id="aiChatInput" placeholder="Paste your sk-ant-… key" style="flex:1;min-width:0;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;font-size:16px;font-family:inherit;outline:none;" onkeydown="if(event.key==='Enter')sendAiChat()">
+    <button onclick="sendAiChat()" style="background:#15803d;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;">Send</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ── SUPABASE CLIENT (shared with main Coach4U CRM) ──
+const SUPABASE_URL = 'https://uoixetfvboevjxlkfyqy.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_m3qgSGvWF0n2TePf6vhqMw_9obUvJEJ';
+const MAIN_CRM_URL = 'https://cathcoach4u.github.io/internal-coach4u-hub';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ── CLIFTONSTRENGTHS CONSTANTS ──
+const CS34 = ['','Achiever','Activator','Adaptability','Analytical','Arranger','Belief','Command','Communication','Competition','Connectedness','Consistency','Context','Deliberative','Developer','Discipline','Empathy','Focus','Futuristic','Harmony','Ideation','Includer','Individualization','Input','Intellection','Learner','Maximizer','Positivity','Relator','Responsibility','Restorative','Self-Assurance','Significance','Strategic','Woo'];
+const CS_DOMAINS={
+  Achiever:'#7B2D8E',Arranger:'#7B2D8E',Belief:'#7B2D8E',Consistency:'#7B2D8E',Deliberative:'#7B2D8E',Discipline:'#7B2D8E',Focus:'#7B2D8E',Responsibility:'#7B2D8E',Restorative:'#7B2D8E',
+  Activator:'#E97200',Command:'#E97200',Communication:'#E97200',Competition:'#E97200',Maximizer:'#E97200',['Self-Assurance']:'#E97200',Significance:'#E97200',Woo:'#E97200',
+  Adaptability:'#0070CD',Connectedness:'#0070CD',Developer:'#0070CD',Empathy:'#0070CD',Harmony:'#0070CD',Includer:'#0070CD',Individualization:'#0070CD',Positivity:'#0070CD',Relator:'#0070CD',
+  Analytical:'#00945B',Context:'#00945B',Futuristic:'#00945B',Ideation:'#00945B',Input:'#00945B',Intellection:'#00945B',Learner:'#00945B',Strategic:'#00945B'
+};
+const domainColors={Executing:'#7B2D8E',Influencing:'#E97200',Relationship:'#0070CD',Strategic:'#00945B'};
+const DOMAIN_OF={
+  Executing:['Achiever','Arranger','Belief','Consistency','Deliberative','Discipline','Focus','Responsibility','Restorative'],
+  Influencing:['Activator','Command','Communication','Competition','Maximizer','Self-Assurance','Significance','Woo'],
+  Relationship:['Adaptability','Connectedness','Developer','Empathy','Harmony','Includer','Individualization','Positivity','Relator'],
+  Strategic:['Analytical','Context','Futuristic','Ideation','Input','Intellection','Learner','Strategic']
+};
+function csColor(name){return CS_DOMAINS[name]||'#64748b'}
+function csPill(rank,name){return `<span style="background:${csColor(name)};color:#fff;padding:3px 10px;border-radius:2px;font-size:11px;font-weight:600;">#${rank} ${name}</span>`}
+function getDomain(theme){for(const d in DOMAIN_OF){if(DOMAIN_OF[d].includes(theme))return d}return null}
+
+// ── CATH VOICE (used in every AI prompt) ──
+const CATH_VOICE_REFERENCE=`Cath Voice Tone Reference v1 — Coach4U
+CORE: Warm, grounded, human, and decisive. Clarity over quantity, connection over performance. If a sentence feels impressive but unclear, rewrite it.
+NON-NEGOTIABLES: Australian English. No exclamation marks, no emojis, no clinical language, no filler, no over-explaining, no policy-document tone unless required. Email sign-off is exactly: Thanks\\nCath
+EMOTIONAL TONE: Warm not gushy; supportive not rescuing; calm even when firm; respects autonomy; never shaming. The reader feels steadied, not managed.
+SENTENCE STYLE: Short to medium sentences. Plain English. Spoken not academic. One idea per sentence. Minimal adjectives.
+CLARITY: Clear next steps; yes/no questions where possible; timeframes plain; options simple; no open-ended drifting. Clarity is care, not control.
+STRENGTHS-BASED FRAMING: Name what is working. Describe challenges as patterns, not traits. Use strengths language naturally, not performatively. Avoid labels unless the client uses them.
+BOUNDARIES: Calm and firm. No apologising for standard practice; no moralising; no over-justifying.
+CLIENT-FACING: Personal not casual. Use the client's name once or twice, not repeatedly. Avoid jargon. Should not sound like a script or admin.
+SELF-CHECK: Would I say this out loud? Is the next step clear? Does it reduce cognitive load? Does it sound human? Calm and confident? If not, rewrite.`;
+
+// ── AI PROMPTS (kept inline so this app is self-contained) ──
+const AI_PROMPTS = {
+  'strengths-pdf-extractor': `You are extracting CliftonStrengths theme order from a Gallup PDF report.
+
+Return ONLY a JSON object with this exact shape (no prose, no code fences):
+{"top10":["Theme1","Theme2","Theme3","Theme4","Theme5","Theme6","Theme7","Theme8","Theme9","Theme10"],"name":"<full name from the PDF if present, else empty string>"}
+
+Rules:
+- Themes must be from this set only: ${CS34.slice(1).join(', ')}
+- Use exact spelling and capitalisation as listed (Self-Assurance has a hyphen)
+- Order is rank 1 → rank 10 (signature themes first)
+- If only top 5 are visible, return what you find and pad with empty strings ""
+- Do not invent themes
+- name = the person's full name as printed on the report, if visible (helps the human pick the right contact); otherwise ""`,
+  'strengths-personal-insights': `You are drafting a Personal Insights report for a Coach4U client based on their CliftonStrengths top-10.
+
+WRITE IN CATH'S VOICE. The voice reference is the source of truth for tone:
+
+${CATH_VOICE_REFERENCE}
+
+STRUCTURE — exactly 4 short paragraphs, in this order, no headings:
+1. What pulls this person forward (their top themes' direction)
+2. How they show up at their best
+3. Where the same patterns may overdo or get them stuck (frame as patterns, not deficits)
+4. One or two practical things to lean into next
+
+RULES:
+- Australian English
+- No exclamation marks, no emojis, no clinical language
+- Plain English, short to medium sentences
+- Strengths-based framing — describe patterns, not labels
+- Talk to the reader as "you"
+- Keep total length around 220-280 words
+- Do not list the themes verbatim — weave them in naturally`
+};
+
+// ── STATE ──
+let contacts=[], clients=[], clientMembers=[], contactReports=[], strengthsInsights=[], gallupRequests=[];
+const reportTypes=[{key:'gallup',label:'Full Gallup Report'},{key:'personal_insights',label:'Personal Insights Report'},{key:'bring_need',label:'Bring Need Report'}];
+const TABS=[
+  {id:'dashboard',label:'Dashboard'},
+  {id:'profiles',label:'Profiles'},
+  {id:'upload',label:'Upload Report'},
+  {id:'domains',label:'Domain Balance'},
+  {id:'codes',label:'Code Tracker'},
+  {id:'reports',label:'Reports'},
+  {id:'sop',label:'Workflow SOP'}
+];
+let activeTab='dashboard';
+let shShowAllState=false;
+
+// ── UTILITIES ──
+function escHtml(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function getContactName(id){const c=contacts.find(x=>x.id===id);return c?((c.first_name||'')+' '+(c.last_name||'')).trim():'Unknown'}
+function toast(msg,type){const el=document.getElementById('toast');el.textContent=msg;el.className='toast show '+(type||'');setTimeout(()=>el.className='toast',2400)}
+function closeModal(id){document.getElementById(id).classList.remove('open')}
+function getAnthropicKey(){return localStorage.getItem('coach4u_anthropic_key')||''}
+function setAnthropicKey(k){localStorage.setItem('coach4u_anthropic_key',k)}
+
+window.hardRefresh=async function(){
+  try{
+    if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();for(const r of regs)await r.unregister()}
+    if('caches' in window){const keys=await caches.keys();for(const k of keys)await caches.delete(k)}
+  }catch(e){console.warn('hardRefresh:',e)}
+  const url=new URL(window.location);url.searchParams.set('_bust',Date.now());
+  setTimeout(()=>window.location.replace(url.toString()),200);
+};
+
+// ── NAVIGATION ──
+function renderTabs(){
+  document.getElementById('tabBar').innerHTML=TABS.map(t=>`<button class="tab ${activeTab===t.id?'active':''}" onclick="navTo('${t.id}')">${t.label}</button>`).join('');
+}
+window.navTo=function(tab){
+  activeTab=tab;
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const el=document.getElementById('screen-'+tab);
+  if(el) el.classList.add('active');
+  renderTabs();
+  if(tab==='dashboard') renderDashboard();
+  if(tab==='profiles') renderProfiles();
+  if(tab==='upload') renderUpload();
+  if(tab==='domains') renderDomains();
+  if(tab==='codes') renderCodes();
+  if(tab==='reports') renderReports();
+  if(tab==='sop') renderSop();
+};
+
+// ── DATA LOAD ──
+async function loadAll(){
+  const [c1,c2,c3,c4,c5,c6]=await Promise.all([
+    supabase.from('contacts').select('*').order('first_name'),
+    supabase.from('clients').select('*'),
+    supabase.from('client_members').select('client_id,contact_id'),
+    (async()=>{let r=await supabase.from('contact_reports').select('*').order('created_at',{ascending:false});if(r.error&&r.error.code==='42703')r=await supabase.from('contact_reports').select('*');return r})(),
+    supabase.from('strengths_insights').select('*'),
+    supabase.from('gallup_code_requests').select('*').order('created_at',{ascending:false})
+  ]);
+  contacts=c1.data||[]; clients=c2.data||[]; clientMembers=c3.data||[];
+  contactReports=c4.data||[]; strengthsInsights=c5.data||[]; gallupRequests=c6.data||[];
+  // Stitch members on clients
+  const memberMap={};(clientMembers||[]).forEach(cm=>{(memberMap[cm.client_id]=memberMap[cm.client_id]||[]).push(cm.contact_id)});
+  clients.forEach(c=>{c.members=memberMap[c.id]||[]});
+}
+
+// ── DASHBOARD ──
+function renderDashboard(){
+  const totalContacts=contacts.length;
+  const withStr=contacts.filter(c=>c.strength_1).length;
+  const reportCount=contactReports.length;
+  const inFlight=gallupRequests.filter(r=>r.status!=='Filed').length;
+  const html=`
+    <div onclick="navTo('upload')" style="background:linear-gradient(135deg,#15803d,#16a34a);color:#fff;border-radius:12px;padding:16px 20px;margin-bottom:14px;cursor:pointer;display:flex;align-items:center;gap:14px;box-shadow:0 2px 8px rgba(21,128,61,.2);">
+      <div style="font-size:28px;">&#10024;</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:700;font-size:15px;margin-bottom:2px;">Upload a Gallup Report</div>
+        <div style="font-size:12px;opacity:.9;">Pick a PDF, choose the contact, and file it — auto-extract themes optional</div>
+      </div>
+      <div style="font-size:20px;opacity:.8;">&rarr;</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px;">
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;"><div style="font-size:11px;color:#64748b;font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;">Profiles</div><div style="font-size:28px;font-weight:700;color:#15803d;">${withStr}</div><div style="font-size:11px;color:#94a3b8;">of ${totalContacts} contacts</div></div>
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;"><div style="font-size:11px;color:#64748b;font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;">Reports filed</div><div style="font-size:28px;font-weight:700;color:#003366;">${reportCount}</div><div style="font-size:11px;color:#94a3b8;">PDFs in storage</div></div>
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;"><div style="font-size:11px;color:#64748b;font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;">Codes in flight</div><div style="font-size:28px;font-weight:700;color:#d97706;">${inFlight}</div><div style="font-size:11px;color:#94a3b8;">not yet filed</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">
+      <div onclick="navTo('profiles')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #16a34a;border-radius:12px;padding:18px 20px;cursor:pointer;"><div style="font-size:24px;margin-bottom:8px;">&#127919;</div><div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">Profiles</div><div style="font-size:11px;color:#64748b;">View &amp; edit strengths</div></div>
+      <div onclick="navTo('domains')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #8b5cf6;border-radius:12px;padding:18px 20px;cursor:pointer;"><div style="font-size:24px;margin-bottom:8px;">&#127912;</div><div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">Domain Balance</div><div style="font-size:11px;color:#64748b;">4 domain overview</div></div>
+      <div onclick="navTo('codes')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #d97706;border-radius:12px;padding:18px 20px;cursor:pointer;"><div style="font-size:24px;margin-bottom:8px;">&#128273;</div><div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">Code Tracker</div><div style="font-size:11px;color:#64748b;">Gallup codes</div></div>
+      <div onclick="navTo('reports')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #003366;border-radius:12px;padding:18px 20px;cursor:pointer;"><div style="font-size:24px;margin-bottom:8px;">&#128203;</div><div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">Reports</div><div style="font-size:11px;color:#64748b;">Personal/Pair/Team</div></div>
+      <div onclick="navTo('sop')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #1e3a5f;border-radius:12px;padding:18px 20px;cursor:pointer;"><div style="font-size:24px;margin-bottom:8px;">&#128218;</div><div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">Workflow SOP</div><div style="font-size:11px;color:#64748b;">Code → file pipeline</div></div>
+    </div>`;
+  document.getElementById('dashContent').innerHTML=html;
+}
+
+// ── PROFILES ──
+window.toggleShowAll=function(el){shShowAllState=!!el.checked;renderProfiles()}
+window.filterProfiles=function(){renderProfiles()}
+function renderProfiles(){
+  const q=(document.getElementById('shSearch')?.value||'').toLowerCase();
+  const showAll=shShowAllState;
+  const filtered=contacts.filter(c=>{
+    const hasStr=!!c.strength_1;
+    if(!showAll&&!hasStr) return false;
+    const reports=contactReports.filter(r=>r.contact_id===c.id);
+    const reportFilenames=reports.map(r=>(r.filename||'').toLowerCase()).join(' ');
+    const s=((c.first_name||'')+' '+(c.last_name||'')+' '+(c.strengths||'')+' '+reportFilenames).toLowerCase();
+    return s.includes(q);
+  });
+  const totalContacts=contacts.length;
+  const totalWithStr=contacts.filter(c=>c.strength_1).length;
+  let html=`
+    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+      <input id="shSearch" class="search-input" placeholder="Search contacts, themes, filenames..." oninput="filterProfiles()" value="${escHtml(q)}">
+      <label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#1e3a5f;font-weight:600;cursor:pointer;flex-shrink:0;">
+        <input type="checkbox" id="shShowAll" ${showAll?'checked':''} onchange="toggleShowAll(this)"> Show contacts without strengths
+      </label>
+    </div>
+    <div style="border:1px solid #e2e8f0;border-radius:10px;background:#fff;overflow:hidden;">
+      <div style="padding:12px 16px;background:#f8fafc;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:10px;">
+        <span style="font-weight:700;font-size:14px;color:#1e293b;">Strengths Profiles</span>
+        <span style="background:#f1f5f9;color:#64748b;font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;">${filtered.length} of ${showAll?totalContacts:totalWithStr}</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;padding:12px;">`;
+  html+=filtered.map(c=>{
+    const top5=[],bottom5=[];
+    for(let i=1;i<=10;i++){if(c['strength_'+i]){const s={rank:i,name:c['strength_'+i]};if(i<=5)top5.push(s);else bottom5.push(s)}}
+    const reports=reportTypes.map(rt=>{
+      const r=contactReports.find(x=>x.contact_id===c.id&&x.report_type===rt.key);
+      if(!r) return '';
+      return `<a href="${r.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;gap:6px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:5px 8px;font-size:11px;color:#1e3a5f;font-weight:600;text-decoration:none;flex-shrink:0;"><span>&#128196;</span>${rt.label} <span style="color:#2563eb;">View</span></a>`;
+    }).filter(Boolean).join('');
+    const hasStrengths=!!c.strength_1;
+    return `<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:160px;">
+          <div style="font-weight:700;font-size:14px;color:#1e293b;">${escHtml(c.first_name)} ${escHtml(c.last_name)}</div>
+          ${c.email?`<div style="font-size:11px;color:#64748b;margin-top:2px;">${escHtml(c.email)}</div>`:''}
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0;">
+          <button class="btn ${hasStrengths?'btn-gray':'btn-blue'}" onclick="openStrEdit('${c.id}')">${hasStrengths?'Edit':'+ Add Strengths'}</button>
+        </div>
+      </div>
+      ${hasStrengths?(
+        (top5.length?'<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:'+(bottom5.length?'4px':'0')+';">'+top5.map(s=>csPill(s.rank,s.name)).join('')+'</div>':'')+
+        (bottom5.length?'<div style="display:flex;flex-wrap:wrap;gap:4px;">'+bottom5.map(s=>csPill(s.rank,s.name)).join('')+'</div>':'')
+      ):'<div style="font-size:12px;color:#94a3b8;">No strengths recorded yet.</div>'}
+      ${reports?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;padding-top:10px;border-top:1px dashed #f1f5f9;">${reports}</div>`:''}
+    </div>`;
+  }).join('');
+  if(!filtered.length) html+='<div style="padding:20px;text-align:center;color:#94a3b8;">No contacts match.</div>';
+  html+=`</div></div>`;
+  document.getElementById('profilesContent').innerHTML=html;
+}
+
+// ── STRENGTHS EDIT MODAL ──
+function strEditBuildDropdowns(values){
+  const grid=document.getElementById('strEditDropdowns');
+  grid.innerHTML='';
+  for(let i=1;i<=10;i++){
+    const label=document.createElement('span');
+    label.style.cssText='font-size:13px;font-weight:700;color:'+(i<=5?'#3b82f6':'#93c5fd')+';';
+    label.textContent='#'+i;
+    const sel=document.createElement('select');
+    sel.id='strEdit'+i;
+    sel.style.cssText='padding:7px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;background:#fff;';
+    sel.innerHTML=CS34.map(s=>'<option value="'+s+'"'+((values[i-1]||'')===s?' selected':'')+'>'+(s||'-- Select --')+'</option>').join('');
+    grid.appendChild(label); grid.appendChild(sel);
+  }
+}
+window.openStrEdit=function(contactId,prefillValues){
+  const c=contacts.find(x=>x.id===contactId);
+  if(!c){toast('Contact not found','error');return}
+  document.getElementById('strEditTitle').textContent=`Edit Strengths — ${c.first_name} ${c.last_name}`;
+  document.getElementById('strEditSubtitle').textContent=c.email||'';
+  document.getElementById('strEditContactId').value=contactId;
+  document.getElementById('strEditPaste').value='';
+  const existing=[];
+  for(let i=1;i<=10;i++)existing.push(c['strength_'+i]||'');
+  const values=prefillValues||existing;
+  strEditBuildDropdowns(values);
+  document.getElementById('strEditWarning').style.display=existing.some(Boolean)?'block':'none';
+  document.getElementById('strEditClearBtn').style.display=existing.some(Boolean)?'inline-block':'none';
+  document.getElementById('strEditModal').classList.add('open');
+};
+window.strEditApplyPaste=function(){
+  const txt=document.getElementById('strEditPaste').value;
+  const list=txt.split(/[,\n]/).map(s=>s.trim()).filter(Boolean);
+  const lookup={};CS34.forEach(t=>{if(t)lookup[t.toLowerCase()]=t});
+  const matched=list.map(item=>lookup[item.toLowerCase()]||'').filter(Boolean).slice(0,10);
+  while(matched.length<10) matched.push('');
+  strEditBuildDropdowns(matched);
+  toast('Pasted '+matched.filter(Boolean).length+' theme(s)','success');
+};
+window.strEditClear=function(){if(!confirm('Clear all 10?'))return;strEditBuildDropdowns(['','','','','','','','','',''])};
+window.saveStrEdit=async function(){
+  const id=document.getElementById('strEditContactId').value;
+  if(!id){toast('No contact','error');return}
+  const data={};const list=[];
+  for(let i=1;i<=10;i++){const v=(document.getElementById('strEdit'+i)||{}).value||'';data['strength_'+i]=v||null;if(v)list.push(v)}
+  data.strengths=list.join(', ')||null;
+  const {error}=await supabase.from('contacts').update(data).eq('id',id);
+  if(error){toast('Save failed: '+error.message,'error');return}
+  await loadAll();
+  closeModal('strEditModal');
+  if(activeTab==='profiles') renderProfiles();
+  if(activeTab==='domains') renderDomains();
+  toast('Strengths saved','success');
+};
+
+// ── UPLOAD REPORT (manual + auto-extract) ──
+function renderUpload(){
+  const all=[...contacts].filter(c=>c.first_name||c.last_name).sort((a,b)=>(a.first_name+' '+a.last_name).localeCompare(b.first_name+' '+b.last_name));
+  const reportTypeLabel={};reportTypes.forEach(rt=>reportTypeLabel[rt.key]=rt.label);
+  const recent=(contactReports||[]).slice(0,10);
+  let html=`
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+      <div onclick="navTo('dashboard')" style="font-size:13px;color:#15803d;font-weight:600;cursor:pointer;">&larr; Back to Dashboard</div>
+      <button class="btn btn-blue" onclick="navTo('profiles')">View all profiles &rarr;</button>
+    </div>
+    <div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #15803d;border-radius:12px;padding:18px 20px;margin-bottom:20px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;"><span style="font-size:20px;">&#10024;</span><div style="font-family:'Quicksand','Inter',sans-serif;font-size:15px;font-weight:700;color:#1e3a5f;">Upload a Report</div></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;align-items:end;">
+        <div><div style="font-size:11px;color:#64748b;margin-bottom:4px;">PDF file</div><input type="file" id="shFile" accept=".pdf" style="width:100%;font-size:12px;"></div>
+        <div><div style="font-size:11px;color:#64748b;margin-bottom:4px;">Contact (optional for Gallup auto-extract)</div>
+          <select id="shContact" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;background:#fff;">
+            <option value="">— Auto-match from PDF name —</option>
+            ${all.map(c=>`<option value="${c.id}">${escHtml(c.first_name)} ${escHtml(c.last_name)}${c.email?' — '+escHtml(c.email):''}</option>`).join('')}
+          </select></div>
+        <div><div style="font-size:11px;color:#64748b;margin-bottom:4px;">Report type</div>
+          <select id="shType" onchange="updateAutoExtract()" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;background:#fff;">
+            ${reportTypes.map(rt=>`<option value="${rt.key}">${rt.label}</option>`).join('')}
+          </select></div>
+        <div><button class="btn btn-green" onclick="uploadFromPanel()" style="width:100%;">Upload</button></div>
+      </div>
+      <label id="shAutoRow" style="display:flex;align-items:center;gap:8px;margin-top:10px;padding:10px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:12px;color:#15803d;font-weight:600;cursor:pointer;">
+        <input type="checkbox" id="shAuto" checked style="margin:0;accent-color:#15803d;">
+        &#10024; Auto-extract top 10 themes from this Gallup PDF (uses Claude — about 5c)
+      </label>
+    </div>
+    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px 20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+        <div style="font-family:'Quicksand','Inter',sans-serif;font-size:15px;font-weight:700;color:#1e3a5f;">Recent uploads</div>
+        <div style="font-size:11px;color:#94a3b8;">Last ${recent.length} of ${contactReports.length}</div>
+      </div>
+      ${recent.length?recent.map(r=>{
+        const c=contacts.find(x=>x.id===r.contact_id);
+        const cName=c?((c.first_name||'')+' '+(c.last_name||'')).trim():'(unknown contact)';
+        const when=r.created_at?new Date(r.created_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}):'';
+        const label=reportTypeLabel[r.report_type]||r.report_type;
+        return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #f1f5f9;border-radius:8px;margin-bottom:8px;background:#f8fafc;">
+          <span style="font-size:18px;">&#128196;</span>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:600;color:#1e293b;">${escHtml(cName)}</div>
+            <div style="font-size:11px;color:#64748b;margin-top:2px;">${escHtml(label)}${when?' &middot; '+when:''}${r.filename?' &middot; '+escHtml(r.filename):''}</div>
+          </div>
+          <a href="${r.url}" target="_blank" rel="noopener" class="btn btn-blue" style="flex-shrink:0;font-size:11px;padding:6px 12px;">View</a>
+        </div>`;
+      }).join(''):'<div style="font-size:12px;color:#94a3b8;padding:14px 0;">No reports uploaded yet.</div>'}
+    </div>`;
+  document.getElementById('uploadContent').innerHTML=html;
+}
+window.updateAutoExtract=function(){const sel=document.getElementById('shType');const row=document.getElementById('shAutoRow');if(!sel||!row)return;row.style.display=sel.value==='gallup'?'flex':'none'};
+
+async function uploadReport(contactId,reportType,file){
+  if(!file)return false;
+  if(!file.name.toLowerCase().endsWith('.pdf')){toast('Please select a PDF','error');return false}
+  const path=contactId+'/'+reportType+'_'+Date.now()+'.pdf';
+  const {error:upErr}=await supabase.storage.from('client-reports').upload(path,file,{upsert:true});
+  if(upErr){toast('Upload error: '+upErr.message,'error');return false}
+  const {data:urlData}=supabase.storage.from('client-reports').getPublicUrl(path);
+  const url=urlData.publicUrl;
+  await supabase.from('contact_reports').delete().eq('contact_id',contactId).eq('report_type',reportType);
+  let ins=await supabase.from('contact_reports').insert({contact_id:contactId,report_type:reportType,filename:file.name,url:url,created_at:new Date().toISOString()}).select().single();
+  if(ins.error&&ins.error.code==='42703'){
+    ins=await supabase.from('contact_reports').insert({contact_id:contactId,report_type:reportType,filename:file.name,url:url}).select().single();
+  }
+  if(ins.error){toast('Error saving report: '+ins.error.message,'error');return false}
+  await loadAll();
+  if(ins.data) contactReports=[ins.data,...contactReports.filter(r=>r.id!==ins.data.id)];
+  return true;
+}
+
+window.uploadFromPanel=async function(){
+  const file=document.getElementById('shFile').files[0];
+  const contactId=document.getElementById('shContact').value;
+  const reportType=document.getElementById('shType').value;
+  const auto=document.getElementById('shAuto').checked;
+  if(!file){toast('Pick a PDF','error');return}
+  if(!reportType){toast('Choose report type','error');return}
+  if(reportType==='gallup'&&auto){
+    if(!getAnthropicKey()){toast('Open the bot (bottom-right) and paste your sk-ant-… key','error');return}
+    if(contactId){await extractWithContact(contactId,file);return}
+    await extractStandalone(file);return;
+  }
+  if(!contactId){toast('Choose a contact','error');return}
+  const ok=await uploadReport(contactId,reportType,file);
+  if(ok){toast('Uploaded','success');renderUpload();if(activeTab==='profiles')renderProfiles()}
+};
+
+// ── AI: PDF EXTRACTION ──
+function fileToBase64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>{const s=r.result||'';const i=s.indexOf(',');res(i>=0?s.slice(i+1):s)};r.onerror=rej;r.readAsDataURL(file)})}
+
+async function callAnthropic(systemPrompt,userText,pdfFile,maxTokens){
+  const body={model:'claude-haiku-4-5-20251001',max_tokens:maxTokens||500,system:systemPrompt,messages:[{role:'user',content:[]}]};
+  if(pdfFile){const b64=await fileToBase64(pdfFile);body.messages[0].content.push({type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}})}
+  body.messages[0].content.push({type:'text',text:userText});
+  const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':getAnthropicKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify(body)});
+  if(!resp.ok){const t=await resp.text();if(resp.status===401) throw new Error('Anthropic API key invalid or expired. Open the bot (bottom-right) and paste a fresh sk-ant-… key.');throw new Error('API '+resp.status+': '+t.slice(0,200))}
+  const j=await resp.json();
+  return (j.content||[]).filter(p=>p.type==='text').map(p=>p.text).join('\n').trim();
+}
+
+async function extractWithContact(contactId,file){
+  try{
+    const ok=await uploadReport(contactId,'gallup',file);
+    if(!ok)return;
+    const text=await callAnthropic(AI_PROMPTS['strengths-pdf-extractor'],"Extract this person's top 10 CliftonStrengths themes in rank order from the attached PDF.",file,400);
+    const m=text.match(/\{[\s\S]*\}/);const parsed=m?JSON.parse(m[0]):null;
+    if(!parsed||!Array.isArray(parsed.top10)) throw new Error('Could not parse theme list');
+    const lookup={};CS34.forEach(t=>{if(t)lookup[t.toLowerCase()]=t});
+    const cleaned=parsed.top10.map(t=>lookup[(t||'').toLowerCase().trim()]||'').slice(0,10);
+    while(cleaned.length<10) cleaned.push('');
+    if(!cleaned.filter(Boolean).length) throw new Error('No recognised themes');
+    openStrEdit(contactId,cleaned);
+    toast('Extracted '+cleaned.filter(Boolean).length+' theme(s) — review and Save','success');
+    renderUpload();
+  }catch(e){
+    console.error(e);
+    const msg=e.message==='Failed to fetch'?'Network blocked the request. Disable any ad-blocker or untick "Auto-extract" to upload without Claude.':e.message;
+    toast('Extract failed: '+msg,'error');
+  }
+}
+
+async function extractStandalone(file){
+  try{
+    const text=await callAnthropic(AI_PROMPTS['strengths-pdf-extractor'],"Extract this person's top 10 CliftonStrengths themes in rank order, plus their name if shown.",file,500);
+    const m=text.match(/\{[\s\S]*\}/);const parsed=m?JSON.parse(m[0]):null;
+    if(!parsed||!Array.isArray(parsed.top10)) throw new Error('Could not parse theme list');
+    const lookup={};CS34.forEach(t=>{if(t)lookup[t.toLowerCase()]=t});
+    const cleaned=parsed.top10.map(t=>lookup[(t||'').toLowerCase().trim()]||'').slice(0,10);
+    while(cleaned.length<10) cleaned.push('');
+    if(!cleaned.filter(Boolean).length) throw new Error('No recognised themes');
+    // Find contact by extracted name
+    const ln=(parsed.name||'').toLowerCase();
+    let suggestedId='';
+    if(ln){
+      const match=contacts.find(c=>ln.includes((c.first_name||'').toLowerCase())&&ln.includes((c.last_name||'').toLowerCase())&&c.first_name&&c.last_name);
+      if(match) suggestedId=match.id;
+    }
+    if(!suggestedId){toast('Pick a contact in the dropdown to file this report','info');return}
+    const ok=await uploadReport(suggestedId,'gallup',file);
+    if(ok){openStrEdit(suggestedId,cleaned);toast('Auto-matched to '+getContactName(suggestedId),'success');renderUpload()}
+  }catch(e){
+    console.error(e);
+    const msg=e.message==='Failed to fetch'?'Network blocked the request. Disable any ad-blocker or untick "Auto-extract" to upload without Claude.':e.message;
+    toast('Extract failed: '+msg,'error');
+  }
+}
+
+// ── DOMAIN BALANCE ──
+function renderDomains(){
+  const withStr=contacts.filter(c=>c.strength_1);
+  const domainCount={Executing:0,Influencing:0,Relationship:0,Strategic:0};
+  const themeByDomain={Executing:{},Influencing:{},Relationship:{},Strategic:{}};
+  withStr.forEach(c=>{
+    for(let i=1;i<=10;i++){
+      const s=c['strength_'+i];if(!s)continue;
+      const d=getDomain(s);if(!d)continue;
+      domainCount[d]++;themeByDomain[d][s]=(themeByDomain[d][s]||0)+1;
+    }
+  });
+  const totalDom=Object.values(domainCount).reduce((a,b)=>a+b,0)||1;
+  let html=`
+    <div onclick="navTo('dashboard')" style="font-size:13px;color:#8b5cf6;font-weight:600;cursor:pointer;margin-bottom:16px;display:inline-block;">&larr; Back to Dashboard</div>
+    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:16px;">
+      <div style="font-family:'Quicksand','Inter',sans-serif;font-size:16px;font-weight:700;color:#1e3a5f;margin-bottom:6px;">Domain Balance — Top 10 themes</div>
+      <div style="font-size:12px;color:#64748b;margin-bottom:14px;">${withStr.length} profiles &middot; ${totalDom} themes counted</div>
+      <div style="display:flex;border-radius:6px;overflow:hidden;height:32px;margin-bottom:12px;">
+        ${Object.entries(domainCount).map(([d,c])=>c?'<div style="background:'+domainColors[d]+';width:'+(c/totalDom*100).toFixed(1)+'%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">'+d+' '+c+'</div>':'').join('')}
+      </div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;">
+        ${Object.entries(domainCount).map(([d,c])=>`<div style="display:flex;align-items:center;gap:6px;"><div style="width:12px;height:12px;border-radius:2px;background:${domainColors[d]};"></div><span style="font-size:12px;color:#64748b;">${d}: ${c} (${(c/totalDom*100).toFixed(0)}%)</span></div>`).join('')}
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;">`;
+  ['Executing','Influencing','Relationship','Strategic'].forEach(d=>{
+    const themes=Object.entries(themeByDomain[d]).sort((a,b)=>b[1]-a[1]);
+    const dTotal=themes.reduce((a,[,n])=>a+n,0)||1;
+    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-top:4px solid ${domainColors[d]};border-radius:12px;padding:16px 18px;">
+      <div style="font-family:'Quicksand','Inter',sans-serif;font-size:14px;font-weight:700;color:${domainColors[d]};margin-bottom:10px;">${d}</div>
+      ${themes.length?themes.map(([name,count])=>{const pct=(count/dTotal*100).toFixed(0);return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;"><span style="font-size:11px;color:#1e293b;flex:1;min-width:0;">${name}</span><div style="flex:1;background:#f1f5f9;border-radius:3px;height:10px;overflow:hidden;"><div style="background:${domainColors[d]};height:100%;width:${pct}%;"></div></div><span style="font-size:11px;color:#64748b;font-weight:600;width:34px;text-align:right;">${count}</span></div>`}).join(''):'<div style="font-size:12px;color:#94a3b8;">No themes recorded.</div>'}
+    </div>`;
+  });
+  html+=`</div>`;
+  document.getElementById('domainsContent').innerHTML=html;
+}
+
+// ── CODE TRACKER (V1: read-only summary, edit in main CRM) ──
+function renderCodes(){
+  const inFlight=gallupRequests.filter(r=>r.status!=='Filed');
+  const html=`
+    <div onclick="navTo('dashboard')" style="font-size:13px;color:#d97706;font-weight:600;cursor:pointer;margin-bottom:16px;display:inline-block;">&larr; Back to Dashboard</div>
+    <div style="background:#fef3c7;border:1px solid #fde68a;border-left:4px solid #d97706;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+      <div style="font-size:13px;font-weight:700;color:#78350f;margin-bottom:4px;">Read-only summary in this app (v0.1)</div>
+      <div style="font-size:12px;color:#78350f;line-height:1.55;">For now, edit the pipeline in the main Coach4U CRM. Full code-tracker is on the roadmap.</div>
+      <a href="${MAIN_CRM_URL}/#strcodes" target="_blank" rel="noopener" class="btn btn-gray" style="margin-top:10px;">Open Code Tracker in main CRM &#8599;</a>
+    </div>
+    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px 20px;">
+      <div style="font-family:'Quicksand','Inter',sans-serif;font-size:15px;font-weight:700;color:#1e3a5f;margin-bottom:12px;">In flight (${inFlight.length})</div>
+      ${inFlight.length?inFlight.map(r=>{
+        const cName=getContactName(r.contact_id);
+        const cl=clients.find(c=>c.id===r.client_id);
+        return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #f1f5f9;border-radius:8px;margin-bottom:8px;background:#f8fafc;">
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:600;color:#1e293b;">${escHtml(cName)}${cl?` &middot; <span style="font-weight:400;color:#64748b;">${escHtml(cl.relationship_name)}</span>`:''}</div>
+            <div style="font-size:11px;color:#64748b;margin-top:2px;">${escHtml(r.product_type||'')} &middot; ${escHtml(r.source||'')} &middot; ${r.created_at?new Date(r.created_at).toLocaleDateString('en-AU'):''}</div>
+          </div>
+          <span style="background:#fff;border:1px solid #e2e8f0;border-radius:99px;padding:3px 10px;font-size:11px;font-weight:700;color:#475569;">${escHtml(r.status||'')}</span>
+        </div>`;
+      }).join(''):'<div style="font-size:12px;color:#94a3b8;padding:14px 0;">No requests in flight.</div>'}
+    </div>`;
+  document.getElementById('codesContent').innerHTML=html;
+}
+
+// ── REPORTS (V1: per-contact view, AI calls in main CRM for now) ──
+function renderReports(){
+  const withStr=contacts.filter(c=>c.strength_1).sort((a,b)=>(a.first_name+' '+a.last_name).localeCompare(b.first_name+' '+b.last_name));
+  const html=`
+    <div onclick="navTo('dashboard')" style="font-size:13px;color:#003366;font-weight:600;cursor:pointer;margin-bottom:16px;display:inline-block;">&larr; Back to Dashboard</div>
+    <div style="background:#dbeafe;border:1px solid #93c5fd;border-left:4px solid #003366;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+      <div style="font-size:13px;font-weight:700;color:#1e3a5f;margin-bottom:4px;">Reports landing — v0.1</div>
+      <div style="font-size:12px;color:#1e3a5f;line-height:1.55;">Pick a contact to view their themes and PDFs. AI report generation (Personal Insights, Bring &amp; Need, Adaptation Tips, Couple Dynamics) is staying in the main CRM until V2.</div>
+      <a href="${MAIN_CRM_URL}/#strreports" target="_blank" rel="noopener" class="btn btn-gray" style="margin-top:10px;">Generate AI reports in main CRM &#8599;</a>
+    </div>
+    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px 20px;">
+      <div style="font-family:'Quicksand','Inter',sans-serif;font-size:15px;font-weight:700;color:#1e3a5f;margin-bottom:12px;">Profiles with strengths (${withStr.length})</div>
+      ${withStr.map(c=>{
+        const top5=[];for(let i=1;i<=5;i++)if(c['strength_'+i])top5.push({rank:i,name:c['strength_'+i]});
+        const reps=contactReports.filter(r=>r.contact_id===c.id);
+        return `<div style="padding:12px;border:1px solid #f1f5f9;border-radius:10px;margin-bottom:8px;background:#f8fafc;">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+            <div style="font-size:13px;font-weight:700;color:#1e293b;">${escHtml(c.first_name)} ${escHtml(c.last_name)}</div>
+            <div style="font-size:11px;color:#64748b;">${reps.length} report${reps.length===1?'':'s'} on file</div>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;">${top5.map(s=>csPill(s.rank,s.name)).join('')}</div>
+          ${reps.length?'<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">'+reps.map(r=>`<a href="${r.url}" target="_blank" rel="noopener" style="font-size:11px;color:#2563eb;text-decoration:none;background:#eff6ff;border:1px solid #bfdbfe;border-radius:4px;padding:3px 8px;font-weight:600;">${escHtml(r.filename||r.report_type)}</a>`).join('')+'</div>':''}
+        </div>`;
+      }).join('')||'<div style="font-size:12px;color:#94a3b8;padding:14px 0;">No profiles with strengths yet.</div>'}
+    </div>`;
+  document.getElementById('reportsContent').innerHTML=html;
+}
+
+// ── WORKFLOW SOP (static reference) ──
+function renderSop(){
+  const html=`
+    <div onclick="navTo('dashboard')" style="font-size:13px;color:#1e3a5f;font-weight:600;cursor:pointer;margin-bottom:16px;display:inline-block;">&larr; Back to Dashboard</div>
+    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:24px;">
+      <h2 style="font-family:'Quicksand','Inter',sans-serif;font-size:20px;color:#1e3a5f;margin-bottom:14px;">Gallup CliftonStrengths workflow</h2>
+      <ol style="padding-left:20px;font-size:13px;line-height:1.8;color:#334155;">
+        <li><strong>New request</strong> — corporate clients use the public link (per-org URL on their client modal). Internal requests start in the main CRM Code Tracker.</li>
+        <li><strong>Awaiting Payment</strong> — invoice issued via Xero.</li>
+        <li><strong>Awaiting Purchase</strong> — payment received, code purchased from Gallup with discount <code>DH7HGTMAZ</code>.</li>
+        <li><strong>Awaiting Completion</strong> — code emailed to client. Use email templates in the agents area.</li>
+        <li><strong>Completed</strong> — client has finished the assessment, PDF received.</li>
+        <li><strong>Upload</strong> — PDF uploaded against the contact via <em>Upload Report</em>; auto-extract pulls the top 10 themes if your Anthropic key is set.</li>
+        <li><strong>Filed</strong> — request marked Filed once the strengths are saved on the contact and the report appears in their profile.</li>
+      </ol>
+      <a href="${MAIN_CRM_URL}/#strsop" target="_blank" rel="noopener" class="btn btn-gray" style="margin-top:14px;">Open full SOP in main CRM &#8599;</a>
+    </div>`;
+  document.getElementById('sopContent').innerHTML=html;
+}
+
+// ── AI CHAT BOT (only handles API key entry in v1) ──
+window.toggleAiChat=function(){const p=document.getElementById('aiChatPanel');const open=p.style.display==='flex';p.style.display=open?'none':'flex';if(!open)document.getElementById('aiChatInput').focus()};
+function appendChat(role,msg){const c=document.getElementById('aiChatMessages');const colour=role==='bot'?'#f0fdf4':'#dbeafe';const align=role==='bot'?'flex-start':'flex-end';c.insertAdjacentHTML('beforeend',`<div style="background:${colour};border-radius:12px;padding:10px 14px;font-size:13px;color:#1e3a5f;max-width:90%;align-self:${align};">${escHtml(msg)}</div>`);c.scrollTop=c.scrollHeight}
+window.sendAiChat=function(){
+  const inp=document.getElementById('aiChatInput');const msg=inp.value.trim();if(!msg)return;inp.value='';
+  appendChat('user',msg);
+  if(msg.startsWith('sk-ant-')){setAnthropicKey(msg);appendChat('bot','API key saved. Auto-extract is now enabled.');return}
+  appendChat('bot','In v0.1 the bot only saves your sk-ant-… key. Full chat tools are in the main CRM.');
+};
+
+// ── INIT ──
+async function init(){
+  try{
+    await loadAll();
+    renderTabs();
+    navTo('dashboard');
+  }catch(e){
+    console.error('Init failed:',e);
+    document.getElementById('dashContent').innerHTML='<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:24px;color:#dc2626;">Could not load data: '+escHtml(e.message)+'</div>';
+  }
+}
+init();
+
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{})}
+</script>
+</body>
+</html>
