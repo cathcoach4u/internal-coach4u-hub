@@ -1,4 +1,4 @@
-const CACHE_NAME = 'coach4u-strengths-v3';
+const CACHE_NAME = 'coach4u-strengths-v4';
 const ASSETS = ['./','index.html','manifest.json'];
 
 self.addEventListener('install', e => {

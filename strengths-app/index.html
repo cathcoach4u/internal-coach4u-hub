@@ -74,7 +74,7 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#f0f6ff;c
     <h1><span class="icon">&#127919;</span> Coach4U Strengths Hub</h1>
     <div class="header-right">
       <button class="refresh-btn" onclick="hardRefresh()" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span class="version">v0.3.0</span>
+      <span class="version">v0.3.1</span>
     </div>
   </div>
   <div class="tab-bar" id="tabBar"></div>
@@ -1325,13 +1325,20 @@ window.sendAiChat=function(){
 
 // ── INIT ──
 async function init(){
+  // 1. Make the dashboard screen visible immediately with a Loading state
+  //    so the user always sees something even before data resolves.
+  activeTab='dashboard';
+  document.getElementById('screen-dashboard').classList.add('active');
+  document.getElementById('dashContent').innerHTML='<div style="padding:40px;text-align:center;color:#64748b;font-size:13px;">Loading Strengths Hub data…</div>';
+  // 2. Render tabs synchronously so navigation works even if data load fails.
+  try{ renderTabs(); }catch(e){ console.error('renderTabs failed:',e); }
+  // 3. Load + render the dashboard.
   try{
     await loadAll();
-    renderTabs();
     navTo('dashboard');
   }catch(e){
     console.error('Init failed:',e);
-    document.getElementById('dashContent').innerHTML='<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:24px;color:#dc2626;">Could not load data: '+escHtml(e.message)+'</div>';
+    document.getElementById('dashContent').innerHTML='<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:24px;color:#dc2626;">Could not load data: '+escHtml(e.message)+'<br><br>Open DevTools Console for details, or click the &#128260; refresh button at the top right.</div>';
   }
 }
 init();
