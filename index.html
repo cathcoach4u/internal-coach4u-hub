@@ -250,7 +250,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.29</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.30</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -8703,7 +8703,7 @@ function renderAgents(){
       return `<div style="display:flex;gap:4px;flex-shrink:0;flex-wrap:wrap;" onclick="event.stopPropagation()">
       ${copilotBtn}
       ${inAppBtn}
-      <button style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;" onclick="viewAgentDetail('${id}')">View</button>
+      <button style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;" onclick="viewAgentDetail('${id}')">Details</button>
       <button style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;" onclick="openAgentForm('${id}')">Edit</button>
       <button style="background:none;border:1px solid #fecaca;border-radius:6px;padding:4px 10px;font-size:11px;color:#dc2626;cursor:pointer;" onclick="deleteAgent('${id}')">Del</button>
     </div>`;
@@ -8726,7 +8726,8 @@ function renderAgents(){
           <div style="position:absolute;left:8px;top:22px;width:14px;height:2px;background:#cbd5e1;"></div>`;
       }
       const platLabel=platformLabels[a.platform]||a.platform||'';
-      row+=`<div onclick="viewAgentDetail('${a.id}')" onmouseover="this.querySelector('.agentNameLink').style.textDecoration='underline';this.querySelector('.agentNameLink').style.color='#0891b2';" onmouseout="this.querySelector('.agentNameLink').style.textDecoration='none';this.querySelector('.agentNameLink').style.color='#1e3a5f';" style="min-width:0;flex:1;cursor:pointer;">
+      const rowClickFn=a.copilot_url?`window.open('${a.copilot_url.replace(/'/g,"\\'")}','_blank')`:`viewAgentDetail('${a.id}')`;
+      row+=`<div onclick="${rowClickFn}" onmouseover="this.querySelector('.agentNameLink').style.textDecoration='underline';this.querySelector('.agentNameLink').style.color='#0891b2';" onmouseout="this.querySelector('.agentNameLink').style.textDecoration='none';this.querySelector('.agentNameLink').style.color='#1e3a5f';" style="min-width:0;flex:1;cursor:pointer;">
         <div style="display:flex;align-items:center;gap:8px;min-width:0;">
           <span style="width:${dotSize};height:${dotSize};border-radius:99px;background:${dotColor};flex-shrink:0;"></span>
           <span class="agentNameLink" style="font-weight:${showAsChild?'600':'700'};font-size:13px;color:#1e3a5f;word-break:break-word;transition:all .15s;">${a.name}</span>
