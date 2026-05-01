@@ -250,7 +250,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.30</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.31</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -4159,16 +4159,15 @@ function renderContactReports(contactId){
 window.uploadReport=async function(contactId,reportType,file,input){
   if(!file) return;
   if(!file.name.toLowerCase().endsWith('.pdf')){toast('Please select a PDF file','error');return;}
-  const label=input.parentElement;
-  const origText=label.childNodes[0].textContent;
-  label.childNodes[0].textContent='Uploading...';
-  label.style.background='#fef3c7';label.style.color='#92400e';
+  const label=input?.parentElement||null;
+  const origText=label?.childNodes?.[0]?.textContent||'';
+  if(label){label.childNodes[0].textContent='Uploading...';label.style.background='#fef3c7';label.style.color='#92400e';}
 
   const path=contactId+'/'+reportType+'_'+Date.now()+'.pdf';
   const {data:uploadData,error:uploadErr}=await supabase.storage.from('client-reports').upload(path,file,{upsert:true});
   if(uploadErr){
     toast('Upload error: '+uploadErr.message,'error');
-    label.childNodes[0].textContent=origText;label.style.background='';label.style.color='';
+    if(label){label.childNodes[0].textContent=origText;label.style.background='';label.style.color='';}
     return;
   }
   const {data:urlData}=supabase.storage.from('client-reports').getPublicUrl(path);
@@ -4181,6 +4180,7 @@ window.uploadReport=async function(contactId,reportType,file,input){
   if(dbErr){toast('Error saving report: '+dbErr.message,'error');return;}
   await loadContactReports();
   renderContactReports(contactId);
+  if(label){label.childNodes[0].textContent=origText;label.style.background='';label.style.color='';}
   toast('Report uploaded','success');
 };
 
