@@ -65,7 +65,7 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#f0f6ff;c
     <h1><span class="icon">&#127919;</span> Coach4U Strengths Hub</h1>
     <div class="header-right">
       <button class="refresh-btn" onclick="hardRefresh()" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span class="version">v0.1.0</span>
+      <span class="version">v0.2.0</span>
     </div>
   </div>
   <div class="tab-bar" id="tabBar"></div>
@@ -100,6 +100,75 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#f0f6ff;c
       <button class="btn btn-red" id="strEditClearBtn" onclick="strEditClear()" style="margin-right:auto;display:none;">Clear all</button>
       <button class="btn btn-gray" onclick="closeModal('strEditModal')">Cancel</button>
       <button class="btn btn-green" onclick="saveStrEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Gallup Code Request Modal -->
+<div class="modal-overlay" id="gallupReqModal">
+  <div class="modal">
+    <h3 id="gallupReqTitle">New Code Request</h3>
+    <input type="hidden" id="gallupReqId">
+    <div class="form-group" id="gallupReqModeRow">
+      <label>Request type</label>
+      <div style="display:flex;gap:6px;">
+        <button type="button" id="gallupModeContactBtn" onclick="gallupReqSwitchMode('contact')" style="flex:1;background:#003366;color:#fff;border:1px solid #003366;padding:9px 12px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">Single contact</button>
+        <button type="button" id="gallupModeCoupleBtn" onclick="gallupReqSwitchMode('couple')" style="flex:1;background:#fff;color:#1e3a5f;border:1px solid #e2e8f0;padding:9px 12px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">Couple (per linked member)</button>
+      </div>
+      <input type="hidden" id="gallupReqMode" value="contact">
+    </div>
+    <div class="form-group" id="gallupReqContactRow">
+      <label>Contact</label>
+      <select id="gallupReqContact"></select>
+    </div>
+    <div class="form-group" id="gallupReqCoupleRow" style="display:none;">
+      <label>Couple client</label>
+      <select id="gallupReqCouple"></select>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:12px;">
+      <div class="form-group" style="margin:0;">
+        <label>Product</label>
+        <select id="gallupReqProduct">
+          <option value="Top 34">CliftonStrengths Top 34</option>
+          <option value="Top 5">CliftonStrengths Top 5</option>
+          <option value="Top 5 to Top 34 upgrade">Top 5 to Top 34 upgrade</option>
+          <option value="Sales and Management Report">Sales and Management Report</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label>Source</label>
+        <select id="gallupReqSource">
+          <option value="Cath">Cath</option>
+          <option value="Coach4U">Coach4U</option>
+          <option value="Referrer">Referrer</option>
+          <option value="Client enquiry">Client enquiry</option>
+          <option value="ThriveHQ">ThriveHQ</option>
+          <option value="Couples">Couples</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label>Status</label>
+        <select id="gallupReqStatus"></select>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:12px;">
+      <div class="form-group" style="margin:0;">
+        <label>Discount code</label>
+        <input id="gallupReqDiscount" value="DH7HGTMAZ">
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label>Code value (Gallup-issued)</label>
+        <input id="gallupReqCodeValue" placeholder="Paste once distributed">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Notes</label>
+      <textarea id="gallupReqNotes" rows="2"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-red" onclick="deleteGallupRequest()" id="gallupReqDeleteBtn" style="margin-right:auto;display:none;">Delete</button>
+      <button class="btn btn-gray" onclick="closeModal('gallupReqModal')">Cancel</button>
+      <button class="btn btn-green" onclick="saveGallupRequest()">Save</button>
     </div>
   </div>
 </div>
@@ -196,8 +265,66 @@ RULES:
 - Strengths-based framing — describe patterns, not labels
 - Talk to the reader as "you"
 - Keep total length around 220-280 words
-- Do not list the themes verbatim — weave them in naturally`
+- Do not list the themes verbatim — weave them in naturally`,
+  'strengths-bring-need': `You are drafting a "Bring & Need" reading for a Coach4U client based on their CliftonStrengths top-10. The reading is for the client to read.
+
+WRITE IN CATH'S VOICE. The voice reference is the source of truth for tone:
+
+${CATH_VOICE_REFERENCE}
+
+STRUCTURE — exactly two short labelled paragraphs, no headings beyond the bold inline labels:
+**What you bring** — one paragraph on what this person reliably contributes when they're in a team. Concrete, observable behaviours, not adjectives.
+**What you need** — one paragraph on what they need from a team to be at their best. Practical conditions, not wishes.
+
+RULES:
+- Australian English, no exclamation marks, no emojis
+- Plain English, short to medium sentences, one idea per sentence
+- Strengths-based — patterns, not deficits
+- Talk to the reader as "you"
+- Total length 160-220 words across both paragraphs
+- Don't list themes verbatim; weave them in naturally
+- No "I" from Cath; this is a reading prepared for the client`,
+  'strengths-adaptation-tips': `You are writing a short adaptation note for Cath (the practitioner) ahead of a session with a client. The note compares Cath's own CliftonStrengths profile to the client's, and gives Cath practical guidance on how to adapt her natural style.
+
+WRITE IN CATH'S VOICE (this note is for her, but in the same plain register):
+
+${CATH_VOICE_REFERENCE}
+
+STRUCTURE — three short labelled sections:
+**Where you're similar** — one sentence or two. Where Cath and the client share dominant themes or domain.
+**Where you're different** — one short paragraph naming the most notable difference (domain skew or specific themes), as a pattern not a deficit.
+**How to adapt** — three numbered, practical, in-session moves Cath can make to meet the client where they are. Each one short. Each one a verb.
+
+RULES:
+- Australian English, no exclamation marks, no emojis, no clinical language
+- Plain English, short to medium sentences
+- Strengths-based framing throughout
+- Address Cath as "you"
+- Keep it under 220 words across all three sections
+- Don't list themes verbatim; weave them in naturally
+- Skip preamble; go straight in`,
+  'strengths-couple-dynamics': `You are drafting a Couple Dynamics reading for a Coach4U practitioner working with this couple in session. The reading is for the practitioner (Cath), not for the clients.
+
+WRITE IN CATH'S VOICE. The voice reference is the source of truth for tone:
+
+${CATH_VOICE_REFERENCE}
+
+STRUCTURE — three short sections, each with a bold inline label:
+**Where they complement** — one short paragraph on how their differences could serve them as a pair.
+**Where friction is likely** — one short paragraph naming the most probable rub-point as a pattern, not a fault.
+**Coaching prompts** — exactly three numbered questions Cath could use in session, each on its own line, plain English.
+
+RULES:
+- Australian English, no exclamation marks, no emojis
+- Strengths-based framing — patterns not labels, never deficits
+- Reference the partners by first name (use the names provided)
+- Don't list themes verbatim; weave them in naturally
+- Total length 200-280 words across all three sections
+- Do not start with "Here is" or any preamble; go straight in`
 };
+
+const GALLUP_STATUSES=['New','Awaiting Payment','Awaiting Purchase','Awaiting Completion','Completed','Filed'];
+const GALLUP_STATUS_COLORS={'New':'#64748b','Awaiting Payment':'#d97706','Awaiting Purchase':'#0891b2','Awaiting Completion':'#7c3aed','Completed':'#15803d','Filed':'#475569'};
 
 // ── STATE ──
 let contacts=[], clients=[], clientMembers=[], contactReports=[], strengthsInsights=[], gallupRequests=[];
@@ -600,60 +727,345 @@ function renderDomains(){
   document.getElementById('domainsContent').innerHTML=html;
 }
 
-// ── CODE TRACKER (V1: read-only summary, edit in main CRM) ──
+// ── CODE TRACKER (full CRUD) ──
+function gallupDaysSince(iso){if(!iso)return null;return Math.floor((Date.now()-new Date(iso).getTime())/(1000*60*60*24))}
 function renderCodes(){
-  const inFlight=gallupRequests.filter(r=>r.status!=='Filed');
-  const html=`
+  const reqs=[...gallupRequests];
+  const counts={};GALLUP_STATUSES.forEach(s=>counts[s]=0);
+  reqs.forEach(r=>{counts[r.status]=(counts[r.status]||0)+1});
+  const awaitingPayment=counts['Awaiting Payment']||0;
+  const awaitingCompletion=counts['Awaiting Completion']||0;
+  const readyToFile=counts['Completed']||0;
+  const inFlight=reqs.filter(r=>r.status!=='Filed').length;
+  let html=`
     <div onclick="navTo('dashboard')" style="font-size:13px;color:#d97706;font-weight:600;cursor:pointer;margin-bottom:16px;display:inline-block;">&larr; Back to Dashboard</div>
-    <div style="background:#fef3c7;border:1px solid #fde68a;border-left:4px solid #d97706;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
-      <div style="font-size:13px;font-weight:700;color:#78350f;margin-bottom:4px;">Read-only summary in this app (v0.1)</div>
-      <div style="font-size:12px;color:#78350f;line-height:1.55;">For now, edit the pipeline in the main Coach4U CRM. Full code-tracker is on the roadmap.</div>
-      <a href="${MAIN_CRM_URL}/#strcodes" target="_blank" rel="noopener" class="btn btn-gray" style="margin-top:10px;">Open Code Tracker in main CRM &#8599;</a>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px;">
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;${awaitingPayment?'box-shadow:0 0 0 2px #d97706;':''}"><div style="font-size:11px;color:#64748b;font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;">&#128176; Awaiting Payment</div><div style="font-size:24px;font-weight:700;color:#d97706;">${awaitingPayment}</div></div>
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;${awaitingCompletion?'box-shadow:0 0 0 2px #7c3aed;':''}"><div style="font-size:11px;color:#64748b;font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;">&#9203; Awaiting Client</div><div style="font-size:24px;font-weight:700;color:#7c3aed;">${awaitingCompletion}</div></div>
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;${readyToFile?'box-shadow:0 0 0 2px #15803d;':''}"><div style="font-size:11px;color:#64748b;font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;">&#128194; Ready to File</div><div style="font-size:24px;font-weight:700;color:#15803d;">${readyToFile}</div></div>
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;"><div style="font-size:11px;color:#64748b;font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;">&#128203; In flight</div><div style="font-size:24px;font-weight:700;color:#003366;">${inFlight}</div></div>
     </div>
-    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px 20px;">
-      <div style="font-family:'Quicksand','Inter',sans-serif;font-size:15px;font-weight:700;color:#1e3a5f;margin-bottom:12px;">In flight (${inFlight.length})</div>
-      ${inFlight.length?inFlight.map(r=>{
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+      <div style="font-family:'Quicksand','Inter',sans-serif;font-size:15px;font-weight:700;color:#1e3a5f;">Code requests</div>
+      <button class="btn btn-blue" onclick="openGallupRequest('')">+ New Request</button>
+    </div>
+    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
+      ${reqs.length?reqs.sort((a,b)=>{
+        const fa=a.status==='Filed'?1:0, fb=b.status==='Filed'?1:0;
+        if(fa!==fb)return fa-fb;
+        return new Date(b.created_at||0)-new Date(a.created_at||0);
+      }).map(r=>{
         const cName=getContactName(r.contact_id);
         const cl=clients.find(c=>c.id===r.client_id);
-        return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #f1f5f9;border-radius:8px;margin-bottom:8px;background:#f8fafc;">
-          <div style="flex:1;min-width:0;">
+        const days=gallupDaysSince(r.created_at);
+        const status=r.status||'New';
+        return `<div onclick="openGallupRequest('${r.id}')" style="padding:12px 16px;border-bottom:1px solid #f1f5f9;cursor:pointer;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <span style="width:10px;height:10px;border-radius:99px;background:${GALLUP_STATUS_COLORS[status]||'#94a3b8'};flex-shrink:0;"></span>
+          <div style="flex:1;min-width:160px;">
             <div style="font-size:13px;font-weight:600;color:#1e293b;">${escHtml(cName)}${cl?` &middot; <span style="font-weight:400;color:#64748b;">${escHtml(cl.relationship_name)}</span>`:''}</div>
-            <div style="font-size:11px;color:#64748b;margin-top:2px;">${escHtml(r.product_type||'')} &middot; ${escHtml(r.source||'')} &middot; ${r.created_at?new Date(r.created_at).toLocaleDateString('en-AU'):''}</div>
+            <div style="font-size:11px;color:#64748b;margin-top:2px;">${escHtml(r.product_type||'')} &middot; ${escHtml(r.source||'')}${days!=null?' &middot; '+days+'d':''}${r.code_value?' &middot; <code style="background:#f1f5f9;padding:1px 6px;border-radius:4px;">'+escHtml(r.code_value)+'</code>':''}</div>
           </div>
-          <span style="background:#fff;border:1px solid #e2e8f0;border-radius:99px;padding:3px 10px;font-size:11px;font-weight:700;color:#475569;">${escHtml(r.status||'')}</span>
+          <span style="background:${GALLUP_STATUS_COLORS[status]||'#94a3b8'};color:#fff;border-radius:99px;padding:3px 10px;font-size:11px;font-weight:700;flex-shrink:0;">${escHtml(status)}</span>
         </div>`;
-      }).join(''):'<div style="font-size:12px;color:#94a3b8;padding:14px 0;">No requests in flight.</div>'}
+      }).join(''):'<div style="padding:20px;text-align:center;color:#94a3b8;">No code requests yet. Click + New Request to log one.</div>'}
     </div>`;
   document.getElementById('codesContent').innerHTML=html;
 }
 
-// ── REPORTS (V1: per-contact view, AI calls in main CRM for now) ──
+window.openGallupRequest=function(id){
+  const r=id?gallupRequests.find(x=>x.id==id):null;
+  document.getElementById('gallupReqId').value=r?r.id:'';
+  document.getElementById('gallupReqTitle').textContent=r?'Edit Code Request':'New Code Request';
+  document.getElementById('gallupReqDeleteBtn').style.display=r?'inline-block':'none';
+  // Status options
+  const statusSel=document.getElementById('gallupReqStatus');
+  statusSel.innerHTML=GALLUP_STATUSES.map(s=>`<option value="${s}">${s}</option>`).join('');
+  // Contacts
+  const contactSel=document.getElementById('gallupReqContact');
+  const sorted=[...contacts].filter(c=>c.first_name||c.last_name).sort((a,b)=>(a.first_name+' '+a.last_name).localeCompare(b.first_name+' '+b.last_name));
+  contactSel.innerHTML='<option value="">— Pick a contact —</option>'+sorted.map(c=>`<option value="${c.id}">${escHtml(c.first_name)} ${escHtml(c.last_name)}${c.email?' — '+escHtml(c.email):''}</option>`).join('');
+  contactSel.value=r?r.contact_id||'':'';
+  // Couples
+  const coupleSel=document.getElementById('gallupReqCouple');
+  const couples=clients.filter(c=>c.role==='Couple').sort((a,b)=>(a.relationship_name||'').localeCompare(b.relationship_name||''));
+  coupleSel.innerHTML='<option value="">— Pick a Couple client —</option>'+couples.map(c=>`<option value="${c.id}">${escHtml(c.relationship_name)}</option>`).join('');
+  coupleSel.value='';
+  gallupReqSwitchMode('contact');
+  document.getElementById('gallupReqProduct').value=r?r.product_type||'Top 34':'Top 34';
+  document.getElementById('gallupReqSource').value=r?r.source||'Cath':'Cath';
+  statusSel.value=r?r.status||'New':'New';
+  document.getElementById('gallupReqDiscount').value=r?r.discount_code||'DH7HGTMAZ':'DH7HGTMAZ';
+  document.getElementById('gallupReqCodeValue').value=r?r.code_value||'':'';
+  document.getElementById('gallupReqNotes').value=r?r.notes||'':'';
+  document.getElementById('gallupReqModal').classList.add('open');
+};
+
+window.gallupReqSwitchMode=function(mode){
+  document.getElementById('gallupReqMode').value=mode;
+  document.getElementById('gallupReqContactRow').style.display=mode==='contact'?'block':'none';
+  document.getElementById('gallupReqCoupleRow').style.display=mode==='couple'?'block':'none';
+  const cBtn=document.getElementById('gallupModeContactBtn');
+  const pBtn=document.getElementById('gallupModeCoupleBtn');
+  const editing=!!document.getElementById('gallupReqId').value;
+  cBtn.style.background=mode==='contact'?'#003366':'#fff';
+  cBtn.style.color=mode==='contact'?'#fff':'#1e3a5f';
+  cBtn.style.borderColor=mode==='contact'?'#003366':'#e2e8f0';
+  pBtn.style.background=mode==='couple'?'#003366':'#fff';
+  pBtn.style.color=mode==='couple'?'#fff':'#1e3a5f';
+  pBtn.style.borderColor=mode==='couple'?'#003366':'#e2e8f0';
+  pBtn.disabled=editing;
+  pBtn.style.opacity=editing?'0.4':'1';
+  pBtn.style.cursor=editing?'not-allowed':'pointer';
+};
+
+window.saveGallupRequest=async function(){
+  const id=document.getElementById('gallupReqId').value;
+  const mode=document.getElementById('gallupReqMode').value;
+  const product=document.getElementById('gallupReqProduct').value;
+  const source=document.getElementById('gallupReqSource').value;
+  const status=document.getElementById('gallupReqStatus').value;
+  const discount=document.getElementById('gallupReqDiscount').value.trim()||'DH7HGTMAZ';
+  const codeValue=document.getElementById('gallupReqCodeValue').value.trim()||null;
+  const notes=document.getElementById('gallupReqNotes').value.trim()||null;
+  if(id){
+    const contactId=document.getElementById('gallupReqContact').value;
+    if(!contactId){toast('Pick a contact','error');return}
+    const patch={contact_id:contactId,product_type:product,source:source,status:status,discount_code:discount,code_value:codeValue,notes:notes,updated_at:new Date().toISOString()};
+    const {error}=await supabase.from('gallup_code_requests').update(patch).eq('id',id);
+    if(error){toast('Save failed: '+error.message,'error');return}
+    toast('Saved','success');
+  }else if(mode==='couple'){
+    const coupleId=document.getElementById('gallupReqCouple').value;
+    if(!coupleId){toast('Pick a Couple client','error');return}
+    const cl=clients.find(c=>c.id===coupleId);
+    if(!cl){toast('Couple not found','error');return}
+    const memberIds=cl.members||[];
+    if(memberIds.length<2){toast('This couple has fewer than 2 linked members','error');return}
+    const rows=memberIds.map(mid=>({contact_id:mid,client_id:coupleId,product_type:product,source:source,status:status,discount_code:discount,code_value:codeValue,notes:notes}));
+    const {error}=await supabase.from('gallup_code_requests').insert(rows);
+    if(error){toast('Save failed: '+error.message,'error');return}
+    toast('Created '+rows.length+' linked requests','success');
+  }else{
+    const contactId=document.getElementById('gallupReqContact').value;
+    if(!contactId){toast('Pick a contact','error');return}
+    const row={contact_id:contactId,product_type:product,source:source,status:status,discount_code:discount,code_value:codeValue,notes:notes};
+    const {error}=await supabase.from('gallup_code_requests').insert(row);
+    if(error){toast('Save failed: '+error.message,'error');return}
+    toast('Request created','success');
+  }
+  await loadAll();
+  renderCodes();
+  closeModal('gallupReqModal');
+};
+
+window.deleteGallupRequest=async function(){
+  const id=document.getElementById('gallupReqId').value;
+  if(!id) return;
+  if(!confirm('Delete this code request? This cannot be undone.')) return;
+  const {error}=await supabase.from('gallup_code_requests').delete().eq('id',id);
+  if(error){toast('Delete failed: '+error.message,'error');return}
+  await loadAll();
+  renderCodes();
+  closeModal('gallupReqModal');
+  toast('Request deleted','success');
+};
+
+// ── REPORTS (full AI generators) ──
+let reportsState={mode:'contact',contactId:'',p1Id:'',p2Id:''};
+window.setReportsMode=function(m){reportsState.mode=m;reportsState.contactId='';reportsState.p1Id='';reportsState.p2Id='';renderReports()};
+window.setReportsContact=function(id){reportsState.contactId=id;renderReports()};
+window.setReportsPair=function(slot,id){reportsState[slot+'Id']=id;renderReports()};
+function getContactStrengths(c){const list=[];for(let i=1;i<=10;i++){if(c['strength_'+i])list.push({rank:i,name:c['strength_'+i]})}return list}
+function findCathContact(){return contacts.find(c=>(c.first_name||'').toLowerCase()==='cath'&&(c.last_name||'').toLowerCase()==='baker'&&c.strength_1)||contacts.find(c=>(c.first_name||'').toLowerCase()==='cath'&&c.strength_1)||null}
+function getInsight(contactId,type){return (strengthsInsights||[]).filter(r=>r.contact_id===contactId&&r.insight_type===type).sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0))[0]||null}
+
 function renderReports(){
   const withStr=contacts.filter(c=>c.strength_1).sort((a,b)=>(a.first_name+' '+a.last_name).localeCompare(b.first_name+' '+b.last_name));
-  const html=`
+  const keyOk=!!getAnthropicKey();
+  let html=`
     <div onclick="navTo('dashboard')" style="font-size:13px;color:#003366;font-weight:600;cursor:pointer;margin-bottom:16px;display:inline-block;">&larr; Back to Dashboard</div>
-    <div style="background:#dbeafe;border:1px solid #93c5fd;border-left:4px solid #003366;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
-      <div style="font-size:13px;font-weight:700;color:#1e3a5f;margin-bottom:4px;">Reports landing — v0.1</div>
-      <div style="font-size:12px;color:#1e3a5f;line-height:1.55;">Pick a contact to view their themes and PDFs. AI report generation (Personal Insights, Bring &amp; Need, Adaptation Tips, Couple Dynamics) is staying in the main CRM until V2.</div>
-      <a href="${MAIN_CRM_URL}/#strreports" target="_blank" rel="noopener" class="btn btn-gray" style="margin-top:10px;">Generate AI reports in main CRM &#8599;</a>
-    </div>
-    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px 20px;">
-      <div style="font-family:'Quicksand','Inter',sans-serif;font-size:15px;font-weight:700;color:#1e3a5f;margin-bottom:12px;">Profiles with strengths (${withStr.length})</div>
-      ${withStr.map(c=>{
-        const top5=[];for(let i=1;i<=5;i++)if(c['strength_'+i])top5.push({rank:i,name:c['strength_'+i]});
-        const reps=contactReports.filter(r=>r.contact_id===c.id);
-        return `<div style="padding:12px;border:1px solid #f1f5f9;border-radius:10px;margin-bottom:8px;background:#f8fafc;">
-          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
-            <div style="font-size:13px;font-weight:700;color:#1e293b;">${escHtml(c.first_name)} ${escHtml(c.last_name)}</div>
-            <div style="font-size:11px;color:#64748b;">${reps.length} report${reps.length===1?'':'s'} on file</div>
-          </div>
-          <div style="display:flex;flex-wrap:wrap;gap:4px;">${top5.map(s=>csPill(s.rank,s.name)).join('')}</div>
-          ${reps.length?'<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">'+reps.map(r=>`<a href="${r.url}" target="_blank" rel="noopener" style="font-size:11px;color:#2563eb;text-decoration:none;background:#eff6ff;border:1px solid #bfdbfe;border-radius:4px;padding:3px 8px;font-weight:600;">${escHtml(r.filename||r.report_type)}</a>`).join('')+'</div>':''}
-        </div>`;
-      }).join('')||'<div style="font-size:12px;color:#94a3b8;padding:14px 0;">No profiles with strengths yet.</div>'}
+    ${keyOk?'':'<div style="background:#fef3c7;border:1px solid #fde68a;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:12px;color:#92400e;">Anthropic API key not set. Open the bot (bottom-right) and paste your <strong>sk-ant-…</strong> key to enable AI report generation.</div>'}
+    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <span style="font-size:12px;font-weight:600;color:#475569;">Mode:</span>
+      <button onclick="setReportsMode('contact')" style="background:${reportsState.mode==='contact'?'#003366':'#f0f4f8'};color:${reportsState.mode==='contact'?'#fff':'#475569'};border:1px solid ${reportsState.mode==='contact'?'#003366':'#e2e8f0'};border-radius:8px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;">Individual</button>
+      <button onclick="setReportsMode('pair')" style="background:${reportsState.mode==='pair'?'#003366':'#f0f4f8'};color:${reportsState.mode==='pair'?'#fff':'#475569'};border:1px solid ${reportsState.mode==='pair'?'#003366':'#e2e8f0'};border-radius:8px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;">Pair / Couple</button>
     </div>`;
+  if(reportsState.mode==='contact'){
+    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;margin-bottom:14px;">
+      <label style="display:block;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Pick contact</label>
+      <select onchange="setReportsContact(this.value)" style="width:100%;padding:10px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;background:#fff;">
+        <option value="">— Pick contact —</option>
+        ${withStr.map(c=>`<option value="${c.id}" ${c.id===reportsState.contactId?'selected':''}>${escHtml(c.first_name)} ${escHtml(c.last_name)}</option>`).join('')}
+      </select>
+    </div>`;
+    if(reportsState.contactId){
+      const c=contacts.find(x=>x.id===reportsState.contactId);
+      if(c) html+=renderIndividualReport(c,keyOk);
+    } else {
+      html+='<div style="font-size:12px;color:#94a3b8;padding:14px 0;">Pick a contact above to see their report.</div>';
+    }
+  } else {
+    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;margin-bottom:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;">
+      <div><label style="display:block;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Partner 1</label>
+        <select onchange="setReportsPair('p1',this.value)" style="width:100%;padding:10px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;">
+          <option value="">— Pick contact —</option>
+          ${withStr.map(c=>`<option value="${c.id}" ${c.id===reportsState.p1Id?'selected':''}>${escHtml(c.first_name)} ${escHtml(c.last_name)}</option>`).join('')}
+        </select></div>
+      <div><label style="display:block;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Partner 2</label>
+        <select onchange="setReportsPair('p2',this.value)" style="width:100%;padding:10px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;">
+          <option value="">— Pick contact —</option>
+          ${withStr.map(c=>`<option value="${c.id}" ${c.id===reportsState.p2Id?'selected':''}>${escHtml(c.first_name)} ${escHtml(c.last_name)}</option>`).join('')}
+        </select></div>
+    </div>`;
+    if(reportsState.p1Id&&reportsState.p2Id&&reportsState.p1Id!==reportsState.p2Id){
+      const p1=contacts.find(x=>x.id===reportsState.p1Id);
+      const p2=contacts.find(x=>x.id===reportsState.p2Id);
+      if(p1&&p2) html+=renderPairReport(p1,p2,keyOk);
+    } else {
+      html+='<div style="font-size:12px;color:#94a3b8;padding:14px 0;">Pick two different contacts above to see the pair report.</div>';
+    }
+  }
   document.getElementById('reportsContent').innerHTML=html;
 }
+
+function renderIndividualReport(c,keyOk){
+  const list=getContactStrengths(c);
+  const piIns=getInsight(c.id,'personal_insights');
+  const bnIns=getInsight(c.id,'bring_need');
+  const adaptIns=getInsight(c.id,'adaptation_tips');
+  const cath=findCathContact();
+  const showAdapt=cath&&cath.id!==c.id;
+  const reps=contactReports.filter(r=>r.contact_id===c.id);
+  const aiBlock=(label,fn,ins)=>{
+    return `<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px 20px;margin-bottom:12px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+        <div style="font-family:'Quicksand','Inter',sans-serif;font-size:14px;font-weight:700;color:#1e3a5f;">${label}</div>
+        <button id="${fn}Btn-${c.id}" onclick="${fn}('${c.id}')" ${keyOk?'':'disabled'} style="background:${keyOk?'#003366':'#cbd5e1'};color:#fff;border:none;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:${keyOk?'pointer':'not-allowed'};">${ins?'Regenerate':'Generate'}</button>
+      </div>
+      ${ins?`<div style="font-size:13px;line-height:1.7;color:#334155;white-space:pre-wrap;">${escHtml(ins.content)}</div><div style="font-size:11px;color:#94a3b8;margin-top:8px;">Generated ${new Date(ins.created_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'})}</div>`:'<div style="font-size:12px;color:#94a3b8;">Not generated yet.</div>'}
+    </div>`;
+  };
+  let h=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px 20px;margin-bottom:12px;">
+    <div style="font-family:'Quicksand','Inter',sans-serif;font-size:18px;font-weight:700;color:#1e3a5f;margin-bottom:6px;">${escHtml(c.first_name)} ${escHtml(c.last_name)}</div>
+    ${c.email?`<div style="font-size:12px;color:#64748b;margin-bottom:10px;">${escHtml(c.email)}</div>`:''}
+    <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;">${list.slice(0,5).map(s=>csPill(s.rank,s.name)).join('')}</div>
+    ${list.length>5?`<div style="display:flex;flex-wrap:wrap;gap:4px;">${list.slice(5).map(s=>csPill(s.rank,s.name)).join('')}</div>`:''}
+    ${reps.length?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;padding-top:10px;border-top:1px dashed #f1f5f9;">${reps.map(r=>`<a href="${r.url}" target="_blank" rel="noopener" style="font-size:11px;color:#2563eb;text-decoration:none;background:#eff6ff;border:1px solid #bfdbfe;border-radius:4px;padding:3px 8px;font-weight:600;">&#128196; ${escHtml(r.filename||r.report_type)}</a>`).join('')}</div>`:''}
+  </div>`;
+  h+=aiBlock('Personal Insights','generatePersonalInsights',piIns);
+  h+=aiBlock('Bring &amp; Need','generateBringNeed',bnIns);
+  if(showAdapt) h+=aiBlock('Adaptation Tips (for Cath)','generateAdaptationTips',adaptIns);
+  return h;
+}
+
+function renderPairReport(p1,p2,keyOk){
+  const l1=getContactStrengths(p1), l2=getContactStrengths(p2);
+  const shared=l1.filter(s=>l2.find(t=>t.name===s.name)).map(s=>s.name);
+  const dynIns=getInsight(p1.id,'couple_dynamics');
+  let h=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px 20px;margin-bottom:12px;">
+    <div style="font-family:'Quicksand','Inter',sans-serif;font-size:16px;font-weight:700;color:#1e3a5f;margin-bottom:10px;">${escHtml(p1.first_name)} &amp; ${escHtml(p2.first_name)}</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:10px;">
+      <div><div style="font-size:11px;color:#64748b;font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;">${escHtml(p1.first_name)}</div><div style="display:flex;flex-wrap:wrap;gap:3px;">${l1.slice(0,5).map(s=>csPill(s.rank,s.name)).join('')}</div></div>
+      <div><div style="font-size:11px;color:#64748b;font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;">${escHtml(p2.first_name)}</div><div style="display:flex;flex-wrap:wrap;gap:3px;">${l2.slice(0,5).map(s=>csPill(s.rank,s.name)).join('')}</div></div>
+    </div>
+    ${shared.length?`<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 12px;font-size:12px;color:#15803d;"><strong>Shared themes:</strong> ${shared.join(', ')}</div>`:'<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;font-size:12px;color:#64748b;">No shared themes in their top 5.</div>'}
+  </div>
+  <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px 20px;margin-bottom:12px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+      <div style="font-family:'Quicksand','Inter',sans-serif;font-size:14px;font-weight:700;color:#1e3a5f;">Couple Dynamics (for Cath)</div>
+      <button onclick="generateCoupleDynamics('${p1.id}','${p2.id}')" ${keyOk?'':'disabled'} style="background:${keyOk?'#003366':'#cbd5e1'};color:#fff;border:none;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:${keyOk?'pointer':'not-allowed'};">${dynIns?'Regenerate':'Generate'}</button>
+    </div>
+    ${dynIns?`<div style="font-size:13px;line-height:1.7;color:#334155;white-space:pre-wrap;">${escHtml(dynIns.content)}</div><div style="font-size:11px;color:#94a3b8;margin-top:8px;">Generated ${new Date(dynIns.created_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'})}</div>`:'<div style="font-size:12px;color:#94a3b8;">Not generated yet.</div>'}
+  </div>`;
+  return h;
+}
+
+async function callAnthropicJson(systemPrompt,userText,maxTokens){
+  const resp=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':getAnthropicKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:maxTokens||1200,system:systemPrompt,messages:[{role:'user',content:userText}]})
+  });
+  if(!resp.ok){const t=await resp.text();if(resp.status===401) throw new Error('Anthropic API key invalid or expired. Open the bot and paste a fresh sk-ant-… key.');throw new Error('API '+resp.status+': '+t.slice(0,200))}
+  const j=await resp.json();
+  const text=(j.content||[]).filter(p=>p.type==='text').map(p=>p.text).join('\n').trim();
+  return {text,usage:j.usage||{}};
+}
+
+async function saveInsight(contactId,type,text,usage,snapshot){
+  const ins={contact_id:contactId,insight_type:type,content:text,strengths_snapshot:snapshot,model:'claude-haiku-4-5-20251001',tokens_in:usage.input_tokens||null,tokens_out:usage.output_tokens||null};
+  const {error}=await supabase.from('strengths_insights').insert(ins);
+  if(error){console.error(error);toast('Saved locally but DB write failed: '+error.message,'error')}
+  await loadAll();
+}
+
+window.generatePersonalInsights=async function(contactId){
+  if(!getAnthropicKey()){toast('Set Anthropic key first','error');return}
+  const c=contacts.find(x=>x.id===contactId);if(!c)return;
+  const list=getContactStrengths(c);if(!list.length){toast('No strengths recorded','error');return}
+  const btn=document.getElementById('generatePersonalInsightsBtn-'+contactId);if(btn){btn.disabled=true;btn.textContent='Generating…'}
+  try{
+    const themes=list.map(s=>`#${s.rank} ${s.name}`).join('\n');
+    const user=`Client first name: ${c.preferred_name||c.first_name||'Friend'}\nTop 10 themes:\n${themes}`;
+    const {text,usage}=await callAnthropicJson(AI_PROMPTS['strengths-personal-insights'],user,1200);
+    const snap={};list.forEach(s=>snap['strength_'+s.rank]=s.name);
+    await saveInsight(contactId,'personal_insights',text,usage,snap);
+    renderReports();
+    toast('Personal Insights generated','success');
+  }catch(e){console.error(e);toast('Failed: '+e.message,'error');if(btn){btn.disabled=false;btn.textContent='Generate'}}
+};
+
+window.generateBringNeed=async function(contactId){
+  if(!getAnthropicKey()){toast('Set Anthropic key first','error');return}
+  const c=contacts.find(x=>x.id===contactId);if(!c)return;
+  const list=getContactStrengths(c);if(!list.length){toast('No strengths recorded','error');return}
+  const btn=document.getElementById('generateBringNeedBtn-'+contactId);if(btn){btn.disabled=true;btn.textContent='Generating…'}
+  try{
+    const themes=list.map(s=>`#${s.rank} ${s.name}`).join('\n');
+    const user=`Client first name: ${c.preferred_name||c.first_name||'Friend'}\nTop 10 themes:\n${themes}`;
+    const {text,usage}=await callAnthropicJson(AI_PROMPTS['strengths-bring-need'],user,1000);
+    const snap={};list.forEach(s=>snap['strength_'+s.rank]=s.name);
+    await saveInsight(contactId,'bring_need',text,usage,snap);
+    renderReports();
+    toast('Bring & Need generated','success');
+  }catch(e){console.error(e);toast('Failed: '+e.message,'error');if(btn){btn.disabled=false;btn.textContent='Generate'}}
+};
+
+window.generateAdaptationTips=async function(contactId){
+  if(!getAnthropicKey()){toast('Set Anthropic key first','error');return}
+  const cath=findCathContact();if(!cath){toast('Cath\'s strengths not in the master list. Add them first.','error');return}
+  const c=contacts.find(x=>x.id===contactId);if(!c)return;
+  const list=getContactStrengths(c);const cathList=getContactStrengths(cath);
+  if(!list.length||!cathList.length){toast('Both Cath and the client need strengths recorded','error');return}
+  const btn=document.getElementById('generateAdaptationTipsBtn-'+contactId);if(btn){btn.disabled=true;btn.textContent='Generating…'}
+  try{
+    const cathThemes=cathList.map(s=>`#${s.rank} ${s.name}`).join('\n');
+    const cliThemes=list.map(s=>`#${s.rank} ${s.name}`).join('\n');
+    const user=`CATH'S top 10:\n${cathThemes}\n\nCLIENT (${c.preferred_name||c.first_name}) top 10:\n${cliThemes}`;
+    const {text,usage}=await callAnthropicJson(AI_PROMPTS['strengths-adaptation-tips'],user,1000);
+    const snap={};list.forEach(s=>snap['strength_'+s.rank]=s.name);
+    await saveInsight(contactId,'adaptation_tips',text,usage,snap);
+    renderReports();
+    toast('Adaptation Tips generated','success');
+  }catch(e){console.error(e);toast('Failed: '+e.message,'error');if(btn){btn.disabled=false;btn.textContent='Generate'}}
+};
+
+window.generateCoupleDynamics=async function(p1Id,p2Id){
+  if(!getAnthropicKey()){toast('Set Anthropic key first','error');return}
+  const p1=contacts.find(x=>x.id===p1Id);const p2=contacts.find(x=>x.id===p2Id);if(!p1||!p2)return;
+  const l1=getContactStrengths(p1);const l2=getContactStrengths(p2);
+  if(!l1.length||!l2.length){toast('Both partners need strengths recorded','error');return}
+  try{
+    const t1=l1.map(s=>`#${s.rank} ${s.name}`).join('\n');
+    const t2=l2.map(s=>`#${s.rank} ${s.name}`).join('\n');
+    const user=`Partner 1 (${p1.preferred_name||p1.first_name}) top 10:\n${t1}\n\nPartner 2 (${p2.preferred_name||p2.first_name}) top 10:\n${t2}`;
+    const {text,usage}=await callAnthropicJson(AI_PROMPTS['strengths-couple-dynamics'],user,1200);
+    const snap={p1_id:p1.id,p2_id:p2.id};
+    await saveInsight(p1.id,'couple_dynamics',text,usage,snap);
+    renderReports();
+    toast('Couple Dynamics generated','success');
+  }catch(e){console.error(e);toast('Failed: '+e.message,'error')}
+};
 
 // ── WORKFLOW SOP (static reference) ──
 function renderSop(){
