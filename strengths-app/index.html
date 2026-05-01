@@ -74,12 +74,12 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#f0f6ff;c
     <h1><span class="icon">&#127919;</span> Coach4U Strengths Hub</h1>
     <div class="header-right">
       <button class="refresh-btn" onclick="hardRefresh()" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span class="version">v0.3.4</span>
+      <span class="version">v0.3.5</span>
     </div>
   </div>
   <div class="tab-bar" id="tabBar"></div>
   <div class="content">
-    <div class="screen active" id="screen-dashboard"><div id="dashContent"><div style="padding:40px;text-align:center;color:#64748b;font-size:13px;">Loading Strengths Hub data…</div></div></div>
+    <div class="screen active" id="screen-dashboard"><div id="dashContent"><div id="bootMsg" style="padding:40px;text-align:center;color:#64748b;font-size:13px;">Loading Strengths Hub data…<br><button onclick="hardRefresh()" style="margin-top:14px;background:#15803d;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;">Retry / hard refresh</button></div></div></div>
     <div class="screen" id="screen-profiles"><div id="profilesContent"></div></div>
     <div class="screen" id="screen-upload"><div id="uploadContent"></div></div>
     <div class="screen" id="screen-domains"><div id="domainsContent"></div></div>
@@ -397,11 +397,11 @@ window.navTo=function(tab){
 };
 
 // ── DATA LOAD ──
-// Race a Supabase query against a 15s timeout so one hang doesn't freeze the whole load.
+// Race a Supabase query against a 5s timeout so one hang doesn't freeze the whole load.
 function withTimeout(promise,label){
   return Promise.race([
     Promise.resolve(promise),
-    new Promise(resolve=>setTimeout(()=>{console.warn('Timeout loading',label);resolve({data:null,error:{message:'timeout'}})},15000))
+    new Promise(resolve=>setTimeout(()=>{console.warn('Timeout loading',label);resolve({data:null,error:{message:'timeout'}})},5000))
   ]);
 }
 async function loadAll(){
