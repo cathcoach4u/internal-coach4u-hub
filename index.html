@@ -251,7 +251,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.39</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.40</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -1290,8 +1290,17 @@ if('serviceWorker' in navigator){
   <div class="modal">
     <h3 id="clientModalTitle">Add Client</h3>
     <input type="hidden" id="clientId">
+    <div id="clPublicGallupSection" style="display:none;background:linear-gradient(135deg,#15803d,#16a34a);color:#fff;border-radius:10px;padding:14px 16px;margin-bottom:14px;">
+      <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;opacity:.85;margin-bottom:6px;">Public Gallup Code Request Link</div>
+      <div style="font-size:12px;line-height:1.5;opacity:.95;margin-bottom:10px;">Share this URL with the organisation. Their staff fill in their own details; new requests land in your Code Tracker as <em>New</em>, linked to this client.</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+        <input id="clPublicGallupUrl" readonly style="flex:1;min-width:0;padding:8px 10px;border:none;border-radius:6px;background:rgba(255,255,255,.95);color:#1e3a5f;font-size:12px;font-family:'Menlo','Consolas',monospace;">
+        <button type="button" onclick="copyPublicGallupLink()" style="background:#fff;color:#15803d;border:none;border-radius:6px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;">Copy</button>
+        <button type="button" onclick="openPublicGallupLink()" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:6px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;">Open &#8599;</button>
+      </div>
+    </div>
     <div class="form-group"><label>Client / Relationship Name</label><input id="clName"></div>
-    <div class="form-group"><label>Role</label><select id="clRole"><option>Individual</option><option>Couple</option><option>Business</option><option>Organisation</option></select></div>
+    <div class="form-group"><label>Role</label><select id="clRole" onchange="updatePublicGallupSection()"><option>Individual</option><option>Couple</option><option>Business</option><option>Organisation</option></select></div>
     <div class="form-group"><label>Status</label>
       <select id="clStatus"><option>Active</option><option>On Hold</option><option>Completed</option></select>
     </div>
@@ -4316,7 +4325,32 @@ window.openClientModal=function(id){
   refSel.innerHTML='<option value="">-- None --</option>'+referrals.map(r=>'<option value="'+r.id+'"'+(c&&c.referred_by===r.id?' selected':'')+'>'+r.name+'</option>').join('');
   renderMemberSelect();
   renderTempMembers();
+  updatePublicGallupSection();
   document.getElementById('clientModal').classList.add('open');
+};
+
+function buildPublicGallupUrl(clientId){
+  return window.location.origin+'/internal-coach4u-hub/gallup-request/?org='+clientId;
+}
+window.updatePublicGallupSection=function(){
+  const section=document.getElementById('clPublicGallupSection');
+  const role=document.getElementById('clRole').value;
+  const id=document.getElementById('clientId').value;
+  if(role==='Organisation'&&id){
+    document.getElementById('clPublicGallupUrl').value=buildPublicGallupUrl(id);
+    section.style.display='block';
+  }else{
+    section.style.display='none';
+  }
+};
+window.copyPublicGallupLink=function(){
+  const url=document.getElementById('clPublicGallupUrl').value;
+  if(!url) return;
+  navigator.clipboard.writeText(url).then(()=>toast('Public Gallup request link copied','success')).catch(()=>toast('Failed to copy','error'));
+};
+window.openPublicGallupLink=function(){
+  const url=document.getElementById('clPublicGallupUrl').value;
+  if(url) window.open(url,'_blank');
 };
 
 function renderMemberSelect(){
