@@ -251,7 +251,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.42</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.43</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -2725,11 +2725,8 @@ function renderStrDomains(){
 function renderStrUpload(){
   const allContactsForPick=[...contacts].filter(c=>c.first_name||c.last_name).sort((a,b)=>(a.first_name+' '+a.last_name).localeCompare(b.first_name+' '+b.last_name));
   const reportTypeLabel={};reportTypes.forEach(rt=>reportTypeLabel[rt.key]=rt.label);
-  const recent=[...(contactReports||[])].sort((a,b)=>{
-    const ta=a.created_at?new Date(a.created_at).getTime():0;
-    const tb=b.created_at?new Date(b.created_at).getTime():0;
-    return tb-ta;
-  }).slice(0,10);
+  // contactReports is already ordered by created_at desc (or by insertion-prepend after upload).
+  const recent=(contactReports||[]).slice(0,10);
   let html=`<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
       <div onclick="navTo('strdash')" style="font-size:13px;color:#15803d;font-weight:600;cursor:pointer;display:inline-block;">&larr; Back to Strengths Hub</div>
       <button onclick="navTo('strengths')" style="background:#003366;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;">View all profiles &rarr;</button>
@@ -4151,7 +4148,12 @@ async function loadGallupRequests(){
   }catch(e){console.warn('loadGallupRequests failed:',e);}
 }
 async function loadContactReports(){
-  const {data,error}=await supabase.from('contact_reports').select('*').order('created_at',{ascending:false,nullsFirst:false});
+  // Try ordered by created_at first; if column doesn't exist (42703), fall back to plain select
+  let {data,error}=await supabase.from('contact_reports').select('*').order('created_at',{ascending:false});
+  if(error&&error.code==='42703'){
+    const fb=await supabase.from('contact_reports').select('*');
+    data=fb.data; error=fb.error;
+  }
   if(data) contactReports=data;
   if(error&&error.code!=='42P01') console.error('Load reports error:',error);
 }
@@ -4216,10 +4218,18 @@ window.uploadReport=async function(contactId,reportType,file,input){
 
   // Delete existing report of same type
   await supabase.from('contact_reports').delete().eq('contact_id',contactId).eq('report_type',reportType);
-  // Insert new
-  const {error:dbErr}=await supabase.from('contact_reports').insert({contact_id:contactId,report_type:reportType,filename:file.name,url:url,created_at:new Date().toISOString()});
-  if(dbErr){toast('Error saving report: '+dbErr.message,'error');return;}
+  // Insert new — try with created_at, fall back without if column missing (42703)
+  const nowIso=new Date().toISOString();
+  let ins=await supabase.from('contact_reports').insert({contact_id:contactId,report_type:reportType,filename:file.name,url:url,created_at:nowIso}).select().single();
+  if(ins.error&&ins.error.code==='42703'){
+    ins=await supabase.from('contact_reports').insert({contact_id:contactId,report_type:reportType,filename:file.name,url:url}).select().single();
+  }
+  if(ins.error){toast('Error saving report: '+ins.error.message,'error');return;}
   await loadContactReports();
+  // Belt-and-braces: ensure the just-uploaded row is at the front of contactReports
+  if(ins.data){
+    contactReports=[ins.data,...contactReports.filter(r=>r.id!==ins.data.id)];
+  }
   renderContactReports(contactId);
   if(label){label.childNodes[0].textContent=origText;label.style.background='';label.style.color='';}
   toast('Report uploaded','success');
