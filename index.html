@@ -251,7 +251,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.38</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.39</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -1590,7 +1590,7 @@ const IN_APP_AGENTS = [
     name:'Strengths: PDF Extractor',
     description:"Extracts the top 10 CliftonStrengths themes (and the person's name if visible) from a Gallup PDF.",
     purpose:'Used by Strengths Hub when uploading a Gallup PDF (per-contact and standalone).',
-    route:{tab:'strdash',label:'Open Strengths Hub'},
+    route:{tab:'strupload',label:'Open Upload Report'},
     defaultPrompt:`You are extracting CliftonStrengths theme order from a Gallup PDF report.
 
 Return ONLY a JSON object with this exact shape (no prose, no code fences):
@@ -2621,7 +2621,15 @@ function renderThqDash(){
 function renderStrDash(){
   const el=document.getElementById('strDashContent');
   if(!el) return;
-  let html=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">
+  let html=`<div onclick="navTo('strupload')" style="background:linear-gradient(135deg,#15803d,#16a34a);color:#fff;border-radius:12px;padding:16px 20px;margin-bottom:14px;cursor:pointer;display:flex;align-items:center;gap:14px;box-shadow:0 2px 8px rgba(21,128,61,.2);" onmouseover="this.style.boxShadow='0 4px 14px rgba(21,128,61,.3)'" onmouseout="this.style.boxShadow='0 2px 8px rgba(21,128,61,.2)'">
+      <div style="font-size:28px;">&#10024;</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:700;font-size:15px;margin-bottom:2px;">Upload a Gallup Report</div>
+        <div style="font-size:12px;opacity:.9;">Pick a PDF, choose the contact, and file it — auto-extract themes optional</div>
+      </div>
+      <div style="font-size:20px;opacity:.8;">&rarr;</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">
     <div onclick="navTo('strsop')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #1e3a5f;border-radius:12px;padding:18px 20px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
       <div style="font-size:24px;margin-bottom:8px;">&#128218;</div>
       <div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">Workflow SOP</div>
@@ -2646,11 +2654,6 @@ function renderStrDash(){
       <div style="font-size:24px;margin-bottom:8px;">&#127912;</div>
       <div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">Domain Balance</div>
       <div style="font-size:11px;color:#64748b;">4 domain overview</div>
-    </div>
-    <div onclick="navTo('strupload')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #15803d;border-radius:12px;padding:18px 20px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
-      <div style="font-size:24px;margin-bottom:8px;">&#10024;</div>
-      <div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">Upload Report</div>
-      <div style="font-size:11px;color:#64748b;">Add Gallup PDFs</div>
     </div>
   </div>`;
   el.innerHTML=html;
@@ -9081,6 +9084,7 @@ function renderAgentDetail(){
     <div style="font-size:12px;color:#64748b;margin-bottom:12px;line-height:1.5;">${platform}${a.owner?' &middot; Owner: '+a.owner:''} &middot; Last edited: ${lastEdited}</div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;">
       ${/writing\s*partner/i.test(a.name||'')?`<a href="writing-partner/" target="_blank" rel="noopener" style="${btn}background:#16a34a;color:#fff;">Launch chat &#8599;</a>`:''}
+      ${(()=>{const r=getInAppRouteForAgent(a.name);return r?`<button onclick="openInAppAgentRoute('${(a.name||'').replace(/'/g,"\\'")}')" style="${btn}background:#15803d;color:#fff;">${r.label} &rarr;</button>`:'';})()}
       ${a.copilot_url
         ?`<a href="${a.copilot_url}" target="_blank" rel="noopener" style="${btn}background:#5b5fc7;color:#fff;">Open in Copilot Studio &#8599;</a>`
         :`<button onclick="openAgentForm('${a.id}');setTimeout(()=>{const f=document.getElementById('agentFormCopilotUrl');if(f){f.scrollIntoView({behavior:'smooth',block:'center'});f.focus();}},120)" style="${btn}background:#f1f5f9;color:#94a3b8;border:1px dashed #cbd5e1;">+ Add Copilot URL</button>`}
