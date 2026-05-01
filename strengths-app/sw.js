@@ -1,5 +1,5 @@
-const CACHE_NAME = 'coach4u-strengths-v10';
-const ASSETS = ['./','index.html','manifest.json'];
+const CACHE_NAME = 'coach4u-strengths-v11';
+const ASSETS = ['manifest.json'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
@@ -12,12 +12,16 @@ self.addEventListener('activate', e => {
   );
 });
 
+// Never cache HTML — always fetch fresh so version updates are picked up immediately.
+// Only cache the small static manifest/icons.
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
-  // Network-first for HTML so updates land quickly; cache-first for the rest
+  const url = new URL(e.request.url);
+  // HTML / navigation: always go to network. No cache fallback (would just serve stale).
   if (e.request.mode === 'navigate' || (e.request.headers.get('accept') || '').includes('text/html')) {
-    e.respondWith(fetch(e.request).catch(() => caches.match(e.request).then(r => r || caches.match('index.html'))));
+    e.respondWith(fetch(e.request));
     return;
   }
+  // Other static assets: cache-first.
   e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
 });
