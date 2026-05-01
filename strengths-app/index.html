@@ -74,12 +74,12 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#f0f6ff;c
     <h1><span class="icon">&#127919;</span> Coach4U Strengths Hub</h1>
     <div class="header-right">
       <button class="refresh-btn" onclick="hardRefresh()" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span class="version">v0.3.5</span>
+      <span class="version">v0.3.6</span>
     </div>
   </div>
   <div class="tab-bar" id="tabBar"></div>
   <div class="content">
-    <div class="screen active" id="screen-dashboard"><div id="dashContent"><div id="bootMsg" style="padding:40px;text-align:center;color:#64748b;font-size:13px;">Loading Strengths Hub data…<br><button onclick="hardRefresh()" style="margin-top:14px;background:#15803d;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;">Retry / hard refresh</button></div></div></div>
+    <div class="screen active" id="screen-dashboard"><div id="dashContent"><div id="bootMsg" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;max-width:480px;margin:20px auto;"><div style="font-weight:700;color:#1e3a5f;margin-bottom:10px;font-size:14px;text-align:center;">Loading Strengths Hub data…</div><div id="bootStatus" style="font-family:inherit;"></div><div style="text-align:center;margin-top:14px;"><button onclick="hardRefresh()" style="background:#15803d;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;">Retry / hard refresh</button></div></div></div></div>
     <div class="screen" id="screen-profiles"><div id="profilesContent"></div></div>
     <div class="screen" id="screen-upload"><div id="uploadContent"></div></div>
     <div class="screen" id="screen-domains"><div id="domainsContent"></div></div>
@@ -405,17 +405,37 @@ function withTimeout(promise,label){
   ]);
 }
 async function loadAll(){
+  // On-screen status so the phone user can see what's happening per table without DevTools.
+  const status=document.getElementById('bootStatus');
+  const lines={};
+  const tables=['contacts','clients','client_members','contact_reports','strengths_insights','gallup_code_requests'];
+  tables.forEach(t=>{lines[t]={state:'…',msg:'pending'}});
+  const draw=()=>{
+    if(!status) return;
+    status.innerHTML=tables.map(t=>{
+      const l=lines[t];
+      const colour=l.state==='✓'?'#15803d':l.state==='✗'?'#dc2626':'#94a3b8';
+      return `<div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid #f1f5f9;"><span style="color:${colour};font-weight:600;">${l.state} ${t}</span><span style="color:#64748b;font-family:'Menlo','Consolas',monospace;font-size:11px;">${l.msg}</span></div>`;
+    }).join('');
+  };
+  draw();
+  const run=async(label,thenable)=>{
+    const r=await withTimeout(thenable,label);
+    if(r.error){lines[label]={state:'✗',msg:r.error.message||'error'}}
+    else{lines[label]={state:'✓',msg:(r.data||[]).length+' rows'}}
+    draw();
+    return r;
+  };
   const [c1,c2,c3,c4,c5,c6]=await Promise.all([
-    withTimeout(supabase.from('contacts').select('*').order('first_name'),'contacts'),
-    withTimeout(supabase.from('clients').select('*'),'clients'),
-    withTimeout(supabase.from('client_members').select('client_id,contact_id'),'client_members'),
-    withTimeout((async()=>{let r=await supabase.from('contact_reports').select('*').order('created_at',{ascending:false});if(r.error&&r.error.code==='42703')r=await supabase.from('contact_reports').select('*');return r})(),'contact_reports'),
-    withTimeout(supabase.from('strengths_insights').select('*'),'strengths_insights'),
-    withTimeout(supabase.from('gallup_code_requests').select('*').order('created_at',{ascending:false}),'gallup_code_requests')
+    run('contacts',supabase.from('contacts').select('*').order('first_name')),
+    run('clients',supabase.from('clients').select('*')),
+    run('client_members',supabase.from('client_members').select('client_id,contact_id')),
+    run('contact_reports',(async()=>{let r=await supabase.from('contact_reports').select('*').order('created_at',{ascending:false});if(r.error&&r.error.code==='42703')r=await supabase.from('contact_reports').select('*');return r})()),
+    run('strengths_insights',supabase.from('strengths_insights').select('*')),
+    run('gallup_code_requests',supabase.from('gallup_code_requests').select('*').order('created_at',{ascending:false}))
   ]);
   contacts=c1.data||[]; clients=c2.data||[]; clientMembers=c3.data||[];
   contactReports=c4.data||[]; strengthsInsights=c5.data||[]; gallupRequests=c6.data||[];
-  // Surface partial-load warnings so the user doesn't sit on a blank screen.
   const failed=[];
   if(c1.error)failed.push('contacts ('+c1.error.message+')');
   if(c2.error)failed.push('clients ('+c2.error.message+')');
@@ -424,7 +444,6 @@ async function loadAll(){
   if(c5.error)failed.push('strengths_insights ('+c5.error.message+')');
   if(c6.error)failed.push('gallup_code_requests ('+c6.error.message+')');
   if(failed.length) console.warn('Load issues:',failed.join('; '));
-  // Stitch members on clients
   const memberMap={};(clientMembers||[]).forEach(cm=>{(memberMap[cm.client_id]=memberMap[cm.client_id]||[]).push(cm.contact_id)});
   clients.forEach(c=>{c.members=memberMap[c.id]||[]});
   return {failed};
