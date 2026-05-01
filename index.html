@@ -251,7 +251,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.41</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.42</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -4151,7 +4151,7 @@ async function loadGallupRequests(){
   }catch(e){console.warn('loadGallupRequests failed:',e);}
 }
 async function loadContactReports(){
-  const {data,error}=await supabase.from('contact_reports').select('*');
+  const {data,error}=await supabase.from('contact_reports').select('*').order('created_at',{ascending:false,nullsFirst:false});
   if(data) contactReports=data;
   if(error&&error.code!=='42P01') console.error('Load reports error:',error);
 }
@@ -4217,7 +4217,7 @@ window.uploadReport=async function(contactId,reportType,file,input){
   // Delete existing report of same type
   await supabase.from('contact_reports').delete().eq('contact_id',contactId).eq('report_type',reportType);
   // Insert new
-  const {error:dbErr}=await supabase.from('contact_reports').insert({contact_id:contactId,report_type:reportType,filename:file.name,url:url});
+  const {error:dbErr}=await supabase.from('contact_reports').insert({contact_id:contactId,report_type:reportType,filename:file.name,url:url,created_at:new Date().toISOString()});
   if(dbErr){toast('Error saving report: '+dbErr.message,'error');return;}
   await loadContactReports();
   renderContactReports(contactId);
