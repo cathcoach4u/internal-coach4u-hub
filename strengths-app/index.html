@@ -74,7 +74,7 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#f0f6ff;c
     <h1><span class="icon">&#127919;</span> Coach4U Strengths Hub</h1>
     <div class="header-right">
       <button class="refresh-btn" onclick="hardRefresh()" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span class="version">v0.3.1</span>
+      <span class="version">v0.3.2</span>
     </div>
   </div>
   <div class="tab-bar" id="tabBar"></div>
@@ -337,7 +337,6 @@ const GALLUP_STATUS_COLORS={'New':'#64748b','Awaiting Payment':'#d97706','Awaiti
 
 // ── STATE ──
 let contacts=[], clients=[], clientMembers=[], contactReports=[], strengthsInsights=[], gallupRequests=[];
-let pulseResults=[], brainPulseSubmissions=[];
 const reportTypes=[{key:'gallup',label:'Full Gallup Report'},{key:'personal_insights',label:'Personal Insights Report'},{key:'bring_need',label:'Bring Need Report'}];
 const TABS=[
   {id:'dashboard',label:'Dashboard'},
@@ -389,19 +388,16 @@ window.navTo=function(tab){
 
 // ── DATA LOAD ──
 async function loadAll(){
-  const [c1,c2,c3,c4,c5,c6,c7,c8]=await Promise.all([
+  const [c1,c2,c3,c4,c5,c6]=await Promise.all([
     supabase.from('contacts').select('*').order('first_name'),
     supabase.from('clients').select('*'),
     supabase.from('client_members').select('client_id,contact_id'),
     (async()=>{let r=await supabase.from('contact_reports').select('*').order('created_at',{ascending:false});if(r.error&&r.error.code==='42703')r=await supabase.from('contact_reports').select('*');return r})(),
     supabase.from('strengths_insights').select('*'),
-    supabase.from('gallup_code_requests').select('*').order('created_at',{ascending:false}),
-    supabase.from('pulse_results').select('*').order('created_at',{ascending:false}).limit(500),
-    supabase.from('brain_pulse_submissions').select('*').order('created_at',{ascending:false}).limit(500)
+    supabase.from('gallup_code_requests').select('*').order('created_at',{ascending:false})
   ]);
   contacts=c1.data||[]; clients=c2.data||[]; clientMembers=c3.data||[];
   contactReports=c4.data||[]; strengthsInsights=c5.data||[]; gallupRequests=c6.data||[];
-  pulseResults=c7.data||[]; brainPulseSubmissions=c8.data||[];
   // Stitch members on clients
   const memberMap={};(clientMembers||[]).forEach(cm=>{(memberMap[cm.client_id]=memberMap[cm.client_id]||[]).push(cm.contact_id)});
   clients.forEach(c=>{c.members=memberMap[c.id]||[]});
@@ -911,23 +907,6 @@ function domainBar(list,height){
   const total=Object.values(dc).reduce((a,b)=>a+b,0)||1;
   return `<div style="display:flex;border-radius:5px;overflow:hidden;height:${height}px;">${Object.entries(dc).map(([d,n])=>n?`<div style="background:${domainColors[d]};width:${(n/total*100).toFixed(1)}%;font-size:9px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;">${d.slice(0,3).toUpperCase()} ${n}</div>`:'').join('')}</div>`;
 }
-function pulseSnapshotFor(contactId){
-  const safe=(pulseResults||[]).filter(r=>r.contact_id===contactId).sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0))[0];
-  const brain=(brainPulseSubmissions||[]).filter(r=>r.contact_id===contactId).sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0))[0];
-  const fmt=d=>d?new Date(d).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}):'';
-  let safeBlock=safe?`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #003366;border-radius:8px;padding:10px 14px;flex:1;min-width:160px;">
-    <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#64748b;font-weight:700;">SAFE Pulse</div>
-    <div style="display:flex;align-items:baseline;gap:8px;margin-top:4px;"><span style="font-weight:700;color:#003366;font-size:15px;">${escHtml(safe.band||'')}</span><span style="font-size:18px;font-weight:800;color:#003366;">${safe.total||0}<span style="font-size:11px;color:#94a3b8;font-weight:500;">/200</span></span></div>
-    <div style="font-size:11px;color:#94a3b8;margin-top:2px;">${fmt(safe.created_at)}</div>
-  </div>`:`<div style="background:#f8fafc;border:1px dashed #cbd5e1;border-radius:8px;padding:10px 14px;flex:1;min-width:160px;font-size:11px;color:#94a3b8;">SAFE Pulse: no check-ins</div>`;
-  let brainBlock=brain?`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #1e3a5f;border-radius:8px;padding:10px 14px;flex:1;min-width:160px;">
-    <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#64748b;font-weight:700;">Brain Pulse</div>
-    <div style="display:flex;align-items:baseline;gap:8px;margin-top:4px;"><span style="font-weight:700;color:#1e3a5f;font-size:15px;">${escHtml(brain.stage||'')}</span><span style="font-size:18px;font-weight:800;color:#1e3a5f;">${brain.grand_total||0}<span style="font-size:11px;color:#94a3b8;font-weight:500;">/200</span></span></div>
-    <div style="font-size:11px;color:#94a3b8;margin-top:2px;">${fmt(brain.created_at)}</div>
-  </div>`:`<div style="background:#f8fafc;border:1px dashed #cbd5e1;border-radius:8px;padding:10px 14px;flex:1;min-width:160px;font-size:11px;color:#94a3b8;">Brain Pulse: no check-ins</div>`;
-  return `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">${safeBlock}${brainBlock}</div>`;
-}
-
 function renderReports(){
   const allClients=clients.filter(c=>c.status==='Active').sort((a,b)=>(a.relationship_name||'').localeCompare(b.relationship_name||''));
   const roles=[...new Set(allClients.map(c=>c.role).filter(Boolean))].sort();
@@ -1164,7 +1143,7 @@ function renderPreSessionBriefIndividual(c){
   <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;margin-bottom:12px;">
     <div style="font-family:'Quicksand','Inter',sans-serif;font-size:12px;font-weight:700;color:#1e3a5f;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px;">Top 10 Strengths</div>
     ${strengthsRowChips(list)}<div style="margin-top:10px;">${domainBar(list,20)}</div>
-  </div>${pulseSnapshotFor(c.id)}`;
+  </div>`;
   function aiBlock(t,b){return `<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;margin-bottom:12px;"><div style="font-family:'Quicksand','Inter',sans-serif;font-size:12px;font-weight:700;color:#1e3a5f;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px;">${t}</div><div style="font-size:12.5px;line-height:1.65;color:#1e293b;white-space:pre-wrap;">${escHtml(b||'')}</div></div>`}
   if(ins) h+=aiBlock('Personal Insights',ins.content);
   if(bn) h+=aiBlock('What You Bring &amp; Need',bn.content);
@@ -1189,10 +1168,6 @@ function renderPreSessionBriefPair(p1,p2){
     <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;"><div style="font-weight:700;color:#1e3a5f;font-size:13px;margin-bottom:6px;">${escHtml(nameOf(p2))}</div>${strengthsRowChips(l2)}<div style="margin-top:8px;">${domainBar(l2,16)}</div></div>
   </div>`;
   if(shared.length) h+=`<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:10px 14px;margin-bottom:12px;"><span style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#15803d;font-weight:700;margin-right:6px;">Shared:</span>${shared.map(name=>`<span style="background:${csColor(name)};color:#fff;padding:2px 8px;border-radius:3px;font-size:11px;font-weight:600;margin-right:4px;">${name}</span>`).join('')}</div>`;
-  h+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
-    <div><div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:6px;">${escHtml(nameOf(p1))}</div>${pulseSnapshotFor(p1.id)}</div>
-    <div><div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:6px;">${escHtml(nameOf(p2))}</div>${pulseSnapshotFor(p2.id)}</div>
-  </div>`;
   if(ins) h+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;"><div style="font-family:'Quicksand','Inter',sans-serif;font-size:12px;font-weight:700;color:#1e3a5f;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px;">Couple Dynamics</div><div style="font-size:12.5px;line-height:1.65;color:#1e293b;white-space:pre-wrap;">${escHtml(ins.content)}</div></div>`;
   else h+='<div class="no-print" style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:10px 14px;font-size:12px;color:#92400e;">No Couple Dynamics generated yet. Switch off Brief mode to generate one.</div>';
   return h;
