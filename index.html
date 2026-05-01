@@ -251,7 +251,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.36</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.37</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -4561,7 +4561,7 @@ window.extractStandalonePDF=async function(file,input){
         ]}]
       })
     });
-    if(!resp.ok){const t=await resp.text();throw new Error('API '+resp.status+': '+t.slice(0,200));}
+    if(!resp.ok){const t=await resp.text();if(resp.status===401) throw new Error('Anthropic API key is invalid or expired. Open the AI bot (robot icon, bottom-right) and paste a fresh sk-ant-… key as a chat message.');throw new Error('API '+resp.status+': '+t.slice(0,200));}
     const json=await resp.json();
     const text=(json.content||[]).filter(p=>p.type==='text').map(p=>p.text).join('\n').trim();
     let parsed=null;
@@ -4579,7 +4579,8 @@ window.extractStandalonePDF=async function(file,input){
     toast('Extracted '+cleaned.filter(Boolean).length+' theme'+(cleaned.filter(Boolean).length===1?'':'s')+' — pick the contact','success');
   }catch(e){
     console.error(e);
-    toast('Extract failed: '+e.message,'error');
+    const msg=(e&&e.message==='Failed to fetch')?'Network blocked the request. Disable any ad-blocker or privacy extension for this site and retry. If this persists, untick the "Auto-extract" checkbox to upload the PDF without calling Claude.':e.message;
+    toast('Extract failed: '+msg,'error');
     if(lbl) lbl.innerText=origText;
     if(input) input.value='';
   }
@@ -4681,7 +4682,7 @@ window.extractStrengthsFromPDF=async function(contactId,file,input){
         ]}]
       })
     });
-    if(!resp.ok){const t=await resp.text();throw new Error('API '+resp.status+': '+t.slice(0,200));}
+    if(!resp.ok){const t=await resp.text();if(resp.status===401) throw new Error('Anthropic API key is invalid or expired. Open the AI bot (robot icon, bottom-right) and paste a fresh sk-ant-… key as a chat message.');throw new Error('API '+resp.status+': '+t.slice(0,200));}
     const json=await resp.json();
     const text=(json.content||[]).filter(p=>p.type==='text').map(p=>p.text).join('\n').trim();
     let parsed=null;
@@ -4699,7 +4700,8 @@ window.extractStrengthsFromPDF=async function(contactId,file,input){
     toast('Extracted '+cleaned.filter(Boolean).length+' theme'+(cleaned.filter(Boolean).length===1?'':'s')+' — review and Save','success');
   }catch(e){
     console.error(e);
-    toast('PDF extract failed: '+e.message,'error');
+    const msg=(e&&e.message==='Failed to fetch')?'Network blocked the request. Disable any ad-blocker or privacy extension for this site and retry. If this persists, untick the "Auto-extract" checkbox to upload the PDF without calling Claude.':e.message;
+    toast('PDF extract failed: '+msg,'error');
     if(lbl) lbl.innerText=origText;
     if(input) input.value='';
   }
@@ -4906,7 +4908,7 @@ ${themes}`;
       headers:{'Content-Type':'application/json','x-api-key':getAnthropicKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:1000,system:sys,messages:[{role:'user',content:user}]})
     });
-    if(!resp.ok){const t=await resp.text();throw new Error('API '+resp.status+': '+t.slice(0,200));}
+    if(!resp.ok){const t=await resp.text();if(resp.status===401) throw new Error('Anthropic API key is invalid or expired. Open the AI bot (robot icon, bottom-right) and paste a fresh sk-ant-… key as a chat message.');throw new Error('API '+resp.status+': '+t.slice(0,200));}
     const json=await resp.json();
     const text=(json.content||[]).filter(p=>p.type==='text').map(p=>p.text).join('\n').trim();
     const usage=json.usage||{};
@@ -4988,7 +4990,7 @@ ${fmt(cliList)}`;
       headers:{'Content-Type':'application/json','x-api-key':getAnthropicKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:1200,system:sys,messages:[{role:'user',content:user}]})
     });
-    if(!resp.ok){const t=await resp.text();throw new Error('API '+resp.status+': '+t.slice(0,200));}
+    if(!resp.ok){const t=await resp.text();if(resp.status===401) throw new Error('Anthropic API key is invalid or expired. Open the AI bot (robot icon, bottom-right) and paste a fresh sk-ant-… key as a chat message.');throw new Error('API '+resp.status+': '+t.slice(0,200));}
     const json=await resp.json();
     const text=(json.content||[]).filter(p=>p.type==='text').map(p=>p.text).join('\n').trim();
     const usage=json.usage||{};
@@ -5025,7 +5027,7 @@ ${themes}`;
       headers:{'Content-Type':'application/json','x-api-key':getAnthropicKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:1200,system:sys,messages:[{role:'user',content:user}]})
     });
-    if(!resp.ok){const t=await resp.text();throw new Error('API '+resp.status+': '+t.slice(0,200));}
+    if(!resp.ok){const t=await resp.text();if(resp.status===401) throw new Error('Anthropic API key is invalid or expired. Open the AI bot (robot icon, bottom-right) and paste a fresh sk-ant-… key as a chat message.');throw new Error('API '+resp.status+': '+t.slice(0,200));}
     const json=await resp.json();
     const text=(json.content||[]).filter(p=>p.type==='text').map(p=>p.text).join('\n').trim();
     const usage=json.usage||{};
@@ -5443,7 +5445,7 @@ Themes both partners share: ${sharedNames.length?sharedNames.join(', '):'(none i
       headers:{'Content-Type':'application/json','x-api-key':getAnthropicKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:1500,system:sys,messages:[{role:'user',content:user}]})
     });
-    if(!resp.ok){const t=await resp.text();throw new Error('API '+resp.status+': '+t.slice(0,200));}
+    if(!resp.ok){const t=await resp.text();if(resp.status===401) throw new Error('Anthropic API key is invalid or expired. Open the AI bot (robot icon, bottom-right) and paste a fresh sk-ant-… key as a chat message.');throw new Error('API '+resp.status+': '+t.slice(0,200));}
     const json=await resp.json();
     const text=(json.content||[]).filter(p=>p.type==='text').map(p=>p.text).join('\n').trim();
     const usage=json.usage||{};
