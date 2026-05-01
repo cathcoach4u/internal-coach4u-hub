@@ -57,6 +57,15 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#f0f6ff;c
   .header{padding:12px 16px}
   .header h1{font-size:16px}
 }
+
+@media print{
+  *{print-color-adjust:exact !important;-webkit-print-color-adjust:exact !important}
+  body{background:#fff}
+  .header,.tab-bar,.refresh-btn,.version,#aiChatBtn,#aiChatPanel,.no-print{display:none !important}
+  .content{padding:0}
+  .screen{display:none}
+  .screen.active{display:block}
+}
 </style>
 </head>
 <body>
@@ -65,7 +74,7 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#f0f6ff;c
     <h1><span class="icon">&#127919;</span> Coach4U Strengths Hub</h1>
     <div class="header-right">
       <button class="refresh-btn" onclick="hardRefresh()" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span class="version">v0.2.0</span>
+      <span class="version">v0.3.0</span>
     </div>
   </div>
   <div class="tab-bar" id="tabBar"></div>
@@ -328,6 +337,7 @@ const GALLUP_STATUS_COLORS={'New':'#64748b','Awaiting Payment':'#d97706','Awaiti
 
 // ── STATE ──
 let contacts=[], clients=[], clientMembers=[], contactReports=[], strengthsInsights=[], gallupRequests=[];
+let pulseResults=[], brainPulseSubmissions=[];
 const reportTypes=[{key:'gallup',label:'Full Gallup Report'},{key:'personal_insights',label:'Personal Insights Report'},{key:'bring_need',label:'Bring Need Report'}];
 const TABS=[
   {id:'dashboard',label:'Dashboard'},
@@ -379,16 +389,19 @@ window.navTo=function(tab){
 
 // ── DATA LOAD ──
 async function loadAll(){
-  const [c1,c2,c3,c4,c5,c6]=await Promise.all([
+  const [c1,c2,c3,c4,c5,c6,c7,c8]=await Promise.all([
     supabase.from('contacts').select('*').order('first_name'),
     supabase.from('clients').select('*'),
     supabase.from('client_members').select('client_id,contact_id'),
     (async()=>{let r=await supabase.from('contact_reports').select('*').order('created_at',{ascending:false});if(r.error&&r.error.code==='42703')r=await supabase.from('contact_reports').select('*');return r})(),
     supabase.from('strengths_insights').select('*'),
-    supabase.from('gallup_code_requests').select('*').order('created_at',{ascending:false})
+    supabase.from('gallup_code_requests').select('*').order('created_at',{ascending:false}),
+    supabase.from('pulse_results').select('*').order('created_at',{ascending:false}).limit(500),
+    supabase.from('brain_pulse_submissions').select('*').order('created_at',{ascending:false}).limit(500)
   ]);
   contacts=c1.data||[]; clients=c2.data||[]; clientMembers=c3.data||[];
   contactReports=c4.data||[]; strengthsInsights=c5.data||[]; gallupRequests=c6.data||[];
+  pulseResults=c7.data||[]; brainPulseSubmissions=c8.data||[];
   // Stitch members on clients
   const memberMap={};(clientMembers||[]).forEach(cm=>{(memberMap[cm.client_id]=memberMap[cm.client_id]||[]).push(cm.contact_id)});
   clients.forEach(c=>{c.members=memberMap[c.id]||[]});
@@ -870,113 +883,318 @@ window.deleteGallupRequest=async function(){
   toast('Request deleted','success');
 };
 
-// ── REPORTS (full AI generators) ──
-let reportsState={mode:'contact',contactId:'',p1Id:'',p2Id:''};
-window.setReportsMode=function(m){reportsState.mode=m;reportsState.contactId='';reportsState.p1Id='';reportsState.p2Id='';renderReports()};
+// ── REPORTS (full: Client/Contact/Team + Pre-session Brief) ──
+let reportsState={mode:'client',clientId:'',contactId:'',roleFilter:'',teamIds:[],briefMode:false};
+window.setReportsMode=function(m){reportsState.mode=m;reportsState.clientId='';reportsState.contactId='';renderReports()};
+window.toggleReportsBrief=function(){reportsState.briefMode=!reportsState.briefMode;renderReports()};
+window.setReportsRoleFilter=function(v){reportsState.roleFilter=v;reportsState.clientId='';renderReports()};
+window.setReportsClient=function(id){reportsState.clientId=id;renderReports()};
 window.setReportsContact=function(id){reportsState.contactId=id;renderReports()};
-window.setReportsPair=function(slot,id){reportsState[slot+'Id']=id;renderReports()};
-function getContactStrengths(c){const list=[];for(let i=1;i<=10;i++){if(c['strength_'+i])list.push({rank:i,name:c['strength_'+i]})}return list}
+window.addReportsTeamMember=function(){const sel=document.getElementById('reportsTeamPicker');const id=sel?.value;if(!id)return;if(!reportsState.teamIds.includes(id))reportsState.teamIds.push(id);if(sel)sel.value='';renderReports()};
+window.removeReportsTeamMember=function(id){reportsState.teamIds=reportsState.teamIds.filter(x=>x!==id);renderReports()};
+window.clearReportsTeam=function(){reportsState.teamIds=[];renderReports()};
+window.addReportsTeamFromClient=function(clientId){if(!clientId)return;const cl=clients.find(c=>c.id===clientId);if(!cl){toast('Client not found','error');return}reportsState.teamIds=[];(cl.members||[]).forEach(mid=>{if(!reportsState.teamIds.includes(mid))reportsState.teamIds.push(mid)});renderReports();toast(cl.relationship_name+' loaded ('+reportsState.teamIds.length+' member'+(reportsState.teamIds.length===1?'':'s')+')','success')};
+
+function getContactStrengths(c){const list=[];if(!c)return list;for(let i=1;i<=10;i++){if(c['strength_'+i])list.push({rank:i,name:c['strength_'+i]})}return list}
 function findCathContact(){return contacts.find(c=>(c.first_name||'').toLowerCase()==='cath'&&(c.last_name||'').toLowerCase()==='baker'&&c.strength_1)||contacts.find(c=>(c.first_name||'').toLowerCase()==='cath'&&c.strength_1)||null}
 function getInsight(contactId,type){return (strengthsInsights||[]).filter(r=>r.contact_id===contactId&&r.insight_type===type).sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0))[0]||null}
+function findCoupleInsight(p1Id,p2Id){return (strengthsInsights||[]).find(r=>{if(r.insight_type!=='couple_dynamics')return false;const snap=r.strengths_snapshot||{};const ids=[snap.p1_id,snap.p2_id];return ids.includes(p1Id)&&ids.includes(p2Id)})}
+
+function strengthsRowChips(list){
+  if(!list.length) return '<div style="font-size:12px;color:#94a3b8;">No strengths recorded.</div>';
+  return `<div style="display:flex;flex-wrap:wrap;gap:4px;">${list.map(s=>`<span style="background:${csColor(s.name)};color:#fff;padding:3px 8px;border-radius:3px;font-size:11px;font-weight:600;">${s.rank}. ${s.name}</span>`).join('')}</div>`;
+}
+function domainBar(list,height){
+  height=height||18;
+  const dc={Executing:0,Influencing:0,Relationship:0,Strategic:0};
+  list.forEach(s=>{const d=getDomain(s.name);if(d)dc[d]++});
+  const total=Object.values(dc).reduce((a,b)=>a+b,0)||1;
+  return `<div style="display:flex;border-radius:5px;overflow:hidden;height:${height}px;">${Object.entries(dc).map(([d,n])=>n?`<div style="background:${domainColors[d]};width:${(n/total*100).toFixed(1)}%;font-size:9px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;">${d.slice(0,3).toUpperCase()} ${n}</div>`:'').join('')}</div>`;
+}
+function pulseSnapshotFor(contactId){
+  const safe=(pulseResults||[]).filter(r=>r.contact_id===contactId).sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0))[0];
+  const brain=(brainPulseSubmissions||[]).filter(r=>r.contact_id===contactId).sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0))[0];
+  const fmt=d=>d?new Date(d).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}):'';
+  let safeBlock=safe?`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #003366;border-radius:8px;padding:10px 14px;flex:1;min-width:160px;">
+    <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#64748b;font-weight:700;">SAFE Pulse</div>
+    <div style="display:flex;align-items:baseline;gap:8px;margin-top:4px;"><span style="font-weight:700;color:#003366;font-size:15px;">${escHtml(safe.band||'')}</span><span style="font-size:18px;font-weight:800;color:#003366;">${safe.total||0}<span style="font-size:11px;color:#94a3b8;font-weight:500;">/200</span></span></div>
+    <div style="font-size:11px;color:#94a3b8;margin-top:2px;">${fmt(safe.created_at)}</div>
+  </div>`:`<div style="background:#f8fafc;border:1px dashed #cbd5e1;border-radius:8px;padding:10px 14px;flex:1;min-width:160px;font-size:11px;color:#94a3b8;">SAFE Pulse: no check-ins</div>`;
+  let brainBlock=brain?`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #1e3a5f;border-radius:8px;padding:10px 14px;flex:1;min-width:160px;">
+    <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#64748b;font-weight:700;">Brain Pulse</div>
+    <div style="display:flex;align-items:baseline;gap:8px;margin-top:4px;"><span style="font-weight:700;color:#1e3a5f;font-size:15px;">${escHtml(brain.stage||'')}</span><span style="font-size:18px;font-weight:800;color:#1e3a5f;">${brain.grand_total||0}<span style="font-size:11px;color:#94a3b8;font-weight:500;">/200</span></span></div>
+    <div style="font-size:11px;color:#94a3b8;margin-top:2px;">${fmt(brain.created_at)}</div>
+  </div>`:`<div style="background:#f8fafc;border:1px dashed #cbd5e1;border-radius:8px;padding:10px 14px;flex:1;min-width:160px;font-size:11px;color:#94a3b8;">Brain Pulse: no check-ins</div>`;
+  return `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">${safeBlock}${brainBlock}</div>`;
+}
 
 function renderReports(){
-  const withStr=contacts.filter(c=>c.strength_1).sort((a,b)=>(a.first_name+' '+a.last_name).localeCompare(b.first_name+' '+b.last_name));
+  const allClients=clients.filter(c=>c.status==='Active').sort((a,b)=>(a.relationship_name||'').localeCompare(b.relationship_name||''));
+  const roles=[...new Set(allClients.map(c=>c.role).filter(Boolean))].sort();
+  const filteredClients=reportsState.roleFilter?allClients.filter(c=>c.role===reportsState.roleFilter):allClients;
+  const allContactsSorted=contacts.filter(c=>c.strength_1).sort((a,b)=>(a.first_name+' '+a.last_name).localeCompare(b.first_name+' '+b.last_name));
+  const st=reportsState;
   const keyOk=!!getAnthropicKey();
-  let html=`
-    <div onclick="navTo('dashboard')" style="font-size:13px;color:#003366;font-weight:600;cursor:pointer;margin-bottom:16px;display:inline-block;">&larr; Back to Dashboard</div>
-    ${keyOk?'':'<div style="background:#fef3c7;border:1px solid #fde68a;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:12px;color:#92400e;">Anthropic API key not set. Open the bot (bottom-right) and paste your <strong>sk-ant-…</strong> key to enable AI report generation.</div>'}
-    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-      <span style="font-size:12px;font-weight:600;color:#475569;">Mode:</span>
-      <button onclick="setReportsMode('contact')" style="background:${reportsState.mode==='contact'?'#003366':'#f0f4f8'};color:${reportsState.mode==='contact'?'#fff':'#475569'};border:1px solid ${reportsState.mode==='contact'?'#003366':'#e2e8f0'};border-radius:8px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;">Individual</button>
-      <button onclick="setReportsMode('pair')" style="background:${reportsState.mode==='pair'?'#003366':'#f0f4f8'};color:${reportsState.mode==='pair'?'#fff':'#475569'};border:1px solid ${reportsState.mode==='pair'?'#003366':'#e2e8f0'};border-radius:8px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;">Pair / Couple</button>
+
+  let html=`<div onclick="navTo('dashboard')" style="font-size:13px;color:#003366;font-weight:600;cursor:pointer;margin-bottom:16px;display:inline-block;" class="no-print">&larr; Back to Dashboard</div>
+  ${keyOk?'':'<div class="no-print" style="background:#fef3c7;border:1px solid #fde68a;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:12px;color:#92400e;">Anthropic API key not set. Open the bot (bottom-right) and paste your <strong>sk-ant-…</strong> key to enable AI report generation.</div>'}
+  <div class="no-print" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px 20px;margin-bottom:16px;">
+    <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:10px;">Choose a Report</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;align-items:center;">
+      <button onclick="setReportsMode('client')" style="background:${st.mode==='client'?'#003366':'#f0f4f8'};color:${st.mode==='client'?'#fff':'#003366'};border:1px solid ${st.mode==='client'?'#003366':'#e2e8f0'};padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">By Client</button>
+      <button onclick="setReportsMode('contact')" style="background:${st.mode==='contact'?'#003366':'#f0f4f8'};color:${st.mode==='contact'?'#fff':'#003366'};border:1px solid ${st.mode==='contact'?'#003366':'#e2e8f0'};padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">By Contact</button>
+      <button onclick="setReportsMode('team')" style="background:${st.mode==='team'?'#003366':'#f0f4f8'};color:${st.mode==='team'?'#fff':'#003366'};border:1px solid ${st.mode==='team'?'#003366':'#e2e8f0'};padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">Team</button>
+      <span style="flex:1;"></span>
+      <label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:${st.briefMode?'#003366':'#64748b'};font-weight:600;cursor:pointer;background:${st.briefMode?'#dbeafe':'#f0f4f8'};border:1px solid ${st.briefMode?'#003366':'#e2e8f0'};padding:7px 12px;border-radius:8px;">
+        <input type="checkbox" ${st.briefMode?'checked':''} onchange="toggleReportsBrief()" style="margin:0;">Pre-session brief
+      </label>
     </div>`;
-  if(reportsState.mode==='contact'){
-    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;margin-bottom:14px;">
-      <label style="display:block;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Pick contact</label>
-      <select onchange="setReportsContact(this.value)" style="width:100%;padding:10px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;background:#fff;">
-        <option value="">— Pick contact —</option>
-        ${withStr.map(c=>`<option value="${c.id}" ${c.id===reportsState.contactId?'selected':''}>${escHtml(c.first_name)} ${escHtml(c.last_name)}</option>`).join('')}
+  if(st.mode==='client'){
+    html+=`<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <select onchange="setReportsRoleFilter(this.value)" style="padding:9px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
+        <option value="">All client types</option>
+        ${roles.map(r=>`<option value="${r}" ${r===st.roleFilter?'selected':''}>${escHtml(r)}</option>`).join('')}
+      </select>
+      <select onchange="setReportsClient(this.value)" style="flex:1;min-width:220px;padding:9px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
+        <option value="">— Select a client —</option>
+        ${filteredClients.map(c=>`<option value="${c.id}" ${c.id===st.clientId?'selected':''}>${escHtml(c.relationship_name)} (${escHtml(c.role||'Other')})</option>`).join('')}
       </select>
     </div>`;
-    if(reportsState.contactId){
-      const c=contacts.find(x=>x.id===reportsState.contactId);
-      if(c) html+=renderIndividualReport(c,keyOk);
-    } else {
-      html+='<div style="font-size:12px;color:#94a3b8;padding:14px 0;">Pick a contact above to see their report.</div>';
-    }
+  } else if(st.mode==='team'){
+    const pickedNames=st.teamIds.map(id=>{const c=contacts.find(x=>x.id===id);return c?`<span style="background:#dbeafe;color:#1e3a5f;padding:4px 10px;border-radius:99px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px;">${escHtml(c.first_name)} ${escHtml(c.last_name)}<span onclick="removeReportsTeamMember('${id}')" style="cursor:pointer;color:#dc2626;font-weight:700;">&times;</span></span>`:''}).join('');
+    const clientsWithMembers=allClients.filter(c=>(c.members||[]).length);
+    html+=`<div style="margin-bottom:8px;">
+      <div style="font-size:11px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Pick a team client (loads its members instantly)</div>
+      <select onchange="addReportsTeamFromClient(this.value)" style="width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
+        <option value="">— Select a team client —</option>
+        ${clientsWithMembers.map(c=>`<option value="${c.id}">${escHtml(c.relationship_name)} (${escHtml(c.role||'Other')} &middot; ${(c.members||[]).length} member${(c.members||[]).length===1?'':'s'})</option>`).join('')}
+      </select>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <select id="reportsTeamPicker" style="flex:1;min-width:220px;padding:9px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
+        <option value="">— Or add a single contact —</option>
+        ${allContactsSorted.filter(c=>!st.teamIds.includes(c.id)).map(c=>`<option value="${c.id}">${escHtml(c.first_name)} ${escHtml(c.last_name)}</option>`).join('')}
+      </select>
+      <button onclick="addReportsTeamMember()" style="background:#003366;color:#fff;border:none;padding:9px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">Add</button>
+      ${st.teamIds.length?`<button onclick="clearReportsTeam()" style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;padding:9px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">Clear</button>`:''}
+    </div>
+    ${st.teamIds.length?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;">${pickedNames}</div>`:'<div style="font-size:11px;color:#94a3b8;margin-top:8px;">Pick a client to load its team in one tap, or build an ad-hoc team.</div>'}`;
   } else {
-    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;margin-bottom:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;">
-      <div><label style="display:block;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Partner 1</label>
-        <select onchange="setReportsPair('p1',this.value)" style="width:100%;padding:10px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;">
-          <option value="">— Pick contact —</option>
-          ${withStr.map(c=>`<option value="${c.id}" ${c.id===reportsState.p1Id?'selected':''}>${escHtml(c.first_name)} ${escHtml(c.last_name)}</option>`).join('')}
-        </select></div>
-      <div><label style="display:block;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Partner 2</label>
-        <select onchange="setReportsPair('p2',this.value)" style="width:100%;padding:10px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;">
-          <option value="">— Pick contact —</option>
-          ${withStr.map(c=>`<option value="${c.id}" ${c.id===reportsState.p2Id?'selected':''}>${escHtml(c.first_name)} ${escHtml(c.last_name)}</option>`).join('')}
-        </select></div>
-    </div>`;
-    if(reportsState.p1Id&&reportsState.p2Id&&reportsState.p1Id!==reportsState.p2Id){
-      const p1=contacts.find(x=>x.id===reportsState.p1Id);
-      const p2=contacts.find(x=>x.id===reportsState.p2Id);
-      if(p1&&p2) html+=renderPairReport(p1,p2,keyOk);
-    } else {
-      html+='<div style="font-size:12px;color:#94a3b8;padding:14px 0;">Pick two different contacts above to see the pair report.</div>';
+    html+=`<select onchange="setReportsContact(this.value)" style="width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
+      <option value="">— Select a contact (with strengths) —</option>
+      ${allContactsSorted.map(c=>`<option value="${c.id}" ${c.id===st.contactId?'selected':''}>${escHtml(c.first_name)} ${escHtml(c.last_name)}</option>`).join('')}
+    </select>`;
+  }
+  html+=`</div>`;
+
+  // Render the chosen report
+  if(st.mode==='client'&&st.clientId){
+    const cl=clients.find(c=>c.id===st.clientId);
+    if(cl){
+      const memberContacts=(cl.members||[]).map(id=>contacts.find(c=>c.id===id)).filter(Boolean);
+      const withStrengths=memberContacts.filter(c=>c.strength_1);
+      html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #003366;border-radius:12px;padding:14px 18px;margin-bottom:14px;">
+        <div style="font-weight:700;color:#1e3a5f;font-size:15px;">${escHtml(cl.relationship_name)}</div>
+        <div style="font-size:12px;color:#64748b;margin-top:2px;">${escHtml(cl.role||'Other')} &middot; ${memberContacts.length} member${memberContacts.length===1?'':'s'} &middot; ${withStrengths.length} with strengths recorded</div>
+      </div>`;
+      if(!memberContacts.length){
+        html+='<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:24px;text-align:center;color:#94a3b8;">This client has no linked members yet.</div>';
+      } else if(memberContacts.length===1){
+        html+=st.briefMode?renderPreSessionBriefIndividual(memberContacts[0]):renderStrengthsCard(memberContacts[0],keyOk);
+      } else if(memberContacts.length===2){
+        html+=st.briefMode?renderPreSessionBriefPair(memberContacts[0],memberContacts[1]):renderPairComparison(memberContacts[0],memberContacts[1],keyOk);
+      } else {
+        html+=renderTeamHeatmap(cl.relationship_name||'Team',memberContacts);
+      }
     }
+  } else if(st.mode==='contact'&&st.contactId){
+    const c=contacts.find(x=>x.id===st.contactId);
+    html+=st.briefMode?renderPreSessionBriefIndividual(c):renderStrengthsCard(c,keyOk);
+  } else if(st.mode==='team'&&st.teamIds.length){
+    const teamMembers=st.teamIds.map(id=>contacts.find(c=>c.id===id)).filter(Boolean);
+    if(teamMembers.length===1) html+=st.briefMode?renderPreSessionBriefIndividual(teamMembers[0]):renderStrengthsCard(teamMembers[0],keyOk);
+    else if(teamMembers.length===2) html+=st.briefMode?renderPreSessionBriefPair(teamMembers[0],teamMembers[1]):renderPairComparison(teamMembers[0],teamMembers[1],keyOk);
+    else html+=renderTeamHeatmap('Ad-hoc team',teamMembers);
+  } else {
+    html+=`<div class="no-print" style="background:#fff;border:1px dashed #cbd5e1;border-radius:12px;padding:30px;text-align:center;color:#94a3b8;font-size:13px;">Pick a client, contact, or build a team above.</div>`;
   }
   document.getElementById('reportsContent').innerHTML=html;
 }
 
-function renderIndividualReport(c,keyOk){
+// ── Report card renderers ──
+function renderStrengthsCard(c,keyOk){
+  if(!c) return '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:24px;text-align:center;color:#94a3b8;">No contact selected.</div>';
   const list=getContactStrengths(c);
+  if(!list.length) return `<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:24px;text-align:center;color:#94a3b8;">${escHtml(c.first_name)} ${escHtml(c.last_name)} has no strengths recorded yet.</div>`;
+  const dc={Executing:0,Influencing:0,Relationship:0,Strategic:0};
+  list.forEach(s=>{const d=getDomain(s.name);if(d)dc[d]++});
+  const total=Object.values(dc).reduce((a,b)=>a+b,0)||1;
+  const top5=list.filter(s=>s.rank<=5);
+  const bottom5=list.filter(s=>s.rank>5);
+  let h=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:14px;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:10px;">
+      <div><div style="font-family:'Quicksand','Inter',sans-serif;font-size:18px;font-weight:700;color:#1e3a5f;">${escHtml(c.first_name)} ${escHtml(c.last_name)}</div>${c.email?`<div style="font-size:12px;color:#94a3b8;margin-top:2px;">${escHtml(c.email)}</div>`:''}</div>
+      <button onclick="window.print()" class="no-print" style="background:#003366;color:#fff;border:none;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">&#128424; Print</button>
+    </div>
+    <div style="display:flex;border-radius:6px;overflow:hidden;height:24px;margin-top:12px;margin-bottom:8px;">${Object.entries(dc).map(([d,n])=>n?`<div style="background:${domainColors[d]};width:${(n/total*100).toFixed(1)}%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;">${d.slice(0,3).toUpperCase()} ${n}</div>`:'').join('')}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:#64748b;">${Object.entries(dc).map(([d,n])=>`<span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:2px;background:${domainColors[d]};"></span>${d}: ${n}</span>`).join('')}</div>
+  </div>`;
+  function group(title,items){
+    if(!items.length) return '';
+    return `<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px 20px;margin-bottom:12px;">
+      <div style="font-family:'Quicksand','Inter',sans-serif;font-size:13px;font-weight:700;color:#1e3a5f;margin-bottom:10px;letter-spacing:.5px;text-transform:uppercase;">${title}</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        ${items.map(s=>`<div style="display:flex;align-items:flex-start;gap:12px;padding:8px 0;border-bottom:1px solid #f1f5f9;">
+          <div style="background:${csColor(s.name)};color:#fff;font-weight:700;font-size:13px;padding:6px 10px;border-radius:4px;min-width:46px;text-align:center;flex-shrink:0;">#${s.rank}</div>
+          <div style="flex:1;min-width:0;"><div style="font-weight:700;font-size:14px;color:#1e293b;">${s.name}</div></div>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }
+  h+=group('Top 5 — Signature Themes',top5);
+  if(bottom5.length) h+=group('Themes 6–10',bottom5);
+  // AI blocks
   const piIns=getInsight(c.id,'personal_insights');
   const bnIns=getInsight(c.id,'bring_need');
   const adaptIns=getInsight(c.id,'adaptation_tips');
   const cath=findCathContact();
   const showAdapt=cath&&cath.id!==c.id;
-  const reps=contactReports.filter(r=>r.contact_id===c.id);
   const aiBlock=(label,fn,ins)=>{
     return `<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px 20px;margin-bottom:12px;">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
-        <div style="font-family:'Quicksand','Inter',sans-serif;font-size:14px;font-weight:700;color:#1e3a5f;">${label}</div>
-        <button id="${fn}Btn-${c.id}" onclick="${fn}('${c.id}')" ${keyOk?'':'disabled'} style="background:${keyOk?'#003366':'#cbd5e1'};color:#fff;border:none;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:${keyOk?'pointer':'not-allowed'};">${ins?'Regenerate':'Generate'}</button>
+        <div style="font-family:'Quicksand','Inter',sans-serif;font-size:13px;font-weight:700;color:#1e3a5f;letter-spacing:.5px;text-transform:uppercase;">${label}</div>
+        <button class="no-print" id="${fn}Btn-${c.id}" onclick="${fn}('${c.id}')" ${keyOk?'':'disabled'} style="background:${keyOk?'#003366':'#cbd5e1'};color:#fff;border:none;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:${keyOk?'pointer':'not-allowed'};">${ins?'Regenerate':'Generate'}</button>
       </div>
-      ${ins?`<div style="font-size:13px;line-height:1.7;color:#334155;white-space:pre-wrap;">${escHtml(ins.content)}</div><div style="font-size:11px;color:#94a3b8;margin-top:8px;">Generated ${new Date(ins.created_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'})}</div>`:'<div style="font-size:12px;color:#94a3b8;">Not generated yet.</div>'}
+      ${ins?`<div style="font-size:13px;line-height:1.7;color:#334155;white-space:pre-wrap;">${escHtml(ins.content)}</div><div class="no-print" style="font-size:11px;color:#94a3b8;margin-top:8px;">Generated ${new Date(ins.created_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'})}</div>`:'<div style="font-size:12px;color:#94a3b8;">Not generated yet.</div>'}
     </div>`;
   };
-  let h=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px 20px;margin-bottom:12px;">
-    <div style="font-family:'Quicksand','Inter',sans-serif;font-size:18px;font-weight:700;color:#1e3a5f;margin-bottom:6px;">${escHtml(c.first_name)} ${escHtml(c.last_name)}</div>
-    ${c.email?`<div style="font-size:12px;color:#64748b;margin-bottom:10px;">${escHtml(c.email)}</div>`:''}
-    <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;">${list.slice(0,5).map(s=>csPill(s.rank,s.name)).join('')}</div>
-    ${list.length>5?`<div style="display:flex;flex-wrap:wrap;gap:4px;">${list.slice(5).map(s=>csPill(s.rank,s.name)).join('')}</div>`:''}
-    ${reps.length?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;padding-top:10px;border-top:1px dashed #f1f5f9;">${reps.map(r=>`<a href="${r.url}" target="_blank" rel="noopener" style="font-size:11px;color:#2563eb;text-decoration:none;background:#eff6ff;border:1px solid #bfdbfe;border-radius:4px;padding:3px 8px;font-weight:600;">&#128196; ${escHtml(r.filename||r.report_type)}</a>`).join('')}</div>`:''}
-  </div>`;
   h+=aiBlock('Personal Insights','generatePersonalInsights',piIns);
   h+=aiBlock('Bring &amp; Need','generateBringNeed',bnIns);
   if(showAdapt) h+=aiBlock('Adaptation Tips (for Cath)','generateAdaptationTips',adaptIns);
   return h;
 }
 
-function renderPairReport(p1,p2,keyOk){
+function renderPairComparison(p1,p2,keyOk){
   const l1=getContactStrengths(p1), l2=getContactStrengths(p2);
-  const shared=l1.filter(s=>l2.find(t=>t.name===s.name)).map(s=>s.name);
-  const dynIns=getInsight(p1.id,'couple_dynamics');
+  const set2=new Set(l2.map(s=>s.name));
+  const shared=l1.filter(s=>set2.has(s.name)).map(s=>s.name);
+  const dynIns=findCoupleInsight(p1.id,p2.id);
   let h=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px 20px;margin-bottom:12px;">
-    <div style="font-family:'Quicksand','Inter',sans-serif;font-size:16px;font-weight:700;color:#1e3a5f;margin-bottom:10px;">${escHtml(p1.first_name)} &amp; ${escHtml(p2.first_name)}</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:10px;">
-      <div><div style="font-size:11px;color:#64748b;font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;">${escHtml(p1.first_name)}</div><div style="display:flex;flex-wrap:wrap;gap:3px;">${l1.slice(0,5).map(s=>csPill(s.rank,s.name)).join('')}</div></div>
-      <div><div style="font-size:11px;color:#64748b;font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;">${escHtml(p2.first_name)}</div><div style="display:flex;flex-wrap:wrap;gap:3px;">${l2.slice(0,5).map(s=>csPill(s.rank,s.name)).join('')}</div></div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:10px;">
+      <div style="font-family:'Quicksand','Inter',sans-serif;font-size:16px;font-weight:700;color:#1e3a5f;">${escHtml(p1.first_name)} &amp; ${escHtml(p2.first_name)}</div>
+      <button onclick="window.print()" class="no-print" style="background:#003366;color:#fff;border:none;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">&#128424; Print</button>
     </div>
-    ${shared.length?`<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 12px;font-size:12px;color:#15803d;"><strong>Shared themes:</strong> ${shared.join(', ')}</div>`:'<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;font-size:12px;color:#64748b;">No shared themes in their top 5.</div>'}
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:10px;">
+      <div><div style="font-size:11px;color:#64748b;font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;">${escHtml(p1.first_name)}</div>${strengthsRowChips(l1)}<div style="margin-top:8px;">${domainBar(l1,16)}</div></div>
+      <div><div style="font-size:11px;color:#64748b;font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;">${escHtml(p2.first_name)}</div>${strengthsRowChips(l2)}<div style="margin-top:8px;">${domainBar(l2,16)}</div></div>
+    </div>
+    ${shared.length?`<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 12px;font-size:12px;color:#15803d;"><strong>Shared themes:</strong> ${shared.join(', ')}</div>`:'<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;font-size:12px;color:#64748b;">No shared themes in their top 10.</div>'}
   </div>
   <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px 20px;margin-bottom:12px;">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
-      <div style="font-family:'Quicksand','Inter',sans-serif;font-size:14px;font-weight:700;color:#1e3a5f;">Couple Dynamics (for Cath)</div>
-      <button onclick="generateCoupleDynamics('${p1.id}','${p2.id}')" ${keyOk?'':'disabled'} style="background:${keyOk?'#003366':'#cbd5e1'};color:#fff;border:none;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:${keyOk?'pointer':'not-allowed'};">${dynIns?'Regenerate':'Generate'}</button>
+      <div style="font-family:'Quicksand','Inter',sans-serif;font-size:13px;font-weight:700;color:#1e3a5f;letter-spacing:.5px;text-transform:uppercase;">Couple Dynamics (for Cath)</div>
+      <button class="no-print" onclick="generateCoupleDynamics('${p1.id}','${p2.id}')" ${keyOk?'':'disabled'} style="background:${keyOk?'#003366':'#cbd5e1'};color:#fff;border:none;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:${keyOk?'pointer':'not-allowed'};">${dynIns?'Regenerate':'Generate'}</button>
     </div>
-    ${dynIns?`<div style="font-size:13px;line-height:1.7;color:#334155;white-space:pre-wrap;">${escHtml(dynIns.content)}</div><div style="font-size:11px;color:#94a3b8;margin-top:8px;">Generated ${new Date(dynIns.created_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'})}</div>`:'<div style="font-size:12px;color:#94a3b8;">Not generated yet.</div>'}
+    ${dynIns?`<div style="font-size:13px;line-height:1.7;color:#334155;white-space:pre-wrap;">${escHtml(dynIns.content)}</div><div class="no-print" style="font-size:11px;color:#94a3b8;margin-top:8px;">Generated ${new Date(dynIns.created_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'})}</div>`:'<div style="font-size:12px;color:#94a3b8;">Not generated yet.</div>'}
   </div>`;
+  return h;
+}
+
+function renderTeamHeatmap(teamLabel,members){
+  const withStr=members.filter(m=>m.strength_1);
+  if(!members.length) return '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:24px;text-align:center;color:#94a3b8;">No members in this team.</div>';
+  const themeFreq={};
+  members.forEach(m=>{for(let i=1;i<=10;i++){const s=m['strength_'+i];if(s)themeFreq[s]=(themeFreq[s]||0)+1}});
+  const dc={Executing:0,Influencing:0,Relationship:0,Strategic:0};
+  Object.entries(themeFreq).forEach(([name,n])=>{const d=getDomain(name);if(d)dc[d]+=n});
+  const totalDom=Object.values(dc).reduce((a,b)=>a+b,0)||1;
+  const missingDomains=Object.entries(dc).filter(([_,n])=>n===0).map(([d])=>d);
+  const sortedThemes=Object.entries(themeFreq).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));
+  const shared=sortedThemes.filter(([_,n])=>n>=2);
+  const sharedSet=new Set(shared.map(([n])=>n));
+  function nameOf(c){return ((c.preferred_name||c.first_name||'')+' '+(c.last_name||'')).trim()||'(no name)'}
+  let h=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #003366;border-radius:12px;padding:14px 18px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+    <div><div style="font-family:'Quicksand','Inter',sans-serif;font-weight:700;color:#1e3a5f;font-size:16px;">${escHtml(teamLabel)}</div><div style="font-size:12px;color:#64748b;margin-top:2px;">Team heatmap &middot; ${members.length} member${members.length===1?'':'s'} &middot; ${withStr.length} with strengths recorded${missingDomains.length?' &middot; missing: '+missingDomains.join(', '):''}</div></div>
+    <button onclick="window.print()" class="no-print" style="background:#003366;color:#fff;border:none;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">&#128424; Print</button>
+  </div>`;
+  if(!withStr.length) return h+'<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:24px;text-align:center;color:#94a3b8;">No strengths recorded for any member yet.</div>';
+  h+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;margin-bottom:14px;">
+    <div style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:8px;">Domain balance — combined</div>
+    <div style="display:flex;border-radius:6px;overflow:hidden;height:24px;margin-bottom:8px;">${Object.entries(dc).map(([d,n])=>n?`<div style="background:${domainColors[d]};width:${(n/totalDom*100).toFixed(1)}%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;">${d.slice(0,3).toUpperCase()} ${n}</div>`:'').join('')}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:#64748b;">${Object.entries(dc).map(([d,n])=>`<span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:2px;background:${domainColors[d]};"></span>${d}: ${n}${dc[d]===0?' <strong style="color:#dc2626;">(gap)</strong>':''}</span>`).join('')}</div>
+  </div>`;
+  if(shared.length){
+    h+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;margin-bottom:14px;">
+      <div style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:8px;">Shared themes (${shared.length} theme${shared.length===1?'':'s'} appear in 2+ members)</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">${shared.map(([name,n])=>`<span style="background:${csColor(name)};color:#fff;padding:4px 10px;border-radius:4px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px;">${name} <span style="background:rgba(255,255,255,.25);padding:1px 6px;border-radius:99px;font-weight:700;">${n}</span></span>`).join('')}</div>
+    </div>`;
+  } else {
+    h+='<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:14px 18px;margin-bottom:14px;font-size:12px;color:#92400e;">No themes appear in more than one member\'s top-10. The team has high diversity.</div>';
+  }
+  h+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;margin-bottom:14px;">
+    <div style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:10px;">Members (${members.length})</div>`;
+  members.forEach(m=>{
+    const list=getContactStrengths(m);
+    h+=`<div style="padding:10px 0;border-top:1px solid #f1f5f9;">
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:baseline;flex-wrap:wrap;margin-bottom:6px;"><div style="font-weight:700;color:#1e3a5f;font-size:14px;">${escHtml(nameOf(m))}</div><div style="font-size:11px;color:#94a3b8;">${list.length?list.length+' themes':'no strengths'}</div></div>
+      ${list.length?`<div style="display:flex;flex-wrap:wrap;gap:4px;">${list.map(s=>`<span style="background:${csColor(s.name)};color:#fff;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:600;${sharedSet.has(s.name)?'box-shadow:0 0 0 2px #15803d;':''}">${s.rank}. ${s.name}</span>`).join('')}</div>`:''}
+    </div>`;
+  });
+  h+='</div>';
+  if(sortedThemes.length){
+    h+=`<details style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;">
+      <summary style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#64748b;font-weight:700;cursor:pointer;">Theme frequency — full list (${sortedThemes.length})</summary>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px;margin-top:10px;">${sortedThemes.map(([name,n])=>`<div style="display:flex;align-items:center;gap:8px;font-size:12px;"><span style="background:${csColor(name)};color:#fff;padding:2px 8px;border-radius:3px;font-weight:600;min-width:90px;">${name}</span><span style="color:#64748b;">${n} ${n===1?'member':'members'}</span></div>`).join('')}</div>
+    </details>`;
+  }
+  return h;
+}
+
+function renderPreSessionBriefIndividual(c){
+  if(!c) return '';
+  const list=getContactStrengths(c);
+  const ins=getInsight(c.id,'personal_insights');
+  const bn=getInsight(c.id,'bring_need');
+  const adapt=getInsight(c.id,'adaptation_tips');
+  const todayStr=new Date().toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  let h=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #003366;border-radius:12px;padding:16px 18px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+    <div><div style="font-family:'Quicksand','Inter',sans-serif;font-weight:700;color:#1e3a5f;font-size:18px;">${escHtml(c.first_name)} ${escHtml(c.last_name)}</div><div style="font-size:12px;color:#64748b;margin-top:2px;">Pre-session brief &middot; ${todayStr}${c.email?' &middot; '+escHtml(c.email):''}</div></div>
+    <button onclick="window.print()" class="no-print" style="background:#003366;color:#fff;border:none;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">&#128424; Print</button>
+  </div>
+  <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;margin-bottom:12px;">
+    <div style="font-family:'Quicksand','Inter',sans-serif;font-size:12px;font-weight:700;color:#1e3a5f;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px;">Top 10 Strengths</div>
+    ${strengthsRowChips(list)}<div style="margin-top:10px;">${domainBar(list,20)}</div>
+  </div>${pulseSnapshotFor(c.id)}`;
+  function aiBlock(t,b){return `<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;margin-bottom:12px;"><div style="font-family:'Quicksand','Inter',sans-serif;font-size:12px;font-weight:700;color:#1e3a5f;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px;">${t}</div><div style="font-size:12.5px;line-height:1.65;color:#1e293b;white-space:pre-wrap;">${escHtml(b||'')}</div></div>`}
+  if(ins) h+=aiBlock('Personal Insights',ins.content);
+  if(bn) h+=aiBlock('What You Bring &amp; Need',bn.content);
+  if(adapt) h+=aiBlock('Adaptation Tips for Cath',adapt.content);
+  if(!ins&&!bn&&!adapt) h+='<div class="no-print" style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#92400e;">No AI readings generated yet. Switch off Brief mode and use the Generate buttons.</div>';
+  return h;
+}
+
+function renderPreSessionBriefPair(p1,p2){
+  const l1=getContactStrengths(p1), l2=getContactStrengths(p2);
+  const set2=new Set(l2.map(s=>s.name));
+  const shared=l1.filter(s=>set2.has(s.name)).map(s=>s.name);
+  const ins=findCoupleInsight(p1.id,p2.id);
+  const todayStr=new Date().toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  function nameOf(c){return ((c.preferred_name||c.first_name||'')+' '+(c.last_name||'')).trim()||'(no name)'}
+  let h=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #b87a90;border-radius:12px;padding:16px 18px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+    <div><div style="font-family:'Quicksand','Inter',sans-serif;font-weight:700;color:#1e3a5f;font-size:18px;">${escHtml(nameOf(p1))} &amp; ${escHtml(nameOf(p2))}</div><div style="font-size:12px;color:#64748b;margin-top:2px;">Couples brief &middot; ${todayStr}</div></div>
+    <button onclick="window.print()" class="no-print" style="background:#003366;color:#fff;border:none;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">&#128424; Print</button>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;"><div style="font-weight:700;color:#1e3a5f;font-size:13px;margin-bottom:6px;">${escHtml(nameOf(p1))}</div>${strengthsRowChips(l1)}<div style="margin-top:8px;">${domainBar(l1,16)}</div></div>
+    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;"><div style="font-weight:700;color:#1e3a5f;font-size:13px;margin-bottom:6px;">${escHtml(nameOf(p2))}</div>${strengthsRowChips(l2)}<div style="margin-top:8px;">${domainBar(l2,16)}</div></div>
+  </div>`;
+  if(shared.length) h+=`<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:10px 14px;margin-bottom:12px;"><span style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#15803d;font-weight:700;margin-right:6px;">Shared:</span>${shared.map(name=>`<span style="background:${csColor(name)};color:#fff;padding:2px 8px;border-radius:3px;font-size:11px;font-weight:600;margin-right:4px;">${name}</span>`).join('')}</div>`;
+  h+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+    <div><div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:6px;">${escHtml(nameOf(p1))}</div>${pulseSnapshotFor(p1.id)}</div>
+    <div><div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:6px;">${escHtml(nameOf(p2))}</div>${pulseSnapshotFor(p2.id)}</div>
+  </div>`;
+  if(ins) h+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;"><div style="font-family:'Quicksand','Inter',sans-serif;font-size:12px;font-weight:700;color:#1e3a5f;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px;">Couple Dynamics</div><div style="font-size:12.5px;line-height:1.65;color:#1e293b;white-space:pre-wrap;">${escHtml(ins.content)}</div></div>`;
+  else h+='<div class="no-print" style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:10px 14px;font-size:12px;color:#92400e;">No Couple Dynamics generated yet. Switch off Brief mode to generate one.</div>';
   return h;
 }
 
@@ -1067,22 +1285,30 @@ window.generateCoupleDynamics=async function(p1Id,p2Id){
   }catch(e){console.error(e);toast('Failed: '+e.message,'error')}
 };
 
-// ── WORKFLOW SOP (static reference) ──
+// ── WORKFLOW SOP (full 8-stage) ──
 function renderSop(){
+  const stage=(n,title,who,what,exit)=>`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #1e3a5f;border-radius:12px;padding:14px 18px;margin-bottom:10px;">
+    <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:8px;"><div style="background:#1e3a5f;color:#fff;font-weight:700;font-size:12px;padding:3px 10px;border-radius:99px;">Stage ${n}</div><div style="font-family:'Quicksand','Inter',sans-serif;font-weight:700;color:#1e3a5f;font-size:15px;">${title}</div><span style="font-size:11px;color:#64748b;">${who}</span></div>
+    <div style="font-size:13px;line-height:1.65;color:#334155;margin-bottom:6px;">${what}</div>
+    <div style="font-size:12px;color:#64748b;background:#f8fafc;border-radius:6px;padding:6px 10px;"><strong>Exit:</strong> ${exit}</div>
+  </div>`;
   const html=`
-    <div onclick="navTo('dashboard')" style="font-size:13px;color:#1e3a5f;font-weight:600;cursor:pointer;margin-bottom:16px;display:inline-block;">&larr; Back to Dashboard</div>
-    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:24px;">
-      <h2 style="font-family:'Quicksand','Inter',sans-serif;font-size:20px;color:#1e3a5f;margin-bottom:14px;">Gallup CliftonStrengths workflow</h2>
-      <ol style="padding-left:20px;font-size:13px;line-height:1.8;color:#334155;">
-        <li><strong>New request</strong> — corporate clients use the public link (per-org URL on their client modal). Internal requests start in the main CRM Code Tracker.</li>
-        <li><strong>Awaiting Payment</strong> — invoice issued via Xero.</li>
-        <li><strong>Awaiting Purchase</strong> — payment received, code purchased from Gallup with discount <code>DH7HGTMAZ</code>.</li>
-        <li><strong>Awaiting Completion</strong> — code emailed to client. Use email templates in the agents area.</li>
-        <li><strong>Completed</strong> — client has finished the assessment, PDF received.</li>
-        <li><strong>Upload</strong> — PDF uploaded against the contact via <em>Upload Report</em>; auto-extract pulls the top 10 themes if your Anthropic key is set.</li>
-        <li><strong>Filed</strong> — request marked Filed once the strengths are saved on the contact and the report appears in their profile.</li>
-      </ol>
-      <a href="${MAIN_CRM_URL}/#strsop" target="_blank" rel="noopener" class="btn btn-gray" style="margin-top:14px;">Open full SOP in main CRM &#8599;</a>
+    <div onclick="navTo('dashboard')" style="font-size:13px;color:#1e3a5f;font-weight:600;cursor:pointer;margin-bottom:16px;display:inline-block;" class="no-print">&larr; Back to Dashboard</div>
+    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px 24px;margin-bottom:16px;">
+      <div style="font-family:'Quicksand','Inter',sans-serif;font-size:20px;font-weight:700;color:#1e3a5f;margin-bottom:6px;">Gallup CliftonStrengths workflow</div>
+      <div style="font-size:13px;color:#64748b;line-height:1.6;">Single source of truth for the full 8-stage code → file pipeline. Each stage maps to a status in the Code Tracker.</div>
+    </div>
+    ${stage('1','New request','Source: Cath, Lou, public form, ThriveHQ, referrer','Capture the request: contact (or couple), product (Top 5 / Top 34 / upgrade / Sales & Mgmt), source. For corporate orgs (e.g. Lifestart), staff submit via the <em>public Gallup link</em> on the org\'s client modal — this lands a New row automatically with the org linked.','Card created in Code Tracker with status <strong>New</strong>.')}
+    ${stage('2','Awaiting Payment','Cath / Lou','Issue the Xero invoice. For corporate orgs, the invoice goes to the org account; for individuals, to the person\'s email.','Invoice sent. Status moves to <strong>Awaiting Payment</strong>.')}
+    ${stage('3','Awaiting Purchase','Cath','Once payment lands in the bank, buy the code on the Gallup Store using discount code <code>DH7HGTMAZ</code>. Note the code value into the Code Tracker card.','Code purchased and pasted into the card\'s <em>Code value</em> field. Status moves to <strong>Awaiting Purchase</strong>.')}
+    ${stage('4','Code emailed to client','Cath / Lou','Send the code via the email template (or Microsoft Teams chat for ThriveHQ members). Include link, instructions, deadline guidance.','Code sent. Status moves to <strong>Awaiting Completion</strong>.')}
+    ${stage('5','Awaiting Completion','Client','Client takes the assessment on Gallup\'s site. Cath nudges if it stalls more than ~10 days.','Client emails (or uploads) the resulting PDF report.')}
+    ${stage('6','Upload PDF','Cath / Lou','In <em>Strengths Hub → Upload Report</em>, pick the PDF and the contact. Tick <em>Auto-extract top 10 themes</em> to have Claude pull the themes; the form opens the Edit modal pre-filled for review and Save.','PDF stored in Supabase, contact_reports row created, top 10 saved on the contact. Status moves to <strong>Completed</strong>.')}
+    ${stage('7','Generate readings (optional)','Cath','In <em>Reports</em>, generate Personal Insights, Bring &amp; Need, and Adaptation Tips for individuals; Couple Dynamics for pairs. Use Pre-session brief mode for a one-page printable.','Readings saved against the contact\'s strengths_insights.')}
+    ${stage('8','Filed','Cath','Once strengths are saved, PDF is in the system, and any AI readings are generated, mark the Code Tracker card as Filed.','Card moves to <strong>Filed</strong>; in-flight count drops. Workflow complete.')}
+    <div style="background:#f0f4f8;border:1px solid #cbd5e1;border-radius:12px;padding:14px 18px;margin-top:14px;">
+      <div style="font-size:12px;font-weight:700;color:#1e3a5f;margin-bottom:6px;">Discount &amp; assets</div>
+      <div style="font-size:12px;color:#475569;line-height:1.6;"><strong>Gallup discount code:</strong> <code style="background:#fff;padding:1px 6px;border:1px solid #e2e8f0;border-radius:4px;">DH7HGTMAZ</code> &middot; <strong>Cath voice doc:</strong> kept inline as the source of truth for every AI prompt.</div>
     </div>`;
   document.getElementById('sopContent').innerHTML=html;
 }
