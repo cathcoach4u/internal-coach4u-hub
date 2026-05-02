@@ -251,7 +251,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.55</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.56</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -10725,6 +10725,8 @@ function renderAbout(){
 
   html+=card('Pages','<ul style="list-style:disc;padding-left:20px;margin:0;">'+
     '<li style="margin:6px 0;font-size:14px;color:#334155;"><strong style="color:#1e3a5f;">index.html</strong> — Main CRM app (single-page)</li>'+
+    '<li style="margin:6px 0;font-size:14px;color:#334155;"><strong style="color:#1e3a5f;">strengths-app/</strong> — Standalone Strengths Hub PWA (Dashboard, Profiles, Upload, Domain Balance, Code Tracker, Reports with 4 AI generators, Workflow SOP). Same Supabase backend; portable to its own repo.</li>'+
+    '<li style="margin:6px 0;font-size:14px;color:#334155;"><strong style="color:#1e3a5f;">gallup-request/</strong> — Public Gallup CliftonStrengths code request form for corporate orgs (per-org URL <code>?org=&lt;client.id&gt;</code>)</li>'+
     '<li style="margin:6px 0;font-size:14px;color:#334155;"><strong style="color:#1e3a5f;">intake/thrivehq/</strong>, <strong style="color:#1e3a5f;">intake/couples/</strong>, <strong style="color:#1e3a5f;">intake/individual/</strong> — Public intake forms</li>'+
     '<li style="margin:6px 0;font-size:14px;color:#334155;"><strong style="color:#1e3a5f;">policies/cancellation/</strong> — Public Cancellation &amp; Rescheduling Policy</li>'+
     '<li style="margin:6px 0;font-size:14px;color:#334155;"><strong style="color:#1e3a5f;">portal/</strong> — Client-facing SAFE Pulse portal (check-in &amp; printable report)</li>'+
@@ -10733,6 +10735,7 @@ function renderAbout(){
     '<li style="margin:6px 0;font-size:14px;color:#334155;"><strong style="color:#1e3a5f;">bot/</strong> — C4U Bot AI assistant (separate PWA)</li>'+
     '<li style="margin:6px 0;font-size:14px;color:#334155;"><strong style="color:#1e3a5f;">docs/cath-voice-tone-v1.md</strong> — Cath Voice Tone Reference v1, source of truth for AI-generated tone</li>'+
     '<li style="margin:6px 0;font-size:14px;color:#334155;"><strong style="color:#1e3a5f;">intake.html</strong> — Legacy, redirects to current ThriveHQ intake</li>'+
+    '<li style="margin:6px 0;font-size:14px;color:#334155;">&#8599; <strong style="color:#1e3a5f;">cathcoach4u.github.io/coach4Uapp-dashboard/</strong> — Coach4U Suite Dashboard (separate repo): central launchpad for all coaching apps, manages client portal access &amp; auth, reads portal URLs live from Supabase. Linked at the top of the Home dashboard.</li>'+
   '</ul>');
 
   document.getElementById('aboutContent').innerHTML=html;

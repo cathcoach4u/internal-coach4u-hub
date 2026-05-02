@@ -11,6 +11,8 @@ Single-page CRM app hosted on GitHub Pages with a Supabase backend. All CRM func
 | `index.html` | Main CRM app (all screens, all JS) |
 | `portal/index.html` | Client-facing SAFE Pulse portal (check-in, results) |
 | `brain-pulse/index.html` | Client-facing Brain Pulse portal |
+| `gallup-request/index.html` | Public Gallup CliftonStrengths code request form for corporate clients (per-org URL: `?org=<client.id>`). Validates the org, collects name/email/phone/notes, creates contact + member link + `gallup_code_requests` row with status `New`. |
+| `strengths-app/` | Standalone Strengths Hub PWA (sibling to the main CRM, hits the same Supabase backend). Mirrors all daily strengths work — Dashboard, Profiles, Upload, Domain Balance, Code Tracker (full CRUD), Reports (Client/Contact/Team + Pre-session brief + 4 AI generators), Workflow SOP. Independent version line (`v0.x.y`) and own service worker. Designed to be portable to its own repo. |
 | `sw.js` | Service worker for PWA caching |
 | `manifest.json` | PWA manifest |
 | `intake.html` | Legacy — now redirects to current ThriveHQ intake |
@@ -50,6 +52,18 @@ Every area's first page is a **Dashboard** so clicking an area tab never lands o
 - `pageToArea` maps page IDs back to areas
 - Page titles defined in `titles` object inside `navTo` (line ~1354)
 - Area tab order in HTML (`#areaTabs`, line ~225) MUST match `Object.keys(areaConfig)` order — `switchArea` highlights the tab via `areaKeys.indexOf(area)`
+
+## Coach4U Suite Dashboard link
+
+The Home dashboard (front screen of the CRM) has a navy/blue gradient launchpad card pinned at the top, linking to `https://cathcoach4u.github.io/coach4Uapp-dashboard/` — the central Coach4U Suite Dashboard that manages every coaching app, client portal access, and reads portal URLs live from Supabase.
+
+## Public Gallup Code Request Form
+
+`gallup-request/index.html` is a public PWA at `/gallup-request/?org=<client.id>`. Used by corporate orgs (e.g. Lifestart) so their staff can self-serve a CliftonStrengths code request without going through Cath. The link surfaces inside the Client Modal: when role is **Organisation** and the client has been saved, a green panel appears at the top of the modal with the per-org URL plus Copy and Open buttons (`#clPublicGallupSection`, render fn `updatePublicGallupSection()`). Submission writes a `gallup_code_requests` row with `status='New'`, links the contact via `client_members`, and shows up immediately in the main CRM Code Tracker pipeline.
+
+## Standalone Strengths Hub PWA (`strengths-app/`)
+
+Self-contained PWA at `/strengths-app/`. Same Supabase backend, no shared code with the main CRM — Cath Voice Reference, the 34 themes, the colour map, all four AI prompts and `csPill`/`getDomain`/`csColor` helpers are inlined so the folder can be lifted into its own repo unchanged. Per-table load status panel on the boot screen (✓/✗ + row counts) for diagnostics on phone where DevTools isn't available. Service worker never caches HTML — version updates land on next reload. Pulses are deliberately NOT loaded; pulse work stays in the main CRM.
 
 ## Pulses
 
