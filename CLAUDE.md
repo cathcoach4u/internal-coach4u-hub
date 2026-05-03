@@ -44,6 +44,10 @@ Areas and their pages (defined at line ~2039):
 
 Every area's first page is a **Dashboard** so clicking an area tab never lands on a raw list.
 
+### Dashboard style convention
+
+All area dashboards use the **ThriveHQ nav-card grid** pattern: `display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px` with white cards, a 4px coloured left border, emoji icon (24px), bold title (14px `#1e3a5f`), and subtitle (11px `#64748b`). Hover reveals `box-shadow:0 4px 12px rgba(0,0,0,.08)`. Stat-counter cards (`dash-card` / `dc-icon` / `dc-info`) precede the nav grid where live data is available. `renderThqDash()` is the canonical reference.
+
 ### Routing
 
 - `navTo(tab)` switches screens by showing `#screen-{tab}` and hiding others
@@ -55,6 +59,15 @@ Every area's first page is a **Dashboard** so clicking an area tab never lands o
 ## Coach4U Suite Dashboard link
 
 The Home dashboard (front screen of the CRM) has a navy/blue gradient launchpad card pinned at the top, linking to `https://cathcoach4u.github.io/coach4Uapp-dashboard/` — the central Coach4U Suite Dashboard that manages every coaching app, client portal access, and reads portal URLs live from Supabase.
+
+## Company Resources (Admin > Company Resources)
+
+`renderResourcesDash()` — shareable public links for clients. Sections:
+- **Intake Forms**: ThriveHQ, Couples, Individual intake form URLs (relative to app base URL)
+- **Policies**: Cancellation & Rescheduling policy page
+- **ThriveHQ Client Links**: external links to `cathcoach4u.github.io/yourthrivehqcoach/` — Links Page, Weekly Coaching Flow, Session Rhythm
+
+Each row has **Copy** and **Open** buttons. Internal links use `renderLinkRow()` (builds URL from `baseUrl + path`); external links use `renderExtLinkRow()` (absolute URL). The Linktree featured card was removed — the Linktree URL is no longer shown here.
 
 ## Public Gallup Code Request Form
 
@@ -166,8 +179,8 @@ The single source of truth for tone in any Coach4U communication, human or AI-ge
 
 ### Versioning
 
-- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.37.1**, line ~222)
-- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v290**)
+- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.51.60**, line ~254)
+- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v393**)
 - **Both must be bumped on every release**
 
 ### Code patterns
