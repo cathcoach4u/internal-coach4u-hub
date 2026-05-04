@@ -251,7 +251,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.60</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.61</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -2542,6 +2542,16 @@ window.openPublicLink=function(btn){
   const url=btn.getAttribute('data-url')||'';
   if(url) window.open(url,'_blank','noopener');
 };
+window._shareTexts=window._shareTexts||{};
+window.copyShareText=function(btn){
+  try{
+    const key=btn.getAttribute('data-text-key')||'';
+    const text=window._shareTexts[key]||'';
+    if(!text){toast('No share text found','error');return;}
+    if(typeof copyText==='function'){copyText(text,'Share text');return;}
+    navigator.clipboard&&navigator.clipboard.writeText(text).then(()=>toast('Share text copied','success')).catch(()=>toast('Copy failed','error'));
+  }catch(e){console.error(e);toast('Copy failed','error');}
+};
 function renderResourcesDash(){
   const el=document.getElementById('resourcesDashContent');
   if(!el) return;
@@ -2552,11 +2562,18 @@ function renderResourcesDash(){
     {label:'Individual Intake Form',path:'/intake/individual/',icon:'&#128100;',desc:'Individual coaching/counselling intake'}
   ];
   const policyLinks=[
-    {label:'Cancellation & Rescheduling Policy',path:'/policies/cancellation/',icon:'&#128197;',desc:'Client-facing policy page'}
+    {label:'Cancellation & Rescheduling Policy',path:'/policies/cancellation/',icon:'&#128197;',desc:'Client-facing policy page',
+     shareText:url=>`Hi,\n\nHere’s the Coach4U Cancellation & Rescheduling Policy for your reference:\n${url}\n\nThe key points: please cancel or reschedule by 9:00am on the business day before your appointment. Late cancellations and no-shows incur the full session fee. If something sudden comes up — illness or an accident — please reach out as early as you can and we’ll handle it with care.\n\nThanks\nCath`}
   ];
 
   function renderLinkRow(l){
     const full=baseUrl+l.path;
+    let shareBtn='';
+    if(l.shareText){
+      const key='st_'+l.path.replace(/[^a-z0-9]/gi,'_');
+      window._shareTexts[key]=l.shareText(full);
+      shareBtn=`<button type="button" data-text-key="${key}" onclick="copyShareText(this)" style="background:#16a34a;color:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">Share text</button>`;
+    }
     return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #f1f5f9;border-radius:8px;margin-bottom:6px;flex-wrap:wrap;">
       <span style="font-size:18px;">${l.icon}</span>
       <div style="flex:1;min-width:160px;">
@@ -2565,6 +2582,7 @@ function renderResourcesDash(){
         <div style="font-size:11px;color:#94a3b8;word-break:break-all;margin-top:2px;">${full}</div>
       </div>
       <button type="button" data-url="${full}" data-label="${l.label} link" onclick="copyPublicLink(this)" style="background:#003366;color:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">Copy</button>
+      ${shareBtn}
       <button type="button" data-url="${full}" onclick="openPublicLink(this)" style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;padding:6px 14px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">Open</button>
     </div>`;
   }
