@@ -251,7 +251,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.62</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.63</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -1276,17 +1276,7 @@ if('serviceWorker' in navigator){
     <div class="form-group"><label>ThriveHQ Membership Start</label><input id="cMemberStart" type="date" onchange="autoRenewalDate()"></div>
     <div class="form-group"><label>ThriveHQ Renewal Date</label><input id="cRenewal" type="date"></div>
     <div class="form-group"><label>Referrer</label><input id="cReferrer" placeholder="Who referred this contact?"></div>
-    <div class="form-group"><label>Link 1</label><div style="display:flex;gap:6px;"><input id="cLink1" placeholder="https://..." style="flex:1;"><a id="cLink1Open" href="#" target="_blank" onclick="event.preventDefault();const u=document.getElementById('cLink1').value.trim();if(u)window.open(u,'_blank');" style="display:flex;align-items:center;padding:0 10px;font-size:12px;color:#3b82f6;text-decoration:none;font-weight:600;white-space:nowrap;">Open &#8599;</a></div></div>
-    <div class="form-group"><label>Link 2</label><div style="display:flex;gap:6px;"><input id="cLink2" placeholder="https://..." style="flex:1;"><a id="cLink2Open" href="#" target="_blank" onclick="event.preventDefault();const u=document.getElementById('cLink2').value.trim();if(u)window.open(u,'_blank');" style="display:flex;align-items:center;padding:0 10px;font-size:12px;color:#3b82f6;text-decoration:none;font-weight:600;white-space:nowrap;">Open &#8599;</a></div></div>
     <div class="form-group"><label>Notes</label><textarea id="cNotes"></textarea></div>
-    <div id="cPulseLinkSection" style="display:none;" class="form-group">
-      <label>SAFEty Pulse Portal</label>
-      <div style="display:flex;gap:6px;align-items:center;">
-        <input id="cPulseLink" readonly style="flex:1;background:#f8fafc;color:#64748b;font-size:11px;cursor:text;">
-        <button type="button" onclick="copyPulseLink(document.getElementById('contactId').value)" style="background:#003366;color:#fff;border:none;padding:8px 12px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">Copy</button>
-        <button type="button" onclick="openPulseLink(document.getElementById('contactId').value)" style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;padding:8px 12px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">Open</button>
-      </div>
-    </div>
     <div class="modal-actions">
       <button class="btn btn-gray" onclick="closeModal('contactModal')">Cancel</button>
       <button class="btn btn-green" onclick="saveContact()">Save</button>
@@ -4121,17 +4111,7 @@ window.openContactModal=function(id){
   document.getElementById('cMemberStart').value=c?c.membership_start_date||'':'';
   document.getElementById('cRenewal').value=c?c.renewal_date||'':'';
   document.getElementById('cReferrer').value=c?c.referrer||'':'';
-  document.getElementById('cLink1').value=c?c.link_1||'':'';
-  document.getElementById('cLink2').value=c?c.link_2||'':'';
   document.getElementById('cNotes').value=c?c.notes:'';
-  // Reports + strengths editing moved to Strengths > Strengths Hub
-  const pulseSection=document.getElementById('cPulseLinkSection');
-  if(c){
-    pulseSection.style.display='block';
-    document.getElementById('cPulseLink').value=getPulsePortalUrl(c.id);
-  } else {
-    pulseSection.style.display='none';
-  }
   document.getElementById('contactModal').classList.add('open');
 };
 
@@ -4146,8 +4126,6 @@ window.saveContact=async function(){
     membership_start_date:document.getElementById('cMemberStart').value||null,
     renewal_date:document.getElementById('cRenewal').value||null,
     referrer:document.getElementById('cReferrer').value.trim()||null,
-    link_1:document.getElementById('cLink1').value.trim()||null,
-    link_2:document.getElementById('cLink2').value.trim()||null,
     notes:document.getElementById('cNotes').value.trim()
   };
   if(!data.first_name||!data.last_name){toast('First and last name required','error');return;}
