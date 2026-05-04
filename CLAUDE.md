@@ -64,10 +64,12 @@ The Home dashboard (front screen of the CRM) has a navy/blue gradient launchpad 
 
 `renderResourcesDash()` — shareable public links for clients. Sections:
 - **Intake Forms**: ThriveHQ, Couples, Individual intake form URLs (relative to app base URL)
-- **Policies**: Cancellation & Rescheduling policy page
+- **Policies**: Cancellation & Rescheduling policy page (`policies/cancellation/index.html`)
 - **ThriveHQ Client Links**: external links to `cathcoach4u.github.io/yourthrivehqcoach/` — Links Page, Weekly Coaching Flow, Session Rhythm
 
 Each row has **Copy** and **Open** buttons. Internal links use `renderLinkRow()` (builds URL from `baseUrl + path`); external links use `renderExtLinkRow()` (absolute URL). The Linktree featured card was removed — the Linktree URL is no longer shown here.
+
+Policy rows can additionally carry a **Share text** button by setting a `shareText: (url) => string` callback on the entry. The generated text is stored in `window._shareTexts` (keyed by path) and copied via `window.copyShareText`. The cancellation policy row uses this to copy a ready-to-send client message in Cath's voice.
 
 ## Public Gallup Code Request Form
 
@@ -179,8 +181,8 @@ The single source of truth for tone in any Coach4U communication, human or AI-ge
 
 ### Versioning
 
-- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.51.60**, line ~254)
-- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v393**)
+- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.51.62**, line ~254)
+- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v395**)
 - **Both must be bumped on every release**
 
 ### Code patterns
