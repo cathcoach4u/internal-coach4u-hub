@@ -56,6 +56,37 @@ All area dashboards use the **ThriveHQ nav-card grid** pattern: `display:grid; g
 - Page titles defined in `titles` object inside `navTo` (line ~1354)
 - Area tab order in HTML (`#areaTabs`, line ~225) MUST match `Object.keys(areaConfig)` order — `switchArea` highlights the tab via `areaKeys.indexOf(area)`
 
+## Data Sync to Dev DB (ThriveHQ / Supabase 2)
+
+The admin panel (`coach4Uapp-dashboard/admin.html`) reads from Internal Hub and copies selected data to the Dev DB (`eekefsuaefgpqmjdyniy`) so ThriveHQ clients can see their results.
+
+### What gets copied
+
+| Internal Hub table | Fields copied | Dev DB table | Dev DB fields |
+|---|---|---|---|
+| `contacts` | `first_name`, `last_name` | `users` | `name` |
+| `contacts` | `membership_start_date` | `users` | `membership_start_date` |
+| `contacts` | `renewal_date` | `users` | `membership_expires` |
+| `brain_pulse_submissions` | `id`, `created_at`, `stage`, `grand_total`, `capacity_total`, `wellbeing_total`, `strengths_total`, `ef_total` | `brain_pulse_results` | `submission_id`, `submitted_at`, `stage`, `grand_total`, `capacity_total`, `wellbeing_total`, `strengths_total`, `ef_total` |
+| `clients` | `id`, `relationship_name`, `role`, `status` | `user_relationships` | `hub_client_id`, `relationship_name`, `role`, `status` |
+| `client_members` | `role` | `user_relationships` | `member_role` |
+
+**Not synced:** `contacts.strength_1–10`, other group member names, tasks, finance, agents, gallup requests.
+
+### Adding a new field to the sync
+
+1. Identify the Internal Hub table and field name
+2. Add a column to the relevant Dev DB table: `ALTER TABLE ... ADD COLUMN IF NOT EXISTS ...`
+3. Add the migration file to `yourthrivehqcoach/migrations/`
+4. Update the sync function in `coach4Uapp-dashboard/admin.html`
+5. Update the field mapping table in `coach4Uapp-dashboard/CLAUDE.md`
+
+### How sync is triggered
+
+Admin opens a client card → data loads from Internal Hub → automatically copies to Dev DB. Runs once per card open per session.
+
+---
+
 ## Coach4U Suite Dashboard link
 
 The Home dashboard (front screen of the CRM) has a navy/blue gradient launchpad card pinned at the top, linking to `https://cathcoach4u.github.io/coach4Uapp-dashboard/` — the central Coach4U Suite Dashboard that manages every coaching app, client portal access, and reads portal URLs live from Supabase.
