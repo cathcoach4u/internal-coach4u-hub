@@ -251,7 +251,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.63</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.64</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -7627,8 +7627,8 @@ function renderClientPulses(){
 }
 
 // ── BRAIN PULSE ──
-const BRAIN_STAGES=[{name:'Overwhelmed',min:20,max:60,color:'#003366'},{name:'Consolidating',min:61,max:100,color:'#1a4d80'},{name:'Building',min:101,max:140,color:'#336699'},{name:'Grounded',min:141,max:170,color:'#4d80b3'},{name:'Anchored',min:171,max:200,color:'#80aacc'}];
-const BRAIN_STAGE_DESC={'Overwhelmed':'Your nervous system is flooded. The rooms need tending, and right now even starting feels hard. This is not failure. This is a signal that capacity is the first room to attend to.','Consolidating':'Things are starting to come together. You are pulling in the pieces — building awareness, reducing the biggest drains, and finding small footholds. Progress here is quieter but real.','Building':'You are moving. Energy is building, focus is more accessible, and the rooms are starting to work with you rather than against you. This is where consistent effort starts to compound.','Grounded':'Your feet are on the floor. Structure is holding, reserves are building, and most demands feel manageable. You are close to fully anchored.','Anchored':'All four anchors are holding. You feel regulated, resourced, clear, and aimed. You are moving toward what matters, with structure that supports you. This is earned ground.'};
+const BRAIN_STAGES=[{name:'Overwhelmed',min:20,max:60,color:'#003366'},{name:'Unsettled',min:61,max:100,color:'#1a4d80'},{name:'Grounded',min:101,max:140,color:'#336699'},{name:'Resourced',min:141,max:170,color:'#4d80b3'},{name:'Empowered',min:171,max:200,color:'#80aacc'}];
+const BRAIN_STAGE_DESC={'Overwhelmed':'Brain owns you, no floor.','Unsettled':'Floor exists but shifts.','Grounded':'Feet on solid ground.','Resourced':'You have what you need to move.','Empowered':'You are leading.'};
 const BRAIN_ROOM_META={
   capacity:{emoji:'🪟',letter:'C',label:'Capacity',color:'#5c8a7a',lightBg:'#eff4f1',borderColor:'#bfd3c9',headerBg:'#d7e2dc',shortDesc:'The steadiness and resilience of your nervous system',fullDesc:'The steadiness and resilience of your nervous system—how calm you feel, how quickly you recover, and how much energy you have.'},
   wellbeing:{emoji:'🌱',letter:'W',label:'Wellbeing',color:'#0891b2',lightBg:'#ecfeff',borderColor:'#a5d8de',headerBg:'#c5e6eb',shortDesc:'What gives your life meaning and sustains you',fullDesc:'What gives your life meaning and sustains you—your sense of purpose, connection, security, health, and belonging.'},
