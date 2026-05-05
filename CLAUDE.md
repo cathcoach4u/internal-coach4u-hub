@@ -241,10 +241,14 @@ The single source of truth for tone in any Coach4U communication, human or AI-ge
 
 ### Brain Pulse
 
-- Stages: Consolidating → Momentum → Building → Grounded (navy-blue progression matching SAFE Pulse)
-- Stage derived from score, not stored by name
+- Stages: Overwhelmed → Consolidating → Building → Grounded → Anchored (score bands 20–60, 61–100, 101–140, 141–170, 171–200)
+- Stage stored by name in `brain_pulse_submissions.stage` at submission time
 - Portal (`brain-pulse/index.html`) and CRM must produce identical reports
 - Red-score question rows highlighted with light red background in reports
+- Client link format: `https://cathcoach4u.github.io/internal-coach4u-hub/brain-pulse/?c=<contacts.id>`
+- **Nav buttons are sticky** (`position:sticky;bottom:0`) — always visible on mobile regardless of page length
+- 4 rooms × 5 questions each, rated 1–10. Next button disabled until all 5 questions in current room are answered
+- Submissions write to `brain_pulse_submissions` in Internal Hub, then auto-sync to Dev DB `brain_pulse_results` via Edge Function webhook
 
 ## Git workflow
 
