@@ -91,8 +91,9 @@ let botConfig=null;
 let conversationHistory=[];
 
 // ── CRM TOOLS ──
+// Interest values must match coach4u-shared/templates/PROFILE.md > CRM Interest Field Values
 const crmTools=[
-  {type:'function',function:{name:'add_prospect',description:'Add a new prospect to the CRM. Use when the user wants to add/create a prospect or lead.',parameters:{type:'object',properties:{name:{type:'string',description:'Full name of the prospect'},email:{type:'string',description:'Email address'},phone:{type:'string',description:'Phone number'},source:{type:'string',description:'How they found Coach4U (e.g. referral, social media, website)'},interest:{type:'string',description:'What they are interested in',enum:['ThriveHQ (ADHD Group)','1:1 Coaching','Workshops','Not specified']},status:{type:'string',description:'Prospect status',enum:['New','Warm','Hot'],default:'New'},notes:{type:'string',description:'Any additional notes'}},required:['name']}}},
+  {type:'function',function:{name:'add_prospect',description:'Add a new prospect to the CRM. Use when the user wants to add/create a prospect or lead.',parameters:{type:'object',properties:{name:{type:'string',description:'Full name of the prospect'},email:{type:'string',description:'Email address'},phone:{type:'string',description:'Phone number'},source:{type:'string',description:'How they found Coach4U (e.g. referral, social media, website)'},interest:{type:'string',description:'What they are interested in',enum:['Couples Coaching/Counselling','Individual Coaching/Counselling','ADHD Coaching/Counselling','ThriveHQ (ADHD Group)','CliftonStrengths Assessment','Business/Leadership Coaching','Career Coaching','Change Management','NDIS Support','Not specified']},status:{type:'string',description:'Prospect status',enum:['New','Warm','Hot'],default:'New'},notes:{type:'string',description:'Any additional notes'}},required:['name']}}},
   {type:'function',function:{name:'search_prospects',description:'Search existing prospects by name, email, or phone. Use to check if someone already exists or to look up prospect details.',parameters:{type:'object',properties:{query:{type:'string',description:'Search term — name, email, or phone number'}},required:['query']}}},
   {type:'function',function:{name:'add_prospect_note',description:'Add an activity note to an existing prospect. Use when the user wants to log a call, email, message, meeting, or follow-up note for a prospect.',parameters:{type:'object',properties:{prospect_name:{type:'string',description:'Name of the prospect to add the note to'},note:{type:'string',description:'The note content'},note_type:{type:'string',description:'Type of activity',enum:['Called','Emailed','Messaged','Met','Follow-up','Note'],default:'Note'}},required:['prospect_name','note']}}},
   {type:'function',function:{name:'add_contact',description:'Add a new contact to the master contact list. Use when the user wants to add someone as a contact (not a prospect).',parameters:{type:'object',properties:{first_name:{type:'string',description:'First name'},last_name:{type:'string',description:'Last name'},email:{type:'string',description:'Email address'},phone:{type:'string',description:'Phone number'},type:{type:'string',description:'Contact type',enum:['Individual','Organisation'],default:'Individual'}},required:['first_name','last_name']}}},
@@ -130,7 +131,7 @@ async function executeTool(name,args){
     case 'add_prospect_note':{
       // Find prospect by name
       const {data:prospects}=await client.from('prospects').select('id,name').ilike('name','%'+args.prospect_name+'%');
-      if(!prospects||!prospects.length) return {success:false,error:'No prospect found with name "'+args.prospect_name+'".'};
+      if(!prospects||!prospects.length) return {success:false,error:'No prospect found with name "'+args.prospect_name+'".' };
       const prospect=prospects[0];
       const {error}=await client.from('prospect_notes').insert({
         prospect_id:prospect.id,note:args.note,note_type:args.note_type||'Note'
@@ -214,7 +215,7 @@ async function executeTool(name,args){
     }
     case 'update_prospect_status':{
       const {data:prospects}=await client.from('prospects').select('id,name').ilike('name','%'+args.prospect_name+'%');
-      if(!prospects||!prospects.length) return {success:false,error:'No prospect found with name "'+args.prospect_name+'".'};
+      if(!prospects||!prospects.length) return {success:false,error:'No prospect found with name "'+args.prospect_name+'".' };
       const p=prospects[0];
       const {error}=await client.from('prospects').update({status:args.status}).eq('id',p.id);
       if(error) return {success:false,error:error.message};
@@ -222,7 +223,7 @@ async function executeTool(name,args){
     }
     case 'set_prospect_followup':{
       const {data:prospects}=await client.from('prospects').select('id,name').ilike('name','%'+args.prospect_name+'%');
-      if(!prospects||!prospects.length) return {success:false,error:'No prospect found with name "'+args.prospect_name+'".'};
+      if(!prospects||!prospects.length) return {success:false,error:'No prospect found with name "'+args.prospect_name+'".' };
       const p=prospects[0];
       const {error}=await client.from('prospects').update({follow_up_date:args.follow_up_date}).eq('id',p.id);
       if(error) return {success:false,error:error.message};
