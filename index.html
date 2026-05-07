@@ -252,7 +252,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.87</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.88</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -10654,15 +10654,20 @@ window.handleLogin=async function(){
   const password=document.getElementById('loginPassword').value;
   const errorEl=document.getElementById('loginError');
   const btn=document.getElementById('loginBtn');
-  errorEl.textContent='';
+  errorEl.textContent='';errorEl.style.color='#ef4444';
   if(!email||!password){errorEl.textContent='Please enter email and password';return;}
   btn.disabled=true;btn.textContent='Signing in...';
-  const {data,error}=await supabase.auth.signInWithPassword({email,password});
-  btn.disabled=false;btn.textContent='Sign In';
-  if(error){errorEl.textContent=error.message;return;}
-  hideLogin();
-  showLoggedInUser(data.user.email);
-  loadAll();
+  try{
+    const {data,error}=await supabase.auth.signInWithPassword({email,password});
+    btn.disabled=false;btn.textContent='Sign In';
+    if(error){errorEl.textContent=error.message;return;}
+    hideLogin();
+    showLoggedInUser(data.user.email);
+    loadAll();
+  }catch(e){
+    btn.disabled=false;btn.textContent='Sign In';
+    errorEl.textContent='Sign in failed: '+(e.message||'unknown error. Try reloading the page.');
+  }
 };
 
 window.handleLogout=async function(){
@@ -10747,7 +10752,7 @@ supabase.auth.onAuthStateChange((event,session)=>{
     showLogin();
     showNewPasswordForm();
   }
-  if(event==='SIGNED_OUT'&&!document.getElementById('loginScreen').style.display!=='flex'){
+  if(event==='SIGNED_OUT'&&document.getElementById('loginScreen').style.display!=='flex'){
     showLogin();
   }
 });
