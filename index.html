@@ -251,7 +251,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.83</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.84</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -873,22 +873,10 @@ if('serviceWorker' in navigator){
   <div class="modal" style="max-width:640px;">
     <h3 id="gallupReqTitle">New Code Request</h3>
     <input type="hidden" id="gallupReqId">
-    <div style="margin-bottom:14px;">
-      <div style="font-size:12px;font-weight:600;color:#64748b;margin-bottom:6px;text-transform:uppercase;letter-spacing:.3px;">Mode</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button type="button" id="gallupModeContactBtn" onclick="gallupReqSwitchMode('contact')" style="flex:1;min-width:0;background:#003366;color:#fff;border:1px solid #003366;padding:9px 12px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">Single contact</button>
-        <button type="button" id="gallupModeCoupleBtn" onclick="gallupReqSwitchMode('couple')" style="flex:1;min-width:0;background:#fff;color:#1e3a5f;border:1px solid #e2e8f0;padding:9px 12px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">Couple (per linked member)</button>
-      </div>
-      <input type="hidden" id="gallupReqMode" value="contact">
-    </div>
+    <input type="hidden" id="gallupReqMode" value="contact">
     <div class="form-group" id="gallupReqContactRow">
       <label>Contact</label>
       <select id="gallupReqContact" style="width:100%;padding:9px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;"></select>
-    </div>
-    <div class="form-group" id="gallupReqCoupleRow" style="display:none;">
-      <label>Couple client</label>
-      <select id="gallupReqCouple" style="width:100%;padding:9px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;"></select>
-      <div style="font-size:11px;color:#94a3b8;margin-top:4px;">Both linked members will get a request, sharing the same client_id.</div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;">
       <div class="form-group">
@@ -3007,13 +2995,6 @@ window.openGallupRequest=function(id){
   const sortedContacts=[...contacts].filter(c=>c.first_name||c.last_name).sort((a,b)=>(a.first_name+' '+a.last_name).localeCompare(b.first_name+' '+b.last_name));
   contactSel.innerHTML='<option value="">— Pick a contact —</option>'+sortedContacts.map(c=>`<option value="${c.id}">${c.first_name} ${c.last_name}${c.email?' — '+c.email:''}</option>`).join('');
   contactSel.value=r?r.contact_id||'':'';
-  // Populate couple dropdown
-  const coupleSel=document.getElementById('gallupReqCouple');
-  const couples=(clients||[]).filter(c=>c.role==='Couple').sort((a,b)=>a.relationship_name.localeCompare(b.relationship_name));
-  coupleSel.innerHTML='<option value="">— Pick a Couple client —</option>'+couples.map(c=>`<option value="${c.id}">${c.relationship_name}</option>`).join('');
-  coupleSel.value='';
-  // Reset to single contact mode (couple mode is for new requests only)
-  gallupReqSwitchMode('contact');
   // Populate other fields
   document.getElementById('gallupReqProduct').value=r?r.product_type||'Top 34':'Top 34';
   document.getElementById('gallupReqSource').value=r?r.source||'Cath':'Cath';
@@ -3023,58 +3004,22 @@ window.openGallupRequest=function(id){
   document.getElementById('gallupReqNotes').value=r?r.notes||'':'';
   document.getElementById('gallupReqModal').classList.add('open');
 };
-window.gallupReqSwitchMode=function(mode){
-  document.getElementById('gallupReqMode').value=mode;
-  document.getElementById('gallupReqContactRow').style.display=mode==='contact'?'block':'none';
-  document.getElementById('gallupReqCoupleRow').style.display=mode==='couple'?'block':'none';
-  const cBtn=document.getElementById('gallupModeContactBtn');
-  const pBtn=document.getElementById('gallupModeCoupleBtn');
-  const editing=!!document.getElementById('gallupReqId').value;
-  if(cBtn){
-    cBtn.style.background=mode==='contact'?'#003366':'#fff';
-    cBtn.style.color=mode==='contact'?'#fff':'#1e3a5f';
-    cBtn.style.borderColor=mode==='contact'?'#003366':'#e2e8f0';
-  }
-  if(pBtn){
-    pBtn.style.background=mode==='couple'?'#003366':'#fff';
-    pBtn.style.color=mode==='couple'?'#fff':'#1e3a5f';
-    pBtn.style.borderColor=mode==='couple'?'#003366':'#e2e8f0';
-    pBtn.disabled=editing;
-    pBtn.style.opacity=editing?'0.4':'1';
-    pBtn.style.cursor=editing?'not-allowed':'pointer';
-  }
-};
 window.saveGallupRequest=async function(){
   const id=document.getElementById('gallupReqId').value;
-  const mode=document.getElementById('gallupReqMode').value;
   const product=document.getElementById('gallupReqProduct').value;
   const source=document.getElementById('gallupReqSource').value;
   const status=document.getElementById('gallupReqStatus').value;
   const discount=document.getElementById('gallupReqDiscount').value.trim()||'DH7HGTMAZ';
   const codeValue=document.getElementById('gallupReqCodeValue').value.trim()||null;
   const notes=document.getElementById('gallupReqNotes').value.trim()||null;
+  const contactId=document.getElementById('gallupReqContact').value;
+  if(!contactId){toast('Pick a contact','error');return;}
   if(id){
-    // Update existing — single contact only
-    const contactId=document.getElementById('gallupReqContact').value;
-    if(!contactId){toast('Pick a contact','error');return;}
     const patch={contact_id:contactId,product_type:product,source:source,status:status,discount_code:discount,code_value:codeValue,notes:notes,updated_at:new Date().toISOString()};
     const {error}=await supabase.from('gallup_code_requests').update(patch).eq('id',id);
     if(error){toast('Save failed: '+error.message,'error');return;}
     toast('Saved','success');
-  }else if(mode==='couple'){
-    const coupleId=document.getElementById('gallupReqCouple').value;
-    if(!coupleId){toast('Pick a Couple client','error');return;}
-    const cl=(clients||[]).find(c=>c.id===coupleId);
-    if(!cl){toast('Couple client not found','error');return;}
-    const memberIds=cl.members||[];
-    if(memberIds.length<2){toast('This couple has fewer than 2 linked members','error');return;}
-    const rows=memberIds.map(mid=>({contact_id:mid,client_id:coupleId,product_type:product,source:source,status:status,discount_code:discount,code_value:codeValue,notes:notes}));
-    const {error}=await supabase.from('gallup_code_requests').insert(rows);
-    if(error){toast('Save failed: '+error.message,'error');return;}
-    toast('Created '+rows.length+' linked requests','success');
   }else{
-    const contactId=document.getElementById('gallupReqContact').value;
-    if(!contactId){toast('Pick a contact','error');return;}
     const row={contact_id:contactId,product_type:product,source:source,status:status,discount_code:discount,code_value:codeValue,notes:notes};
     const {error}=await supabase.from('gallup_code_requests').insert(row);
     if(error){toast('Save failed: '+error.message,'error');return;}
