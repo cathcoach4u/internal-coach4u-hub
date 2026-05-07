@@ -197,6 +197,14 @@ Parent agents represent the master system prompts for Copilot Studio. Child agen
 - **Quick-log form** (`submitGallupRequestFromSop`): inline form on the Code Tracker page; contact + product + source + status → single insert
 - **Group headers**: requests grouped by contact, coloured top border, filled count pill
 
+### Profiles (Hubs > Strengths Hub > Profiles)
+
+- **Page**: `screen-strengths`, render fn `renderStrengths()`
+- **Layout**: Each contact card is **collapsed by default** — shows name, email, theme count, Edit button. Tap anywhere on the header row to expand/collapse the ranked strength list.
+- **Expand state**: `shExpandedContacts` object (keyed by contact id). Reset to empty on every `navTo('strengths')` so the page always opens fully collapsed.
+- **Strength display**: numbered card per theme — `#rank` badge in domain colour, 3px left border, theme name bold, full Gallup description below.
+- **Toggle fn**: `window.toggleStrContact(id)` — flips state and re-renders.
+
 ### Reports (Hubs > Strengths Hub > Reports)
 
 - **Page**: `screen-strreports`, render fn `renderStrengthsReports()`
@@ -283,8 +291,8 @@ NDIS-Related Services (when applicable)
 
 ### Versioning
 
-- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.51.90**, line ~254)
-- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v423**)
+- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.51.96**, line ~254)
+- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v429**)
 - **Both must be bumped on every release**
 
 ### Code patterns
@@ -333,6 +341,13 @@ NDIS-Related Services (when applicable)
 - **Version bumping protocol**:
   - Always bump both `index.html` version (`v{major}.{minor}.{patch}`, line ~253) and `sw.js` cache (`coach4u-crm-v{N}`, line 1) on every commit that ships user-visible changes.
   - Bump in the same commit as the change so the cache invalidates correctly on next page load.
+
+## Client List (`renderClients`)
+
+- **Group collapse state**: `clientGroupState` (line ~4230) — `true` = collapsed, `false` = expanded. All groups default to `true` (collapsed): Couple, Individual, Business, Organisation, Community, Archived.
+- **ThriveHQ** has role `Community` in the database (not `Organisation`) — must have a `Community:true` entry in `clientGroupState` or it will always open expanded (no entry defaults to `undefined` → falsy → expanded).
+- **Toggle**: `toggleClientGroup(g)` flips the state and re-renders.
+- **Strength display on cards**: uses `csColor()` and `csPill()` for compact domain-coloured pills. Full ranked cards (left border + description) used in client profile and Profiles page.
 
 ## Prospect ↔ Intake linking
 

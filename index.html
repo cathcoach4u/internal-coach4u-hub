@@ -10843,12 +10843,12 @@ function renderAbout(){
 
   html+=card('Features','<ul style="list-style:disc;padding-left:20px;margin:0;">'+
     listItem('Home','At-a-glance dashboard: active prospects, intake forms to review, ThriveHQ trials, Gallup codes in flight — plus headline numbers and quick-nav to all areas')+
-    listItem('CRM','Dashboard, Master List, Prospect List, Clients Dashboard, Client List, Intake Forms, Invoices')+
+    listItem('CRM','Dashboard, Master List, Prospect List, Clients Dashboard, Client List, Intake Forms, Invoices. Client List groups (Couple, Individual, Organisation, Community/ThriveHQ, Archived) all start collapsed — click to expand.')+
     listItem('Referrers','Dashboard (Referral Hub) and referrer Payments tracking')+
     listItem('Pulses','Dashboard, SAFE Pulse, Brain Pulse, Connection Pulse — per-client mini portal with printable reports')+
     listItem('Couples Hub','Dashboard, live Couples Intake worksheet (Port Institute 5-stage, save-to-records), Therapy Timelines, Betrayal First Aid')+
     listItem('ThriveHQ Hub','Dashboard, Trials, Members, Renewals, Coaching Calls')+
-    listItem('Strengths Hub','Dashboard, Reports (Individual / Pair / Team Heatmap, Pre-session brief), Profiles, Domain Balance, Upload Report, Gallup Workflow SOP, Gallup Code Tracker')+
+    listItem('Strengths Hub','Dashboard, Reports (Individual / Pair / Team Heatmap, Pre-session brief), Profiles, Domain Balance, Upload Report, Gallup Workflow SOP, Gallup Code Tracker. Profiles page starts with each contact collapsed — tap the row to expand their strength cards. Strength cards use a consistent ranked style: domain-coloured #rank badge, theme name, and description.')+
     listItem('Strengths AI','Personal Insights, What You Bring &amp; Need, Couple Dynamics, Adaptation Tips — all written in Cath\'s voice via direct Anthropic API. Couple Dynamics and Pulse sections shown only for Couple/Individual clients.')+
     listItem('Gallup Code Tracker','Full workflow tracker for CliftonStrengths assessment requests: one record per contact, stamp stages (New → Awaiting Payment → Purchased → Code Sent → Notified → Filed), quick-log form on page, edit modal for corrections')+
     listItem('IT','Dashboard, IT Projects, Agents (parent/child with versioning + SharePoint export), AI Strategy (cross-agent audit + chat), Writing Partner')+
@@ -10859,7 +10859,7 @@ function renderAbout(){
     listItem('Intake Forms','Public forms (ThriveHQ, Couples, Individual) — full AU/NZ address (street, suburb, state, postcode), partner preferred name. Address is displayed in the CRM intake review view.')+
     listItem('Cancellation Policy','Public branded policy page at /policies/cancellation/')+
     listItem('Cath Voice Reference','docs/cath-voice-tone-v1.md + inline CATH_VOICE_REFERENCE constant — single source of truth for all AI-generated tone')+
-    listItem('Client Profile','Full-screen modal with teal header, scrollable body — Members, Reports &amp; Documents, Pulse Check-ins, Couple Dynamics AI, Notes. Pulse and Couple Dynamics sections are role-gated (Couple/Individual only). Designed to work on mobile.')+
+    listItem('Client Profile','Full-screen modal with teal header, scrollable body — Members, Reports &amp; Documents, Pulse Check-ins, Couple Dynamics AI, Notes. Pulse and Couple Dynamics sections are role-gated (Couple/Individual only). Flex column layout ensures correct scrolling on mobile including iPhone notch/home indicator.')+
     listItem('C4U Bot','AI chat assistant — add prospects, contacts, tasks, search CRM, view dashboards')+
   '</ul>');
 
