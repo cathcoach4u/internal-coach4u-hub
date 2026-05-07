@@ -251,7 +251,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.91</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.92</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -4694,10 +4694,9 @@ function renderStrengths(){
           <button onclick="openStrEdit('${c.id}')" style="background:${hasStrengths?'#f0f4f8':'#003366'};color:${hasStrengths?'#003366':'#fff'};border:1px solid ${hasStrengths?'#e2e8f0':'#003366'};border-radius:6px;padding:7px 12px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">${hasStrengths?'&#9998; Edit':'+ Add Strengths'}</button>
         </div>
       </div>
-      ${hasStrengths?(
-        (top5.length?'<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:'+(bottom5.length?'4px':'0')+';">'+top5.map(s=>csPill(s.rank,s.name)).join('')+'</div>':'')+
-        (bottom5.length?'<div style="display:flex;flex-wrap:wrap;gap:4px;">'+bottom5.map(s=>csPill(s.rank,s.name)).join('')+'</div>':'')
-      ):'<div style="font-size:12px;color:#94a3b8;">No strengths recorded yet. Use <strong>+ Add Strengths</strong> to type them in, or use the <strong>Auto-extract from Gallup PDF</strong> panel on the Strengths Hub Dashboard.</div>'}
+      ${hasStrengths?
+        '<div style="display:flex;flex-direction:column;gap:4px;margin-top:4px;">'+[...top5,...bottom5].map(s=>`<div style="display:flex;align-items:flex-start;gap:8px;padding:7px 10px;border-radius:8px;background:#f8fafc;border-left:3px solid ${csColor(s.name)};"><span style="background:${csColor(s.name)};color:#fff;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:700;white-space:nowrap;flex-shrink:0;min-width:26px;text-align:center;">#${s.rank}</span><div><div style="font-size:13px;font-weight:600;color:#1e293b;">${s.name}</div>${CS_THEME_DESC[s.name]?`<div style="font-size:11px;color:#64748b;line-height:1.4;margin-top:1px;">${CS_THEME_DESC[s.name]}</div>`:''}</div></div>`).join('')+'</div>'
+        :'<div style="font-size:12px;color:#94a3b8;">No strengths recorded yet. Use <strong>+ Add Strengths</strong> to type them in, or use the <strong>Auto-extract from Gallup PDF</strong> panel on the Strengths Hub Dashboard.</div>'}
       ${viewChips?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;padding-top:10px;border-top:1px dashed #f1f5f9;">${viewChips}</div>`:''}
     </div>`;
   }).join('');
@@ -6893,15 +6892,9 @@ function renderThriveHQ(){
         <button onclick="openContactModal('${c.id}')" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:5px;padding:8px 14px;font-size:12px;color:#fff;cursor:pointer;font-weight:600;">View</button>
       </div>
       <div style="padding:10px 12px;flex:1;display:flex;flex-direction:column;gap:6px;">
-        ${top5.length?`<div>
-          <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#94a3b8;font-weight:600;margin-bottom:4px;">Top 5</div>
-          <div style="display:flex;flex-wrap:wrap;gap:3px;">${top5.map(s=>`<span style="background:${csColor(s.name)};color:#fff;padding:3px 8px;border-radius:2px;font-size:10px;font-weight:700;">${s.name}</span>`).join('')}</div>
-        </div>`:''}
-        ${bottom5.length?`<div>
-          <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#94a3b8;font-weight:600;margin-bottom:4px;">6–10</div>
-          <div style="display:flex;flex-wrap:wrap;gap:3px;">${bottom5.map(s=>`<span style="background:${csColor(s.name)};color:#fff;padding:3px 8px;border-radius:2px;font-size:10px;font-weight:700;">${s.name}</span>`).join('')}</div>
-        </div>`:''}
-        ${!top5.length&&!bottom5.length?'<div style="font-size:11px;color:#94a3b8;text-align:center;padding:8px 0;">No strengths profile</div>':''}
+        ${(top5.length||bottom5.length)?
+          `<div style="display:flex;flex-direction:column;gap:3px;">${[...top5,...bottom5].map(s=>`<div style="display:flex;align-items:flex-start;gap:6px;padding:5px 8px;border-radius:6px;background:#f8fafc;border-left:3px solid ${csColor(s.name)};"><span style="background:${csColor(s.name)};color:#fff;padding:1px 5px;border-radius:3px;font-size:10px;font-weight:700;white-space:nowrap;flex-shrink:0;">#${s.rank}</span><div style="font-size:11px;font-weight:600;color:#1e293b;">${s.name}</div></div>`).join('')}</div>`
+          :'<div style="font-size:11px;color:#94a3b8;text-align:center;padding:8px 0;">No strengths profile</div>'}
       </div>
       <div style="padding:8px 12px;border-top:1px solid #f1f5f9;background:#f8fafc;display:flex;gap:4px;align-items:center;flex-wrap:wrap;">
         ${c.renewal_date?'<span style="font-size:10px;padding:2px 6px;border-radius:99px;font-weight:600;background:'+(isOverdue?'#fef2f2;color:#dc2626;':isDueSoon?'#fef3c7;color:#d97706;':'#dcfce7;color:#15803d;')+'">'+c.renewal_date+(isOverdue?' OVERDUE':isDueSoon?' DUE SOON':'')+'</span>':'<span style="font-size:10px;color:#94a3b8;">No renewal</span>'}
