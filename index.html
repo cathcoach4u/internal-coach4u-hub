@@ -251,7 +251,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.66</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.67</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -282,6 +282,10 @@ if('serviceWorker' in navigator){
 
       <div style="font-family:'Quicksand','Inter',sans-serif;font-size:14px;font-weight:700;color:#1e3a5f;letter-spacing:.5px;text-transform:uppercase;margin:0 0 10px;">At a glance</div>
       <div class="dash-cards">
+        <div class="dash-card" onclick="navTo('clients')" style="cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
+          <div class="dc-icon" style="background:#dcfce7;color:#16a34a;">&#128101;</div>
+          <div class="dc-info"><h4 id="dcClients">0</h4><p>Active Clients</p></div>
+        </div>
         <div class="dash-card" onclick="navTo('prospects')" id="dcProspectsCard" style="cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
           <div class="dc-icon" style="background:#dbeafe;color:#2563eb;">&#128203;</div>
           <div class="dc-info"><h4 id="dcProspects">0</h4><p id="dcProspectsLabel">Active Prospects</p></div>
@@ -298,17 +302,9 @@ if('serviceWorker' in navigator){
           <div class="dc-icon" style="background:#fef3c7;color:#d97706;">&#127919;</div>
           <div class="dc-info"><h4 id="dcGallupInFlight">0</h4><p>Gallup Codes In Flight</p></div>
         </div>
-      </div>
-
-      <div style="font-family:'Quicksand','Inter',sans-serif;font-size:14px;font-weight:700;color:#1e3a5f;letter-spacing:.5px;text-transform:uppercase;margin:20px 0 10px;">Headline Numbers</div>
-      <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:18px;">
-        <div onclick="switchArea('crm')" style="cursor:pointer;flex:1;min-width:140px;background:#f8fafc;border:1px solid #f1f5f9;border-radius:8px;padding:14px 16px;">
-          <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;font-weight:600;">Total Contacts</div>
-          <div style="font-size:22px;font-weight:800;color:#1e3a5f;margin-top:4px;"><span id="dcContacts">0</span></div>
-        </div>
-        <div onclick="navTo('clients')" style="cursor:pointer;flex:1;min-width:140px;background:#f8fafc;border:1px solid #f1f5f9;border-radius:8px;padding:14px 16px;">
-          <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;font-weight:600;">Active Clients</div>
-          <div style="font-size:22px;font-weight:800;color:#1e3a5f;margin-top:4px;"><span id="dcClients">0</span></div>
+        <div class="dash-card" onclick="switchArea('crm')" style="cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
+          <div class="dc-icon" style="background:#f1f5f9;color:#1e3a5f;">&#128209;</div>
+          <div class="dc-info"><h4 id="dcContacts">0</h4><p>Total Contacts</p></div>
         </div>
       </div>
 
