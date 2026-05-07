@@ -251,7 +251,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.79</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.80</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -4678,17 +4678,23 @@ window._cpRefreshFn=null;
       memberContacts.forEach(mc=>{html+=memberCard(mc);});
       html+=`</div>`;
     } else {
-      html+=`<div style="background:#f8fafc;border:1px dashed #e2e8f0;border-radius:12px;padding:24px;text-align:center;color:#94a3b8;font-size:14px;margin-top:20px;">No contacts linked yet — use Edit to link members.</div>`;
+      html+=`<div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:12px;padding:24px;text-align:center;margin-top:20px;">
+        <div style="font-size:15px;font-weight:700;color:#92400e;margin-bottom:6px;">No contacts linked yet</div>
+        <div style="font-size:13px;color:#78350f;margin-bottom:14px;">Open Edit and add the contact under Members to see their profile here.</div>
+        <button onclick="closeModal('clientProfileModal');openClientModal('${c.id}')" style="background:#d97706;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;">&#9998; Open Edit</button>
+      </div>`;
     }
 
     // Reports
     html+=buildReportsSection(memberContacts);
 
-    // Pulse
-    html+=buildPulseSection(memberContacts);
+    // Pulse — only relevant for Individual and Couple clients
+    if(c.role==='Couple'||c.role==='Individual'){
+      html+=buildPulseSection(memberContacts);
+    }
 
-    // Couple Dynamics AI (couples with 2 members who both have strengths)
-    if(memberContacts.length===2&&memberContacts[0].strength_1&&memberContacts[1].strength_1){
+    // Couple Dynamics AI — only for Couple clients with both partners having strengths
+    if(c.role==='Couple'&&memberContacts.length===2&&memberContacts[0].strength_1&&memberContacts[1].strength_1){
       html+=sectionHead('Couple Dynamics');
       html+=renderCoupleDynamicsBlock(memberContacts[0],memberContacts[1]);
     }
