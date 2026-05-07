@@ -186,6 +186,17 @@ Parent agents represent the master system prompts for Copilot Studio. Child agen
 
 ## Strengths Hub
 
+### Gallup Code Tracker (Hubs > Strengths Hub > Code Tracker)
+
+- **Page**: `screen-strcodes`, render fn `renderStrCodes()`
+- **Table**: `gallup_code_requests` — one row per contact per request
+- **Workflow stages**: New → Awaiting Payment → Awaiting Purchase → Awaiting Completion → Completed → Filed
+- **Stage colours**: payment=#d97706, purchased=#0891b2, code sent=#7c3aed, notified=#0d9488, completed=#15803d, filed=#475569
+- **Stamp buttons** (`stampBtn`): grey outline when not yet stamped, solid fill when stamped; clicking advances status
+- **Log modal** (`openGallupReqModal`): single-contact only — one record per save. The old "Couple (per linked member)" batch-insert mode has been removed. `saveGallupRequest` inserts/updates one row only.
+- **Quick-log form** (`submitGallupRequestFromSop`): inline form on the Code Tracker page; contact + product + source + status → single insert
+- **Group headers**: requests grouped by contact, coloured top border, filled count pill
+
 ### Reports (Hubs > Strengths Hub > Reports)
 
 - **Page**: `screen-strreports`, render fn `renderStrengthsReports()`
@@ -272,8 +283,8 @@ NDIS-Related Services (when applicable)
 
 ### Versioning
 
-- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.51.62**, line ~254)
-- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v395**)
+- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.51.84**, line ~254)
+- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v417**)
 - **Both must be bumped on every release**
 
 ### Code patterns
