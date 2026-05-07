@@ -251,7 +251,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.68</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.69</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -1327,7 +1327,7 @@ if('serviceWorker' in navigator){
 
 <!-- CLIENT PROFILE MODAL -->
 <div class="modal-overlay" id="clientProfileModal">
-  <div class="modal" style="max-width:920px;width:95vw;padding:0;overflow:hidden;border-radius:14px;">
+  <div class="modal" style="max-width:1100px;width:98vw;padding:0;overflow:hidden;border-radius:14px;">
     <div id="clientProfileContent"></div>
   </div>
 </div>
@@ -4496,53 +4496,89 @@ window._cpRefreshFn=null;
   const AVATAR_COLORS=['#0D9488','#0891b2','#7c3aed','#1e3a5f','#b45309','#be185d','#0f766e','#6d28d9'];
   function avatarColor(str){let h=0;for(let i=0;i<str.length;i++)h=str.charCodeAt(i)+((h<<5)-h);return AVATAR_COLORS[Math.abs(h)%AVATAR_COLORS.length];}
   function initials(first,last){return ((first||'?')[0]+(last||'?')[0]).toUpperCase();}
-  function avatar(first,last,size){const bg=avatarColor((first||'')+(last||''));return `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${bg};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:${Math.round(size*0.38)}px;font-weight:700;color:#fff;letter-spacing:1px;">${initials(first,last)}</div>`;}
+  function avatar(first,last,size){const bg=avatarColor((first||'')+(last||''));return `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${bg};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:${Math.round(size*0.38)}px;font-weight:700;color:#fff;">${initials(first,last)}</div>`;}
 
-  function reportsForContact(cid){
-    return reportTypes.map(rt=>{
-      const r=(contactReports||[]).find(x=>x.contact_id===cid&&x.report_type===rt.key);
-      return {rt,r};
-    });
+  // Clean section heading with left-border accent
+  function sectionHead(label){
+    return `<div style="display:flex;align-items:center;gap:10px;margin:24px 0 14px;">
+      <div style="width:4px;height:20px;border-radius:2px;background:${TEAL};flex-shrink:0;"></div>
+      <div style="font-size:13px;font-weight:700;color:#1e293b;letter-spacing:.4px;text-transform:uppercase;">${label}</div>
+    </div>`;
   }
 
+  // Member card — contact info + strength pills only (no upload buttons here)
   function memberCard(contact){
     const strengths=[];for(let i=1;i<=10;i++){if(contact['strength_'+i])strengths.push({rank:i,name:contact['strength_'+i]});}
-    const top5=strengths.filter(s=>s.rank<=5);const rest=strengths.filter(s=>s.rank>5);
-    const reps=reportsForContact(contact.id);
     const displayName=(contact.preferred_name&&contact.preferred_name!==contact.first_name)
       ?`${contact.preferred_name} (${contact.first_name}) ${contact.last_name}`:`${contact.first_name} ${contact.last_name}`;
-    const spLink=(contact.sharepoint_link||'').trim();
-    let reportsHtml='';
-    if(spLink&&spLink.startsWith('http')) reportsHtml+=`<a href="${spLink}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;background:#f0fdfa;border:1px solid #99f6e4;border-radius:6px;padding:5px 10px;font-size:11px;color:${TEAL};font-weight:600;text-decoration:none;">&#128193; Gallup PDF (SharePoint)</a>`;
-    reps.forEach(({rt,r})=>{
-      if(r) reportsHtml+=`<a href="${r.url}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;background:#f0fdfa;border:1px solid #99f6e4;border-radius:6px;padding:5px 10px;font-size:11px;color:${TEAL};font-weight:600;text-decoration:none;">&#128196; ${rt.label} View</a>`;
-      else reportsHtml+=`<label style="display:inline-flex;align-items:center;gap:5px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:5px 10px;font-size:11px;color:#64748b;font-weight:600;cursor:pointer;">&#128196; ${rt.label} <span style="color:${TEAL};">Upload</span><input type="file" accept=".pdf" style="display:none;" onchange="window._cpUpload('${contact.id}','${rt.key}',this)"></label>`;
-    });
-    return `<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;height:100%;box-sizing:border-box;">
-      <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:12px;">
-        ${avatar(contact.first_name,contact.last_name,52)}
+    return `<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.05);">
+      <div style="display:flex;gap:14px;align-items:center;margin-bottom:${strengths.length?'16':'0'}px;">
+        ${avatar(contact.first_name,contact.last_name,60)}
         <div style="flex:1;min-width:0;">
-          <div style="font-weight:700;font-size:15px;color:#1e293b;margin-bottom:4px;">${displayName}</div>
-          ${contact.email?`<a href="mailto:${contact.email}" style="display:block;font-size:12px;color:${TEAL};text-decoration:none;font-weight:500;margin-bottom:2px;">&#9993; ${contact.email}</a>`:''}
-          ${contact.phone?`<a href="tel:${contact.phone.replace(/\s/g,'')}" style="display:block;font-size:12px;color:#1e3a5f;text-decoration:none;font-weight:500;">&#128222; ${contact.phone}</a>`:''}
+          <div style="font-weight:700;font-size:16px;color:#1e293b;margin-bottom:6px;">${displayName}</div>
+          ${contact.email?`<a href="mailto:${contact.email}" style="display:flex;align-items:center;gap:6px;font-size:13px;color:${TEAL};text-decoration:none;font-weight:500;margin-bottom:3px;">&#9993; ${contact.email}</a>`:''}
+          ${contact.phone?`<a href="tel:${contact.phone.replace(/\s/g,'')}" style="display:flex;align-items:center;gap:6px;font-size:13px;color:#475569;text-decoration:none;font-weight:500;">&#128222; ${contact.phone}</a>`:''}
         </div>
       </div>
-      ${strengths.length?`<div style="margin-bottom:10px;"><div style="font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:#94a3b8;font-weight:700;margin-bottom:5px;">CliftonStrengths</div><div style="display:flex;flex-wrap:wrap;gap:3px;">${top5.map(s=>csPill(s.rank,s.name)).join('')}${rest.map(s=>csPill(s.rank,s.name)).join('')}</div></div>`:'<div style="font-size:12px;color:#94a3b8;margin-bottom:10px;">No strengths recorded yet.</div>'}
-      ${reportsHtml?`<div style="display:flex;flex-wrap:wrap;gap:5px;padding-top:10px;border-top:1px solid #f1f5f9;">${reportsHtml}</div>`:''}
+      ${strengths.length?`
+        <div style="border-top:1px solid #f1f5f9;padding-top:14px;">
+          <div style="font-size:11px;font-weight:700;color:#94a3b8;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">CliftonStrengths</div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;">${strengths.map(s=>csPill(s.rank,s.name)).join('')}</div>
+        </div>`
+      :'<div style="border-top:1px solid #f1f5f9;padding-top:12px;font-size:13px;color:#94a3b8;">No strengths recorded yet.</div>'}
     </div>`;
+  }
+
+  // PDF Reports section — one row per member, clean upload/view grid
+  function buildReportsSection(memberContacts){
+    if(!memberContacts.length) return '';
+    let hasAny=false;
+    let rows='';
+    memberContacts.forEach(contact=>{
+      const spLink=(contact.sharepoint_link||'').trim();
+      const reps=reportTypes.map(rt=>{
+        return (contactReports||[]).find(x=>x.contact_id===contact.id&&x.report_type===rt.key)||null;
+      });
+      hasAny=true;
+      rows+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 20px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.04);">
+        <div style="font-weight:700;font-size:14px;color:#1e293b;margin-bottom:12px;">${contact.preferred_name||contact.first_name} ${contact.last_name}</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;">
+          ${spLink&&spLink.startsWith('http')?`<a href="${spLink}" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:#f0fdfa;border:1px solid #99f6e4;border-radius:10px;text-decoration:none;">
+            <span style="font-size:18px;">&#128193;</span>
+            <div><div style="font-size:12px;font-weight:700;color:${TEAL};">Gallup PDF</div><div style="font-size:11px;color:#64748b;">SharePoint &nbsp;&#8599;</div></div>
+          </a>`:''}
+          ${reportTypes.map((rt,i)=>{
+            const r=reps[i];
+            if(r) return `<a href="${r.url}" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:#f0fdfa;border:1px solid #99f6e4;border-radius:10px;text-decoration:none;">
+              <span style="font-size:18px;">&#128196;</span>
+              <div><div style="font-size:12px;font-weight:700;color:${TEAL};">${rt.label}</div><div style="font-size:11px;color:#64748b;">View PDF &nbsp;&#8599;</div></div>
+            </a>`;
+            return `<label style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:10px;cursor:pointer;">
+              <span style="font-size:18px;">&#128196;</span>
+              <div><div style="font-size:12px;font-weight:600;color:#64748b;">${rt.label}</div><div style="font-size:11px;color:${TEAL};font-weight:600;">Upload PDF</div></div>
+              <input type="file" accept=".pdf" style="display:none;" onchange="window._cpUpload('${contact.id}','${rt.key}',this)">
+            </label>`;
+          }).join('')}
+        </div>
+      </div>`;
+    });
+    if(!hasAny) return '';
+    return sectionHead('Reports &amp; Documents')+rows;
   }
 
   function buildStrengthsSection(client,memberContacts){
     const withStr=memberContacts.filter(c=>c.strength_1);
-    if(!withStr.length) return `<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-top:10px;text-align:center;color:#94a3b8;font-size:13px;">No strengths recorded yet for members of this client.</div>`;
     let reportHtml='';
-    if(withStr.length===1) reportHtml=renderStrengthsCard(withStr[0]);
-    else if(withStr.length===2) reportHtml=renderPairComparison(withStr[0],withStr[1]);
-    else reportHtml=renderTeamHeatmap(client.relationship_name||'Team',withStr);
-    return `<div style="margin-top:14px;">
-      <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:${TEAL};font-weight:700;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid #ccfbf1;">Strengths Report</div>
-      ${reportHtml}
-    </div>`;
+    if(!withStr.length){
+      reportHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:24px;text-align:center;color:#94a3b8;font-size:13px;">No strengths recorded for this client's members yet.</div>`;
+    } else if(withStr.length===1){
+      reportHtml=renderStrengthsCard(withStr[0]);
+    } else if(withStr.length===2){
+      reportHtml=renderPairComparison(withStr[0],withStr[1]);
+    } else {
+      reportHtml=renderTeamHeatmap(client.relationship_name||'Team',withStr);
+    }
+    return sectionHead('Strengths Report')+reportHtml;
   }
 
   function buildPulseSection(memberContacts){
@@ -4550,39 +4586,30 @@ window._cpRefreshFn=null;
     const bpSubs=(brainPulseSubmissions||[]).filter(r=>memberIds.includes(r.contact_id));
     const pulseRes=(pulseResults||[]).filter(r=>memberIds.includes(r.contact_id));
     if(!bpSubs.length&&!pulseRes.length) return '';
-    let h=`<div style="margin-top:14px;"><div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:${TEAL};font-weight:700;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid #ccfbf1;">Pulse Check-ins</div>`;
-    if(bpSubs.length){
-      h+=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin-bottom:8px;">`;
-      memberContacts.forEach(mc=>{
-        const myBP=bpSubs.filter(r=>r.contact_id===mc.id);
-        if(!myBP.length) return;
-        const latest=myBP[0];
-        const bs=bpStageFor(latest);
-        h+=`<div onclick="closeModal('clientProfileModal');navTo('clibrainpulse')" style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px;cursor:pointer;" onmouseover="this.style.borderColor='${TEAL}'" onmouseout="this.style.borderColor='#e2e8f0'">
-          <div style="font-size:12px;font-weight:700;color:#1e3a5f;margin-bottom:6px;">${mc.first_name} — Brain Pulse</div>
-          <div style="display:flex;align-items:center;gap:10px;">
-            <div style="font-size:24px;font-weight:800;color:${bs.color||TEAL};">${latest.grand_total}</div>
-            <div><div style="font-size:12px;font-weight:600;color:${bs.color||TEAL};">${bs.name||latest.stage}</div><div style="font-size:11px;color:#94a3b8;">${myBP.length} check-in${myBP.length===1?'':'s'}</div></div>
+    let cards='';
+    memberContacts.forEach(mc=>{
+      const myBP=bpSubs.filter(r=>r.contact_id===mc.id);
+      if(myBP.length){
+        const latest=myBP[0];const bs=bpStageFor(latest);
+        cards+=`<div onclick="closeModal('clientProfileModal');navTo('clibrainpulse')" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 20px;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.04);" onmouseover="this.style.borderColor='${TEAL}'" onmouseout="this.style.borderColor='#e2e8f0'">
+          <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">${mc.first_name} — Brain Pulse</div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="font-size:32px;font-weight:800;color:${bs.color||TEAL};">${latest.grand_total}<span style="font-size:14px;color:#94a3b8;font-weight:400;">/200</span></div>
+            <div><div style="font-size:14px;font-weight:600;color:${bs.color||TEAL};">${bs.name||latest.stage}</div><div style="font-size:12px;color:#94a3b8;">${myBP.length} check-in${myBP.length===1?'':'s'} · tap to view</div></div>
           </div>
         </div>`;
-      });
-      h+=`</div>`;
-    }
-    if(pulseRes.length){
-      h+=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;">`;
-      memberContacts.forEach(mc=>{
-        const myPR=pulseRes.filter(r=>r.contact_id===mc.id);
-        if(!myPR.length) return;
+      }
+      const myPR=pulseRes.filter(r=>r.contact_id===mc.id);
+      if(myPR.length){
         const latest=myPR[0];
-        h+=`<div onclick="closeModal('clientProfileModal');navTo('clipulse')" style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px;cursor:pointer;" onmouseover="this.style.borderColor='${TEAL}'" onmouseout="this.style.borderColor='#e2e8f0'">
-          <div style="font-size:12px;font-weight:700;color:#1e3a5f;margin-bottom:4px;">${mc.first_name} — SAFE Pulse</div>
-          <div style="font-size:11px;color:#64748b;">${myPR.length} check-in${myPR.length===1?'':'s'} · Latest ${new Date(latest.created_at||latest.submitted_at).toLocaleDateString('en-AU',{day:'numeric',month:'short'})}</div>
+        cards+=`<div onclick="closeModal('clientProfileModal');navTo('clipulse')" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 20px;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.04);" onmouseover="this.style.borderColor='${TEAL}'" onmouseout="this.style.borderColor='#e2e8f0'">
+          <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">${mc.first_name} — SAFE Pulse</div>
+          <div style="font-size:13px;font-weight:600;color:#1e3a5f;">${myPR.length} check-in${myPR.length===1?'':'s'}</div>
+          <div style="font-size:12px;color:#94a3b8;margin-top:2px;">Latest ${new Date(latest.created_at||latest.submitted_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'})} · tap to view</div>
         </div>`;
-      });
-      h+=`</div>`;
-    }
-    h+=`</div>`;
-    return h;
+      }
+    });
+    return sectionHead('Pulse Check-ins')+`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;">${cards}</div>`;
   }
 
   window.openClientProfile=function(id){
@@ -4592,60 +4619,64 @@ window._cpRefreshFn=null;
     const memberContacts=(c.members||[]).map(mid=>contacts.find(x=>x.id===mid)).filter(Boolean);
     const ref=c.referred_by?referrals.find(r=>r.id===c.referred_by):null;
 
-    let html=`<div style="background:linear-gradient(135deg,${TEAL},${TEAL_DARK});padding:20px 20px 16px;color:#fff;">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">
+    let html=`<div style="background:linear-gradient(135deg,${TEAL} 0%,${TEAL_DARK} 100%);padding:24px 28px 20px;color:#fff;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;">
         <div>
-          <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;opacity:.8;margin-bottom:4px;">${c.role||'Client'}</div>
-          <div style="font-size:22px;font-weight:700;line-height:1.2;margin-bottom:8px;">${c.relationship_name}</div>
+          <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;opacity:.75;margin-bottom:6px;">${c.role||'Client'}</div>
+          <div style="font-size:26px;font-weight:700;line-height:1.2;margin-bottom:10px;">${c.relationship_name}</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <span style="background:rgba(255,255,255,.2);border-radius:99px;padding:3px 12px;font-size:11px;font-weight:600;">${c.status}</span>
-            <span style="background:rgba(255,255,255,.2);border-radius:99px;padding:3px 12px;font-size:11px;font-weight:600;">&#128100; ${c.practitioner||'Cath'}</span>
-            ${ref?`<span style="background:rgba(255,255,255,.2);border-radius:99px;padding:3px 12px;font-size:11px;font-weight:600;">Ref: ${ref.name}</span>`:''}
+            <span style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:99px;padding:4px 14px;font-size:12px;font-weight:600;">${c.status}</span>
+            <span style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:99px;padding:4px 14px;font-size:12px;font-weight:600;">&#128100; ${c.practitioner||'Cath'}</span>
+            ${ref?`<span style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:99px;padding:4px 14px;font-size:12px;font-weight:600;">Referred by ${ref.name}</span>`:''}
           </div>
         </div>
-        <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
-          <button onclick="closeModal('clientProfileModal');openClientModal('${c.id}')" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);border-radius:8px;padding:8px 16px;font-size:12px;font-weight:700;color:#fff;cursor:pointer;white-space:nowrap;">&#9998; Edit</button>
-          <button onclick="window._cpRefreshFn=null;closeModal('clientProfileModal')" style="background:transparent;border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:8px 16px;font-size:12px;font-weight:600;color:rgba(255,255,255,.85);cursor:pointer;">Close</button>
+        <div style="display:flex;gap:8px;flex-shrink:0;align-items:flex-start;">
+          <button onclick="closeModal('clientProfileModal');openClientModal('${c.id}')" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.4);border-radius:8px;padding:10px 18px;font-size:13px;font-weight:700;color:#fff;cursor:pointer;">&#9998; Edit</button>
+          <button onclick="window._cpRefreshFn=null;closeModal('clientProfileModal')" style="background:transparent;border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:10px 18px;font-size:13px;font-weight:600;color:rgba(255,255,255,.85);cursor:pointer;">Close</button>
         </div>
       </div>
     </div>
-    <div style="padding:16px;background:#f8fafc;max-height:80vh;overflow-y:auto;">`;
+    <div style="padding:20px 28px 28px;background:#fff;max-height:85vh;overflow-y:auto;">`;
 
     // Quick-access links
     if(c.file_notes_link||c.xero_link){
-      html+=`<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;">`;
-      if(c.file_notes_link) html+=`<a href="${c.file_notes_link}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#f0fdfa;border:1px solid #99f6e4;border-radius:8px;padding:8px 14px;font-size:12px;color:${TEAL};font-weight:600;text-decoration:none;">&#128193; File Notes (SharePoint)</a>`;
-      if(c.xero_link) html+=`<a href="${c.xero_link}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:8px 14px;font-size:12px;color:#15803d;font-weight:600;text-decoration:none;">&#128176; Xero Invoice</a>`;
+      html+=`<div style="display:flex;flex-wrap:wrap;gap:10px;padding:16px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:4px;">
+        <span style="font-size:12px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;align-self:center;flex-shrink:0;">Quick Links</span>`;
+      if(c.file_notes_link) html+=`<a href="${c.file_notes_link}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #99f6e4;border-radius:8px;padding:8px 16px;font-size:13px;color:${TEAL};font-weight:600;text-decoration:none;box-shadow:0 1px 3px rgba(0,0,0,.04);">&#128193; File Notes (SharePoint) &#8599;</a>`;
+      if(c.xero_link) html+=`<a href="${c.xero_link}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #bbf7d0;border-radius:8px;padding:8px 16px;font-size:13px;color:#15803d;font-weight:600;text-decoration:none;box-shadow:0 1px 3px rgba(0,0,0,.04);">&#128176; Xero Invoice &#8599;</a>`;
       html+=`</div>`;
     }
 
-    // Members — side-by-side grid for couples
+    // Members
     if(memberContacts.length){
-      html+=`<div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#94a3b8;font-weight:700;margin-bottom:8px;">Members</div>`;
-      html+=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px;margin-bottom:4px;">`;
+      html+=sectionHead('Members');
+      html+=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;">`;
       memberContacts.forEach(mc=>{html+=memberCard(mc);});
       html+=`</div>`;
     } else {
-      html+=`<div style="background:#fff;border:1px dashed #e2e8f0;border-radius:12px;padding:20px;text-align:center;color:#94a3b8;font-size:13px;margin-bottom:10px;">No contacts linked yet — use Edit to link members.</div>`;
+      html+=`<div style="background:#f8fafc;border:1px dashed #e2e8f0;border-radius:12px;padding:24px;text-align:center;color:#94a3b8;font-size:14px;margin-top:20px;">No contacts linked yet — use Edit to link members.</div>`;
     }
 
-    // Pulse check-ins
+    // Reports
+    html+=buildReportsSection(memberContacts);
+
+    // Pulse
     html+=buildPulseSection(memberContacts);
 
-    // Strengths Report (full, with AI generation buttons)
+    // Strengths Report
     html+=buildStrengthsSection(c,memberContacts);
 
     // Notes
     if(c.notes&&c.notes.trim()){
-      html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;margin-top:10px;">
-        <div style="font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:#94a3b8;font-weight:700;margin-bottom:6px;">Notes</div>
-        <div style="font-size:13px;color:#374151;line-height:1.6;white-space:pre-wrap;">${c.notes.trim()}</div>
+      html+=sectionHead('Notes');
+      html+=`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:18px 20px;">
+        <div style="font-size:14px;color:#374151;line-height:1.7;white-space:pre-wrap;">${c.notes.trim()}</div>
       </div>`;
     }
 
     // Delete
-    html+=`<div style="margin-top:14px;text-align:right;">
-      <button onclick="if(confirm('Delete this client?')){window._cpRefreshFn=null;closeModal('clientProfileModal');deleteClient('${c.id}');}" style="background:none;border:1px solid #fecaca;border-radius:8px;padding:8px 16px;font-size:12px;color:#dc2626;cursor:pointer;font-weight:600;">Delete Client</button>
+    html+=`<div style="margin-top:24px;padding-top:16px;border-top:1px solid #f1f5f9;text-align:right;">
+      <button onclick="if(confirm('Delete this client?')){window._cpRefreshFn=null;closeModal('clientProfileModal');deleteClient('${c.id}');}" style="background:none;border:1px solid #fecaca;border-radius:8px;padding:9px 18px;font-size:13px;color:#dc2626;cursor:pointer;font-weight:600;">Delete Client</button>
     </div></div>`;
 
     document.getElementById('clientProfileContent').innerHTML=html;
