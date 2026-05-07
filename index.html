@@ -251,7 +251,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.93</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.94</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -4642,6 +4642,8 @@ window._cpRefreshFn=null;
 // ── STRENGTHS HUB ──
 let shShowAllState=false;
 window.toggleShShowAll=function(el){shShowAllState=!!el.checked;renderStrengths();};
+const shExpandedContacts={};
+window.toggleStrContact=function(id){shExpandedContacts[id]=!shExpandedContacts[id];renderStrengths();};
 function renderStrengths(){
   const q=document.getElementById('shSearch').value.toLowerCase();
   const showAll=shShowAllState;
@@ -4684,20 +4686,24 @@ function renderStrengths(){
     const spBtn=spLink&&spLink.startsWith('http')?`<a href="${spLink}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;gap:6px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:5px 8px;font-size:11px;color:#15803d;font-weight:600;text-decoration:none;flex-shrink:0;"><span style="font-size:12px;">&#128193;</span>View Gallup PDF (SharePoint)</a>`:'';
     const hasStrengths=!!c.strength_1;
     const viewChips=spBtn+reports;
-    return `<div style="background:#fff;border:1px solid #e2e8f0;border-left:3px solid ${hasStrengths?'#3b82f6':'#cbd5e1'};border-radius:8px;padding:12px 16px;">
-      <div style="display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:${hasStrengths?'8':'0'}px;">
-        <div style="flex:1;min-width:160px;">
+    const expanded=!!shExpandedContacts[c.id];
+    const count=[...top5,...bottom5].length;
+    return `<div style="background:#fff;border:1px solid #e2e8f0;border-left:3px solid ${hasStrengths?'#3b82f6':'#cbd5e1'};border-radius:8px;overflow:hidden;">
+      <div onclick="toggleStrContact('${c.id}')" style="display:flex;align-items:center;gap:12px;padding:12px 16px;cursor:pointer;user-select:none;">
+        <span style="font-size:11px;color:#94a3b8;flex-shrink:0;">${expanded?'&#9660;':'&#9654;'}</span>
+        <div style="flex:1;min-width:0;">
           <div style="font-weight:600;font-size:14px;color:#1e293b;">${c.first_name} ${c.last_name}</div>
-          ${c.email?'<div style="font-size:11px;color:#94a3b8;margin-top:2px;">'+c.email+'</div>':''}
+          ${c.email?'<div style="font-size:11px;color:#94a3b8;margin-top:1px;">'+c.email+'</div>':''}
         </div>
-        <div style="display:flex;gap:6px;flex-shrink:0;">
-          <button onclick="openStrEdit('${c.id}')" style="background:${hasStrengths?'#f0f4f8':'#003366'};color:${hasStrengths?'#003366':'#fff'};border:1px solid ${hasStrengths?'#e2e8f0':'#003366'};border-radius:6px;padding:7px 12px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">${hasStrengths?'&#9998; Edit':'+ Add Strengths'}</button>
-        </div>
+        ${hasStrengths?`<span style="background:#f1f5f9;color:#64748b;font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;flex-shrink:0;">${count} themes</span>`:''}
+        <button onclick="event.stopPropagation();openStrEdit('${c.id}')" style="background:${hasStrengths?'#f0f4f8':'#003366'};color:${hasStrengths?'#003366':'#fff'};border:1px solid ${hasStrengths?'#e2e8f0':'#003366'};border-radius:6px;padding:7px 12px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;">${hasStrengths?'&#9998; Edit':'+ Add'}</button>
       </div>
-      ${hasStrengths?
-        '<div style="display:flex;flex-direction:column;gap:4px;margin-top:4px;">'+[...top5,...bottom5].map(s=>`<div style="display:flex;align-items:flex-start;gap:8px;padding:7px 10px;border-radius:8px;background:#f8fafc;border-left:3px solid ${csColor(s.name)};"><span style="background:${csColor(s.name)};color:#fff;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:700;white-space:nowrap;flex-shrink:0;min-width:26px;text-align:center;">#${s.rank}</span><div><div style="font-size:13px;font-weight:600;color:#1e293b;">${s.name}</div>${CS_THEME_DESC[s.name]?`<div style="font-size:11px;color:#64748b;line-height:1.4;margin-top:1px;">${CS_THEME_DESC[s.name]}</div>`:''}</div></div>`).join('')+'</div>'
-        :'<div style="font-size:12px;color:#94a3b8;">No strengths recorded yet. Use <strong>+ Add Strengths</strong> to type them in, or use the <strong>Auto-extract from Gallup PDF</strong> panel on the Strengths Hub Dashboard.</div>'}
-      ${viewChips?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;padding-top:10px;border-top:1px dashed #f1f5f9;">${viewChips}</div>`:''}
+      ${expanded?`<div style="padding:0 12px 12px;">
+        ${hasStrengths?
+          '<div style="display:flex;flex-direction:column;gap:4px;">'+[...top5,...bottom5].map(s=>`<div style="display:flex;align-items:flex-start;gap:8px;padding:7px 10px;border-radius:8px;background:#f8fafc;border-left:3px solid ${csColor(s.name)};"><span style="background:${csColor(s.name)};color:#fff;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:700;white-space:nowrap;flex-shrink:0;min-width:26px;text-align:center;">#${s.rank}</span><div><div style="font-size:13px;font-weight:600;color:#1e293b;">${s.name}</div>${CS_THEME_DESC[s.name]?`<div style="font-size:11px;color:#64748b;line-height:1.4;margin-top:1px;">${CS_THEME_DESC[s.name]}</div>`:''}</div></div>`).join('')+'</div>'
+          :'<div style="font-size:12px;color:#94a3b8;padding:4px 0;">No strengths recorded yet.</div>'}
+        ${viewChips?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;padding-top:10px;border-top:1px dashed #f1f5f9;">${viewChips}</div>`:''}
+      </div>`:''}
     </div>`;
   }).join('');
   html+='</div></div>';
