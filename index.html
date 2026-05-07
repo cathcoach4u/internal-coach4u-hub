@@ -251,7 +251,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.90</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.91</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -10857,9 +10857,10 @@ function renderAbout(){
     listItem('Finance','Dashboard, Income, Where Money Goes, Bills, Transactions (Xero CSV import)')+
     listItem('Development Business','Running costs (Supabase, Claude API) and possible pricing reference for development apps — 7 app tiers from Relationship to Developer Coach4U')+
     listItem('Prospects','Sales pipeline: status tracking, dated activity logs, follow-up dates, overdue highlighting, intake form linking')+
-    listItem('Intake Forms','Public forms (ThriveHQ, Couples, Individual) — full AU/NZ address, partner preferred name, Couples form links to client session')+
+    listItem('Intake Forms','Public forms (ThriveHQ, Couples, Individual) — full AU/NZ address (street, suburb, state, postcode), partner preferred name. Address is displayed in the CRM intake review view.')+
     listItem('Cancellation Policy','Public branded policy page at /policies/cancellation/')+
     listItem('Cath Voice Reference','docs/cath-voice-tone-v1.md + inline CATH_VOICE_REFERENCE constant — single source of truth for all AI-generated tone')+
+    listItem('Client Profile','Full-screen modal with teal header, scrollable body — Members, Reports &amp; Documents, Pulse Check-ins, Couple Dynamics AI, Notes. Pulse and Couple Dynamics sections are role-gated (Couple/Individual only). Designed to work on mobile.')+
     listItem('C4U Bot','AI chat assistant — add prospects, contacts, tasks, search CRM, view dashboards')+
   '</ul>');
 

@@ -283,8 +283,8 @@ NDIS-Related Services (when applicable)
 
 ### Versioning
 
-- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.51.84**, line ~254)
-- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v417**)
+- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.51.90**, line ~254)
+- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v423**)
 - **Both must be bumped on every release**
 
 ### Code patterns
@@ -341,6 +341,27 @@ NDIS-Related Services (when applicable)
 - **Link action** (`linkProspectToIntake` ~line 2200): ensures the prospect has a `contact_id` (creates one from the name if missing), then sets `intake_submissions.contact_id = prospect.contact_id`. Also bumps intake status `New → Reviewed`.
 - **Source-of-truth rule**: prospect/contact fields are never overwritten by intake data — the prospect record wins. The intake becomes viewable via `openIntakeDetailFromProspect` but is never merged into prospect fields.
 - **Unlink** (`unlinkProspectIntake`): clears `intake_submissions.contact_id`.
+
+## Client Profile Modal (`openClientProfile`)
+
+- **HTML**: `#clientProfileModal` (line ~1325) — full-screen overlay with teal header + scrollable body
+- **Structure**: outer modal uses `display:flex;flex-direction:column` so the teal header stays pinned and the white body scrolls. The `#clientProfileContent` wrapper **must** have `display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden` — without these the flex chain breaks and the body won't scroll on mobile.
+- **Content div** (injected into `#clientProfileContent`): teal header div + body div with `flex:1;overflow-y:auto;min-height:0`
+- **Sections**: Members → Reports & Documents → Pulse Check-ins (Couple/Individual only) → Couple Dynamics AI (Couple only, 2+ members with strengths) → Notes
+- **Height**: `calc(100vh - safe-area-insets)` applied inline on `#clientProfileModal` so it respects the iPhone notch/home indicator
+
+## Auth / Sign-in
+
+- **Login screen**: `#loginScreen` (`.login-screen` class, z-index 10000) — shown before `#appMain` and `#sidebar`
+- **Boot sequence** (`boot()` IIFE): calls `supabase.auth.getSession()` → validates with `supabase.auth.getUser()` → if valid hides login and calls `loadAll()`; otherwise shows login
+- **`handleLogin`**: wrapped in try/catch so any error surfaces in `#loginError` div. Calls `supabase.auth.signInWithPassword()`
+- **`onAuthStateChange`**: handles `PASSWORD_RECOVERY` (show reset form) and `SIGNED_OUT` — condition is `event==='SIGNED_OUT' && loginScreen.style.display!=='flex'` (i.e. only show login if it isn't already visible)
+- **JS syntax errors anywhere in the inline script** silently prevent all functions after the error from being defined — `handleLogin` lives at line ~10652, so any earlier syntax error makes the Sign In button do nothing. Always run `node --check` on the extracted script after edits.
+
+## Intake submission viewer (CRM)
+
+- **Address fields**: `intake_submissions` has `address_line_1`, `address_line_2`, `suburb`, `state`, `postcode` columns. The intake forms collect all of these. The CRM viewer (`renderIntakeDetail` ~line 5985) shows them as a formatted address block below Personal Details — only rendered if at least one field is present.
+- **Template literal caution**: the Personal Details section uses a nested template literal for the address conditional. Ensure the outer `html+=\`...\`` is closed with a backtick+semicolon after the final `</div>` of the section card.
 
 ## Client detail — strengths reports
 
