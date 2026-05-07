@@ -131,7 +131,8 @@ td .actions button{padding:8px 14px;font-size:12px;}
   .header h2{font-size:17px;}
   .header-right{gap:8px;font-size:11px;}
   .header-right #headerDate{display:none;}
-  .modal{padding:18px;max-width:92vw;}
+  .modal{padding:18px;max-width:92vw;max-height:92vh;}
+  .modal-overlay{align-items:flex-start;padding-top:max(16px,env(safe-area-inset-top));padding-bottom:max(16px,env(safe-area-inset-bottom));}
   .dash-cards{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));}
   .mob-grid-2{grid-template-columns:1fr;}
   .toolbar{flex-direction:column;align-items:stretch;}
@@ -251,7 +252,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.86</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.87</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -1322,7 +1323,7 @@ if('serviceWorker' in navigator){
 
 <!-- CLIENT PROFILE MODAL -->
 <div class="modal-overlay" id="clientProfileModal">
-  <div class="modal" style="max-width:1400px;width:99vw;padding:0;overflow:hidden;border-radius:14px;">
+  <div class="modal" style="max-width:1400px;width:99vw;padding:0;overflow:hidden;border-radius:14px;display:flex;flex-direction:column;max-height:92vh;">
     <div id="clientProfileContent"></div>
   </div>
 </div>
@@ -4574,7 +4575,7 @@ window._cpRefreshFn=null;
         </div>
       </div>
     </div>
-    <div style="padding:20px 28px 28px;background:#fff;max-height:88vh;overflow-y:auto;">`;
+    <div style="padding:20px 28px 28px;background:#fff;flex:1;overflow-y:auto;min-height:0;">`;
 
     // Quick-access links
     if(c.file_notes_link||c.xero_link){
