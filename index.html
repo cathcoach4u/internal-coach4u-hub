@@ -251,7 +251,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.80</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.81</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -2945,34 +2945,43 @@ function renderStrCodes(){
   GALLUP_STATUSES.forEach(status=>{
     const group=reqs.filter(r=>r.status===status);
     if(!group.length) return;
-    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden;">
-      <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#f8fafc;border-bottom:1px solid #e2e8f0;">
-        <span style="width:10px;height:10px;border-radius:99px;background:${GALLUP_STATUS_COLORS[status]};"></span>
+    const sc=GALLUP_STATUS_COLORS[status]||'#64748b';
+    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-top:3px solid ${sc};border-radius:12px;margin-bottom:16px;overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:10px;padding:13px 18px;background:#f8fafc;border-bottom:1px solid #e2e8f0;">
+        <span style="width:12px;height:12px;border-radius:99px;background:${sc};flex-shrink:0;"></span>
         <span style="font-weight:700;color:#1e293b;font-size:14px;">${status}</span>
-        <span style="background:#f1f5f9;color:#64748b;font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;">${group.length}</span>
+        <span style="background:${sc};color:#fff;font-size:11px;font-weight:700;padding:2px 10px;border-radius:99px;">${group.length}</span>
       </div>`;
     group.forEach(r=>{
       const days=gallupDaysSince(r.created_at);
       const couple=gallupClientName(r.client_id);
       const next=gallupNextAction(r);
       const product=r.product_type||'';
-      const codeChip=r.code_value?'<span style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;">code: '+r.code_value+'</span>':'';
-      html+=`<div onclick="openGallupRequest('${r.id}')" style="padding:12px 16px;border-bottom:1px solid #f1f5f9;cursor:pointer;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
-        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px;">
-          <div style="font-weight:600;color:#1e293b;font-size:14px;">${gallupContactName(r.contact_id)}</div>
-          ${couple?`<span style="background:#fce7f3;color:#be185d;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;">&#128105;&#8205;&#10084;&#65039;&#8205;&#128104; ${couple}</span>`:''}
-          ${product?`<span style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;">${product}</span>`:''}
-          ${codeChip}
-          <span style="margin-left:auto;font-size:11px;color:#94a3b8;">${days!==null?days+'d ago':''}</span>
+      const codeChip=r.code_value?`<span style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700;font-family:monospace;">&#128273; ${r.code_value}</span>`:'';
+      const statusColor=GALLUP_STATUS_COLORS[r.status]||'#64748b';
+      html+=`<div style="padding:16px 18px;border-bottom:1px solid #f1f5f9;border-left:3px solid ${statusColor};">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px;">
+          <div>
+            <div style="font-weight:700;color:#1e293b;font-size:15px;margin-bottom:5px;">${gallupContactName(r.contact_id)}</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
+              ${couple?`<span style="background:#fce7f3;color:#be185d;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600;">&#10084; ${couple}</span>`:''}
+              ${product?`<span style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600;">${product}</span>`:''}
+              ${codeChip}
+            </div>
+          </div>
+          <div style="text-align:right;flex-shrink:0;">
+            <div style="font-size:11px;color:#94a3b8;">${days!==null?days+'d ago':''}</div>
+            <div onclick="openGallupRequest('${r.id}')" style="font-size:11px;color:#0D9488;font-weight:600;cursor:pointer;margin-top:4px;">Edit &#8599;</div>
+          </div>
         </div>
-        <div style="font-size:12px;color:#64748b;margin-bottom:8px;">Next: ${next}</div>
+        ${next&&next!=='Done'?`<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:7px 12px;font-size:12px;color:#15803d;font-weight:600;margin-bottom:10px;">&#9654; Next: ${next}</div>`:'<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:7px 12px;font-size:12px;color:#15803d;font-weight:600;margin-bottom:10px;">&#10003; Done</div>'}
         <div style="display:flex;gap:6px;flex-wrap:wrap;" onclick="event.stopPropagation()">
           ${stampBtn(r,'payment_confirmed_at','Payment confirmed','Awaiting Purchase','#d97706')}
           ${stampBtn(r,'purchased_at','Code purchased',null,'#0891b2')}
           ${stampBtn(r,'code_sent_at','Code sent','Awaiting Completion','#7c3aed')}
-          ${stampBtn(r,'notified_at','Notified client',null,'#0891b2')}
+          ${stampBtn(r,'notified_at','Notified client',null,'#0d9488')}
           ${stampBtn(r,'completed_at','Completed','Completed','#15803d')}
-          ${stampBtn(r,'exported_at','PDF exported',null,'#0891b2')}
+          ${stampBtn(r,'exported_at','PDF exported',null,'#2563eb')}
           ${stampBtn(r,'filed_at','Filed','Filed','#475569')}
         </div>
       </div>`;
@@ -2985,11 +2994,11 @@ function renderStrCodes(){
 }
 function stampBtn(r,field,label,nextStatus,color){
   const stamped=!!r[field];
-  const bg=stamped?color:'#fff';
-  const fg=stamped?'#fff':color;
+  const bg=stamped?color:'#f8fafc';
+  const fg=stamped?'#fff':'#94a3b8';
   const border=stamped?color:'#e2e8f0';
   const tick=stamped?'&#10003; ':'';
-  return `<button onclick="stampGallupStage('${r.id}','${field}',${nextStatus?"'"+nextStatus+"'":'null'})" style="background:${bg};color:${fg};border:1px solid ${border};padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">${tick}${label}</button>`;
+  return `<button onclick="stampGallupStage('${r.id}','${field}',${nextStatus?"'"+nextStatus+"'":'null'})" title="${stamped?'Click to un-stamp':'Click to stamp'}" style="background:${bg};color:${fg};border:1px solid ${border};padding:6px 12px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;transition:opacity .15s;">${tick}${label}</button>`;
 }
 window.stampGallupStage=async function(id,field,nextStatus){
   const r=gallupRequests.find(x=>x.id==id);
