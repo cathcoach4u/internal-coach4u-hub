@@ -251,7 +251,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.96</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.97</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -790,10 +790,14 @@ if('serviceWorker' in navigator){
     <h3 id="prospModalTitle">New Prospect</h3>
     <input type="hidden" id="prospId">
     <input type="hidden" id="prospContact" value="">
-    <div class="form-group"><label>Name <span id="prospContactBadge" style="font-size:11px;color:#16a34a;display:none;">&#9989; Linked to Master List</span></label>
+    <div class="form-group"><label>Name <span id="prospContactBadge" style="font-size:11px;color:#16a34a;display:none;">&#9989; Linked to Master List</span> <button type="button" id="prospLinkBtn" onclick="toggleProspLinkSearch()" style="font-size:11px;color:#3b82f6;background:none;border:none;cursor:pointer;padding:0;margin-left:4px;text-decoration:underline;">Link contact</button></label>
       <div style="position:relative;">
         <input id="prospName" placeholder="Start typing to search Master List..." autocomplete="off" oninput="searchProspContacts()">
         <div id="prospSuggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #e2e8f0;border-radius:8px;max-height:180px;overflow-y:auto;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,.15);"></div>
+      </div>
+      <div id="prospLinkSection" style="display:none;margin-top:6px;position:relative;">
+        <input id="prospLinkSearch" placeholder="Search Master List by name..." autocomplete="off" oninput="searchProspLink()" style="width:100%;padding:8px 10px;border:1px solid #3b82f6;border-radius:6px;font-size:13px;box-sizing:border-box;">
+        <div id="prospLinkSuggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #e2e8f0;border-radius:8px;max-height:180px;overflow-y:auto;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,.15);"></div>
       </div>
     </div>
     <div class="form-group"><label>Email</label><input id="prospEmail" type="email"></div>
@@ -2802,7 +2806,10 @@ function renderStrUpload(){
           <div style="font-size:13px;font-weight:600;color:#1e293b;${c?'cursor:pointer;':''}" ${c?`onclick="navTo('strengths');setTimeout(()=>{const s=document.getElementById('shSearch');if(s){s.value='${(cName||'').replace(/'/g,"\\'")}';renderStrengths();}},80)"`:''}>${cName}</div>
           <div style="font-size:11px;color:#64748b;margin-top:2px;">${label}${when?' &middot; '+when:''}${r.filename?' &middot; '+r.filename:''}</div>
         </div>
-        <a href="${r.url}" target="_blank" rel="noopener" style="background:#003366;color:#fff;border-radius:6px;padding:6px 12px;font-size:11px;font-weight:600;text-decoration:none;flex-shrink:0;">View</a>
+        <div style="display:flex;gap:6px;flex-shrink:0;">
+          <a href="${r.url}" target="_blank" rel="noopener" style="background:#003366;color:#fff;border-radius:6px;padding:6px 12px;font-size:11px;font-weight:600;text-decoration:none;">View</a>
+          <button onclick="deleteContactReport('${r.id}')" style="background:none;border:1px solid #fecaca;color:#dc2626;border-radius:6px;padding:6px 10px;font-size:11px;font-weight:600;cursor:pointer;">&#10005;</button>
+        </div>
       </div>`;
     }).join(''):'<div style="font-size:12px;color:#94a3b8;padding:14px 0;">No reports uploaded yet. Pick a PDF above and Upload to file your first.</div>'}
   </div>`;
@@ -3851,6 +3858,37 @@ window.selectProspContact=function(contactId){
   document.getElementById('prospSuggestions').style.display='none';
   document.getElementById('prospContactBadge').style.display='inline';
 };
+window.toggleProspLinkSearch=function(){
+  const sec=document.getElementById('prospLinkSection');
+  const visible=sec.style.display!=='none';
+  sec.style.display=visible?'none':'block';
+  if(!visible){document.getElementById('prospLinkSearch').focus();}
+};
+window.searchProspLink=function(){
+  const q=document.getElementById('prospLinkSearch').value.trim().toLowerCase();
+  const box=document.getElementById('prospLinkSuggestions');
+  if(q.length<2){box.style.display='none';return;}
+  const matches=contacts.filter(c=>(c.first_name+' '+c.last_name).toLowerCase().includes(q)).slice(0,8);
+  if(!matches.length){
+    box.innerHTML='<div style="padding:10px 14px;color:#64748b;font-size:13px;">No matches found</div>';
+    box.style.display='block';return;
+  }
+  box.innerHTML=matches.map(c=>`<div onclick="selectProspLink('${c.id}')" style="padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background='#fff'">
+    <span><strong>${c.first_name} ${c.last_name}</strong></span>
+    <span style="color:#64748b;font-size:11px;">${c.email||c.phone||''}</span>
+  </div>`).join('');
+  box.style.display='block';
+};
+window.selectProspLink=function(contactId){
+  const c=contacts.find(x=>x.id===contactId);
+  if(!c) return;
+  document.getElementById('prospContact').value=c.id;
+  document.getElementById('prospContactBadge').style.display='inline';
+  document.getElementById('prospLinkSection').style.display='none';
+  document.getElementById('prospLinkSearch').value='';
+  document.getElementById('prospLinkSuggestions').style.display='none';
+  toast(`Linked to ${c.first_name} ${c.last_name}`,'success');
+};
 window.saveProspect=async function(){
   const id=document.getElementById('prospId').value;
   const obj={
@@ -4177,18 +4215,36 @@ window.uploadReport=async function(contactId,reportType,file,input){
   }
   const url=`${SUPABASE_URL}/storage/v1/object/public/client-reports/${path}`;
 
-  // Delete existing report of same type
-  await supabase.from('contact_reports').delete().eq('contact_id',contactId).eq('report_type',reportType);
-  const ins=await supabase.from('contact_reports').insert({contact_id:contactId,report_type:reportType,filename:file.name,url:url}).select().single();
-  if(ins.error){toast('Error saving report: '+ins.error.message,'error');return;}
+  // Select existing records for this contact + report type to avoid duplicates
+  const {data:existingRows}=await supabase.from('contact_reports').select('id').eq('contact_id',contactId).eq('report_type',reportType);
+  let insData=null;
+  if(existingRows&&existingRows.length>0){
+    // Update the first record, remove any extras
+    const {data:upd}=await supabase.from('contact_reports').update({filename:file.name,url:url}).eq('id',existingRows[0].id).select().single();
+    insData=upd;
+    const extraIds=existingRows.slice(1).map(r=>r.id);
+    if(extraIds.length) await supabase.from('contact_reports').delete().in('id',extraIds);
+  } else {
+    const ins=await supabase.from('contact_reports').insert({contact_id:contactId,report_type:reportType,filename:file.name,url:url}).select().single();
+    if(ins.error){toast('Error saving report: '+ins.error.message,'error');return;}
+    insData=ins.data;
+  }
   await loadContactReports();
-  // Belt-and-braces: ensure the just-uploaded row is at the front of contactReports
-  if(ins.data){
-    contactReports=[ins.data,...contactReports.filter(r=>r.id!==ins.data.id)];
+  if(insData){
+    contactReports=[insData,...contactReports.filter(r=>r.id!==insData.id)];
   }
   renderContactReports(contactId);
   if(label){label.childNodes[0].textContent=origText;label.style.background='';label.style.color='';}
   toast('Report uploaded','success');
+};
+
+window.deleteContactReport=async function(id){
+  if(!confirm('Delete this report record?')) return;
+  const {error}=await supabase.from('contact_reports').delete().eq('id',id);
+  if(error){toast('Error: '+error.message,'error');return;}
+  await loadContactReports();
+  renderStrUpload();
+  toast('Report deleted','success');
 };
 
 window.deleteContact=async function(id){
