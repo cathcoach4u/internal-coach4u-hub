@@ -149,7 +149,7 @@ Parent agents represent the master system prompts for Copilot Studio. Child agen
 ### Tables
 
 | Table | Purpose |
-|-------|---------|
+|-------|----------|
 | `agents` | Agent records (name, status, type, platform, system_prompt, etc.) |
 | `agent_versions` | Immutable snapshots of agent state at each save |
 | `agent_issues` | Issue log per agent (title, description, status, fix_applied) |
@@ -207,6 +207,66 @@ The single source of truth for tone in any Coach4U communication, human or AI-ge
 - **Inline constant**: `CATH_VOICE_REFERENCE` in `index.html` — included verbatim in every Strengths AI generation prompt
 - **Mirror**: maintain a copy in SharePoint as the canonical client-facing source if needed
 - **Highlights**: Australian English; no exclamation marks, emojis, or clinical language; warm, grounded, decisive; strengths-based framing; sign-off `Thanks\nCath`
+
+## Bot Config and Services
+
+**Source of truth for services**: `coach4u-shared/templates/PROFILE.md` — the Services section and CRM Interest Field Values table.
+
+The `interest` enum in `bot/index.html` and the `system_prompt` in the `bot_config` Supabase table must both match the services list in `PROFILE.md`. Update `PROFILE.md` first, then propagate.
+
+**Rule: whenever services change or the interest enum in `bot/index.html` is updated, always provide the following SQL for the user to run in Supabase SQL Editor.**
+
+```sql
+-- Step 1: Read the current prompt before editing
+SELECT system_prompt FROM bot_config WHERE active = true;
+
+-- Step 2: Paste your updated prompt (existing content + services block) then run:
+UPDATE bot_config
+SET system_prompt = 'PASTE FULL UPDATED PROMPT HERE'
+WHERE active = true;
+```
+
+Services block to include in the system_prompt (based on `PROFILE.md` — update here if services change):
+
+```
+## Coach4U Services
+
+All of the following are legitimate Coach4U services. Never flag any of them as out of scope or unavailable.
+
+Couples Coaching and Counselling
+- Free 15–30 min connection call
+- Couples intake session (~2 hours), ongoing sessions (~90 min)
+- Approaches: EFT, Gottman, Imago Dialogue, Transactional Analysis, Narrative Therapy, Solution-Focused Therapy
+- Strengths integration where relevant
+
+Individual Coaching and Counselling
+- One-to-one for adults
+- Focus: life transitions, emotional regulation, clarity, momentum
+- Strengths-based, non-clinical approach
+
+ADHD Coaching and Counselling
+- One-to-one ADHD coaching and group coaching via ThriveHQ
+- Weekly sessions, body doubling, executive functioning tools
+
+ThriveHQ (ADHD Group Membership)
+- Ongoing group coaching membership
+- Coaching, planning, accountability, and peer support
+
+CliftonStrengths Assessment and Strengths-Based Development
+- Gallup Top 5 and Full 34, individual and couples strengths sessions
+
+Business, Leadership and Team Coaching
+- Executive coaching, leadership development, team coaching, neurodiversity-informed workplace coaching
+
+Career Coaching
+- Career direction and transitions, values and strengths mapping
+
+Change Management and Organisational Support
+- Change leadership, stakeholder engagement, coaching alongside change initiatives
+
+NDIS-Related Services (when applicable)
+- Sessions aligned with NDIS plans, strengths-based evidence-informed support
+```
 
 ## Conventions
 
