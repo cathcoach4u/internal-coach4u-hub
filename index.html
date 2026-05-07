@@ -251,7 +251,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.76</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.77</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -5664,7 +5664,7 @@ function renderPairComparison(p1,p2){
       const isShared=sharedSet.has(s.name);
       h+=`<div style="display:flex;align-items:center;gap:10px;padding:0 0 0 ${isShared?'6px':'0'};border-left:${isShared?'3px solid #15803d':'3px solid transparent'};background:${isShared?'#f0fdf4':'transparent'};border-radius:${isShared?'4px':'0'};margin-bottom:2px;height:36px;border-bottom:1px solid #f1f5f9;">
         <div style="background:${csColor(s.name)};color:#fff;font-weight:700;font-size:11px;padding:4px 8px;border-radius:4px;min-width:30px;text-align:center;flex-shrink:0;">#${s.rank}</div>
-        <div style="flex:1;min-width:0;font-size:13px;font-weight:${isShared?'700':'500'};color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${s.name}</div>
+        <div onmouseenter="showCsTip('${s.name}',this)" onmouseleave="hideCsTip()" style="flex:1;min-width:0;font-size:13px;font-weight:${isShared?'700':'500'};color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:help;">${s.name} &#128269;</div>
       </div>`;
     });
     h+='</div>';
@@ -5687,7 +5687,7 @@ function renderPairComparison(p1,p2){
     html+=`<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:14px 18px;margin-bottom:14px;">
       <div style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#15803d;font-weight:700;margin-bottom:8px;">Shared themes (${shared.length})</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;">
-        ${shared.map(s=>`<span style="background:${csColor(s.name)};color:#fff;padding:4px 10px;border-radius:4px;font-size:12px;font-weight:600;">${s.name}</span>`).join('')}
+        ${shared.map(s=>`<span onmouseenter="showCsTip('${s.name}',this)" onmouseleave="hideCsTip()" style="background:${csColor(s.name)};color:#fff;padding:4px 10px;border-radius:4px;font-size:12px;font-weight:600;cursor:help;">${s.name} &#128269;</span>`).join('')}
       </div>
     </div>`;
   } else {
