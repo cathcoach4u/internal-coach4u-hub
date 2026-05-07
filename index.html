@@ -251,7 +251,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.67</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.68</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -1327,7 +1327,7 @@ if('serviceWorker' in navigator){
 
 <!-- CLIENT PROFILE MODAL -->
 <div class="modal-overlay" id="clientProfileModal">
-  <div class="modal" style="max-width:640px;padding:0;overflow:hidden;border-radius:14px;">
+  <div class="modal" style="max-width:920px;width:95vw;padding:0;overflow:hidden;border-radius:14px;">
     <div id="clientProfileContent"></div>
   </div>
 </div>
@@ -4490,13 +4490,13 @@ window.deleteClient=async function(id){
 };
 
 // ── CLIENT PROFILE DASHBOARD ──
+window._cpRefreshFn=null;
 (function(){
-  const AVATAR_COLORS=['#1e3a5f','#16a34a','#7c3aed','#0891b2','#b45309','#be185d','#0f766e','#6d28d9'];
+  const TEAL='#0D9488';const TEAL_DARK='#0F766E';
+  const AVATAR_COLORS=['#0D9488','#0891b2','#7c3aed','#1e3a5f','#b45309','#be185d','#0f766e','#6d28d9'];
   function avatarColor(str){let h=0;for(let i=0;i<str.length;i++)h=str.charCodeAt(i)+((h<<5)-h);return AVATAR_COLORS[Math.abs(h)%AVATAR_COLORS.length];}
   function initials(first,last){return ((first||'?')[0]+(last||'?')[0]).toUpperCase();}
   function avatar(first,last,size){const bg=avatarColor((first||'')+(last||''));return `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${bg};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:${Math.round(size*0.38)}px;font-weight:700;color:#fff;letter-spacing:1px;">${initials(first,last)}</div>`;}
-
-  function getStrengths(c){const list=[];for(let i=1;i<=10;i++){if(c['strength_'+i])list.push({rank:i,name:c['strength_'+i]});}return list;}
 
   function reportsForContact(cid){
     return reportTypes.map(rt=>{
@@ -4505,65 +4505,98 @@ window.deleteClient=async function(id){
     });
   }
 
-  function memberCard(contact,clientId){
-    const strengths=getStrengths(contact);
-    const top5=strengths.filter(s=>s.rank<=5);
-    const rest=strengths.filter(s=>s.rank>5);
+  function memberCard(contact){
+    const strengths=[];for(let i=1;i<=10;i++){if(contact['strength_'+i])strengths.push({rank:i,name:contact['strength_'+i]});}
+    const top5=strengths.filter(s=>s.rank<=5);const rest=strengths.filter(s=>s.rank>5);
     const reps=reportsForContact(contact.id);
     const displayName=(contact.preferred_name&&contact.preferred_name!==contact.first_name)
-      ?`${contact.preferred_name} (${contact.first_name}) ${contact.last_name}`
-      :`${contact.first_name} ${contact.last_name}`;
-
+      ?`${contact.preferred_name} (${contact.first_name}) ${contact.last_name}`:`${contact.first_name} ${contact.last_name}`;
     const spLink=(contact.sharepoint_link||'').trim();
     let reportsHtml='';
+    if(spLink&&spLink.startsWith('http')) reportsHtml+=`<a href="${spLink}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;background:#f0fdfa;border:1px solid #99f6e4;border-radius:6px;padding:5px 10px;font-size:11px;color:${TEAL};font-weight:600;text-decoration:none;">&#128193; Gallup PDF (SharePoint)</a>`;
     reps.forEach(({rt,r})=>{
-      if(r){
-        reportsHtml+=`<a href="${r.url}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:5px 10px;font-size:11px;color:#1e3a5f;font-weight:600;text-decoration:none;">&#128196; ${rt.label} <span style="color:#2563eb;">View</span></a>`;
-      } else {
-        reportsHtml+=`<label style="display:inline-flex;align-items:center;gap:5px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:5px 10px;font-size:11px;color:#64748b;font-weight:600;cursor:pointer;">&#128196; ${rt.label} <span style="color:#1e3a5f;">Upload</span><input type="file" accept=".pdf" style="display:none;" onchange="window._cpUpload('${contact.id}','${rt.key}',this)"></label>`;
-      }
+      if(r) reportsHtml+=`<a href="${r.url}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;background:#f0fdfa;border:1px solid #99f6e4;border-radius:6px;padding:5px 10px;font-size:11px;color:${TEAL};font-weight:600;text-decoration:none;">&#128196; ${rt.label} View</a>`;
+      else reportsHtml+=`<label style="display:inline-flex;align-items:center;gap:5px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:5px 10px;font-size:11px;color:#64748b;font-weight:600;cursor:pointer;">&#128196; ${rt.label} <span style="color:${TEAL};">Upload</span><input type="file" accept=".pdf" style="display:none;" onchange="window._cpUpload('${contact.id}','${rt.key}',this)"></label>`;
     });
-    if(spLink&&spLink.startsWith('http')){
-      reportsHtml=`<a href="${spLink}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:5px 10px;font-size:11px;color:#15803d;font-weight:600;text-decoration:none;">&#128193; Gallup PDF (SharePoint)</a>`+reportsHtml;
-    }
-
-    return `<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:10px;">
-      <div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:${strengths.length||reportsHtml?'12':'0'}px;">
-        ${avatar(contact.first_name,contact.last_name,56)}
+    return `<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;height:100%;box-sizing:border-box;">
+      <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:12px;">
+        ${avatar(contact.first_name,contact.last_name,52)}
         <div style="flex:1;min-width:0;">
           <div style="font-weight:700;font-size:15px;color:#1e293b;margin-bottom:4px;">${displayName}</div>
-          <div style="display:flex;flex-direction:column;gap:3px;">
-            ${contact.email?`<a href="mailto:${contact.email}" style="font-size:12px;color:#2563eb;text-decoration:none;font-weight:500;">&#9993; ${contact.email}</a>`:''}
-            ${contact.phone?`<a href="tel:${contact.phone.replace(/\s/g,'')}" style="font-size:12px;color:#1e3a5f;text-decoration:none;font-weight:500;">&#128222; ${contact.phone}</a>`:''}
-            ${contact.contact_type&&contact.contact_type!=='Individual'?`<span style="font-size:11px;color:#64748b;">${contact.contact_type}</span>`:''}
-          </div>
+          ${contact.email?`<a href="mailto:${contact.email}" style="display:block;font-size:12px;color:${TEAL};text-decoration:none;font-weight:500;margin-bottom:2px;">&#9993; ${contact.email}</a>`:''}
+          ${contact.phone?`<a href="tel:${contact.phone.replace(/\s/g,'')}" style="display:block;font-size:12px;color:#1e3a5f;text-decoration:none;font-weight:500;">&#128222; ${contact.phone}</a>`:''}
         </div>
       </div>
-      ${strengths.length?`
-        <div style="margin-bottom:${reportsHtml?'10':'0'}px;">
-          <div style="font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:#94a3b8;font-weight:700;margin-bottom:6px;">CliftonStrengths</div>
-          <div style="display:flex;flex-wrap:wrap;gap:4px;">
-            ${top5.map(s=>csPill(s.rank,s.name)).join('')}
-            ${rest.map(s=>csPill(s.rank,s.name)).join('')}
-          </div>
-        </div>`:'<div style="font-size:12px;color:#94a3b8;margin-bottom:10px;">No strengths recorded yet.</div>'}
-      ${reportsHtml?`<div style="display:flex;flex-wrap:wrap;gap:6px;padding-top:10px;border-top:1px solid #f1f5f9;">${reportsHtml}</div>`:''}
+      ${strengths.length?`<div style="margin-bottom:10px;"><div style="font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:#94a3b8;font-weight:700;margin-bottom:5px;">CliftonStrengths</div><div style="display:flex;flex-wrap:wrap;gap:3px;">${top5.map(s=>csPill(s.rank,s.name)).join('')}${rest.map(s=>csPill(s.rank,s.name)).join('')}</div></div>`:'<div style="font-size:12px;color:#94a3b8;margin-bottom:10px;">No strengths recorded yet.</div>'}
+      ${reportsHtml?`<div style="display:flex;flex-wrap:wrap;gap:5px;padding-top:10px;border-top:1px solid #f1f5f9;">${reportsHtml}</div>`:''}
     </div>`;
+  }
+
+  function buildStrengthsSection(client,memberContacts){
+    const withStr=memberContacts.filter(c=>c.strength_1);
+    if(!withStr.length) return `<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-top:10px;text-align:center;color:#94a3b8;font-size:13px;">No strengths recorded yet for members of this client.</div>`;
+    let reportHtml='';
+    if(withStr.length===1) reportHtml=renderStrengthsCard(withStr[0]);
+    else if(withStr.length===2) reportHtml=renderPairComparison(withStr[0],withStr[1]);
+    else reportHtml=renderTeamHeatmap(client.relationship_name||'Team',withStr);
+    return `<div style="margin-top:14px;">
+      <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:${TEAL};font-weight:700;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid #ccfbf1;">Strengths Report</div>
+      ${reportHtml}
+    </div>`;
+  }
+
+  function buildPulseSection(memberContacts){
+    const memberIds=memberContacts.map(c=>c.id);
+    const bpSubs=(brainPulseSubmissions||[]).filter(r=>memberIds.includes(r.contact_id));
+    const pulseRes=(pulseResults||[]).filter(r=>memberIds.includes(r.contact_id));
+    if(!bpSubs.length&&!pulseRes.length) return '';
+    let h=`<div style="margin-top:14px;"><div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:${TEAL};font-weight:700;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid #ccfbf1;">Pulse Check-ins</div>`;
+    if(bpSubs.length){
+      h+=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin-bottom:8px;">`;
+      memberContacts.forEach(mc=>{
+        const myBP=bpSubs.filter(r=>r.contact_id===mc.id);
+        if(!myBP.length) return;
+        const latest=myBP[0];
+        const bs=bpStageFor(latest);
+        h+=`<div onclick="closeModal('clientProfileModal');navTo('clibrainpulse')" style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px;cursor:pointer;" onmouseover="this.style.borderColor='${TEAL}'" onmouseout="this.style.borderColor='#e2e8f0'">
+          <div style="font-size:12px;font-weight:700;color:#1e3a5f;margin-bottom:6px;">${mc.first_name} — Brain Pulse</div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="font-size:24px;font-weight:800;color:${bs.color||TEAL};">${latest.grand_total}</div>
+            <div><div style="font-size:12px;font-weight:600;color:${bs.color||TEAL};">${bs.name||latest.stage}</div><div style="font-size:11px;color:#94a3b8;">${myBP.length} check-in${myBP.length===1?'':'s'}</div></div>
+          </div>
+        </div>`;
+      });
+      h+=`</div>`;
+    }
+    if(pulseRes.length){
+      h+=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;">`;
+      memberContacts.forEach(mc=>{
+        const myPR=pulseRes.filter(r=>r.contact_id===mc.id);
+        if(!myPR.length) return;
+        const latest=myPR[0];
+        h+=`<div onclick="closeModal('clientProfileModal');navTo('clipulse')" style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px;cursor:pointer;" onmouseover="this.style.borderColor='${TEAL}'" onmouseout="this.style.borderColor='#e2e8f0'">
+          <div style="font-size:12px;font-weight:700;color:#1e3a5f;margin-bottom:4px;">${mc.first_name} — SAFE Pulse</div>
+          <div style="font-size:11px;color:#64748b;">${myPR.length} check-in${myPR.length===1?'':'s'} · Latest ${new Date(latest.created_at||latest.submitted_at).toLocaleDateString('en-AU',{day:'numeric',month:'short'})}</div>
+        </div>`;
+      });
+      h+=`</div>`;
+    }
+    h+=`</div>`;
+    return h;
   }
 
   window.openClientProfile=function(id){
     const c=id?clients.find(x=>x.id===id):null;
     if(!c) return;
+    window._cpRefreshFn=()=>window.openClientProfile(id);
     const memberContacts=(c.members||[]).map(mid=>contacts.find(x=>x.id===mid)).filter(Boolean);
     const ref=c.referred_by?referrals.find(r=>r.id===c.referred_by):null;
-    const roleColor={Couple:'#be185d',Individual:'#0891b2',Business:'#b45309',Organisation:'#6d28d9'}[c.role]||'#1e3a5f';
-    const statusColor=c.status==='Active'?'#16a34a':c.status==='On Hold'?'#d97706':'#94a3b8';
 
-    let html=`<div style="background:linear-gradient(135deg,${roleColor},${roleColor}cc);padding:20px 20px 16px;color:#fff;">
+    let html=`<div style="background:linear-gradient(135deg,${TEAL},${TEAL_DARK});padding:20px 20px 16px;color:#fff;">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">
         <div>
           <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;opacity:.8;margin-bottom:4px;">${c.role||'Client'}</div>
-          <div style="font-size:20px;font-weight:700;line-height:1.2;margin-bottom:8px;">${c.relationship_name}</div>
+          <div style="font-size:22px;font-weight:700;line-height:1.2;margin-bottom:8px;">${c.relationship_name}</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
             <span style="background:rgba(255,255,255,.2);border-radius:99px;padding:3px 12px;font-size:11px;font-weight:600;">${c.status}</span>
             <span style="background:rgba(255,255,255,.2);border-radius:99px;padding:3px 12px;font-size:11px;font-weight:600;">&#128100; ${c.practitioner||'Cath'}</span>
@@ -4572,43 +4605,49 @@ window.deleteClient=async function(id){
         </div>
         <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
           <button onclick="closeModal('clientProfileModal');openClientModal('${c.id}')" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);border-radius:8px;padding:8px 16px;font-size:12px;font-weight:700;color:#fff;cursor:pointer;white-space:nowrap;">&#9998; Edit</button>
-          <button onclick="closeModal('clientProfileModal')" style="background:transparent;border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:8px 16px;font-size:12px;font-weight:600;color:rgba(255,255,255,.85);cursor:pointer;">Close</button>
+          <button onclick="window._cpRefreshFn=null;closeModal('clientProfileModal')" style="background:transparent;border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:8px 16px;font-size:12px;font-weight:600;color:rgba(255,255,255,.85);cursor:pointer;">Close</button>
         </div>
       </div>
     </div>
-    <div style="padding:16px;background:#f8fafc;max-height:70vh;overflow-y:auto;">`;
+    <div style="padding:16px;background:#f8fafc;max-height:80vh;overflow-y:auto;">`;
 
-    // Quick-access links bar
-    const hasLinks=c.file_notes_link||c.xero_link;
-    if(hasLinks){
+    // Quick-access links
+    if(c.file_notes_link||c.xero_link){
       html+=`<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;">`;
-      if(c.file_notes_link) html+=`<a href="${c.file_notes_link}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:8px 14px;font-size:12px;color:#1e3a5f;font-weight:600;text-decoration:none;">&#128193; File Notes (SharePoint)</a>`;
+      if(c.file_notes_link) html+=`<a href="${c.file_notes_link}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#f0fdfa;border:1px solid #99f6e4;border-radius:8px;padding:8px 14px;font-size:12px;color:${TEAL};font-weight:600;text-decoration:none;">&#128193; File Notes (SharePoint)</a>`;
       if(c.xero_link) html+=`<a href="${c.xero_link}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:8px 14px;font-size:12px;color:#15803d;font-weight:600;text-decoration:none;">&#128176; Xero Invoice</a>`;
       html+=`</div>`;
     }
 
-    // Members
+    // Members — side-by-side grid for couples
     if(memberContacts.length){
       html+=`<div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#94a3b8;font-weight:700;margin-bottom:8px;">Members</div>`;
-      memberContacts.forEach(mc=>{html+=memberCard(mc,c.id);});
+      html+=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px;margin-bottom:4px;">`;
+      memberContacts.forEach(mc=>{html+=memberCard(mc);});
+      html+=`</div>`;
     } else {
-      html+=`<div style="background:#fff;border:1px dashed #e2e8f0;border-radius:12px;padding:20px;text-align:center;color:#94a3b8;font-size:13px;margin-bottom:10px;">No contacts linked yet. Use Edit to link members.</div>`;
+      html+=`<div style="background:#fff;border:1px dashed #e2e8f0;border-radius:12px;padding:20px;text-align:center;color:#94a3b8;font-size:13px;margin-bottom:10px;">No contacts linked yet — use Edit to link members.</div>`;
     }
+
+    // Pulse check-ins
+    html+=buildPulseSection(memberContacts);
+
+    // Strengths Report (full, with AI generation buttons)
+    html+=buildStrengthsSection(c,memberContacts);
 
     // Notes
     if(c.notes&&c.notes.trim()){
-      html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;margin-top:4px;">
+      html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;margin-top:10px;">
         <div style="font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:#94a3b8;font-weight:700;margin-bottom:6px;">Notes</div>
         <div style="font-size:13px;color:#374151;line-height:1.6;white-space:pre-wrap;">${c.notes.trim()}</div>
       </div>`;
     }
 
-    // Delete at bottom
+    // Delete
     html+=`<div style="margin-top:14px;text-align:right;">
-      <button onclick="if(confirm('Delete this client?')){closeModal('clientProfileModal');deleteClient('${c.id}');}" style="background:none;border:1px solid #fecaca;border-radius:8px;padding:8px 16px;font-size:12px;color:#dc2626;cursor:pointer;font-weight:600;">Delete Client</button>
-    </div>`;
+      <button onclick="if(confirm('Delete this client?')){window._cpRefreshFn=null;closeModal('clientProfileModal');deleteClient('${c.id}');}" style="background:none;border:1px solid #fecaca;border-radius:8px;padding:8px 16px;font-size:12px;color:#dc2626;cursor:pointer;font-weight:600;">Delete Client</button>
+    </div></div>`;
 
-    html+=`</div>`;
     document.getElementById('clientProfileContent').innerHTML=html;
     document.getElementById('clientProfileModal').classList.add('open');
   };
@@ -4618,10 +4657,7 @@ window.deleteClient=async function(id){
     if(!file) return;
     await uploadReport(contactId,reportType,file,null);
     await loadContactReports();
-    const modal=document.getElementById('clientProfileModal');
-    const cid=document.getElementById('clientId')?.value||null;
-    const activeClient=clients.find(c=>(c.members||[]).includes(contactId));
-    if(activeClient) window.openClientProfile(activeClient.id);
+    if(window._cpRefreshFn) window._cpRefreshFn();
   };
 })();
 
@@ -5159,6 +5195,7 @@ ${themes}`;
     if(error){console.error(error);toast('Saved locally but DB write failed: '+error.message,'error');}
     await loadStrengthsInsights();
     renderStrengthsReports();
+    if(window._cpRefreshFn)window._cpRefreshFn();
     toast('Bring &amp; Need generated','success');
   }catch(e){
     console.error(e);
@@ -5240,6 +5277,7 @@ ${fmt(cliList)}`;
     if(error){console.error(error);toast('Saved locally but DB write failed: '+error.message,'error');}
     await loadStrengthsInsights();
     renderStrengthsReports();
+    if(window._cpRefreshFn)window._cpRefreshFn();
     toast('Adaptation tips generated','success');
   }catch(e){
     console.error(e);
@@ -5278,6 +5316,7 @@ ${themes}`;
     if(error){console.error(error);toast('Saved locally but DB write failed: '+error.message,'error');}
     await loadStrengthsInsights();
     renderStrengthsReports();
+    if(window._cpRefreshFn)window._cpRefreshFn();
     toast('Personal Insights generated','success');
   }catch(e){
     console.error(e);
@@ -5695,6 +5734,7 @@ Themes both partners share: ${sharedNames.length?sharedNames.join(', '):'(none i
     if(error){console.error(error);toast('Saved locally but DB write failed: '+error.message,'error');}
     await loadStrengthsInsights();
     renderStrengthsReports();
+    if(window._cpRefreshFn)window._cpRefreshFn();
     toast('Couple Dynamics generated','success');
   }catch(e){
     console.error(e);
