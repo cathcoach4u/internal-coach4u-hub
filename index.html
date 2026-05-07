@@ -251,7 +251,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.81</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.82</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -2719,7 +2719,7 @@ function renderStrDomains(){
   });
   const totalDom=Object.values(domainCount).reduce((a,b)=>a+b,0)||1;
 
-  let html=`<div onclick="navTo('strdash')" style="font-size:13px;color:#8b5cf6;font-weight:600;cursor:pointer;margin-bottom:16px;display:inline-block;">&larr; Back to Strengths Hub</div>
+  let html=`<div onclick="navTo('strdash')" style="font-size:13px;color:#1e3a5f;font-weight:600;cursor:pointer;margin-bottom:16px;display:inline-flex;align-items:center;gap:6px;opacity:.8;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='.8'">&larr; Back to Strengths Hub</div>
     <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:16px;">
     <div style="font-family:'Quicksand','Inter',sans-serif;font-size:16px;font-weight:700;color:#1e3a5f;margin-bottom:6px;">Domain Balance — Top 10 themes</div>
     <div style="font-size:12px;color:#64748b;margin-bottom:14px;">${withStr.length} profiles &middot; ${totalDom} themes counted</div>
@@ -2762,7 +2762,7 @@ function renderStrUpload(){
   // contactReports is already ordered by created_at desc (or by insertion-prepend after upload).
   const recent=(contactReports||[]).slice(0,10);
   let html=`<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
-      <div onclick="navTo('strdash')" style="font-size:13px;color:#15803d;font-weight:600;cursor:pointer;display:inline-block;">&larr; Back to Strengths Hub</div>
+      <div onclick="navTo('strdash')" style="font-size:13px;color:#1e3a5f;font-weight:600;cursor:pointer;margin-bottom:16px;display:inline-flex;align-items:center;gap:6px;opacity:.8;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='.8'">&larr; Back to Strengths Hub</div>
       <button onclick="navTo('strengths')" style="background:#003366;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;">View all profiles &rarr;</button>
     </div>
     <div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #15803d;border-radius:12px;padding:18px 20px;margin-bottom:20px;">
@@ -2869,7 +2869,7 @@ function renderStrCodes(){
   const readyToFile=counts['Completed']||0;
   const inFlight=reqs.filter(r=>r.status!=='Filed').length;
 
-  let html=`<div onclick="navTo('strdash')" style="font-size:13px;color:#d97706;font-weight:600;cursor:pointer;margin-bottom:16px;display:inline-block;">&larr; Back to Strengths Hub</div>
+  let html=`<div onclick="navTo('strdash')" style="font-size:13px;color:#1e3a5f;font-weight:600;cursor:pointer;margin-bottom:16px;display:inline-flex;align-items:center;gap:6px;opacity:.8;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='.8'">&larr; Back to Strengths Hub</div>
     <div class="dash-cards" style="margin-bottom:16px;">
     <div class="dash-card" style="${awaitingPayment?'box-shadow:0 0 0 2px #d97706;':''}"><div class="dc-icon" style="background:#fef3c7;color:#d97706;">&#128176;</div><div class="dc-info"><h4>${awaitingPayment}</h4><p>Awaiting Payment</p></div></div>
     <div class="dash-card" style="${awaitingCompletion?'box-shadow:0 0 0 2px #7c3aed;':''}"><div class="dc-icon" style="background:#ede9fe;color:#7c3aed;">&#9203;</div><div class="dc-info"><h4>${awaitingCompletion}</h4><p>Awaiting Client</p></div></div>
@@ -3130,7 +3130,7 @@ function renderStrSop(){
   const list=items=>'<ul style="margin:6px 0 0 18px;padding:0;">'+items.map(i=>`<li style="margin-bottom:4px;">${i}</li>`).join('')+'</ul>';
 
   let html=`<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
-    <button onclick="navTo('strdash')" style="background:#16a34a;color:#fff;border:none;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">&larr; Back to Strengths Hub</button>
+    <div onclick="navTo('strdash')" style="font-size:13px;color:#1e3a5f;font-weight:600;cursor:pointer;margin-bottom:16px;display:inline-flex;align-items:center;gap:6px;opacity:.8;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='.8'">&larr; Back to Strengths Hub</div>
     <button onclick="navTo('strcodes')" style="background:#003366;color:#fff;border:none;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">Open Code Tracker &rarr;</button>
     <button onclick="window.print()" style="background:#fff;color:#1e3a5f;border:1px solid #e2e8f0;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">Print</button>
   </div>`;
@@ -4751,7 +4751,7 @@ function renderStrengths(){
   const totalContacts=(contacts||[]).length;
   const totalWithStr=(contacts||[]).filter(c=>c.strength_1).length;
 
-  let html=`<div onclick="navTo('strdash')" style="font-size:13px;color:#3b82f6;font-weight:600;cursor:pointer;margin-bottom:16px;display:inline-block;">&larr; Back to Strengths Hub</div>
+  let html=`<div onclick="navTo('strdash')" style="font-size:13px;color:#1e3a5f;font-weight:600;cursor:pointer;margin-bottom:16px;display:inline-flex;align-items:center;gap:6px;opacity:.8;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='.8'">&larr; Back to Strengths Hub</div>
   <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
     <div style="font-size:12px;color:#64748b;">Edit a contact's strengths in place, or upload a Gallup PDF to extract them automatically. Editing is locked behind the Edit button so they can't be changed by accident.</div>
     <label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#1e3a5f;font-weight:600;cursor:pointer;flex-shrink:0;">
@@ -5825,7 +5825,7 @@ function renderStrengthsReports(){
   const filteredClients=st.roleFilter?allClients.filter(c=>c.role===st.roleFilter):allClients;
   const allContactsSorted=[...(contacts||[])].filter(c=>c.strength_1).sort((a,b)=>((a.first_name+' '+a.last_name)).localeCompare(b.first_name+' '+b.last_name));
 
-  let html=`<div onclick="navTo('strdash')" style="font-size:13px;color:#0891b2;font-weight:600;cursor:pointer;margin-bottom:16px;display:inline-block;">&larr; Back to Strengths Hub</div>
+  let html=`<div onclick="navTo('strdash')" style="font-size:13px;color:#1e3a5f;font-weight:600;cursor:pointer;margin-bottom:16px;display:inline-flex;align-items:center;gap:6px;opacity:.8;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='.8'">&larr; Back to Strengths Hub</div>
   <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px 20px;margin-bottom:16px;">
     <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:10px;">Choose a Report</div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;align-items:center;">
