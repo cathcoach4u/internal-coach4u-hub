@@ -251,7 +251,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.75</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.76</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -1533,7 +1533,7 @@ const CS_DOMAINS={
   Analytical:'#00945B',Context:'#00945B',Futuristic:'#00945B',Ideation:'#00945B',Input:'#00945B',Intellection:'#00945B',Learner:'#00945B',Strategic:'#00945B'
 };
 function csColor(name){return CS_DOMAINS[name]||'#64748b';}
-function csPill(rank,name){return `<span style="background:${csColor(name)};color:#fff;padding:3px 10px;border-radius:2px;font-size:11px;font-weight:600;">#${rank} ${name}</span>`;}
+function csPill(rank,name){const hasDesc=!!CS_THEME_DESC[name];return `<span onmouseenter="${hasDesc?'showCsTip(\''+name+'\',this)':''}" onmouseleave="${hasDesc?'hideCsTip()':''}" style="background:${csColor(name)};color:#fff;padding:3px 10px;border-radius:2px;font-size:11px;font-weight:600;cursor:${hasDesc?'help':'default'};">#${rank} ${name}${hasDesc?' &#128269;':''}</span>`;}
 
 // CliftonStrengths theme descriptions (from cr2e2_cliftonstrengthsthemes.csv reference)
 const CS_THEME_DESC={
@@ -4265,12 +4265,7 @@ window.uploadReport=async function(contactId,reportType,file,input){
 
   // Delete existing report of same type
   await supabase.from('contact_reports').delete().eq('contact_id',contactId).eq('report_type',reportType);
-  // Insert new — try with created_at, fall back without if column missing (42703)
-  const nowIso=new Date().toISOString();
-  let ins=await supabase.from('contact_reports').insert({contact_id:contactId,report_type:reportType,filename:file.name,url:url,created_at:nowIso}).select().single();
-  if(ins.error&&ins.error.code==='42703'){
-    ins=await supabase.from('contact_reports').insert({contact_id:contactId,report_type:reportType,filename:file.name,url:url}).select().single();
-  }
+  const ins=await supabase.from('contact_reports').insert({contact_id:contactId,report_type:reportType,filename:file.name,url:url}).select().single();
   if(ins.error){toast('Error saving report: '+ins.error.message,'error');return;}
   await loadContactReports();
   // Belt-and-braces: ensure the just-uploaded row is at the front of contactReports
@@ -11766,6 +11761,21 @@ const CONNECTION_STAGE_COLORS={disconnected:'#dc2626',reactive:'#ea580c',intenti
 
 })();
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js');}
+window.showCsTip=function(name,el){
+  const tip=document.getElementById('csTooltipEl');
+  if(!tip||!CS_THEME_DESC[name]) return;
+  tip.innerHTML=`<div style="font-size:12px;font-weight:700;color:#0D9488;margin-bottom:4px;">${name}</div><div style="font-size:12px;color:#374151;line-height:1.5;">${CS_THEME_DESC[name]}</div>`;
+  const r=el.getBoundingClientRect();
+  tip.style.display='block';
+  const tw=Math.min(280,window.innerWidth-16);
+  tip.style.width=tw+'px';
+  let left=r.left+window.scrollX;
+  if(left+tw>window.innerWidth-8) left=window.innerWidth-tw-8;
+  tip.style.left=Math.max(8,left)+'px';
+  tip.style.top=(r.bottom+window.scrollY+6)+'px';
+};
+window.hideCsTip=function(){const tip=document.getElementById('csTooltipEl');if(tip)tip.style.display='none';};
 </script>
+<div id="csTooltipEl" style="display:none;position:fixed;z-index:9999;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px;box-shadow:0 8px 24px rgba(0,0,0,.12);pointer-events:none;max-width:280px;"></div>
 </body>
 </html>
