@@ -251,7 +251,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.53.7</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.54.0</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -467,7 +467,10 @@ if('serviceWorker' in navigator){
       <div id="invoiceContent"></div>
     </div>
 
-    <!-- STRENGTHS DASHBOARD -->
+    <div class="screen" id="screen-sms">
+      <div id="smsContent"></div>
+    </div>
+
     <div class="screen" id="screen-strdash">
       <div id="strDashContent"></div>
     </div>
@@ -1585,6 +1588,8 @@ SELF-CHECK: Would I say this out loud? Is the next step clear? Does it reduce co
 // ── DATA ──
 let contacts = [];
 let clients = [];
+let smsMessages = [];
+let smsSelectedContactId = null;
 let tasks = [];
 let referrals = [];
 let pulseResults = [];
@@ -1956,7 +1961,7 @@ async function loadAgents(){
 }
 async function loadAll(){
   try{
-    await Promise.all([loadContacts(), loadClients(), loadTasks(), loadProspects(), loadProspectNotes(), loadReferrers(), loadRefPayments(), loadRenewals(), loadContactReports(), loadStrengthsInsights(), loadGallupRequests(), loadTrials(), loadTaskLogs(), loadFinanceTransactions(), loadBills(), loadIntakeSubmissions(), loadPulseResults(), loadBrainPulseSubmissions(), loadConnectionPulseSubmissions(), loadAgents()]);
+    await Promise.all([loadContacts(), loadClients(), loadTasks(), loadProspects(), loadProspectNotes(), loadReferrers(), loadRefPayments(), loadRenewals(), loadContactReports(), loadStrengthsInsights(), loadGallupRequests(), loadTrials(), loadTaskLogs(), loadFinanceTransactions(), loadBills(), loadIntakeSubmissions(), loadPulseResults(), loadBrainPulseSubmissions(), loadConnectionPulseSubmissions(), loadAgents(), loadSmsMessages()]);
     await bootstrapInAppAgents();
   }catch(e){
     console.error('loadAll error:',e);
@@ -1975,7 +1980,7 @@ window.navTo = function(tab,btn){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+tab).classList.add('active');
   window.scrollTo(0,0);
-  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ Hub',thqintake:'Intake Forms',strdash:'Strengths Hub',opsdash:'Admin',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Profiles',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Task Management',playbook:'Lou\'s Playbook',quicklinks:'Quick Links',itprojects:'IT Projects',agents:'Agents',writingpartner:'Writing Partner',findash:'Finance',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fintxns:'Transactions',findev:'Development Business',thqbrainpulse:'Brain Pulse',clibrainpulse:'Brain Pulse',cliconnection:'Connection Pulse',thqpulse:'SAFE Pulse',clipulse:'SAFE Pulse',pulsesdash:'Pulses',couplesintake:'Couples Intake',couplesdash:'Couples Hub',couplestimelines:'Therapy Timelines',couplesbetrayal:'Betrayal First Aid',itdash:'IT',resourcesdash:'Resources',agentsai:'AI Strategy',strreports:'Strengths Reports',strdomains:'Domain Balance',strupload:'Upload Report',strcodes:'Gallup Code Tracker',strsop:'Gallup Workflow SOP'};
+  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ Hub',thqintake:'Intake Forms',strdash:'Strengths Hub',opsdash:'Admin',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',sms:'SMS',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Profiles',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Task Management',playbook:'Lou\'s Playbook',quicklinks:'Quick Links',itprojects:'IT Projects',agents:'Agents',writingpartner:'Writing Partner',findash:'Finance',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fintxns:'Transactions',findev:'Development Business',thqbrainpulse:'Brain Pulse',clibrainpulse:'Brain Pulse',cliconnection:'Connection Pulse',thqpulse:'SAFE Pulse',clipulse:'SAFE Pulse',pulsesdash:'Pulses',couplesintake:'Couples Intake',couplesdash:'Couples Hub',couplestimelines:'Therapy Timelines',couplesbetrayal:'Betrayal First Aid',itdash:'IT',resourcesdash:'Resources',agentsai:'AI Strategy',strreports:'Strengths Reports',strdomains:'Domain Balance',strupload:'Upload Report',strcodes:'Gallup Code Tracker',strsop:'Gallup Workflow SOP'};
   document.getElementById('pageTitle').textContent=titles[tab]||'Coach4U';
   // Sync area tab
   const area=pageToArea[tab]||'home';
@@ -2014,6 +2019,7 @@ window.navTo = function(tab,btn){
   if(tab==='masterlist') renderMasterList();
   if(tab==='clients') renderClients();
   if(tab==='clinvoices') renderInvoices();
+  if(tab==='sms') renderSms();
   if(tab==='prospects') renderProspects();
   if(tab==='referrals') renderReferrals();
   if(tab==='thqtrials') renderThqTrials();
@@ -2062,7 +2068,7 @@ window.goToClient=function(clientId){
 // ── AREA TABS & SIDEBAR ──
 const areaConfig={
   home:{label:'Home',pages:[{id:'dashboard',icon:'&#9776;',label:'Dashboard'}]},
-  crm:{label:'CRM',pages:[{id:'crmdash',icon:'&#128200;',label:'Dashboard'},{id:'masterlist',icon:'&#128209;',label:'Master List'},{id:'prospects',icon:'&#128203;',label:'Prospect List'},{id:'clidash',icon:'&#129309;',label:'Clients Dashboard'},{id:'clients',icon:'&#128101;',label:'Client List'},{id:'thqintake',icon:'&#128221;',label:'Intake Forms'},{id:'clinvoices',icon:'&#128206;',label:'Invoices'}]},
+  crm:{label:'CRM',pages:[{id:'crmdash',icon:'&#128200;',label:'Dashboard'},{id:'masterlist',icon:'&#128209;',label:'Master List'},{id:'prospects',icon:'&#128203;',label:'Prospect List'},{id:'clidash',icon:'&#129309;',label:'Clients Dashboard'},{id:'clients',icon:'&#128101;',label:'Client List'},{id:'thqintake',icon:'&#128221;',label:'Intake Forms'},{id:'clinvoices',icon:'&#128206;',label:'Invoices'},{id:'sms',icon:'&#128244;',label:'SMS'}]},
   referrers:{label:'Referrers',pages:[{id:'referrals',icon:'&#128200;',label:'Dashboard'},{id:'refpayments',icon:'&#128176;',label:'Payments'}]},
   pulses:{label:'Pulses',pages:[{id:'pulsesdash',icon:'&#128200;',label:'Dashboard'},{id:'clipulse',icon:'&#128147;',label:'SAFE Pulse'},{id:'clibrainpulse',icon:'&#129504;',label:'Brain Pulse'},{id:'cliconnection',icon:'&#128151;',label:'Connection Pulse'}]},
   hubs:{label:'Hubs',pages:[{id:'modulesdash',icon:'&#128200;',label:'Dashboard'},{id:'couplesdash',icon:'&#128149;',label:'Couples Hub'},{id:'thqdash',icon:'&#128170;',label:'ThriveHQ Hub'},{id:'strdash',icon:'&#127919;',label:'Strengths Hub'}]},
@@ -4566,6 +4572,164 @@ function renderInvoices(){
   if(!active.length&&!other.length) html='<div style="padding:30px;text-align:center;color:#94a3b8;">No clients found.</div>';
   document.getElementById('invoiceContent').innerHTML=html;
 }
+
+// ── SMS ──────────────────────────────────────────────────────────────────────
+const SUPABASE_EDGE_URL='https://uoixetfvboevjxlkfyqy.supabase.co/functions/v1';
+
+async function loadSmsMessages(){
+  const {data,error}=await supabase.from('sms_messages').select('*').order('created_at',{ascending:true});
+  if(data) smsMessages=data;
+  if(error&&error.code!=='42P01') console.error('loadSmsMessages:',error);
+}
+
+function getSmsSession(){
+  try{return supabase.auth.getSession();}catch(e){return null;}
+}
+
+function renderSms(){
+  const el=document.getElementById('smsContent');
+  if(!el) return;
+
+  // Build contact list — contacts that have sms history, plus search
+  const smsContactIds=[...new Set(smsMessages.map(m=>m.contact_id).filter(Boolean))];
+  const smsContacts=contacts.filter(c=>smsContactIds.includes(c.id));
+  const allContacts=[...contacts].filter(c=>c.first_name||c.last_name).sort((a,b)=>(a.first_name+' '+a.last_name).localeCompare(b.first_name+' '+b.last_name));
+
+  const thread=smsSelectedContactId?smsMessages.filter(m=>m.contact_id===smsSelectedContactId):[];
+  const selContact=contacts.find(c=>c.id===smsSelectedContactId);
+
+  el.innerHTML=`
+<div style="display:grid;grid-template-columns:260px 1fr;height:calc(100vh - 120px);gap:0;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;background:#fff;">
+
+  <!-- Contact sidebar -->
+  <div style="border-right:1px solid #e2e8f0;display:flex;flex-direction:column;background:#f8fafc;">
+    <div style="padding:12px;border-bottom:1px solid #e2e8f0;">
+      <input id="smsContactSearch" oninput="renderSmsContactList()" placeholder="Search contacts…" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;">
+    </div>
+    <div id="smsContactList" style="flex:1;overflow-y:auto;"></div>
+  </div>
+
+  <!-- Thread panel -->
+  <div style="display:flex;flex-direction:column;">
+    <!-- Thread header -->
+    <div style="padding:14px 18px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:10px;min-height:56px;">
+      ${selContact?`
+        <div style="flex:1;">
+          <div style="font-weight:700;font-size:14px;color:#1e3a5f;">${selContact.first_name||''} ${selContact.last_name||''}</div>
+          <div style="font-size:11px;color:#64748b;">${selContact.phone||'No phone'}</div>
+        </div>
+        ${selContact.sms_opted_out?'<span style="font-size:11px;background:#fee2e2;color:#dc2626;padding:3px 10px;border-radius:99px;font-weight:700;">OPTED OUT</span>':''}
+      `:'<div style="color:#94a3b8;font-size:13px;">Select a contact to start messaging</div>'}
+    </div>
+
+    <!-- Messages -->
+    <div id="smsThread" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;background:#f8fafc;">
+      ${thread.length===0&&smsSelectedContactId?'<div style="text-align:center;color:#94a3b8;font-size:13px;padding-top:30px;">No messages yet</div>':''}
+      ${thread.map(m=>{
+        const out=m.direction==='outbound';
+        const time=new Date(m.created_at).toLocaleString('en-AU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+        return `<div style="display:flex;justify-content:${out?'flex-end':'flex-start'};">
+          <div style="max-width:70%;background:${out?'#1e3a5f':'#fff'};color:${out?'#fff':'#1e293b'};border:${out?'none':'1px solid #e2e8f0'};border-radius:${out?'12px 12px 4px 12px':'12px 12px 12px 4px'};padding:10px 14px;font-size:13px;line-height:1.5;">
+            ${m.body.replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+            <div style="font-size:10px;opacity:.6;margin-top:4px;text-align:right;">${time}</div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+
+    <!-- Compose -->
+    ${smsSelectedContactId?`
+    <div style="padding:12px 14px;border-top:1px solid #e2e8f0;background:#fff;">
+      ${selContact?.sms_opted_out?
+        '<div style="text-align:center;color:#dc2626;font-size:13px;padding:8px;">This contact has opted out of SMS — you cannot send them messages.</div>'
+        :`<div style="display:flex;gap:8px;align-items:flex-end;">
+          <textarea id="smsCompose" placeholder="Type a message…" rows="2" style="flex:1;padding:10px 12px;border:1px solid #e2e8f0;border-radius:10px;font-size:14px;font-family:inherit;resize:none;" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendSms();}"></textarea>
+          <button onclick="sendSms()" style="background:#1e3a5f;color:#fff;border:none;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">Send &#8594;</button>
+        </div>`}
+    </div>
+    `:''}
+  </div>
+</div>`;
+
+  renderSmsContactList();
+
+  // Scroll thread to bottom
+  const threadEl=document.getElementById('smsThread');
+  if(threadEl) threadEl.scrollTop=threadEl.scrollHeight;
+}
+
+window.renderSmsContactList=function(){
+  const search=(document.getElementById('smsContactSearch')?.value||'').toLowerCase();
+  const listEl=document.getElementById('smsContactList');
+  if(!listEl) return;
+
+  const allContacts=[...contacts].filter(c=>c.first_name||c.last_name).sort((a,b)=>(a.first_name+' '+a.last_name).localeCompare(b.first_name+' '+b.last_name));
+  const smsContactIds=[...new Set(smsMessages.map(m=>m.contact_id).filter(Boolean))];
+
+  // Show contacts with history first, then all (filtered by search)
+  const withHistory=allContacts.filter(c=>smsContactIds.includes(c.id)&&(!search||(c.first_name+' '+c.last_name).toLowerCase().includes(search)));
+  const withoutHistory=allContacts.filter(c=>!smsContactIds.includes(c.id)&&search&&(c.first_name+' '+c.last_name).toLowerCase().includes(search));
+  const shown=[...withHistory,...withoutHistory];
+
+  if(!shown.length){listEl.innerHTML='<div style="padding:16px;font-size:13px;color:#94a3b8;text-align:center;">No contacts</div>';return;}
+
+  listEl.innerHTML=shown.map(c=>{
+    const name=(c.first_name||'')+' '+(c.last_name||'');
+    const last=smsMessages.filter(m=>m.contact_id===c.id).slice(-1)[0];
+    const preview=last?last.body.slice(0,35)+(last.body.length>35?'…':''):'';
+    const sel=c.id===smsSelectedContactId;
+    return `<div onclick="selectSmsContact('${c.id}')" style="padding:12px 14px;border-bottom:1px solid #f1f5f9;cursor:pointer;background:${sel?'#e8f4ff':'transparent'};display:flex;align-items:center;gap:10px;" onmouseover="this.style.background='${sel?'#e8f4ff':'#f1f5f9'}'" onmouseout="this.style.background='${sel?'#e8f4ff':'transparent'}'">
+      <div style="width:36px;height:36px;border-radius:50%;background:#1e3a5f;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;">${(c.first_name||'?')[0].toUpperCase()}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:600;font-size:13px;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name.trim()}${c.sms_opted_out?' <span style="font-size:10px;color:#dc2626;">(OUT)</span>':''}</div>
+        ${preview?`<div style="font-size:11px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${preview}</div>`:'<div style="font-size:11px;color:#94a3b8;">No messages</div>'}
+      </div>
+    </div>`;
+  }).join('');
+};
+
+window.selectSmsContact=function(id){
+  smsSelectedContactId=id;
+  renderSms();
+};
+
+window.sendSms=async function(){
+  const compose=document.getElementById('smsCompose');
+  const body=compose?.value.trim();
+  if(!body){toast('Type a message first','error');return;}
+  const contact=contacts.find(c=>c.id===smsSelectedContactId);
+  if(!contact){toast('No contact selected','error');return;}
+  if(!contact.phone){toast('This contact has no phone number','error');return;}
+  if(contact.sms_opted_out){toast('Contact has opted out of SMS','error');return;}
+
+  const btn=document.querySelector('#smsContent button[onclick="sendSms()"]');
+  if(btn){btn.disabled=true;btn.textContent='Sending…';}
+
+  try{
+    const {data:{session}}=await supabase.auth.getSession();
+    if(!session) throw new Error('Not authenticated');
+    const res=await fetch(`${SUPABASE_EDGE_URL}/send-sms`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},
+      body:JSON.stringify({to:contact.phone,body,contact_id:contact.id})
+    });
+    const json=await res.json();
+    if(!res.ok) throw new Error(json.error||'Send failed');
+    if(compose) compose.value='';
+    await loadSmsMessages();
+    renderSms();
+    toast('Message sent','success');
+  }catch(e){
+    toast('Send failed: '+e.message,'error');
+    if(btn){btn.disabled=false;btn.textContent='Send →';}
+  }
+};
+
+window.openSmsForContact=function(contactId){
+  smsSelectedContactId=contactId;
+  navTo('sms');
+};
+// ─────────────────────────────────────────────────────────────────────────────
 
 window.openClientModal=function(id){
   const c=id?clients.find(x=>x.id===id):null;
