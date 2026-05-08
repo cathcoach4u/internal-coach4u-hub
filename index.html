@@ -251,7 +251,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.52.3</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.52.4</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -2601,7 +2601,8 @@ function renderResourcesDash(){
   const thrivehqLinks=[
     {label:'Links Page',url:'https://cathcoach4u.github.io/yourthrivehqcoach/links.html',icon:'&#128279;',desc:'ThriveHQ client resource hub'},
     {label:'Weekly Coaching Flow',url:'https://cathcoach4u.github.io/yourthrivehqcoach/weekly-coaching-flow.html',icon:'&#128197;',desc:'Week-by-week coaching flow guide'},
-    {label:'Session Rhythm',url:'https://cathcoach4u.github.io/yourthrivehqcoach/session-rhythm.html',icon:'&#127381;',desc:'Session structure and rhythm reference'}
+    {label:'Session Rhythm',url:'https://cathcoach4u.github.io/yourthrivehqcoach/session-rhythm.html',icon:'&#127381;',desc:'Session structure and rhythm reference'},
+    {label:'Body Doubling',url:'https://cathcoach4u.github.io/yourthrivehqcoach/body-doubling.html',icon:'&#128101;',desc:'Body doubling session info for ThriveHQ clients'}
   ];
   function renderExtLinkRow(l){
     return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #f1f5f9;border-radius:8px;margin-bottom:6px;flex-wrap:wrap;">
