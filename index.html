@@ -251,7 +251,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.53.0</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.53.1</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -2880,6 +2880,22 @@ function renderStrCodes(){
 
   // Inline quick-entry form
   const sopContacts=[...contacts].filter(c=>c.first_name||c.last_name).sort((a,b)=>(a.first_name+' '+a.last_name).localeCompare(b.first_name+' '+b.last_name));
+
+  // Generate Gallup Request Link panel
+  const allClientsForLink=[...clients].filter(c=>c.relationship_name).sort((a,b)=>a.relationship_name.localeCompare(b.relationship_name));
+  html+=`<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:16px 18px;margin-bottom:16px;">
+    <div style="font-size:13px;font-weight:700;color:#15803d;margin-bottom:10px;">&#128279; Generate Public Gallup Request Link</div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <select id="gallupLinkClientSel" onchange="updateGallupLinkPreview()" style="flex:1;min-width:200px;padding:9px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
+        <option value="">— Select a client —</option>
+        ${allClientsForLink.map(c=>`<option value="${c.id}">${c.relationship_name}${c.role?' ('+c.role+')':''}</option>`).join('')}
+      </select>
+      <button onclick="copyGallupRequestLink()" style="background:#15803d;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">&#128203; Copy</button>
+      <button onclick="openGallupRequestLink()" style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">Open &#8599;</button>
+    </div>
+    <div id="gallupLinkPreview" style="margin-top:8px;font-size:11px;color:#64748b;word-break:break-all;display:none;"></div>
+  </div>`;
+
   html+=`<div style="background:#fff;border:2px solid #003366;border-radius:14px;padding:18px 20px;margin-bottom:16px;">
     <div style="font-family:'Quicksand','Inter',sans-serif;font-size:14px;font-weight:700;color:#003366;margin-bottom:12px;">Log a New Code Request</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:10px;">
@@ -3016,6 +3032,25 @@ window.openGallupRequest=function(id){
   document.getElementById('gallupReqCodeValue').value=r?r.code_value||'':'';
   document.getElementById('gallupReqNotes').value=r?r.notes||'':'';
   document.getElementById('gallupReqModal').classList.add('open');
+};
+window.updateGallupLinkPreview=function(){
+  const sel=document.getElementById('gallupLinkClientSel');
+  const id=sel?sel.value:'';
+  const preview=document.getElementById('gallupLinkPreview');
+  if(!id||!preview){if(preview)preview.style.display='none';return;}
+  preview.textContent=buildPublicGallupUrl(id);
+  preview.style.display='block';
+};
+window.copyGallupRequestLink=function(){
+  const id=document.getElementById('gallupLinkClientSel')?.value;
+  if(!id){toast('Select a client first','error');return;}
+  const url=buildPublicGallupUrl(id);
+  navigator.clipboard.writeText(url).then(()=>toast('Link copied','success')).catch(()=>toast('Copy failed','error'));
+};
+window.openGallupRequestLink=function(){
+  const id=document.getElementById('gallupLinkClientSel')?.value;
+  if(!id){toast('Select a client first','error');return;}
+  window.open(buildPublicGallupUrl(id),'_blank');
 };
 window.saveGallupRequest=async function(){
   const id=document.getElementById('gallupReqId').value;
