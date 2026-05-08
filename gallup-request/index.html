@@ -60,13 +60,17 @@ function showError(msg){
 function escHtml(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 
 async function init(){
-  if(!orgId){showError('No organisation specified in the link.');return;}
-  const {data: client, error} = await supabase.from('clients').select('id,relationship_name,role,status').eq('id',orgId).maybeSingle();
-  if(error){showError('Could not look up the organisation. Try again later.');return;}
-  if(!client){showError('Organisation not found.');return;}
-  if(client.role !== 'Organisation'){showError('This link is for organisations only.');return;}
-  if(client.status === 'Completed'){showError('This organisation is no longer accepting requests.');return;}
-  renderForm(client);
+  if(!orgId){showError('No client specified in the link.');return;}
+  try{
+    const {data: client, error} = await supabase.from('clients').select('id,relationship_name,role,status').eq('id',orgId).maybeSingle();
+    if(error){showError('Could not look up the client. Try again later.');return;}
+    if(!client){showError('Client not found.');return;}
+    if(client.status === 'Completed'){showError('This link is no longer active.');return;}
+    renderForm(client);
+  }catch(e){
+    showError('Something went wrong. Please try again later.');
+    console.error('Gallup init error:',e);
+  }
 }
 
 function renderForm(client){
@@ -74,7 +78,7 @@ function renderForm(client){
     <div class="card">
       <h2>Hi from Coach4U</h2>
       <p>Use this form to request a Gallup CliftonStrengths assessment code. Cath will set up the code and email it to you.</p>
-      <div class="org-pill">For: ${escHtml(client.relationship_name)}</div>
+      <div class="org-pill">&#128204; ${escHtml(client.relationship_name)}</div>
     </div>
     <div class="form-card">
       <div class="form-group">
