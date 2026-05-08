@@ -251,7 +251,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.98</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.51.99</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -3302,6 +3302,30 @@ window.copyDailySummary=function(){
   copyText(summary,'Daily summary');
 };
 
+window.sendCompletedToTeams=async function(){
+  const today=new Date().toISOString().split('T')[0];
+  const dateStr=new Date().toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long'});
+  const sections=buildPlaybookSections(today);
+  const completed=sections.find(s=>s.key==='completed');
+  if(!completed||!completed.items.length){toast('Nothing completed today yet','info');return;}
+  const lines=completed.items.map(t=>'✅ '+t.title).join('\n');
+  const msg='Completed today ('+dateStr+'):\n\n'+lines;
+  const ok=await postToTeams('Daily Update','Complete','Normal','NOTE',msg,'Lou',false);
+  if(ok) toast('Sent to Teams','success');
+  else toast('Teams webhook not set up — check Admin settings','error');
+};
+window.sendLogToTeams=async function(){
+  const now=new Date();
+  const dateStr=now.toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long'});
+  const todayStr=now.toISOString().split('T')[0];
+  const entries=getPlaybookLog(todayStr);
+  if(!entries.length){toast('Nothing in today\'s log yet','info');return;}
+  const lines=entries.map(e=>'✅ '+e.time+' — '+e.text).join('\n');
+  const msg='Work log ('+dateStr+'):\n\n'+lines;
+  const ok=await postToTeams('Daily Work Log','Complete','Normal','NOTE',msg,'Lou',false);
+  if(ok) toast('Log sent to Teams','success');
+  else toast('Teams webhook not set up — check Admin settings','error');
+};
 window.copyPlaybookSection=function(key){
   const today=new Date().toISOString().split('T')[0];
   const sections=buildPlaybookSections(today);
@@ -3443,12 +3467,17 @@ function renderPlaybook(){
     </div>`;
 
   // Category sections
+  const hasTeams=!!getTeamsWebhook();
   sections.forEach(s=>{
     if(!s.items.length) return;
+    const isCompleted=s.key==='completed';
     html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid ${s.color};border-radius:10px;padding:14px 16px;margin-bottom:10px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:6px;flex-wrap:wrap;">
         <span style="font-weight:700;font-size:14px;color:${s.color};">${s.icon} ${s.label} <span style="font-weight:500;font-size:12px;color:#94a3b8;">(${s.items.length})</span></span>
-        <button onclick="copyPlaybookSection('${s.key}')" style="background:none;border:1px solid #e2e8f0;border-radius:6px;padding:4px 10px;font-size:11px;color:#64748b;cursor:pointer;font-family:inherit;font-weight:600;white-space:nowrap;" onmouseover="this.style.background='#f0f6ff';this.style.color='#2563eb'" onmouseout="this.style.background='none';this.style.color='#64748b'">&#128203; Copy</button>
+        <div style="display:flex;gap:6px;">
+          <button onclick="copyPlaybookSection('${s.key}')" style="background:none;border:1px solid #e2e8f0;border-radius:6px;padding:4px 10px;font-size:11px;color:#64748b;cursor:pointer;font-family:inherit;font-weight:600;white-space:nowrap;" onmouseover="this.style.background='#f0f6ff';this.style.color='#2563eb'" onmouseout="this.style.background='none';this.style.color='#64748b'">&#128203; Copy</button>
+          ${isCompleted&&hasTeams?`<button onclick="sendCompletedToTeams()" style="background:#6264a7;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;">&#128172; Send to Teams</button>`:''}
+        </div>
       </div>
       ${s.items.map(t=>{
         const st=t.status||'Not Started';
@@ -3469,7 +3498,10 @@ function renderPlaybook(){
         <span style="font-weight:700;font-size:14px;color:#0891b2;">&#128196; Today's Work Log</span>
         <span style="font-size:11px;color:#94a3b8;margin-left:8px;">Resets each morning &middot; ${logEntries.length} entr${logEntries.length===1?'y':'ies'}</span>
       </div>
-      ${logEntries.length?`<button onclick="copyPlaybookLog()" style="background:none;border:1px solid #e2e8f0;border-radius:6px;padding:4px 10px;font-size:11px;color:#64748b;cursor:pointer;font-weight:600;" onmouseover="this.style.background='#f0f6ff';this.style.color='#2563eb'" onmouseout="this.style.background='none';this.style.color='#64748b'">&#128203; Copy log</button>`:''}
+      ${logEntries.length?`<div style="display:flex;gap:6px;">
+        <button onclick="copyPlaybookLog()" style="background:none;border:1px solid #e2e8f0;border-radius:6px;padding:4px 10px;font-size:11px;color:#64748b;cursor:pointer;font-weight:600;" onmouseover="this.style.background='#f0f6ff';this.style.color='#2563eb'" onmouseout="this.style.background='none';this.style.color='#64748b'">&#128203; Copy log</button>
+        ${hasTeams?`<button onclick="sendLogToTeams()" style="background:#6264a7;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;">&#128172; Send to Teams</button>`:''}
+      </div>`:''}
     </div>
     <div style="display:flex;gap:8px;margin-bottom:${logEntries.length?'12':'0'}px;">
       <input id="playbookLogInput" placeholder="What did you just complete? Press Enter or Add..." onkeydown="playbookLogKeydown(event)" style="flex:1;padding:9px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;">
