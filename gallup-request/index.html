@@ -47,28 +47,39 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#f0f4f
 <script>
 const SUPABASE_URL = 'https://uoixetfvboevjxlkfyqy.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_m3qgSGvWF0n2TePf6vhqMw_9obUvJEJ';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-const params = new URLSearchParams(window.location.search);
-const orgId = params.get('org');
 const root = document.getElementById('root');
 
 function showError(msg){
-  root.innerHTML = `<div class="error-card"><strong>This link isn't active.</strong><br>${msg}<br><br>Contact Cath at Coach4U if you think this is wrong.</div>`;
+  root.innerHTML = `<div class="error-card"><strong>Oops.</strong><br>${msg}<br><br>Contact Cath at Coach4U if you think this is wrong.</div>`;
 }
 
 function escHtml(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 
+// Check library loaded
+if(!window.supabase){
+  showError('Could not load the required library. Please check your connection and refresh.');
+  throw new Error('Supabase not loaded');
+}
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const params = new URLSearchParams(window.location.search);
+const orgId = params.get('org');
+
+// Timeout fallback — show error if nothing renders within 12s
+const _loadTimer = setTimeout(()=>showError('Request timed out. Please refresh and try again.'), 12000);
+
 async function init(){
-  if(!orgId){showError('No client specified in the link.');return;}
+  if(!orgId){clearTimeout(_loadTimer);showError('No client link specified — please use the link Cath provided.');return;}
   try{
     const {data: client, error} = await supabase.from('clients').select('id,relationship_name,role,status').eq('id',orgId).maybeSingle();
-    if(error){showError('Could not look up the client. Try again later.');return;}
-    if(!client){showError('Client not found.');return;}
+    clearTimeout(_loadTimer);
+    if(error){showError('Could not load client details ('+error.message+'). Try again later.');return;}
+    if(!client){showError('Client not found. The link may be incorrect.');return;}
     if(client.status === 'Completed'){showError('This link is no longer active.');return;}
     renderForm(client);
   }catch(e){
-    showError('Something went wrong. Please try again later.');
+    clearTimeout(_loadTimer);
+    showError('Something went wrong ('+e.message+'). Please refresh and try again.');
     console.error('Gallup init error:',e);
   }
 }
