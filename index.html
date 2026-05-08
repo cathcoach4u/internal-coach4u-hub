@@ -251,7 +251,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.52.0</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.52.1</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -3302,41 +3302,35 @@ window.copyDailySummary=function(){
   copyText(summary,'Daily summary');
 };
 
-window.sendCompletedToTeams=async function(){
-  if(!getTeamsWebhook()){
-    const url=prompt('Paste your Teams webhook URL to set it up:');
-    if(!url||!url.startsWith('http')){return;}
-    setTeamsWebhook(url);
-    toast('Webhook saved — sending now...','info');
+function getTeamsChatEmail(){return localStorage.getItem('coach4u_teams_chat_email')||'';}
+function setTeamsChatEmail(e){localStorage.setItem('coach4u_teams_chat_email',e);}
+function openTeamsChat(msg){
+  let email=getTeamsChatEmail();
+  if(!email){
+    email=(prompt('Enter the Teams email address to send to (e.g. cath@coach4u.com.au):')||'').trim();
+    if(!email||!email.includes('@')) return;
+    setTeamsChatEmail(email);
   }
+  const url='https://teams.microsoft.com/l/chat/0/0?users='+encodeURIComponent(email)+'&message='+encodeURIComponent(msg);
+  window.open(url,'_blank');
+}
+window.sendCompletedToTeams=function(){
   const today=new Date().toISOString().split('T')[0];
   const dateStr=new Date().toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long'});
   const sections=buildPlaybookSections(today);
   const completed=sections.find(s=>s.key==='completed');
   if(!completed||!completed.items.length){toast('Nothing completed today yet','info');return;}
   const lines=completed.items.map(t=>'✅ '+t.title).join('\n');
-  const msg='Completed today ('+dateStr+'):\n\n'+lines;
-  const ok=await postToTeams('Daily Update','Complete','Normal','NOTE',msg,'Lou',false);
-  if(ok) toast('Sent to Teams','success');
-  else toast('Failed to send — check your webhook URL in Admin settings','error');
+  openTeamsChat('Completed today ('+dateStr+'):\n\n'+lines);
 };
-window.sendLogToTeams=async function(){
-  if(!getTeamsWebhook()){
-    const url=prompt('Paste your Teams webhook URL to set it up:');
-    if(!url||!url.startsWith('http')){return;}
-    setTeamsWebhook(url);
-    toast('Webhook saved — sending now...','info');
-  }
+window.sendLogToTeams=function(){
   const now=new Date();
   const dateStr=now.toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long'});
   const todayStr=now.toISOString().split('T')[0];
   const entries=getPlaybookLog(todayStr);
   if(!entries.length){toast('Nothing in today\'s log yet','info');return;}
   const lines=entries.map(e=>'✅ '+e.time+' — '+e.text).join('\n');
-  const msg='Work log ('+dateStr+'):\n\n'+lines;
-  const ok=await postToTeams('Daily Work Log','Complete','Normal','NOTE',msg,'Lou',false);
-  if(ok) toast('Log sent to Teams','success');
-  else toast('Failed to send — check your webhook URL in Admin settings','error');
+  openTeamsChat('Work log ('+dateStr+'):\n\n'+lines);
 };
 window.copyPlaybookSection=function(key){
   const today=new Date().toISOString().split('T')[0];
