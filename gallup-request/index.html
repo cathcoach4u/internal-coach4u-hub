@@ -80,10 +80,6 @@ function renderForm(){
         <label>Mobile (optional)</label>
         <input id="fPhone" type="tel" placeholder="04xx xxx xxx" autocomplete="tel">
       </div>
-      <div class="form-group">
-        <label>Anything Cath should know? (optional)</label>
-        <textarea id="fNotes" placeholder="e.g. timing, accessibility needs, your role"></textarea>
-      </div>
       <button class="submit-btn" id="submitBtn" onclick="submitForm()">Send request</button>
     </div>
   `;
@@ -97,7 +93,7 @@ window.submitForm = async function(){
   const name = document.getElementById('fName').value.trim();
   const email = document.getElementById('fEmail').value.trim();
   const phone = document.getElementById('fPhone').value.trim();
-  const notes = document.getElementById('fNotes').value.trim();
+  const notes = '';
   if(!name){alert('Please enter your full name.');return;}
   if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){alert('Please enter a valid email.');return;}
   const btn = document.getElementById('submitBtn');
