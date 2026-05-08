@@ -251,7 +251,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.8</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.9</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -1604,6 +1604,10 @@ let clients = [];
 let smsMessages = [];
 let smsSelectedContactId = null;
 let smsChannelFilter = 'all'; // 'all' | 'sms' | 'whatsapp'
+let commsLists = [];
+let commsListMembers = [];
+let commsView = 'contacts'; // 'contacts' | 'groups'
+let commsActiveListId = null; // null | 'thrivehq' | UUID | 'new'
 let tasks = [];
 let referrals = [];
 let pulseResults = [];
@@ -1975,7 +1979,7 @@ async function loadAgents(){
 }
 async function loadAll(){
   try{
-    await Promise.all([loadContacts(), loadClients(), loadTasks(), loadProspects(), loadProspectNotes(), loadReferrers(), loadRefPayments(), loadRenewals(), loadContactReports(), loadStrengthsInsights(), loadGallupRequests(), loadTrials(), loadTaskLogs(), loadFinanceTransactions(), loadBills(), loadIntakeSubmissions(), loadPulseResults(), loadBrainPulseSubmissions(), loadConnectionPulseSubmissions(), loadAgents(), loadSmsMessages()]);
+    await Promise.all([loadContacts(), loadClients(), loadTasks(), loadProspects(), loadProspectNotes(), loadReferrers(), loadRefPayments(), loadRenewals(), loadContactReports(), loadStrengthsInsights(), loadGallupRequests(), loadTrials(), loadTaskLogs(), loadFinanceTransactions(), loadBills(), loadIntakeSubmissions(), loadPulseResults(), loadBrainPulseSubmissions(), loadConnectionPulseSubmissions(), loadAgents(), loadSmsMessages(), loadCommsLists()]);
     await bootstrapInAppAgents();
   }catch(e){
     console.error('loadAll error:',e);
@@ -4703,8 +4707,9 @@ function renderSms(){
   if(!window._commsChannel) window._commsChannel='sms';
 
   const isMobile=window.innerWidth<640;
-  const showList=!isMobile||commsMobileView==='list'||!smsSelectedContactId;
-  const showThread=!isMobile||(commsMobileView==='thread'&&!!smsSelectedContactId);
+  const inGroupsMode=commsView==='groups';
+  const showList=!isMobile||commsMobileView==='list';
+  const showThread=!isMobile||commsMobileView==='thread';
 
   const filterBar=`<div style="padding:8px 12px;border-bottom:1px solid #e2e8f0;display:flex;gap:5px;flex-shrink:0;">
     <button onclick="smsChannelFilter='all';renderSms();" style="flex:1;padding:5px;border-radius:6px;border:1px solid #e2e8f0;font-size:11px;font-weight:700;cursor:pointer;background:${smsChannelFilter==='all'?'#1e3a5f':'#f8fafc'};color:${smsChannelFilter==='all'?'#fff':'#64748b'};">All</button>
@@ -4713,12 +4718,13 @@ function renderSms(){
     <button onclick="smsChannelFilter='email';renderSms();" style="flex:1;padding:5px;border-radius:6px;border:1px solid #e2e8f0;font-size:11px;font-weight:700;cursor:pointer;background:${smsChannelFilter==='email'?'#c2410c':'#f8fafc'};color:${smsChannelFilter==='email'?'#fff':'#64748b'};">Email</button>
   </div>`;
 
+  const viewToggle=`<div style="padding:8px 12px;border-bottom:1px solid #e2e8f0;display:flex;gap:5px;flex-shrink:0;">
+    <button onclick="commsView='contacts';commsActiveListId=null;renderSms();" style="flex:1;padding:5px;border-radius:6px;border:1px solid #e2e8f0;font-size:11px;font-weight:700;cursor:pointer;background:${commsView==='contacts'?'#1e3a5f':'#f8fafc'};color:${commsView==='contacts'?'#fff':'#64748b'};">Contacts</button>
+    <button onclick="commsView='groups';smsSelectedContactId=null;renderSms();" style="flex:1;padding:5px;border-radius:6px;border:1px solid #e2e8f0;font-size:11px;font-weight:700;cursor:pointer;background:${commsView==='groups'?'#0d9488':'#f8fafc'};color:${commsView==='groups'?'#fff':'#64748b'};">Groups</button>
+  </div>`;
   const listPanel=`<div style="display:${showList?'flex':'none'};flex-direction:column;${isMobile?'width:100%;':'width:260px;border-right:1px solid #e2e8f0;'}background:#f8fafc;flex-shrink:0;">
-    <div style="padding:10px 12px;border-bottom:1px solid #e2e8f0;flex-shrink:0;">
-      <input id="smsContactSearch" oninput="renderSmsContactList()" placeholder="Search contacts…" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box;">
-    </div>
-    ${filterBar}
-    <div id="smsContactList" style="flex:1;overflow-y:auto;"></div>
+    ${viewToggle}
+    ${inGroupsMode?renderGroupListSidebar():`<div style="padding:10px 12px;border-bottom:1px solid #e2e8f0;flex-shrink:0;"><input id="smsContactSearch" oninput="renderSmsContactList()" placeholder="Search contacts…" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box;"></div>${filterBar}<div id="smsContactList" style="flex:1;overflow-y:auto;"></div>`}
   </div>`;
 
   const threadHeader=selContact?`
@@ -4741,7 +4747,9 @@ function renderSms(){
     </div>
   `:'<div style="color:#94a3b8;font-size:13px;">Select a contact</div>';
 
-  const threadPanel=`<div style="display:${showThread?'flex':'none'};flex-direction:column;flex:1;min-width:0;min-height:0;">
+  const threadPanel=inGroupsMode
+    ?`<div style="display:${showThread?'flex':'none'};flex-direction:column;flex:1;min-width:0;min-height:0;">${renderGroupDetailPanel(isMobile)}</div>`
+    :`<div style="display:${showThread?'flex':'none'};flex-direction:column;flex:1;min-width:0;min-height:0;">
     <div style="padding:10px 14px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:8px;min-height:54px;flex-shrink:0;position:sticky;top:0;background:#fff;z-index:2;">
       ${threadHeader}
     </div>
@@ -4919,6 +4927,181 @@ window.sendMiniComms=async function(contactId){
     toast('Sent','success');
   }catch(e){ toast('Send failed: '+e.message,'error'); }
 };
+async function loadCommsLists(){
+  const [{data:lists,error:e1},{data:members}]=await Promise.all([
+    supabase.from('comms_lists').select('*').order('name'),
+    supabase.from('comms_list_members').select('*')
+  ]);
+  if(lists) commsLists=lists;
+  if(members) commsListMembers=members;
+  if(e1&&e1.code!=='42P01') console.error('loadCommsLists:',e1);
+}
+
+function getThqGroupContacts(){
+  const thqClients=clients.filter(c=>c.role==='Community'&&c.status==='Active');
+  const cids=[...new Set(thqClients.flatMap(c=>c.members||[]))];
+  return contacts.filter(c=>cids.includes(c.id));
+}
+
+function renderGroupListSidebar(){
+  const thq=getThqGroupContacts();
+  const customLists=commsLists.filter(l=>l.filter_type==='manual');
+  let h='<div style="display:flex;flex-direction:column;flex:1;overflow-y:auto;">';
+  const isThqActive=commsActiveListId==='thrivehq';
+  h+=`<div onclick="window.selectCommsGroup('thrivehq')" style="padding:11px 13px;border-bottom:1px solid #f1f5f9;cursor:pointer;background:${isThqActive?'#e8f4ff':'transparent'};">
+    <div style="font-weight:700;font-size:13px;color:#0d9488;">&#127775; ThriveHQ Members</div>
+    <div style="font-size:11px;color:#64748b;margin-top:2px;">${thq.length} active member${thq.length!==1?'s':''} &middot; Auto-populated</div>
+  </div>`;
+  customLists.forEach(list=>{
+    const mids=commsListMembers.filter(m=>m.list_id===list.id).map(m=>m.contact_id);
+    const isActive=commsActiveListId===list.id;
+    h+=`<div onclick="window.selectCommsGroup('${list.id}')" style="padding:11px 13px;border-bottom:1px solid #f1f5f9;cursor:pointer;background:${isActive?'#e8f4ff':'transparent'};">
+      <div style="font-weight:600;font-size:13px;color:#1e293b;">&#128101; ${list.name.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div>
+      <div style="font-size:11px;color:#64748b;margin-top:2px;">${mids.length} member${mids.length!==1?'s':''} &middot; Custom</div>
+    </div>`;
+  });
+  const isNewActive=commsActiveListId==='new';
+  h+=`<div style="padding:10px 12px;">
+    <button onclick="window.selectCommsGroup('new')" style="width:100%;padding:8px;border:2px dashed ${isNewActive?'#1e3a5f':'#cbd5e1'};border-radius:8px;background:${isNewActive?'#f0f4ff':'transparent'};color:${isNewActive?'#1e3a5f':'#64748b'};font-size:12px;font-weight:600;cursor:pointer;">+ New List</button>
+  </div></div>`;
+  return h;
+}
+
+function renderGroupDetailPanel(isMob){
+  const backBtn=isMob?`<button type="button" ontouchend="event.preventDefault();window._commsBackToList();" onclick="window._commsBackToList();" style="background:none;border:none;font-size:24px;cursor:pointer;padding:8px 12px 8px 4px;color:#1e3a5f;-webkit-tap-highlight-color:rgba(0,0,0,.1);min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;">&#8592;</button>`:'';
+
+  if(commsActiveListId==='new'){
+    const allC=[...contacts].filter(c=>c.first_name||c.last_name).sort((a,b)=>(a.first_name||'').localeCompare(b.first_name||''));
+    const rows=allC.map(c=>{
+      const name=`${c.first_name||''} ${c.last_name||''}`.trim();
+      const dis=c.sms_opted_out||!c.phone;
+      return `<label style="display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid #f1f5f9;cursor:${dis?'default':'pointer'};opacity:${dis?'.5':'1'};">
+        <input type="checkbox" name="newGroupContact" value="${c.id}" ${dis?'disabled':''} style="width:16px;height:16px;">
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:600;color:#1e293b;">${name.replace(/&/g,'&amp;').replace(/</g,'&lt;')}${c.sms_opted_out?'<span style="font-size:9px;background:#fee2e2;color:#dc2626;padding:1px 5px;border-radius:99px;margin-left:5px;">OPTED OUT</span>':''}</div>
+          <div style="font-size:11px;color:#94a3b8;">${c.phone||'No phone'}</div>
+        </div>
+      </label>`;
+    }).join('');
+    return `<div style="padding:12px 14px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:8px;flex-shrink:0;position:sticky;top:0;background:#fff;z-index:2;">${backBtn}<div style="font-weight:700;font-size:15px;color:#1e3a5f;flex:1;">New List</div></div>
+    <div style="padding:10px 14px;border-bottom:1px solid #e2e8f0;flex-shrink:0;"><input id="newGroupName" placeholder="List name…" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box;"></div>
+    <div style="flex:1;overflow-y:auto;">${rows}</div>
+    <div style="padding:10px 12px;border-top:1px solid #e2e8f0;background:#fff;flex-shrink:0;"><button onclick="window.saveCommsGroup()" style="width:100%;padding:10px;background:#1e3a5f;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;">Save List</button></div>`;
+  }
+
+  if(!commsActiveListId){
+    return `<div style="display:flex;align-items:center;justify-content:center;flex:1;color:#94a3b8;font-size:13px;padding:32px;">Select a list to send messages</div>`;
+  }
+
+  const isThq=commsActiveListId==='thrivehq';
+  let listName,members,canDelete;
+  if(isThq){
+    listName='ThriveHQ Members';members=getThqGroupContacts();canDelete=false;
+  } else {
+    const list=commsLists.find(l=>l.id===commsActiveListId);
+    if(!list) return `<div style="padding:16px;color:#94a3b8;">List not found.</div>`;
+    listName=list.name;
+    const mids=commsListMembers.filter(m=>m.list_id===list.id).map(m=>m.contact_id);
+    members=contacts.filter(c=>mids.includes(c.id));
+    canDelete=true;
+  }
+  const eligible=members.filter(c=>!c.sms_opted_out&&c.phone);
+  const optedOut=members.filter(c=>c.sms_opted_out).length;
+  const noPhone=members.filter(c=>!c.phone&&!c.sms_opted_out).length;
+  const memberRows=members.map(c=>{
+    const name=`${c.first_name||''} ${c.last_name||''}`.trim();
+    const out=c.sms_opted_out,np=!c.phone;
+    const badge=out?'<span style="font-size:9px;background:#fee2e2;color:#dc2626;padding:1px 6px;border-radius:99px;font-weight:700;">OPTED OUT</span>':np?'<span style="font-size:9px;background:#fef3c7;color:#d97706;padding:1px 6px;border-radius:99px;font-weight:700;">NO PHONE</span>':'<span style="font-size:9px;background:#dcfce7;color:#15803d;padding:1px 6px;border-radius:99px;font-weight:700;">&#10003;</span>';
+    return `<div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid #f1f5f9;opacity:${(out||np)?'.55':'1'};">
+      <div style="width:30px;height:30px;border-radius:50%;background:${isThq?'#0d9488':'#1e3a5f'};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">${(c.first_name||'?')[0].toUpperCase()}</div>
+      <div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:600;color:#1e293b;">${name.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div><div style="font-size:11px;color:#94a3b8;">${c.phone||'No phone'}</div></div>
+      ${badge}
+    </div>`;
+  }).join('');
+  return `<div style="padding:12px 14px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:8px;flex-shrink:0;position:sticky;top:0;background:#fff;z-index:2;">
+    ${backBtn}
+    <div style="flex:1;min-width:0;"><div style="font-weight:700;font-size:15px;color:#1e3a5f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${listName.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div>
+    <div style="font-size:11px;color:#64748b;">${members.length} member${members.length!==1?'s':''} &middot; ${eligible.length} can receive SMS${optedOut?' &middot; '+optedOut+' opted out':''}${noPhone?' &middot; '+noPhone+' no phone':''}</div></div>
+    ${canDelete?`<button onclick="window.deleteCommsGroup('${commsActiveListId}')" style="font-size:11px;color:#dc2626;background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:6px;flex-shrink:0;">Delete</button>`:''}
+  </div>
+  <div style="flex:1;overflow-y:auto;">${memberRows||'<div style="padding:24px;color:#94a3b8;text-align:center;font-size:13px;">No members in this list</div>'}</div>
+  <div id="groupSendProgress" style="display:none;padding:8px 14px;background:#f0fdf4;border-top:1px solid #bbf7d0;font-size:12px;color:#15803d;text-align:center;"></div>
+  <div style="padding:10px 12px;border-top:1px solid #e2e8f0;background:#fff;flex-shrink:0;">
+    ${eligible.length>0
+      ?`<div style="display:flex;gap:8px;align-items:flex-end;">
+          <div style="flex:1;display:flex;flex-direction:column;gap:3px;">
+            <textarea id="groupComposeBox" placeholder="Message to all ${eligible.length} member${eligible.length!==1?'s':''}…" rows="2" style="width:100%;padding:9px 11px;border:1px solid #e2e8f0;border-radius:10px;font-size:13px;font-family:inherit;resize:none;box-sizing:border-box;" oninput="window._updateCharCount('groupComposeBox')"></textarea>
+            <div id="_cc_groupComposeBox" style="font-size:10px;color:#94a3b8;text-align:right;display:none;"></div>
+          </div>
+          <button onclick="window.sendGroupSms('${commsActiveListId}')" style="background:#0d9488;color:#fff;border:none;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;">Send to ${eligible.length}</button>
+        </div>`
+      :'<div style="color:#dc2626;font-size:12px;text-align:center;padding:6px;">No eligible recipients — all opted out or missing phone number.</div>'
+    }
+  </div>`;
+}
+
+window.selectCommsGroup=function(id){commsActiveListId=id;commsMobileView='thread';renderSms();};
+
+window.sendGroupSms=async function(listId){
+  const compose=document.getElementById('groupComposeBox');
+  const body=compose?.value.trim();
+  if(!body){toast('Type a message first','error');return;}
+  const isThq=listId==='thrivehq';
+  const members=isThq?getThqGroupContacts():contacts.filter(c=>commsListMembers.filter(m=>m.list_id===listId).map(m=>m.contact_id).includes(c.id));
+  const eligible=members.filter(c=>!c.sms_opted_out&&c.phone);
+  if(!eligible.length){toast('No eligible recipients','error');return;}
+  const progressEl=document.getElementById('groupSendProgress');
+  if(progressEl){progressEl.style.display='block';progressEl.textContent=`Sending 0 / ${eligible.length}…`;}
+  const {data:{session}}=await supabase.auth.getSession();
+  if(!session){toast('Not authenticated','error');return;}
+  let sent=0,failed=0;
+  for(const contact of eligible){
+    try{
+      const res=await fetch(`${SUPABASE_EDGE_URL}/send-sms`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},body:JSON.stringify({to:contact.phone,body,contact_id:contact.id})});
+      if(res.ok) sent++; else failed++;
+    }catch(e){failed++;}
+    if(progressEl) progressEl.textContent=`Sending ${sent+failed} / ${eligible.length}… (${sent} sent${failed?' &middot; '+failed+' failed':''})`;
+  }
+  if(compose) compose.value='';
+  await loadSmsMessages();
+  if(progressEl){
+    progressEl.textContent=`Done: ${sent} sent${failed?' &middot; '+failed+' failed':''}`;
+    progressEl.style.background=failed?'#fef2f2':'#f0fdf4';
+    progressEl.style.color=failed?'#dc2626':'#15803d';
+    progressEl.style.borderTop=`1px solid ${failed?'#fecaca':'#bbf7d0'}`;
+    setTimeout(()=>{if(progressEl) progressEl.style.display='none';},5000);
+  }
+  toast(failed?`${sent} sent, ${failed} failed`:`${sent} messages sent`,'success');
+};
+
+window.saveCommsGroup=async function(){
+  const nameEl=document.getElementById('newGroupName');
+  const name=(nameEl?.value||'').trim();
+  if(!name){toast('Enter a list name','error');return;}
+  const checked=[...document.querySelectorAll('input[name="newGroupContact"]:checked')].map(el=>el.value);
+  if(!checked.length){toast('Select at least one contact','error');return;}
+  const {data:list,error:e1}=await supabase.from('comms_lists').insert({name,filter_type:'manual'}).select().single();
+  if(e1){toast('Error saving list: '+e1.message,'error');return;}
+  const {error:e2}=await supabase.from('comms_list_members').insert(checked.map(contact_id=>({list_id:list.id,contact_id})));
+  if(e2){toast('Error saving members: '+e2.message,'error');return;}
+  await loadCommsLists();
+  commsActiveListId=list.id;
+  commsMobileView='thread';
+  renderSms();
+  toast('List saved','success');
+};
+
+window.deleteCommsGroup=async function(listId){
+  if(!confirm('Delete this list?')) return;
+  const {error}=await supabase.from('comms_lists').delete().eq('id',listId);
+  if(error){toast('Error: '+error.message,'error');return;}
+  await loadCommsLists();
+  commsActiveListId=null;
+  commsMobileView='list';
+  renderSms();
+  toast('List deleted','success');
+};
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 window.openClientModal=function(id){
