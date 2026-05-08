@@ -251,7 +251,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.52.8</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.52.9</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -986,7 +986,7 @@ if('serviceWorker' in navigator){
       <div style="display:flex;flex-direction:column;gap:6px;">
         <div style="display:flex;gap:6px;">
           <select id="tkLogType" style="padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;flex:1;">
-            <option>STATUS UPDATE</option><option>ACTION REQUIRED</option><option>CONFIRMATION REQUEST</option><option>BLOCKED</option><option>NOTE</option>
+            <option>STATUS UPDATE</option><option>ACTION REQUIRED</option><option>CONFIRMATION REQUEST</option><option>BLOCKED</option><option>NOTE</option><option>COMPLETED</option>
           </select>
           <button class="btn btn-blue" onclick="addTaskLog()" style="padding:8px 14px;font-size:12px;">Post</button>
         </div>
@@ -8584,6 +8584,13 @@ window.addTaskLog=async function(){
     task_id:taskId,log_type:logType,message:msg,posted_by:postedBy,response_required:responseRequired,sent_to_teams:sendToTeams||false
   });
   if(error){toast('Error: '+error.message,'error');return;}
+  // If COMPLETED, mark the task as Complete
+  if(logType==='COMPLETED'){
+    await supabase.from('tasks').update({status:'Complete',updated_at:new Date().toISOString()}).eq('id',taskId);
+    await loadTasks();
+    const statusEl=document.getElementById('tkStatus');
+    if(statusEl) statusEl.value='Complete';
+  }
   // Send to Teams if checked
   if(sendToTeams){
     const t=tasks.find(x=>x.id===taskId);
@@ -8596,7 +8603,7 @@ window.addTaskLog=async function(){
   if(document.getElementById('tkNotifyCathLabel')) document.getElementById('tkNotifyCathLabel').style.display='none';
   await loadTaskLogs();
   renderTaskLogEntries(taskId);
-  toast(sendToTeams?'Update posted + sent to Teams':'Update posted','success');
+  toast(logType==='COMPLETED'?'Task marked Complete':'Update posted','success');
 };
 
 window.saveTask=async function(){
@@ -11173,7 +11180,7 @@ function setTeamsWebhook(url){localStorage.setItem('coach4u_teams_webhook',url);
 async function postToTeams(taskTitle,taskStatus,taskPriority,logType,message,postedBy,notifyCath){
   const webhookUrl=getTeamsWebhook();
   if(!webhookUrl) return false;
-  const typeEmoji={'STATUS UPDATE':'📋','ACTION REQUIRED':'🚨','CONFIRMATION REQUEST':'❓','BLOCKED':'🚫','NOTE':'📝'};
+  const typeEmoji={'STATUS UPDATE':'📋','ACTION REQUIRED':'🚨','CONFIRMATION REQUEST':'❓','BLOCKED':'🚫','NOTE':'📝','COMPLETED':'✅'};
   const isLegacy=webhookUrl.includes('IncomingWebhook');
   const isPowerAutomate=webhookUrl.includes('powerplatform.com')||webhookUrl.includes('logic.azure.com')||webhookUrl.includes('flow.microsoft.com');
   let payload;
