@@ -49,9 +49,10 @@ serve(async (req) => {
     }
 
     // Store inbound message
-    await supabase.from('sms_messages').insert({
+    const { error: insertError } = await supabase.from('sms_messages').insert({
       contact_id: contact?.id || null,
       client_id:  null,
+      channel:    'sms',
       direction:  'inbound',
       from_number: from,
       to_number:   to,
@@ -59,6 +60,7 @@ serve(async (req) => {
       twilio_sid:  sid,
       status:      'received',
     })
+    if (insertError) console.error('sms_messages insert error:', JSON.stringify(insertError))
 
     // Empty TwiML — no auto-reply
     return new Response(
