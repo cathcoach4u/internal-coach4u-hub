@@ -251,7 +251,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.52.9</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.53.0</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -8584,12 +8584,16 @@ window.addTaskLog=async function(){
     task_id:taskId,log_type:logType,message:msg,posted_by:postedBy,response_required:responseRequired,sent_to_teams:sendToTeams||false
   });
   if(error){toast('Error: '+error.message,'error');return;}
-  // If COMPLETED, mark the task as Complete
+  // If COMPLETED, mark the task as Complete then close modal and refresh lists
   if(logType==='COMPLETED'){
     await supabase.from('tasks').update({status:'Complete',updated_at:new Date().toISOString()}).eq('id',taskId);
     await loadTasks();
-    const statusEl=document.getElementById('tkStatus');
-    if(statusEl) statusEl.value='Complete';
+    closeModal('taskModal');
+    renderTasks();
+    renderOpsDash();
+    if(document.getElementById('screen-playbook')?.classList.contains('active')) renderPlaybook();
+    toast('Task marked Complete','success');
+    return;
   }
   // Send to Teams if checked
   if(sendToTeams){
