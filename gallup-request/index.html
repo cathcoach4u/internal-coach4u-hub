@@ -48,6 +48,9 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#f0f4f
 const SUPABASE_URL = 'https://uoixetfvboevjxlkfyqy.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_m3qgSGvWF0n2TePf6vhqMw_9obUvJEJ';
 const root = document.getElementById('root');
+const params = new URLSearchParams(window.location.search);
+const orgId = params.get('org');
+const clientName = params.get('name') ? decodeURIComponent(params.get('name')) : '';
 
 function showError(msg){
   root.innerHTML = `<div class="error-card"><strong>Oops.</strong><br>${msg}<br><br>Contact Cath at Coach4U if you think this is wrong.</div>`;
@@ -55,41 +58,12 @@ function showError(msg){
 
 function escHtml(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 
-// Check library loaded
-if(!window.supabase){
-  showError('Could not load the required library. Please check your connection and refresh.');
-  throw new Error('Supabase not loaded');
-}
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-const params = new URLSearchParams(window.location.search);
-const orgId = params.get('org');
-
-// Timeout fallback — show error if nothing renders within 12s
-const _loadTimer = setTimeout(()=>showError('Request timed out. Please refresh and try again.'), 12000);
-
-async function init(){
-  if(!orgId){clearTimeout(_loadTimer);showError('No client link specified — please use the link Cath provided.');return;}
-  try{
-    const {data: client, error} = await supabase.from('clients').select('id,relationship_name,role,status').eq('id',orgId).maybeSingle();
-    clearTimeout(_loadTimer);
-    if(error){showError('Could not load client details ('+error.message+'). Try again later.');return;}
-    if(!client){showError('Client not found. The link may be incorrect.');return;}
-    if(client.status === 'Completed'){showError('This link is no longer active.');return;}
-    renderForm(client);
-  }catch(e){
-    clearTimeout(_loadTimer);
-    showError('Something went wrong ('+e.message+'). Please refresh and try again.');
-    console.error('Gallup init error:',e);
-  }
-}
-
-function renderForm(client){
+function renderForm(){
   root.innerHTML = `
     <div class="card">
       <h2>Hi from Coach4U</h2>
       <p>Use this form to request a Gallup CliftonStrengths assessment code. Cath will set up the code and email it to you.</p>
-      <div class="org-pill">&#128204; ${escHtml(client.relationship_name)}</div>
+      ${clientName?`<div class="org-pill">&#128204; ${escHtml(clientName)}</div>`:''}
     </div>
     <div class="form-card">
       <div class="form-group">
@@ -113,8 +87,11 @@ function renderForm(client){
       <button class="submit-btn" id="submitBtn" onclick="submitForm()">Send request</button>
     </div>
   `;
-  window._client = client;
 }
+
+// Called on page load — no Supabase needed, show form immediately
+if(!orgId){showError('No client link specified — please use the link Cath provided.');}
+else{renderForm();}
 
 window.submitForm = async function(){
   const name = document.getElementById('fName').value.trim();
@@ -125,7 +102,8 @@ window.submitForm = async function(){
   if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){alert('Please enter a valid email.');return;}
   const btn = document.getElementById('submitBtn');
   btn.disabled = true; btn.textContent = 'Sending…';
-  const client = window._client;
+  if(!window.supabase){btn.disabled=false;btn.textContent='Send request';alert('Could not connect. Please refresh and try again.');return;}
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   // Split name into first/last for contacts table
   const parts = name.split(/\s+/);
   const first = parts.shift() || '';
@@ -140,16 +118,16 @@ window.submitForm = async function(){
     if(insErr){btn.disabled=false;btn.textContent='Send request';alert('Could not save your contact: '+insErr.message);return;}
     contactId = created.id;
   }
-  // 2. Link as member of the org (idempotent)
-  const {data: existingLink} = await supabase.from('client_members').select('id').eq('client_id',client.id).eq('contact_id',contactId).maybeSingle();
+  // 2. Link as member of the client (idempotent)
+  const {data: existingLink} = await supabase.from('client_members').select('id').eq('client_id',orgId).eq('contact_id',contactId).maybeSingle();
   if(!existingLink){
-    await supabase.from('client_members').insert({client_id:client.id, contact_id:contactId});
+    await supabase.from('client_members').insert({client_id:orgId, contact_id:contactId});
   }
   // 3. Create gallup_code_requests row
   const reqNotes = `Requested via public form${notes?` — ${notes}`:''}`;
   const {error: reqErr} = await supabase.from('gallup_code_requests').insert({
     contact_id: contactId,
-    client_id: client.id,
+    client_id: orgId,
     product_type: 'Top 5',
     source: 'Coach4U',
     status: 'New',
@@ -167,7 +145,6 @@ window.submitForm = async function(){
   `;
 };
 
-init();
 </script>
 </body>
 </html>
