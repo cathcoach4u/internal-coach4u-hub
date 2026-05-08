@@ -251,7 +251,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.52.2</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.52.3</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -644,6 +644,10 @@ if('serviceWorker' in navigator){
     <!-- LOU'S PLAYBOOK -->
     <div class="screen" id="screen-playbook">
       <div id="playbookContent"></div>
+    </div>
+
+    <div class="screen" id="screen-quicklinks">
+      <div id="quicklinksContent"></div>
     </div>
 
     <!-- IT PROJECTS -->
@@ -1966,7 +1970,7 @@ window.navTo = function(tab,btn){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+tab).classList.add('active');
   window.scrollTo(0,0);
-  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ Hub',thqintake:'Intake Forms',strdash:'Strengths Hub',opsdash:'Admin',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Profiles',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Task Management',playbook:'Lou\'s Playbook',itprojects:'IT Projects',agents:'Agents',writingpartner:'Writing Partner',findash:'Finance',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fintxns:'Transactions',findev:'Development Business',thqbrainpulse:'Brain Pulse',clibrainpulse:'Brain Pulse',cliconnection:'Connection Pulse',thqpulse:'SAFE Pulse',clipulse:'SAFE Pulse',pulsesdash:'Pulses',couplesintake:'Couples Intake',couplesdash:'Couples Hub',couplestimelines:'Therapy Timelines',couplesbetrayal:'Betrayal First Aid',itdash:'IT',resourcesdash:'Resources',agentsai:'AI Strategy',strreports:'Strengths Reports',strdomains:'Domain Balance',strupload:'Upload Report',strcodes:'Gallup Code Tracker',strsop:'Gallup Workflow SOP'};
+  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ Hub',thqintake:'Intake Forms',strdash:'Strengths Hub',opsdash:'Admin',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Profiles',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Task Management',playbook:'Lou\'s Playbook',quicklinks:'Quick Links',itprojects:'IT Projects',agents:'Agents',writingpartner:'Writing Partner',findash:'Finance',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fintxns:'Transactions',findev:'Development Business',thqbrainpulse:'Brain Pulse',clibrainpulse:'Brain Pulse',cliconnection:'Connection Pulse',thqpulse:'SAFE Pulse',clipulse:'SAFE Pulse',pulsesdash:'Pulses',couplesintake:'Couples Intake',couplesdash:'Couples Hub',couplestimelines:'Therapy Timelines',couplesbetrayal:'Betrayal First Aid',itdash:'IT',resourcesdash:'Resources',agentsai:'AI Strategy',strreports:'Strengths Reports',strdomains:'Domain Balance',strupload:'Upload Report',strcodes:'Gallup Code Tracker',strsop:'Gallup Workflow SOP'};
   document.getElementById('pageTitle').textContent=titles[tab]||'Coach4U';
   // Sync area tab
   const area=pageToArea[tab]||'home';
@@ -2022,6 +2026,7 @@ window.navTo = function(tab,btn){
   if(tab==='tasks') renderTasks();
   if(tab==='refpayments') renderRefPayments();
   if(tab==='playbook') renderPlaybook();
+  if(tab==='quicklinks') renderQuickLinks();
   if(tab==='itprojects') renderITProjects();
   if(tab==='agents') renderAgents();
   if(tab==='agentsai') renderAgentsAI();
@@ -2057,7 +2062,7 @@ const areaConfig={
   pulses:{label:'Pulses',pages:[{id:'pulsesdash',icon:'&#128200;',label:'Dashboard'},{id:'clipulse',icon:'&#128147;',label:'SAFE Pulse'},{id:'clibrainpulse',icon:'&#129504;',label:'Brain Pulse'},{id:'cliconnection',icon:'&#128151;',label:'Connection Pulse'}]},
   hubs:{label:'Hubs',pages:[{id:'modulesdash',icon:'&#128200;',label:'Dashboard'},{id:'couplesdash',icon:'&#128149;',label:'Couples Hub'},{id:'thqdash',icon:'&#128170;',label:'ThriveHQ Hub'},{id:'strdash',icon:'&#127919;',label:'Strengths Hub'}]},
   it:{label:'IT',pages:[{id:'itdash',icon:'&#128200;',label:'Dashboard'},{id:'itprojects',icon:'&#9881;',label:'IT Projects'},{id:'agents',icon:'&#129302;',label:'Agents'},{id:'agentsai',icon:'&#10024;',label:'AI Strategy'},{id:'writingpartner',icon:'&#9997;',label:'Writing Partner'}]},
-  operations:{label:'Admin',pages:[{id:'opsdash',icon:'&#128736;',label:'Dashboard'},{id:'tasks',icon:'&#9989;',label:'Task Management'},{id:'playbook',icon:'&#128214;',label:'Playbook'},{id:'resourcesdash',icon:'&#128279;',label:'Company Resources'}]},
+  operations:{label:'Admin',pages:[{id:'opsdash',icon:'&#128736;',label:'Dashboard'},{id:'tasks',icon:'&#9989;',label:'Task Management'},{id:'playbook',icon:'&#128214;',label:'Playbook'},{id:'quicklinks',icon:'&#128279;',label:'Quick Links'},{id:'resourcesdash',icon:'&#128279;',label:'Company Resources'}]},
   finance:{label:'Finance',pages:[{id:'findash',icon:'&#128176;',label:'Dashboard'},{id:'finincome',icon:'&#128181;',label:'Income'},{id:'finspend',icon:'&#128200;',label:'Where Money Goes'},{id:'finbills',icon:'&#128196;',label:'Bills'},{id:'fintxns',icon:'&#128203;',label:'Transactions'}]},
   devbusiness:{label:'Development Business',pages:[{id:'findev',icon:'&#128640;',label:'Overview'}]},
   about:{label:'About',pages:[{id:'about',icon:'&#8505;',label:'About'}]}
@@ -3341,13 +3346,20 @@ window.copyPlaybookSection=function(key){
   copyText(text,s.label);
 };
 
+function getCompletedResetAt(){return localStorage.getItem('playbookCompletedResetAt')||'1970-01-01T00:00:00.000Z';}
+window.resetCompletedSection=function(){
+  localStorage.setItem('playbookCompletedResetAt',new Date().toISOString());
+  renderPlaybook();
+  toast('Completed list reset','success');
+};
 function buildPlaybookSections(todayStr){
+  const resetAt=getCompletedResetAt();
   const active=tasks.filter(t=>t.status!=='Complete');
   const priorities=active.filter(t=>t.focus_date===todayStr).sort(taskSorter);
-  const completedToday=tasks.filter(t=>t.status==='Complete'&&t.updated_at&&t.updated_at.startsWith(todayStr));
+  const completedSinceReset=tasks.filter(t=>t.status==='Complete'&&t.updated_at&&t.updated_at>resetAt);
   return [
     {key:'priorities',label:"Today's Priorities",icon:'&#9733;',color:'#f59e0b',items:priorities},
-    {key:'completed',label:'Completed Today',icon:'&#10004;',color:'#16a34a',items:completedToday}
+    {key:'completed',label:'Completed',icon:'&#10004;',color:'#16a34a',items:completedSinceReset}
   ];
 }
 
@@ -3477,6 +3489,7 @@ function renderPlaybook(){
         <div style="display:flex;gap:6px;">
           <button onclick="copyPlaybookSection('${s.key}')" style="background:none;border:1px solid #e2e8f0;border-radius:6px;padding:4px 10px;font-size:11px;color:#64748b;cursor:pointer;font-family:inherit;font-weight:600;white-space:nowrap;" onmouseover="this.style.background='#f0f6ff';this.style.color='#2563eb'" onmouseout="this.style.background='none';this.style.color='#64748b'">&#128203; Copy</button>
           ${isCompleted?`<button onclick="sendCompletedToTeams()" style="background:#6264a7;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;">&#128172; Send to Teams</button>`:''}
+          ${isCompleted?`<button onclick="if(confirm('Reset the completed list?'))resetCompletedSection()" style="background:none;border:1px solid #fecaca;border-radius:6px;padding:4px 10px;font-size:11px;color:#dc2626;cursor:pointer;font-weight:600;white-space:nowrap;font-family:inherit;">&#8635; Reset</button>`:''}
         </div>
       </div>
       ${s.items.map(t=>{
@@ -3531,27 +3544,7 @@ function renderPlaybook(){
     </div>
   </div>`;
 
-  // ── Section 3: Quick Links ──
-  html+=`<div style="margin-bottom:24px;">
-    <h3 style="font-family:'Quicksand',sans-serif;font-size:17px;color:#1e3a5f;margin-bottom:12px;">&#128279; Quick Links & Tools</h3>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;">
-    ${playbookLinks.map(cat=>`
-      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.04);">
-        <div style="font-weight:700;font-size:13px;color:#1e3a5f;margin-bottom:10px;">${cat.cat}</div>
-        ${cat.items.map(l=>{
-          if(l.onclick) return `<div onclick="${l.onclick}" style="display:flex;align-items:center;gap:10px;padding:8px 10px;margin:4px 0;border:1px solid #f1f5f9;border-radius:8px;cursor:pointer;font-size:13px;color:#2563eb;font-weight:500;transition:all .15s;" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background='#fff'">
-            <span style="font-size:18px;">${l.icon}</span> ${l.label}
-          </div>`;
-          return `<a href="${l.url}" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:10px;padding:8px 10px;margin:4px 0;border:1px solid #f1f5f9;border-radius:8px;text-decoration:none;font-size:13px;color:#2563eb;font-weight:500;transition:all .15s;" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background='#fff'">
-            <span style="font-size:18px;">${l.icon}</span> ${l.label}
-          </a>`;
-        }).join('')}
-      </div>
-    `).join('')}
-    </div>
-  </div>`;
-
-  // ── Section 4: Handover info ──
+  // ── Section 3: Handover info ──
   html+=`<div style="background:#f0f6ff;border:1px solid #bfdbfe;border-radius:10px;padding:16px 20px;margin-bottom:24px;">
     <div style="font-weight:700;font-size:14px;color:#1e3a5f;margin-bottom:8px;">&#128161; If Someone Else is Covering</div>
     <div style="font-size:13px;color:#475569;line-height:1.7;">
@@ -3564,6 +3557,20 @@ function renderPlaybook(){
   </div>`;
 
   document.getElementById('playbookContent').innerHTML=html;
+}
+
+function renderQuickLinks(){
+  const linkGrid=playbookLinks.map(cat=>`
+    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.04);">
+      <div style="font-weight:700;font-size:13px;color:#1e3a5f;margin-bottom:10px;">${cat.cat}</div>
+      ${cat.items.map(l=>{
+        if(l.onclick) return `<div onclick="${l.onclick}" style="display:flex;align-items:center;gap:10px;padding:8px 10px;margin:4px 0;border:1px solid #f1f5f9;border-radius:8px;cursor:pointer;font-size:13px;color:#2563eb;font-weight:500;" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background='#fff'"><span style="font-size:18px;">${l.icon}</span> ${l.label}</div>`;
+        return `<a href="${l.url}" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:10px;padding:8px 10px;margin:4px 0;border:1px solid #f1f5f9;border-radius:8px;text-decoration:none;font-size:13px;color:#2563eb;font-weight:500;" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background='#fff'"><span style="font-size:18px;">${l.icon}</span> ${l.label}</a>`;
+      }).join('')}
+    </div>`).join('');
+  document.getElementById('quicklinksContent').innerHTML=`
+    <h3 style="font-family:'Quicksand',sans-serif;font-size:20px;color:#1e3a5f;margin-bottom:16px;">&#128279; Quick Links &amp; Tools</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;">${linkGrid}</div>`;
 }
 
 // ── REFERRERS DASHBOARD ──
