@@ -251,7 +251,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.52.7</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.52.8</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -3365,12 +3365,27 @@ function checkAutoResetCompleted(){
     }
   }
 }
-window.copyCompletedItem=function(text,btn){
-  navigator.clipboard.writeText(text).then(()=>{
-    const orig=btn.textContent;
-    btn.textContent='✓';
-    setTimeout(()=>{btn.textContent=orig;},1200);
-  }).catch(()=>toast('Copy failed','error'));
+let playbookHistoryExpanded=false;
+window.togglePlaybookHistory=function(){playbookHistoryExpanded=!playbookHistoryExpanded;renderPlaybook();};
+window.copyCompletedDay=function(dateLabel,titles){
+  const text=dateLabel+':\n'+titles.map(t=>'• '+t).join('\n');
+  navigator.clipboard.writeText(text).then(()=>toast('Day copied','success')).catch(()=>toast('Copy failed','error'));
+};
+window.copyCompletedWeek=function(){
+  const weekAgo=new Date();weekAgo.setDate(weekAgo.getDate()-7);weekAgo.setHours(0,0,0,0);
+  const weekItems=tasks.filter(t=>t.status==='Complete'&&t.updated_at&&new Date(t.updated_at)>=weekAgo);
+  if(!weekItems.length){toast('No completed tasks in the past 7 days','info');return;}
+  const byDate={};
+  [...weekItems].sort((a,b)=>new Date(b.updated_at)-new Date(a.updated_at)).forEach(t=>{
+    const d=t.updated_at.split('T')[0];
+    if(!byDate[d])byDate[d]=[];
+    byDate[d].push(t.title);
+  });
+  const text=Object.entries(byDate).map(([d,titles])=>{
+    const label=new Date(d+'T12:00:00').toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long'});
+    return label+':\n'+titles.map(t=>'• '+t).join('\n');
+  }).join('\n\n');
+  navigator.clipboard.writeText(text).then(()=>toast('Week copied','success')).catch(()=>toast('Copy failed','error'));
 };
 function buildPlaybookSections(todayStr){
   const resetAt=getCompletedResetAt();
@@ -3527,44 +3542,56 @@ function renderPlaybook(){
 
   // Category sections
   sections.forEach(s=>{
-    if(!s.items.length) return;
     const isCompleted=s.key==='completed';
+    if(!isCompleted&&!s.items.length) return;
+    // Build date-grouped html helper
+    function groupByDate(items){
+      const byDate={};
+      [...items].sort((a,b)=>new Date(b.updated_at)-new Date(a.updated_at)).forEach(t=>{
+        const d=(t.updated_at||'').split('T')[0];
+        if(!byDate[d])byDate[d]=[];
+        byDate[d].push(t);
+      });
+      return Object.entries(byDate).map(([d,its])=>{
+        const label=d?new Date(d+'T12:00:00').toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long'}):'Unknown date';
+        const titlesJson=JSON.stringify(its.map(t=>t.title)).replace(/'/g,"\\'");
+        const rows=its.map(t=>`<div onclick="openTaskModal('${t.id}')" style="display:flex;align-items:center;padding:4px 0;cursor:pointer;gap:6px;">
+          <span style="font-size:13px;color:#1e293b;flex:1;min-width:0;">&#10004; ${t.title}</span>
+        </div>`).join('');
+        return `<div style="margin-bottom:8px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0 3px;border-top:1px solid #f1f5f9;">
+            <span style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.8px;">${label}</span>
+            <button onclick="copyCompletedDay('${label}',${titlesJson})" style="background:none;border:1px solid #e2e8f0;border-radius:5px;padding:2px 8px;font-size:10px;color:#64748b;cursor:pointer;font-weight:600;font-family:inherit;flex-shrink:0;">&#128203; Copy day</button>
+          </div>
+          ${rows}
+        </div>`;
+      }).join('');
+    }
+    const resetAt=getCompletedResetAt();
+    const historyItems=tasks.filter(t=>t.status==='Complete'&&t.updated_at&&t.updated_at<=resetAt&&t.updated_at>'1970-01-02');
     html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid ${s.color};border-radius:10px;padding:14px 16px;margin-bottom:10px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:6px;flex-wrap:wrap;">
         <span style="font-weight:700;font-size:14px;color:${s.color};">${s.icon} ${s.label} <span style="font-weight:500;font-size:12px;color:#94a3b8;">(${s.items.length})</span></span>
-        <div style="display:flex;gap:6px;">
-          <button onclick="copyPlaybookSection('${s.key}')" style="background:none;border:1px solid #e2e8f0;border-radius:6px;padding:4px 10px;font-size:11px;color:#64748b;cursor:pointer;font-family:inherit;font-weight:600;white-space:nowrap;" onmouseover="this.style.background='#f0f6ff';this.style.color='#2563eb'" onmouseout="this.style.background='none';this.style.color='#64748b'">&#128203; Copy</button>
-          ${isCompleted?`<button onclick="sendCompletedToTeams()" style="background:#6264a7;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;">&#128172; Send to Teams</button>`:''}
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          ${isCompleted?`<button onclick="copyCompletedWeek()" style="background:none;border:1px solid #e2e8f0;border-radius:6px;padding:4px 10px;font-size:11px;color:#64748b;cursor:pointer;font-family:inherit;font-weight:600;white-space:nowrap;">&#128203; Copy week</button>`:''}
+          ${isCompleted?`<button onclick="sendCompletedToTeams()" style="background:#6264a7;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;">&#128172; Teams</button>`:''}
           ${isCompleted?`<button onclick="if(confirm('Reset the completed list?'))resetCompletedSection()" style="background:none;border:1px solid #fecaca;border-radius:6px;padding:4px 10px;font-size:11px;color:#dc2626;cursor:pointer;font-weight:600;white-space:nowrap;font-family:inherit;">&#8635; Reset</button>`:''}
+          ${!isCompleted?`<button onclick="copyPlaybookSection('${s.key}')" style="background:none;border:1px solid #e2e8f0;border-radius:6px;padding:4px 10px;font-size:11px;color:#64748b;cursor:pointer;font-family:inherit;font-weight:600;white-space:nowrap;">&#128203; Copy</button>`:''}
         </div>
       </div>
-      ${(()=>{
-        if(!isCompleted) return s.items.map(t=>{
-          const st=t.status||'Not Started';
-          return `<div onclick="openTaskModal('${t.id}')" style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;cursor:pointer;gap:8px;">
-            <span style="font-size:13px;color:#1e293b;flex:1;min-width:0;">&#8226; ${t.title}</span>
-            <span style="font-size:10px;padding:2px 8px;border-radius:99px;background:#f1f5f9;color:${statusColors[st]||'#64748b'};font-weight:600;white-space:nowrap;">${st}</span>
-          </div>`;
-        }).join('');
-        // Group completed by date descending
-        const byDate={};
-        [...s.items].sort((a,b)=>new Date(b.updated_at)-new Date(a.updated_at)).forEach(t=>{
-          const d=t.updated_at?t.updated_at.split('T')[0]:'';
-          if(!byDate[d]) byDate[d]=[];
-          byDate[d].push(t);
-        });
-        return Object.entries(byDate).map(([d,items])=>{
-          const label=d?new Date(d+'T12:00:00').toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long'}):'Unknown date';
-          const rows=items.map(t=>`<div style="display:flex;align-items:center;padding:5px 0;gap:8px;">
-            <span onclick="openTaskModal('${t.id}')" style="font-size:13px;color:#1e293b;flex:1;min-width:0;cursor:pointer;">&#10004; ${t.title}</span>
-            <button onclick="copyCompletedItem('${t.title.replace(/'/g,"\\'")}',this)" style="background:none;border:1px solid #e2e8f0;border-radius:5px;padding:2px 7px;font-size:11px;color:#64748b;cursor:pointer;flex-shrink:0;font-family:inherit;">&#128203;</button>
-          </div>`).join('');
-          return `<div style="margin-bottom:6px;">
-            <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.8px;padding:6px 0 4px;border-top:1px solid #f1f5f9;">${label}</div>
-            ${rows}
-          </div>`;
-        }).join('');
-      })()}
+      ${isCompleted
+        ? (s.items.length ? groupByDate(s.items) : '<div style="font-size:12px;color:#94a3b8;padding:4px 0;">Nothing completed since last reset.</div>')
+        : s.items.map(t=>{
+            const st=t.status||'Not Started';
+            return `<div onclick="openTaskModal('${t.id}')" style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;cursor:pointer;gap:8px;">
+              <span style="font-size:13px;color:#1e293b;flex:1;min-width:0;">&#8226; ${t.title}</span>
+              <span style="font-size:10px;padding:2px 8px;border-radius:99px;background:#f1f5f9;color:${statusColors[st]||'#64748b'};font-weight:600;white-space:nowrap;">${st}</span>
+            </div>`;
+          }).join('')}
+      ${isCompleted&&historyItems.length?`<div style="margin-top:10px;border-top:1px dashed #e2e8f0;padding-top:8px;">
+        <button onclick="togglePlaybookHistory()" style="background:none;border:none;font-size:11px;color:#94a3b8;cursor:pointer;padding:0;font-family:inherit;font-weight:600;">${playbookHistoryExpanded?'&#9660;':'&#9654;'} History (${historyItems.length} older tasks)</button>
+        ${playbookHistoryExpanded?`<div style="margin-top:8px;">${groupByDate(historyItems)}</div>`:''}
+      </div>`:''}
     </div>`;
   });
 
