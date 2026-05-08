@@ -251,7 +251,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.52.4</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.52.5</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -3493,13 +3493,32 @@ function renderPlaybook(){
           ${isCompleted?`<button onclick="if(confirm('Reset the completed list?'))resetCompletedSection()" style="background:none;border:1px solid #fecaca;border-radius:6px;padding:4px 10px;font-size:11px;color:#dc2626;cursor:pointer;font-weight:600;white-space:nowrap;font-family:inherit;">&#8635; Reset</button>`:''}
         </div>
       </div>
-      ${s.items.map(t=>{
-        const st=t.status||'Not Started';
-        return `<div onclick="openTaskModal('${t.id}')" style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;cursor:pointer;gap:8px;">
-          <span style="font-size:13px;color:#1e293b;flex:1;min-width:0;">&#8226; ${t.title}</span>
-          <span style="font-size:10px;padding:2px 8px;border-radius:99px;background:#f1f5f9;color:${statusColors[st]||'#64748b'};font-weight:600;white-space:nowrap;">${st}</span>
-        </div>`;
-      }).join('')}
+      ${(()=>{
+        if(!isCompleted) return s.items.map(t=>{
+          const st=t.status||'Not Started';
+          return `<div onclick="openTaskModal('${t.id}')" style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;cursor:pointer;gap:8px;">
+            <span style="font-size:13px;color:#1e293b;flex:1;min-width:0;">&#8226; ${t.title}</span>
+            <span style="font-size:10px;padding:2px 8px;border-radius:99px;background:#f1f5f9;color:${statusColors[st]||'#64748b'};font-weight:600;white-space:nowrap;">${st}</span>
+          </div>`;
+        }).join('');
+        // Group completed by date descending
+        const byDate={};
+        [...s.items].sort((a,b)=>new Date(b.updated_at)-new Date(a.updated_at)).forEach(t=>{
+          const d=t.updated_at?t.updated_at.split('T')[0]:'';
+          if(!byDate[d]) byDate[d]=[];
+          byDate[d].push(t);
+        });
+        return Object.entries(byDate).map(([d,items])=>{
+          const label=d?new Date(d+'T12:00:00').toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long'}):'Unknown date';
+          const rows=items.map(t=>`<div onclick="openTaskModal('${t.id}')" style="display:flex;align-items:center;padding:5px 0;cursor:pointer;gap:8px;">
+            <span style="font-size:13px;color:#1e293b;flex:1;min-width:0;">&#10004; ${t.title}</span>
+          </div>`).join('');
+          return `<div style="margin-bottom:6px;">
+            <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.8px;padding:6px 0 4px;border-top:1px solid #f1f5f9;">${label}</div>
+            ${rows}
+          </div>`;
+        }).join('');
+      })()}
     </div>`;
   });
 
