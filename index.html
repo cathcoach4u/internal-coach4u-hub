@@ -4719,8 +4719,8 @@ function renderSms(){
   </div>`;
 
   const viewToggle=`<div style="padding:8px 12px;border-bottom:1px solid #e2e8f0;display:flex;gap:5px;flex-shrink:0;">
-    <button onclick="commsView='contacts';commsActiveListId=null;renderSms();" style="flex:1;padding:5px;border-radius:6px;border:1px solid #e2e8f0;font-size:11px;font-weight:700;cursor:pointer;background:${commsView==='contacts'?'#1e3a5f':'#f8fafc'};color:${commsView==='contacts'?'#fff':'#64748b'};">Contacts</button>
-    <button onclick="commsView='groups';smsSelectedContactId=null;commsMobileView='list';renderSms();" style="flex:1;padding:5px;border-radius:6px;border:1px solid #e2e8f0;font-size:11px;font-weight:700;cursor:pointer;background:${commsView==='groups'?'#0d9488':'#f8fafc'};color:${commsView==='groups'?'#fff':'#64748b'};">Groups</button>
+    <button onclick="window._switchCommsView('contacts')" style="flex:1;padding:5px;border-radius:6px;border:1px solid #e2e8f0;font-size:11px;font-weight:700;cursor:pointer;background:${commsView==='contacts'?'#1e3a5f':'#f8fafc'};color:${commsView==='contacts'?'#fff':'#64748b'};">Contacts</button>
+    <button onclick="window._switchCommsView('groups')" style="flex:1;padding:5px;border-radius:6px;border:1px solid #e2e8f0;font-size:11px;font-weight:700;cursor:pointer;background:${commsView==='groups'?'#0d9488':'#f8fafc'};color:${commsView==='groups'?'#fff':'#64748b'};">Groups</button>
   </div>`;
   const listPanel=`<div style="display:${showList?'flex':'none'};flex-direction:column;${isMobile?'width:100%;':'width:260px;border-right:1px solid #e2e8f0;'}background:#f8fafc;flex-shrink:0;">
     ${viewToggle}
@@ -4791,6 +4791,12 @@ window.renderSmsContactList=function(){
 };
 
 window._commsBackToList=function(){commsMobileView='list';renderSms();};
+window._switchCommsView=function(v){
+  commsView=v;
+  if(v==='groups'){smsSelectedContactId=null;commsMobileView='list';}
+  else{commsActiveListId=null;}
+  renderSms();
+};
 
 window.selectSmsContact=function(id){
   smsSelectedContactId=id;
