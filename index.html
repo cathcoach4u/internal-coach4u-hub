@@ -4719,8 +4719,8 @@ function renderSms(){
   </div>`;
 
   const viewToggle=`<div style="padding:8px 12px;border-bottom:1px solid #e2e8f0;display:flex;gap:5px;flex-shrink:0;">
-    <button onclick="window._switchCommsView('contacts')" style="flex:1;padding:5px;border-radius:6px;border:1px solid #e2e8f0;font-size:11px;font-weight:700;cursor:pointer;background:${commsView==='contacts'?'#1e3a5f':'#f8fafc'};color:${commsView==='contacts'?'#fff':'#64748b'};">Contacts</button>
-    <button onclick="window._switchCommsView('groups')" style="flex:1;padding:5px;border-radius:6px;border:1px solid #e2e8f0;font-size:11px;font-weight:700;cursor:pointer;background:${commsView==='groups'?'#0d9488':'#f8fafc'};color:${commsView==='groups'?'#fff':'#64748b'};">Groups</button>
+    <button onclick="commsView='contacts';commsActiveListId=null;renderSms();" style="flex:1;padding:5px;border-radius:6px;border:1px solid #e2e8f0;font-size:11px;font-weight:700;cursor:pointer;background:${commsView==='contacts'?'#1e3a5f':'#f8fafc'};color:${commsView==='contacts'?'#fff':'#64748b'};">Contacts</button>
+    <button onclick="commsView='groups';smsSelectedContactId=null;commsMobileView='list';renderSms();" style="flex:1;padding:5px;border-radius:6px;border:1px solid #e2e8f0;font-size:11px;font-weight:700;cursor:pointer;background:${commsView==='groups'?'#0d9488':'#f8fafc'};color:${commsView==='groups'?'#fff':'#64748b'};">Groups</button>
   </div>`;
   const listPanel=`<div style="display:${showList?'flex':'none'};flex-direction:column;${isMobile?'width:100%;':'width:260px;border-right:1px solid #e2e8f0;'}background:#f8fafc;flex-shrink:0;">
     ${viewToggle}
@@ -4791,12 +4791,6 @@ window.renderSmsContactList=function(){
 };
 
 window._commsBackToList=function(){commsMobileView='list';renderSms();};
-window._switchCommsView=function(v){
-  commsView=v;
-  if(v==='groups'){smsSelectedContactId=null;commsMobileView='list';}
-  else{commsActiveListId=null;}
-  renderSms();
-};
 
 window.selectSmsContact=function(id){
   smsSelectedContactId=id;
@@ -6434,7 +6428,7 @@ function renderPairComparison(p1,p2){
       <div style="font-family:'Quicksand','Inter',sans-serif;font-weight:700;color:#1e3a5f;font-size:16px;">${nameOf(p1)} &amp; ${nameOf(p2)}</div>
       <div style="font-size:12px;color:#64748b;margin-top:2px;">Pair comparison &middot; ${shared.length} shared theme${shared.length===1?'':'s'}${missingDomains.length?' &middot; missing: '+missingDomains.join(', '):''}</div>
     </div>
-    <button onclick="window.print()" class="no-print" style="background:#003366;color:#fff;border:none;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">&#128424; Print</button>
+    <button onclick="printPairComparison('${p1.id}','${p2.id}')" class="no-print" style="background:#003366;color:#fff;border:none;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">&#128424; Print</button>
   </div>`;
 
   // Shared strengths block
@@ -6504,6 +6498,76 @@ function renderCoupleDynamicsBlock(p1,p2){
   h+='</div>';
   return h;
 }
+
+window.printPairComparison=function(p1Id,p2Id){
+  const p1=contacts.find(c=>c.id===p1Id);
+  const p2=contacts.find(c=>c.id===p2Id);
+  if(!p1||!p2){toast('Partners not found','error');return;}
+  const list1=getContactStrengths(p1);
+  const list2=getContactStrengths(p2);
+  const set1=new Set(list1.map(s=>s.name));
+  const set2=new Set(list2.map(s=>s.name));
+  const shared=list1.filter(s=>set2.has(s.name));
+  const dc1={Executing:0,Influencing:0,Relationship:0,Strategic:0};
+  const dc2={Executing:0,Influencing:0,Relationship:0,Strategic:0};
+  list1.forEach(s=>{const d=getDomain(s.name);if(d)dc1[d]++;});
+  list2.forEach(s=>{const d=getDomain(s.name);if(d)dc2[d]++;});
+  const dcAll={Executing:dc1.Executing+dc2.Executing,Influencing:dc1.Influencing+dc2.Influencing,Relationship:dc1.Relationship+dc2.Relationship,Strategic:dc1.Strategic+dc2.Strategic};
+  const totalAll=Object.values(dcAll).reduce((a,b)=>a+b,0)||1;
+  const missingDomains=Object.entries(dcAll).filter(([_,n])=>n===0).map(([d])=>d);
+  function nameOf(c){return((c.preferred_name||c.first_name||'')+' '+(c.last_name||'')).trim()||'(no name)';}
+  const dateStr=new Date().toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'});
+  const existing=findCoupleInsight(p1Id,p2Id);
+
+  function renderPrintCol(c,list,sharedSet){
+    let h=`<div style="flex:1;min-width:0;"><div style="font-weight:700;color:#1e3a5f;font-size:14px;border-bottom:2px solid #b87a90;padding-bottom:6px;margin-bottom:8px;">${nameOf(c)}</div>`;
+    if(!list.length){h+=`<div style="font-size:11px;color:#94a3b8;">No strengths recorded.</div></div>`;return h;}
+    const dc={Executing:0,Influencing:0,Relationship:0,Strategic:0};
+    list.forEach(s=>{const d=getDomain(s.name);if(d)dc[d]++;});
+    const total=Object.values(dc).reduce((a,b)=>a+b,0)||1;
+    h+=`<div style="display:flex;border-radius:3px;overflow:hidden;height:12px;margin-bottom:8px;">${Object.entries(dc).map(([d,n])=>n?`<div style="background:${domainColors[d]};width:${(n/total*100).toFixed(1)}%;"></div>`:'').join('')}</div>`;
+    list.forEach(s=>{
+      const isShared=sharedSet.has(s.name);
+      h+=`<div style="display:flex;align-items:flex-start;gap:7px;padding:4px ${isShared?'4px 4px 4px 6px':'4px 4px 4px 4px'};border-bottom:1px solid #f1f5f9;${isShared?'background:#f0fdf4;border-left:3px solid #15803d;':''}margin-bottom:1px;">
+        <div style="background:${csColor(s.name)};color:#fff;font-weight:700;font-size:9px;padding:2px 6px;border-radius:3px;min-width:26px;text-align:center;flex-shrink:0;line-height:16px;">#${s.rank}</div>
+        <div><div style="font-size:11px;font-weight:${isShared?'700':'600'};color:#1e293b;">${s.name}</div>${CS_THEME_DESC[s.name]?`<div style="font-size:9px;color:#64748b;line-height:1.4;margin-top:1px;">${CS_THEME_DESC[s.name]}</div>`:''}</div>
+      </div>`;
+    });
+    h+='</div>';
+    return h;
+  }
+
+  const domainBarHtml=Object.entries(dcAll).map(([d,n])=>n?`<div style="background:${domainColors[d]};width:${(n/totalAll*100).toFixed(1)}%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;min-width:24px;">${d.slice(0,3).toUpperCase()} ${n}</div>`:'').join('');
+  const sharedHtml=shared.length?shared.map(s=>`<span style="background:${csColor(s.name)};color:#fff;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:600;display:inline-block;margin:2px;">${s.name}</span>`).join(''):'<span style="font-size:11px;color:#92400e;">No shared themes — high complementary diversity.</span>';
+  const dynamicsHtml=existing?`<div style="margin-top:22px;padding-top:16px;border-top:2px solid #e2e8f0;"><div style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#1e3a5f;font-weight:700;margin-bottom:8px;">Couple Dynamics</div><div style="font-size:11px;line-height:1.8;color:#1e293b;white-space:pre-wrap;">${(existing.content||'').replace(/</g,'&lt;')}</div><div style="font-size:9px;color:#94a3b8;margin-top:6px;">Generated ${new Date(existing.created_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'})}</div></div>`:'';
+
+  const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${nameOf(p1)} &amp; ${nameOf(p2)} — Strengths Comparison</title>
+<style>@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}body{font-family:'Inter',Arial,sans-serif;margin:0;padding:22px 26px;color:#1e293b;font-size:12px;}*{box-sizing:border-box;}</style>
+</head><body>
+<div style="border-left:4px solid #b87a90;padding:8px 14px;margin-bottom:16px;">
+  <div style="font-size:17px;font-weight:700;color:#1e3a5f;">${nameOf(p1)} &amp; ${nameOf(p2)}</div>
+  <div style="font-size:10px;color:#64748b;margin-top:3px;">Strengths Comparison &middot; ${shared.length} shared theme${shared.length===1?'':'s'}${missingDomains.length?' &middot; missing domains: '+missingDomains.join(', '):''}  &middot; ${dateStr}</div>
+</div>
+<div style="margin-bottom:12px;">
+  <div style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#15803d;font-weight:700;margin-bottom:5px;">Shared Themes</div>
+  <div>${sharedHtml}</div>
+</div>
+<div style="margin-bottom:14px;">
+  <div style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:5px;">Domain Balance — Combined</div>
+  <div style="display:flex;border-radius:4px;overflow:hidden;height:18px;margin-bottom:5px;">${domainBarHtml}</div>
+  <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:9px;color:#64748b;">${Object.entries(dcAll).map(([d,n])=>`<span style="display:inline-flex;align-items:center;gap:3px;"><span style="width:8px;height:8px;border-radius:2px;background:${domainColors[d]};display:inline-block;"></span>${d}: ${n}</span>`).join('')}</div>
+</div>
+<div style="display:flex;gap:14px;align-items:flex-start;">${renderPrintCol(p1,list1,set2)}${renderPrintCol(p2,list2,set1)}</div>
+${dynamicsHtml}
+<div style="margin-top:20px;border-top:1px solid #e2e8f0;padding-top:8px;font-size:9px;color:#94a3b8;text-align:center;">Coach4U Internal Hub &middot; CliftonStrengths Report</div>
+</body></html>\`;
+
+  const win=window.open('','_blank','width=960,height=720');
+  if(!win){toast('Allow pop-ups to use the print function','error');return;}
+  win.document.write(html);
+  win.document.close();
+  win.onload=function(){win.focus();win.print();};
+};
 
 window.generateCoupleDynamics=async function(p1Id,p2Id){
   const p1=contacts.find(c=>c.id===p1Id);
