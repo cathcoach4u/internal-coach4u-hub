@@ -251,7 +251,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.11</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.12</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -6566,7 +6566,7 @@ window.printPairComparison=function(p1Id,p2Id){
 <div style="display:flex;gap:14px;align-items:flex-start;">${renderPrintCol(p1,list1,set2)}${renderPrintCol(p2,list2,set1)}</div>
 ${dynamicsHtml}
 <div style="margin-top:20px;border-top:1px solid #e2e8f0;padding-top:8px;font-size:9px;color:#94a3b8;text-align:center;">Coach4U Internal Hub &middot; CliftonStrengths Report</div>
-</body></html>\`;
+</body></html>`;
 
   const win=window.open('','_blank','width=960,height=720');
   if(!win){toast('Allow pop-ups to use the print function','error');return;}
