@@ -251,7 +251,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.12</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.13</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -5377,7 +5377,8 @@ window._cpRefreshFn=null;
             ${ref?`<span style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:99px;padding:4px 14px;font-size:12px;font-weight:600;">Referred by ${ref.name}</span>`:''}
           </div>
         </div>
-        <div style="display:flex;gap:8px;flex-shrink:0;align-items:flex-start;">
+        <div style="display:flex;gap:8px;flex-shrink:0;align-items:flex-start;flex-wrap:wrap;justify-content:flex-end;">
+          ${(()=>{const withStr=memberContacts.filter(m=>m.strength_1);return c.role==='Couple'&&withStr.length===2?`<button onclick="printPairComparison('${withStr[0].id}','${withStr[1].id}')" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.4);border-radius:8px;padding:10px 18px;font-size:13px;font-weight:600;color:#fff;cursor:pointer;">&#128424; Print</button>`:'';})()}
           <button onclick="closeModal('clientProfileModal');openClientModal('${c.id}')" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.4);border-radius:8px;padding:10px 18px;font-size:13px;font-weight:700;color:#fff;cursor:pointer;">&#9998; Edit</button>
           <button onclick="window._cpRefreshFn=null;closeModal('clientProfileModal')" style="background:transparent;border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:10px 18px;font-size:13px;font-weight:600;color:rgba(255,255,255,.85);cursor:pointer;">Close</button>
         </div>
