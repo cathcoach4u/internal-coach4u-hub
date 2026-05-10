@@ -251,7 +251,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.17</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.18</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -4694,7 +4694,7 @@ function renderCommsCompose(contactId, composeId, sendFn){
         <textarea id="${composeId}" placeholder="Type a message…" rows="2" style="width:100%;padding:9px 11px;border:1px solid #e2e8f0;border-radius:10px;font-size:13px;font-family:inherit;resize:none;box-sizing:border-box;" oninput="window._updateCharCount('${composeId}')" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();${sendFn};}"></textarea>
         <div id="_cc_${composeId}" style="font-size:10px;color:#94a3b8;text-align:right;display:none;"></div>
       </div>
-      <button onclick="${sendFn}" style="background:#1e3a5f;color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;">Send</button>
+      <button id="_sendBtn_${composeId}" onclick="${sendFn}" style="background:#1e3a5f;color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;">Send</button>
     </div>`}
   </div>`;
 }
@@ -4815,8 +4815,13 @@ window.sendCommsMessage=async function(){
   const contact=contacts.find(c=>c.id===smsSelectedContactId);
   if(!contact){toast('No contact selected','error');return;}
   const ch=window._commsChannel||'sms';
+  // Lock UI immediately to prevent double-sends
+  const sendBtn=document.getElementById('_sendBtn_smsComposeBox');
+  if(sendBtn){sendBtn.disabled=true;sendBtn.textContent='Sending…';}
+  if(compose) compose.value='';
+  const unlock=()=>{if(sendBtn){sendBtn.disabled=false;sendBtn.textContent='Send';}};
   if(ch==='email'){
-    if(!contact.email){toast('This contact has no email address on file','error');return;}
+    if(!contact.email){unlock();if(compose)compose.value=body;toast('This contact has no email address on file','error');return;}
     const subjEl=document.getElementById('_subj_inp_smsComposeBox');
     const subject=(subjEl?.value||'').trim()||'Message from Coach4U';
     try{
@@ -4829,17 +4834,16 @@ window.sendCommsMessage=async function(){
       });
       const json=await res.json();
       if(!res.ok) throw new Error(json.error||'Send failed');
-      if(compose) compose.value='';
       if(subjEl) subjEl.value='';
       await loadSmsMessages();
       renderSms();
       toast('Email sent','success');
-    }catch(e){ toast('Send failed: '+e.message,'error'); }
+    }catch(e){ if(compose)compose.value=body;unlock();toast('Send failed: '+e.message,'error'); }
     return;
   }
-  if(!contact.phone){toast('This contact has no phone number on file','error');return;}
-  if(ch==='sms'&&contact.sms_opted_out){toast('Contact has opted out of SMS','error');return;}
-  if(ch==='whatsapp'&&contact.whatsapp_opted_out){toast('Contact has opted out of WhatsApp','error');return;}
+  if(!contact.phone){if(compose)compose.value=body;unlock();toast('This contact has no phone number on file','error');return;}
+  if(ch==='sms'&&contact.sms_opted_out){if(compose)compose.value=body;unlock();toast('Contact has opted out of SMS','error');return;}
+  if(ch==='whatsapp'&&contact.whatsapp_opted_out){if(compose)compose.value=body;unlock();toast('Contact has opted out of WhatsApp','error');return;}
   const endpoint=ch==='whatsapp'?'send-whatsapp':'send-sms';
   try{
     const {data:{session}}=await supabase.auth.getSession();
@@ -4851,11 +4855,10 @@ window.sendCommsMessage=async function(){
     });
     const json=await res.json();
     if(!res.ok) throw new Error(json.error||'Send failed');
-    if(compose) compose.value='';
     await loadSmsMessages();
     renderSms();
     toast('Message sent','success');
-  }catch(e){ toast('Send failed: '+e.message,'error'); }
+  }catch(e){ if(compose)compose.value=body;unlock();toast('Send failed: '+e.message,'error'); }
 };
 
 window.openCommsForContact=function(contactId,channel){
