@@ -251,7 +251,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.16</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.17</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -1606,6 +1606,7 @@ let clients = [];
 let smsMessages = [];
 let smsSelectedContactId = null;
 let smsChannelFilter = 'all'; // 'all' | 'sms' | 'whatsapp'
+window.setSmsChannelFilter=function(ch){smsChannelFilter=ch;renderSms();};
 let commsLists = [];
 let commsListMembers = [];
 let commsView = 'contacts'; // 'contacts' | 'groups'
@@ -4714,10 +4715,10 @@ function renderSms(){
   const showThread=!isMobile||commsMobileView==='thread';
 
   const filterBar=`<div style="padding:8px 12px;border-bottom:1px solid #e2e8f0;display:flex;gap:5px;flex-shrink:0;">
-    <button onclick="smsChannelFilter='all';renderSms();" style="flex:1;padding:5px;border-radius:6px;border:1px solid #e2e8f0;font-size:11px;font-weight:700;cursor:pointer;background:${smsChannelFilter==='all'?'#1e3a5f':'#f8fafc'};color:${smsChannelFilter==='all'?'#fff':'#64748b'};">All</button>
-    <button onclick="smsChannelFilter='sms';renderSms();" style="flex:1;padding:5px;border-radius:6px;border:1px solid #e2e8f0;font-size:11px;font-weight:700;cursor:pointer;background:${smsChannelFilter==='sms'?'#1d4ed8':'#f8fafc'};color:${smsChannelFilter==='sms'?'#fff':'#64748b'};">SMS</button>
-    <button onclick="smsChannelFilter='whatsapp';renderSms();" style="flex:1;padding:5px;border-radius:6px;border:1px solid #e2e8f0;font-size:11px;font-weight:700;cursor:pointer;background:${smsChannelFilter==='whatsapp'?'#15803d':'#f8fafc'};color:${smsChannelFilter==='whatsapp'?'#fff':'#64748b'};">WA</button>
-    <button onclick="smsChannelFilter='email';renderSms();" style="flex:1;padding:5px;border-radius:6px;border:1px solid #e2e8f0;font-size:11px;font-weight:700;cursor:pointer;background:${smsChannelFilter==='email'?'#c2410c':'#f8fafc'};color:${smsChannelFilter==='email'?'#fff':'#64748b'};">Email</button>
+    <button onclick="setSmsChannelFilter('all')" style="flex:1;padding:5px;border-radius:6px;border:1px solid #e2e8f0;font-size:11px;font-weight:700;cursor:pointer;background:${smsChannelFilter==='all'?'#1e3a5f':'#f8fafc'};color:${smsChannelFilter==='all'?'#fff':'#64748b'};">All</button>
+    <button onclick="setSmsChannelFilter('sms')" style="flex:1;padding:5px;border-radius:6px;border:1px solid #e2e8f0;font-size:11px;font-weight:700;cursor:pointer;background:${smsChannelFilter==='sms'?'#1d4ed8':'#f8fafc'};color:${smsChannelFilter==='sms'?'#fff':'#64748b'};">SMS</button>
+    <button onclick="setSmsChannelFilter('whatsapp')" style="flex:1;padding:5px;border-radius:6px;border:1px solid #e2e8f0;font-size:11px;font-weight:700;cursor:pointer;background:${smsChannelFilter==='whatsapp'?'#15803d':'#f8fafc'};color:${smsChannelFilter==='whatsapp'?'#fff':'#64748b'};">WA</button>
+    <button onclick="setSmsChannelFilter('email')" style="flex:1;padding:5px;border-radius:6px;border:1px solid #e2e8f0;font-size:11px;font-weight:700;cursor:pointer;background:${smsChannelFilter==='email'?'#c2410c':'#f8fafc'};color:${smsChannelFilter==='email'?'#fff':'#64748b'};">Email</button>
   </div>`;
 
   const viewToggle=`<div style="padding:8px 12px;border-bottom:1px solid #e2e8f0;display:flex;gap:5px;flex-shrink:0;">
