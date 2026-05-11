@@ -253,7 +253,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.33</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.34</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -9037,6 +9037,163 @@ const tkGroupState={};
 function toggleTkGroup(g){tkGroupState[g]=!tkGroupState[g];renderTasks();}
 window.toggleTkGroup=toggleTkGroup;
 
+// ── TICKLER / SCHEDULER ──────────────────────────────────────────────────────
+let schedulerSelectedDate=null; // YYYY-MM-DD of selected cell
+let schedulerView='week'; // 'week' | 'month' | 'months'
+
+window.setSchedulerView=function(v){schedulerView=v;schedulerSelectedDate=null;renderTasks();};
+window.selectSchedulerDate=function(d){schedulerSelectedDate=schedulerSelectedDate===d?null:d;renderTasks();};
+window.selectSchedulerMonth=function(m){schedulerSelectedDate=schedulerSelectedDate===m?null:m;renderTasks();};
+
+window.scheduleTask=async function(taskId, dateStr){
+  const {error}=await supabase.from('tasks').update({focus_date:dateStr||null}).eq('id',taskId);
+  if(error){toast('Could not schedule task','error');return;}
+  const t=tasks.find(x=>x.id===taskId);
+  if(t) t.focus_date=dateStr||null;
+  renderTasks();
+  toast(dateStr?'Scheduled':'Unscheduled','success');
+};
+
+window.showSchedulePicker=function(taskId){
+  const t=tasks.find(x=>x.id===taskId);
+  if(!t) return;
+  const now=new Date();
+  const todayStr=now.toISOString().split('T')[0];
+
+  // Build quick-pick dates: rest of this week + next 12 weeks Mon + months
+  const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const options=[];
+  // Days this week and next 2 weeks
+  for(let i=1;i<=14;i++){
+    const d=new Date(now);
+    d.setDate(now.getDate()+i);
+    const ds=d.toISOString().split('T')[0];
+    const label=i===1?'Tomorrow':days[d.getDay()]+' '+d.getDate()+' '+d.toLocaleString('en-AU',{month:'short'});
+    options.push({label,value:ds});
+  }
+  // Next 6 months
+  for(let m=1;m<=6;m++){
+    const d=new Date(now.getFullYear(),now.getMonth()+m,1);
+    options.push({label:d.toLocaleString('en-AU',{month:'long',year:'numeric'}),value:d.toISOString().split('T')[0]});
+  }
+
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9000;display:flex;align-items:flex-end;justify-content:center;';
+  modal.innerHTML=`<div style="background:#fff;border-radius:16px 16px 0 0;width:100%;max-width:540px;padding:20px;max-height:70vh;overflow-y:auto;">
+    <div style="font-weight:700;font-size:15px;color:#1e3a5f;margin-bottom:4px;">Schedule: ${t.title.slice(0,50)}</div>
+    <div style="font-size:12px;color:#94a3b8;margin-bottom:14px;">Current: ${t.focus_date||'Unscheduled'}</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;">
+      ${options.map(o=>`<button onclick="scheduleTask('${taskId}','${o.value}');document.body.removeChild(this.closest('[style*=fixed]'))" style="padding:10px 12px;border:1px solid #e2e8f0;border-radius:8px;background:${t.focus_date===o.value?'#1e3a5f':'#f8fafc'};color:${t.focus_date===o.value?'#fff':'#1e293b'};font-size:13px;font-weight:600;cursor:pointer;text-align:left;">${o.label}</button>`).join('')}
+      ${t.focus_date?`<button onclick="scheduleTask('${taskId}',null);document.body.removeChild(this.closest('[style*=fixed]'))" style="padding:10px 12px;border:1px solid #fecaca;border-radius:8px;background:#fef2f2;color:#dc2626;font-size:13px;font-weight:600;cursor:pointer;text-align:left;">Remove schedule</button>`:''}
+    </div>
+    <button onclick="document.body.removeChild(this.parentNode.parentNode)" style="margin-top:14px;width:100%;padding:11px;border:1px solid #e2e8f0;border-radius:8px;background:#f8fafc;font-size:13px;font-weight:600;cursor:pointer;color:#64748b;">Cancel</button>
+  </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click',e=>{if(e.target===modal)document.body.removeChild(modal);});
+};
+
+function renderScheduler(scheduledTasks){
+  const now=new Date();
+  const todayStr=now.toISOString().split('T')[0];
+  const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+  // Tab bar
+  let html=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #0d9488;border-radius:10px;overflow:hidden;margin-bottom:12px;">
+    <div style="padding:14px 16px 0;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+      <span style="font-weight:700;font-size:14px;color:#0d9488;">&#128197; Scheduler <span style="font-weight:500;font-size:12px;color:#94a3b8;">(${scheduledTasks.length})</span></span>
+      <div style="display:flex;gap:4px;">
+        ${[['week','This Week'],['month','1–31'],['months','Months']].map(([v,l])=>`<button onclick="setSchedulerView('${v}')" style="padding:4px 10px;border-radius:6px;border:1px solid ${schedulerView===v?'#0d9488':'#e2e8f0'};background:${schedulerView===v?'#0d9488':'#f8fafc'};color:${schedulerView===v?'#fff':'#64748b'};font-size:11px;font-weight:700;cursor:pointer;">${l}</button>`).join('')}
+      </div>
+    </div>`;
+
+  if(schedulerView==='week'){
+    // This week Mon-Sun
+    const weekStart=new Date(now);
+    const dow=now.getDay();
+    weekStart.setDate(now.getDate()-(dow===0?6:dow-1)); // Monday
+    html+=`<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:0;border-top:1px solid #f1f5f9;margin-top:12px;">`;
+    for(let i=0;i<7;i++){
+      const d=new Date(weekStart);
+      d.setDate(weekStart.getDate()+i);
+      const ds=d.toISOString().split('T')[0];
+      const isToday=ds===todayStr;
+      const isPast=ds<todayStr;
+      const sel=schedulerSelectedDate===ds;
+      const dayTasks=scheduledTasks.filter(t=>t.focus_date===ds);
+      html+=`<div onclick="selectSchedulerDate('${ds}')" style="padding:8px 4px;text-align:center;cursor:pointer;border-right:${i<6?'1px solid #f1f5f9':'none'};background:${sel?'#f0fdfa':isToday?'#f8fafc':'#fff'};${isPast?'opacity:.5;':''}">
+        <div style="font-size:10px;font-weight:700;color:${isToday?'#0d9488':'#64748b'};text-transform:uppercase;">${days[d.getDay()]}</div>
+        <div style="font-size:17px;font-weight:800;color:${isToday?'#0d9488':'#1e3a5f'};margin:2px 0;">${d.getDate()}</div>
+        <div style="font-size:10px;font-weight:700;color:${dayTasks.length?'#0d9488':'#d1d5db'};">${dayTasks.length||'·'}</div>
+      </div>`;
+    }
+    html+=`</div>`;
+  } else if(schedulerView==='month'){
+    // Day grid 1-31
+    const daysInMonth=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
+    html+=`<div style="padding:10px 14px 0;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;">${now.toLocaleString('en-AU',{month:'long',year:'numeric'})}</div>`;
+    html+=`<div style="display:flex;flex-wrap:wrap;gap:6px;padding:10px 14px 14px;">`;
+    for(let d=1;d<=daysInMonth;d++){
+      const ds=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const isToday=ds===todayStr;
+      const isPast=ds<todayStr;
+      const sel=schedulerSelectedDate===ds;
+      const count=scheduledTasks.filter(t=>t.focus_date===ds).length;
+      html+=`<div onclick="selectSchedulerDate('${ds}')" style="width:36px;height:36px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border:${sel?'2px solid #0d9488':isToday?'2px solid #0d9488':'1px solid #e2e8f0'};background:${sel?'#0d9488':isToday?'#f0fdfa':'#f8fafc'};${isPast?'opacity:.4;':''}">
+        <span style="font-size:12px;font-weight:${isToday||sel?'800':'600'};color:${sel?'#fff':isToday?'#0d9488':'#1e293b'};">${d}</span>
+        ${count?`<span style="font-size:8px;color:${sel?'rgba(255,255,255,.8)':'#0d9488'};font-weight:700;">${count}</span>`:''}
+      </div>`;
+    }
+    html+=`</div>`;
+  } else {
+    // Month cards
+    html+=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:6px;padding:12px 14px 14px;border-top:1px solid #f1f5f9;margin-top:12px;">`;
+    for(let m=0;m<=11;m++){
+      const d=new Date(now.getFullYear(),now.getMonth()+m,1);
+      const prefix=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+      const isCurrent=m===0;
+      const sel=schedulerSelectedDate===prefix;
+      const count=scheduledTasks.filter(t=>(t.focus_date||'').startsWith(prefix)).length;
+      html+=`<div onclick="selectSchedulerMonth('${prefix}')" style="padding:10px 8px;border-radius:8px;text-align:center;cursor:pointer;border:${sel?'2px solid #0d9488':isCurrent?'2px solid #0d9488':'1px solid #e2e8f0'};background:${sel?'#0d9488':isCurrent?'#f0fdfa':'#f8fafc'};">
+        <div style="font-size:12px;font-weight:700;color:${sel?'#fff':isCurrent?'#0d9488':'#1e3a5f'};">${d.toLocaleString('en-AU',{month:'short'})}</div>
+        <div style="font-size:10px;color:${sel?'rgba(255,255,255,.8)':'#94a3b8'};">${d.getFullYear()}</div>
+        ${count?`<div style="font-size:11px;font-weight:700;color:${sel?'#fff':'#0d9488'};margin-top:3px;">${count}</div>`:''}
+      </div>`;
+    }
+    html+=`</div>`;
+  }
+
+  // Show tasks for selected day/month
+  if(schedulerSelectedDate){
+    const selTasks=scheduledTasks.filter(t=>{
+      if(schedulerView==='months') return (t.focus_date||'').startsWith(schedulerSelectedDate);
+      return t.focus_date===schedulerSelectedDate;
+    });
+    html+=`<div style="border-top:1px solid #e2e8f0;padding:12px 16px;">`;
+    if(!selTasks.length){
+      html+=`<div style="font-size:12px;color:#94a3b8;padding:4px 0;">No tasks scheduled for this ${schedulerView==='months'?'month':'day'}.</div>`;
+    } else {
+      html+=selTasks.map(t=>{
+        const st=t.status||'Not Started';
+        const stColors={'Not Started':'#94a3b8','In Progress':'#2563eb','Waiting on Cath':'#d97706','Waiting on CoachVA':'#7c3aed','Blocked':'#dc2626','Complete':'#16a34a'};
+        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f8fafc;gap:8px;">
+          <span onclick="openTaskModal('${t.id}')" style="font-size:13px;color:#1e293b;flex:1;cursor:pointer;">&#8226; ${t.title}</span>
+          <span style="font-size:10px;padding:2px 7px;border-radius:99px;background:#f1f5f9;color:${stColors[st]};font-weight:600;white-space:nowrap;flex-shrink:0;">${st}</span>
+          <button onclick="showSchedulePicker('${t.id}')" style="background:none;border:1px solid #e2e8f0;border-radius:6px;padding:3px 8px;font-size:10px;font-weight:600;color:#0d9488;cursor:pointer;flex-shrink:0;white-space:nowrap;">Move</button>
+        </div>`;
+      }).join('');
+    }
+    html+=`</div>`;
+  }
+
+  html+=`</div>`;
+
+  // Unscheduled prompt if no tasks shown
+  if(!scheduledTasks.length){
+    html=html.replace('</div>','<div style="padding:12px 16px 14px;font-size:12px;color:#94a3b8;">No tasks scheduled. Use the calendar icon on any task to schedule it.</div></div>');
+  }
+  return html;
+}
+
 // Task log data
 let taskLogs=[];
 async function loadTaskLogs(){
@@ -9057,6 +9214,7 @@ function renderTaskCard(t,showStar){
 
   const starHtml=showStar!==false?`<span onclick="event.stopPropagation();toggleFocusTask('${t.id}',${isFocused?'false':'true'})" style="font-size:16px;cursor:pointer;color:${isFocused?'#f59e0b':'#d1d5db'};" title="${isFocused?'Remove from today':'Add to today\'s priorities'}">${isFocused?'&#9733;':'&#9734;'}</span>`:'';
 
+  const schedBtn=!isDone?`<button onclick="event.stopPropagation();showSchedulePicker('${t.id}')" style="background:none;border:1px solid #e2e8f0;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:600;color:#0d9488;cursor:pointer;flex-shrink:0;white-space:nowrap;" title="Schedule">&#128197;</button>`:'';
   return `<div onclick="openTaskModal('${t.id}')" style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;cursor:pointer;gap:8px;border-bottom:1px solid #f1f5f9;${isDone?'opacity:.5;':''}" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
     <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">
       ${starHtml}
@@ -9064,7 +9222,10 @@ function renderTaskCard(t,showStar){
       ${needsDecision?'<span style="background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:99px;font-size:9px;font-weight:700;white-space:nowrap;">DECISION</span>':''}
       ${overdue?'<span style="background:#fef2f2;color:#dc2626;padding:1px 6px;border-radius:99px;font-size:9px;font-weight:700;white-space:nowrap;">OVERDUE</span>':''}
     </div>
-    <span style="font-size:10px;padding:2px 8px;border-radius:99px;background:#f1f5f9;color:${statusColors[st]||'#64748b'};font-weight:600;white-space:nowrap;">${st}</span>
+    <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+      ${schedBtn}
+      <span style="font-size:10px;padding:2px 8px;border-radius:99px;background:#f1f5f9;color:${statusColors[st]||'#64748b'};font-weight:600;white-space:nowrap;">${st}</span>
+    </div>
   </div>`;
 }
 
@@ -9141,13 +9302,13 @@ function renderTasks(){
     const priorities=active.filter(t=>t.focus_date===todayStr).sort(taskSorter);
     const priorityIds=new Set(priorities.map(t=>t.id));
     const rest=active.filter(t=>!priorityIds.has(t.id));
-    const needsDecision=rest.filter(t=>t.decision_required==='Yes'||t.status==='Waiting on Cath').sort(taskSorter);
-    const decisionIds=new Set(needsDecision.map(t=>t.id));
-    const blocked=rest.filter(t=>!decisionIds.has(t.id)&&t.status==='Blocked').sort(taskSorter);
+    const scheduled=rest.filter(t=>t.focus_date&&t.focus_date>todayStr).sort((a,b)=>a.focus_date.localeCompare(b.focus_date));
+    const scheduledIds=new Set(scheduled.map(t=>t.id));
+    const blocked=rest.filter(t=>!scheduledIds.has(t.id)&&t.status==='Blocked').sort(taskSorter);
     const blockedIds=new Set(blocked.map(t=>t.id));
-    const inProgress=rest.filter(t=>!decisionIds.has(t.id)&&!blockedIds.has(t.id)&&t.status==='In Progress').sort(taskSorter);
+    const inProgress=rest.filter(t=>!scheduledIds.has(t.id)&&!blockedIds.has(t.id)&&t.status==='In Progress').sort(taskSorter);
     const inProgressIds=new Set(inProgress.map(t=>t.id));
-    const exclude=new Set([...priorityIds,...decisionIds,...blockedIds,...inProgressIds]);
+    const exclude=new Set([...priorityIds,...scheduledIds,...blockedIds,...inProgressIds]);
     const taskCat=rest.filter(t=>!exclude.has(t.id)&&(t.work_category||'Task')==='Task').sort(taskSorter);
     const actionPlan=rest.filter(t=>!exclude.has(t.id)&&t.work_category==='Action Plan').sort(taskSorter);
     const bau=rest.filter(t=>!exclude.has(t.id)&&t.work_category==='BAU').sort(taskSorter);
@@ -9159,7 +9320,7 @@ function renderTasks(){
       </div>`;
     }
     html+=renderTaskSection("Today's Priorities",'&#9733;','#f59e0b',priorities,true);
-    html+=renderTaskSection('Needs Decision','&#9888;','#d97706',needsDecision,true);
+    html+=renderScheduler(scheduled);
     html+=renderTaskSection('Blocked','&#128683;','#dc2626',blocked,true);
     html+=renderTaskSection('In Progress','&#9654;','#2563eb',inProgress,true);
     html+=renderTaskSection('Tasks','&#128203;','#64748b',taskCat,true);
