@@ -253,7 +253,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.35</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.36</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -1996,6 +1996,8 @@ async function loadAll(){
     renderDashboard();
     document.getElementById('appLoader').style.display='none';
     startCommsRealtime();
+    rolloverOutstandingTasks();
+    scheduleNightlyRollover();
   }
 }
 
@@ -9036,6 +9038,58 @@ function renderPulsesDash(){
 const tkGroupState={};
 function toggleTkGroup(g){tkGroupState[g]=!tkGroupState[g];renderTasks();}
 window.toggleTkGroup=toggleTkGroup;
+
+// ── PHILIPPINES NIGHTLY ROLLOVER ─────────────────────────────────────────────
+function getPHTDateStr(offsetDays){
+  const now=new Date();
+  // PHT = UTC+8
+  const phtMs=now.getTime()+(now.getTimezoneOffset()+480)*60000;
+  const pht=new Date(phtMs+(offsetDays||0)*86400000);
+  return pht.toISOString().split('T')[0];
+}
+
+async function rolloverOutstandingTasks(){
+  // Catch-up on load: move any non-complete tasks with past focus_dates to today (PHT)
+  const todayPHT=getPHTDateStr();
+  const stale=tasks.filter(t=>t.focus_date&&t.focus_date<todayPHT&&t.status!=='Complete');
+  if(!stale.length) return;
+  const ids=stale.map(t=>t.id);
+  const {error}=await supabase.from('tasks').update({focus_date:todayPHT}).in('id',ids);
+  if(!error){
+    stale.forEach(t=>t.focus_date=todayPHT);
+    renderTasks();
+  }
+}
+
+async function rolloverTodayTasks(){
+  // Called at 11pm PHT: move today's outstanding tasks to tomorrow
+  const todayPHT=getPHTDateStr();
+  const tomorrowPHT=getPHTDateStr(1);
+  const toMove=tasks.filter(t=>t.focus_date===todayPHT&&t.status!=='Complete');
+  if(!toMove.length){toast('All tasks already complete — nice work!','success',4000);return;}
+  const ids=toMove.map(t=>t.id);
+  const {error}=await supabase.from('tasks').update({focus_date:tomorrowPHT}).in('id',ids);
+  if(!error){
+    toMove.forEach(t=>t.focus_date=tomorrowPHT);
+    toast(`${toMove.length} outstanding task${toMove.length>1?'s':''} moved to tomorrow`,'info',6000);
+    renderTasks();
+  }
+}
+
+function scheduleNightlyRollover(){
+  const now=new Date();
+  const phtMs=now.getTime()+(now.getTimezoneOffset()+480)*60000;
+  const phtNow=new Date(phtMs);
+  // Next 11pm PHT
+  const next11=new Date(phtNow);
+  next11.setHours(23,0,0,0);
+  if(phtNow>=next11) next11.setDate(next11.getDate()+1);
+  const msUntil=next11-phtNow;
+  setTimeout(async()=>{
+    await rolloverTodayTasks();
+    scheduleNightlyRollover(); // reschedule for next night
+  },msUntil);
+}
 
 // ── TICKLER / SCHEDULER ──────────────────────────────────────────────────────
 let schedulerSelectedMonth=null; // 'YYYY-MM' drilled month
