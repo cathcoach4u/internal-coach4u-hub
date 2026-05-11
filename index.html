@@ -253,7 +253,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.59</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.60</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -642,11 +642,6 @@ if('serviceWorker' in navigator){
     <div class="screen" id="screen-tasks">
       <div class="toolbar" style="flex-wrap:wrap;gap:8px;">
         <input class="search-input" id="tkSearch" placeholder="Search tasks..." oninput="filterTasks()" style="min-width:140px;">
-        <select id="tkFilterView" onchange="filterTasks()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;font-weight:600;">
-          <option value="active">Active</option>
-          <option value="complete">Completed</option>
-          <option value="all">All</option>
-        </select>
         <button class="btn btn-blue" onclick="openTaskModal()">+ Add Task</button>
         <div style="position:relative;display:inline-block;" id="copyListWrap">
           <button class="btn btn-gray" onclick="toggleCopyMenu()" style="white-space:nowrap;">&#128203; Copy List &#9662;</button>
@@ -9394,18 +9389,13 @@ function renderTaskSection(title,icon,color,items,showStar){
 
 function renderTasks(){
   const q=document.getElementById('tkSearch').value.toLowerCase();
-  const view=document.getElementById('tkFilterView').value;
   const todayStr=getPHTDateStr();
   let filtered=tasks;
   if(q) filtered=filtered.filter(t=>(t.title+' '+(t.owner||'')+' '+(t.description||'')+' '+(t.task_type||'')).toLowerCase().includes(q));
 
   let html='';
 
-  if(view==='complete'){
-    const completed=filtered.filter(t=>t.status==='Complete').sort((a,b)=>(b.updated_at||'').localeCompare(a.updated_at||''));
-    html+=renderTaskSection('Completed','&#10004;','#16a34a',completed,false);
-  } else {
-    if(view==='active') filtered=filtered.filter(t=>t.status!=='Complete');
+  {
     const active=filtered.filter(t=>t.status!=='Complete');
     const priorities=active.filter(t=>t.focus_date===todayStr).sort(taskSorter);
     const priorityIds=new Set(priorities.map(t=>t.id));
