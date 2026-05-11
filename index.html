@@ -253,7 +253,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.63</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.64</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -9073,6 +9073,14 @@ function getAUDateStr(offsetDays){
   const ms=Date.now()+(offsetDays||0)*86400000;
   return new Intl.DateTimeFormat('en-CA',{timeZone:'Australia/Sydney'}).format(new Date(ms));
 }
+function nextWorkday(dateStr){
+  // Given YYYY-MM-DD, return next workday (Fri→Mon, Sat→Mon, Sun→Mon, otherwise +1 day)
+  const d=new Date(dateStr+'T00:00:00');
+  const day=d.getDay(); // 0=Sun,1=Mon,...,5=Fri,6=Sat
+  const add=day===5?3:day===6?2:1;
+  d.setDate(d.getDate()+add);
+  return d.toISOString().slice(0,10);
+}
 
 async function rolloverOutstandingTasks(){
   // Catch-up on load: move any non-complete tasks with past focus_date (or due_date) to today
@@ -9101,35 +9109,36 @@ async function rolloverOutstandingTasks(){
 }
 
 async function rolloverTodayTasks(){
-  // Called at 11pm AU: move today's outstanding tasks to tomorrow
+  // Called at 11pm AU: move today's outstanding tasks to next workday (Fri→Mon)
   const today=getAUDateStr();
-  const tomorrow=getAUDateStr(1);
+  const next=nextWorkday(today);
+  const isWeekend=next!==getAUDateStr(1);
   const toMove=tasks.filter(t=>t.focus_date===today&&t.status!=='Complete');
   if(!toMove.length){toast('All tasks already complete — nice work!','success',4000);return;}
   const ids=toMove.map(t=>t.id);
-  // Roll both focus_date and due_date (if due today) to tomorrow
-  const {error}=await supabase.from('tasks').update({focus_date:tomorrow}).in('id',ids);
+  const {error}=await supabase.from('tasks').update({focus_date:next}).in('id',ids);
   if(!error){
     const dueTodayIds=toMove.filter(t=>t.due_date===today).map(t=>t.id);
-    if(dueTodayIds.length) await supabase.from('tasks').update({due_date:tomorrow}).in('id',dueTodayIds);
-    toMove.forEach(t=>{t.focus_date=tomorrow;if(t.due_date===today)t.due_date=tomorrow;});
-    toast(`${toMove.length} outstanding task${toMove.length>1?'s':''} moved to tomorrow`,'info',6000);
+    if(dueTodayIds.length) await supabase.from('tasks').update({due_date:next}).in('id',dueTodayIds);
+    toMove.forEach(t=>{t.focus_date=next;if(t.due_date===today)t.due_date=next;});
+    const label=isWeekend?'Monday':'tomorrow';
+    toast(`${toMove.length} outstanding task${toMove.length>1?'s':''} moved to ${label}`,'info',6000);
     renderTasks();
   }
 }
 
 function scheduleNightlyRollover(){
+  // Schedule next 11pm Australia/Sydney
   const now=new Date();
-  const phtMs=now.getTime()+(now.getTimezoneOffset()+480)*60000;
-  const phtNow=new Date(phtMs);
-  // Next 11pm PHT
-  const next11=new Date(phtNow);
-  next11.setHours(23,0,0,0);
-  if(phtNow>=next11) next11.setDate(next11.getDate()+1);
-  const msUntil=next11-phtNow;
+  const auDateStr=new Intl.DateTimeFormat('en-CA',{timeZone:'Australia/Sydney'}).format(now);
+  const auTimeStr=new Intl.DateTimeFormat('en-GB',{timeZone:'Australia/Sydney',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(now);
+  const [h,m,s]=auTimeStr.split(':').map(Number);
+  const auSecondsNow=h*3600+m*60+s;
+  const secondsUntil11pm=23*3600-auSecondsNow;
+  const msUntil=(secondsUntil11pm>0?secondsUntil11pm:secondsUntil11pm+86400)*1000;
   setTimeout(async()=>{
     await rolloverTodayTasks();
-    scheduleNightlyRollover(); // reschedule for next night
+    scheduleNightlyRollover();
   },msUntil);
 }
 
