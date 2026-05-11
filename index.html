@@ -253,7 +253,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.45</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.46</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -9186,11 +9186,8 @@ function buildSchedPickerBody(){
     const [yr,mo]=pickerMonth.split('-').map(Number);
     const daysInMonth=new Date(yr,mo,0).getDate();
     const monthName=new Date(yr,mo-1,1).toLocaleString('en-AU',{month:'long',year:'numeric'});
-    const wholeVal=`${pickerMonth}-01`;
-    const isWhole=t.focus_date===wholeVal;
     const dayCells=Array.from({length:daysInMonth},(_,i)=>{
       const d=i+1;
-      if(d===1) return ''; // shown as "whole month" button above
       const ds=`${pickerMonth}-${String(d).padStart(2,'0')}`;
       const isSel=t.focus_date===ds;
       const isPast=ds<=todayStr;
@@ -9200,10 +9197,6 @@ function buildSchedPickerBody(){
         <button onclick="backSchedPicker()" style="background:none;border:1px solid #e2e8f0;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;color:#64748b;cursor:pointer;">← Months</button>
         <span style="font-size:14px;font-weight:700;color:#1e3a5f;">${monthName}</span>
       </div>
-      <button onclick="scheduleTask('${taskId}','${wholeVal}');${close}" style="width:100%;padding:11px;border:${isWhole?'2px solid #0d9488':'1px solid #e2e8f0'};border-radius:8px;background:${isWhole?'#f0fdfa':'#f8fafc'};color:${isWhole?'#0d9488':'#64748b'};font-size:13px;font-weight:700;cursor:pointer;margin-bottom:12px;">
-        Sometime in ${monthName}
-      </button>
-      <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Pick a day</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;">${dayCells}</div>`;
   }
 }
@@ -9261,19 +9254,10 @@ function renderScheduler(scheduledTasks){
     // ---- Day grid for drilled month ----
     const [yr,mo]=schedulerSelectedMonth.split('-').map(Number);
     const daysInMonth=new Date(yr,mo,0).getDate();
-    const wholeVal=`${schedulerSelectedMonth}-01`;
-    const wholeCount=scheduledTasks.filter(t=>t.focus_date===wholeVal).length;
-    const isWholeSel=schedulerSelectedDate===wholeVal;
 
-    // "Sometime this month" row
     html+=`<div style="padding:10px 14px 0;">
-      <div onclick="selectSchedulerDay('${wholeVal}')" style="padding:9px 12px;border:${isWholeSel?'2px solid #0d9488':'1px solid #e2e8f0'};border-radius:8px;background:${isWholeSel?'#f0fdfa':'#f8fafc'};cursor:pointer;display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-        <span style="font-size:13px;font-weight:600;color:${isWholeSel?'#0d9488':'#64748b'};">&#128448; Sometime this month</span>
-        ${wholeCount?`<span style="font-size:11px;font-weight:700;color:#0d9488;background:#e0f7f4;padding:1px 8px;border-radius:99px;">${wholeCount}</span>`:''}
-      </div>
-      <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Days</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;padding-bottom:14px;">`;
-    for(let d=2;d<=daysInMonth;d++){
+    for(let d=1;d<=daysInMonth;d++){
       const ds=`${schedulerSelectedMonth}-${String(d).padStart(2,'0')}`;
       const isToday=ds===todayStr;
       const isPast=ds<todayStr;
@@ -9289,7 +9273,7 @@ function renderScheduler(scheduledTasks){
     // Task list for selected day
     if(schedulerSelectedDate){
       const selTasks=scheduledTasks.filter(t=>t.focus_date===schedulerSelectedDate);
-      const dayLabel=schedulerSelectedDate===wholeVal?'Sometime this month':schedulerSelectedDate;
+      const dayLabel=schedulerSelectedDate;
       const stColors={'Not Started':'#94a3b8','In Progress':'#2563eb','Waiting on Cath':'#d97706','Waiting on CoachVA':'#7c3aed','Blocked':'#dc2626','Complete':'#16a34a'};
       html+=`<div style="border-top:1px solid #e2e8f0;padding:12px 16px;">`;
       if(!selTasks.length){
@@ -9394,13 +9378,7 @@ function renderTasks(){
     const priorities=active.filter(t=>t.focus_date===todayStr).sort(taskSorter);
     const priorityIds=new Set(priorities.map(t=>t.id));
     const rest=active.filter(t=>!priorityIds.has(t.id));
-    const todayMonth=todayStr.slice(0,7);
-    const scheduled=rest.filter(t=>{
-      if(!t.focus_date||t.focus_date===todayStr) return false;
-      if(t.focus_date>todayStr) return true;
-      // "Sometime this month" stored as YYYY-MM-01 — keep visible throughout the month
-      return t.focus_date.endsWith('-01')&&t.focus_date.slice(0,7)>=todayMonth;
-    }).sort((a,b)=>a.focus_date.localeCompare(b.focus_date));
+    const scheduled=rest.filter(t=>t.focus_date&&t.focus_date>todayStr).sort((a,b)=>a.focus_date.localeCompare(b.focus_date));
     const scheduledIds=new Set(scheduled.map(t=>t.id));
     const blocked=rest.filter(t=>!scheduledIds.has(t.id)&&t.status==='Blocked').sort(taskSorter);
     const blockedIds=new Set(blocked.map(t=>t.id));
