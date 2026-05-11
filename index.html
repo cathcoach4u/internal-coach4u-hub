@@ -253,7 +253,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.60</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.61</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -3395,7 +3395,9 @@ function setTeamsChatEmail(e){localStorage.setItem('coach4u_teams_chat_email',e)
 function openTeamsChat(msg){
   const email='cath@coach4u.com.au';
   const url='https://teams.microsoft.com/l/chat/0/0?users='+encodeURIComponent(email)+'&message='+encodeURIComponent(msg);
-  window.open(url,'_blank');
+  const w=window.open(url,'_blank');
+  // Close the blank tab after iOS hands off to the Teams app
+  setTimeout(()=>{try{if(w&&!w.closed)w.close();}catch(e){}},1500);
 }
 window.sendCompletedToTeams=function(){
   const today=getPHTDateStr();
@@ -9489,7 +9491,7 @@ window.sendMorningToTeams=function(){
   copyText(text,'Morning list copied');
   const email='cath@coach4u.com.au';
   const url='https://teams.microsoft.com/l/chat/0/0?users='+encodeURIComponent(email)+'&message='+encodeURIComponent(text);
-  setTimeout(()=>window.open(url,'_blank'),400);
+  setTimeout(()=>{const w=window.open(url,'_blank');setTimeout(()=>{try{if(w&&!w.closed)w.close();}catch(e){}},1500);},400);
 };
 
 window.copyAfternoonUpdate=function(){
