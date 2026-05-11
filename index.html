@@ -253,7 +253,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.49</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.50</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -9404,7 +9404,7 @@ function renderTasks(){
     const priorities=active.filter(t=>t.focus_date===todayStr).sort(taskSorter);
     const priorityIds=new Set(priorities.map(t=>t.id));
     const rest=active.filter(t=>!priorityIds.has(t.id));
-    const scheduled=rest.filter(t=>t.focus_date&&t.focus_date>todayStr).sort((a,b)=>a.focus_date.localeCompare(b.focus_date));
+    const scheduled=active.filter(t=>t.focus_date&&t.focus_date>=todayStr).sort((a,b)=>a.focus_date.localeCompare(b.focus_date));
     const scheduledIds=new Set(scheduled.map(t=>t.id));
     const blocked=rest.filter(t=>!scheduledIds.has(t.id)&&t.status==='Blocked').sort(taskSorter);
     const blockedIds=new Set(blocked.map(t=>t.id));
@@ -9416,8 +9416,8 @@ function renderTasks(){
     const bau=rest.filter(t=>!exclude.has(t.id)&&t.work_category==='BAU').sort(taskSorter);
     const completedToday=filtered.filter(t=>t.status==='Complete'&&t.updated_at&&new Date(new Date(t.updated_at).getTime()+8*3600000).toISOString().split('T')[0]===todayStr);
 
-    html+=renderTaskSection("Today's Priorities",'&#9733;','#f59e0b',priorities,true);
     html+=renderScheduler(scheduled);
+    html+=renderTaskSection("Today's Priorities",'&#9733;','#f59e0b',priorities,true);
     html+=renderTaskSection('Blocked','&#128683;','#dc2626',blocked,true);
     html+=renderTaskSection('In Progress','&#9654;','#2563eb',inProgress,true);
     html+=renderTaskSection('Tasks','&#128203;','#64748b',taskCat,true);
@@ -9490,7 +9490,10 @@ window.sendMorningToTeams=function(){
   if(actionPlan.length){text+='\n2026 Action Plan:\n';actionPlan.forEach(t=>{text+=t.title+'\n';});}
   if(bau.length){text+='\nBusiness as Usual:\n';bau.forEach(t=>{text+=t.title+'\n';});}
   text+='\nI will keep you updated of my progress.\nThanks, Cath!';
-  openTeamsChat(text);
+  copyText(text,'Morning list copied');
+  const email='cath@coach4u.com.au';
+  const url='https://teams.microsoft.com/l/chat/0/0?users='+encodeURIComponent(email)+'&message='+encodeURIComponent(text);
+  setTimeout(()=>window.open(url,'_blank'),400);
 };
 
 window.copyAfternoonUpdate=function(){
