@@ -108,6 +108,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
 .toast.show{opacity:1;}
 .toast.success{background:#16a34a;}
 .toast.error{background:#ef4444;}
+.toast.info{background:#1e3a5f;}
 
 /* ── LINKED MEMBERS ── */
 .member-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
@@ -251,7 +252,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.24</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.25</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -2179,10 +2180,10 @@ window.closeMobile = function(){
 };
 
 // ── TOAST ──
-function toast(msg,type){
+function toast(msg,type,duration){
   const t=document.getElementById('toast');
-  t.textContent=msg;t.className='toast '+type+' show';
-  setTimeout(()=>t.classList.remove('show'),2500);
+  t.innerHTML=msg;t.className='toast '+type+' show';
+  setTimeout(()=>t.classList.remove('show'),duration||2500);
 }
 window.toast=toast;
 
@@ -4632,10 +4633,10 @@ function startCommsRealtime(){
           thread.innerHTML=renderCommsThread(smsSelectedContactId,smsChannelFilter);
           thread.scrollTop=thread.scrollHeight;
         }
-      } else {
+      } else if(msg.direction==='inbound'){
         const contact=contacts.find(c=>c.id===msg.contact_id);
         const name=contact?(contact.first_name||'')+' '+(contact.last_name||''):'New message';
-        toast(`&#128242; ${name.trim()}: ${msg.body.slice(0,60)}${msg.body.length>60?'…':''}`, 'info');
+        toast(`New message from ${name.trim()}: ${msg.body.slice(0,50)}${msg.body.length>50?'…':''}`, 'info', 5000);
       }
       renderSmsContactList();
     })
