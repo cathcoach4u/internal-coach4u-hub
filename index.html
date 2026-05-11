@@ -253,7 +253,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.47</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.48</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -651,7 +651,8 @@ if('serviceWorker' in navigator){
         <div style="position:relative;display:inline-block;" id="copyListWrap">
           <button class="btn btn-gray" onclick="toggleCopyMenu()" style="white-space:nowrap;">&#128203; Copy List &#9662;</button>
           <div id="copyListMenu" style="display:none;position:absolute;top:100%;right:0;margin-top:4px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:50;min-width:200px;overflow:hidden;">
-            <button onclick="copyMorningList()" style="display:flex;align-items:center;gap:8px;width:100%;padding:14px 16px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:600;color:#1e3a5f;font-family:inherit;text-align:left;" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background='none'">&#9728;&#65039; AM — Morning Plan</button>
+            <button onclick="copyMorningList()" style="display:flex;align-items:center;gap:8px;width:100%;padding:14px 16px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:600;color:#1e3a5f;font-family:inherit;text-align:left;" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background='none'">&#9728;&#65039; AM — Copy Morning Plan</button>
+            <button onclick="sendMorningToTeams()" style="display:flex;align-items:center;gap:8px;width:100%;padding:14px 16px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:600;color:#5558a3;font-family:inherit;text-align:left;" onmouseover="this.style.background='#f0f0ff'" onmouseout="this.style.background='none'">&#128172; AM — Send to Teams</button>
             <div style="border-top:1px solid #f1f5f9;"></div>
             <button onclick="copyAfternoonUpdate()" style="display:flex;align-items:center;gap:8px;width:100%;padding:14px 16px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:600;color:#1e3a5f;font-family:inherit;text-align:left;" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background='none'">&#127749; PM — End of Day Update</button>
           </div>
@@ -3380,7 +3381,7 @@ function renderOpsDash(){
 
 window.copyDailySummary=function(){
   const now=new Date();
-  const today=now.toISOString().split('T')[0];
+  const today=getPHTDateStr();
   const dateStr=now.toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   const sections=buildPlaybookSections(today);
   let summary='Hi Cath,\n\nProgress update for '+dateStr+':\n\n';
@@ -3406,7 +3407,7 @@ function openTeamsChat(msg){
   window.open(url,'_blank');
 }
 window.sendCompletedToTeams=function(){
-  const today=new Date().toISOString().split('T')[0];
+  const today=getPHTDateStr();
   const dateStr=new Date().toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long'});
   const sections=buildPlaybookSections(today);
   const completed=sections.find(s=>s.key==='completed');
@@ -3417,14 +3418,14 @@ window.sendCompletedToTeams=function(){
 window.sendLogToTeams=function(){
   const now=new Date();
   const dateStr=now.toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long'});
-  const todayStr=now.toISOString().split('T')[0];
+  const todayStr=getPHTDateStr();
   const entries=getPlaybookLog(todayStr);
   if(!entries.length){toast('Nothing in today\'s log yet','info');return;}
   const lines=entries.map(e=>'✅ '+e.text).join('\n');
   openTeamsChat('Work log ('+dateStr+'):\n\n'+lines);
 };
 window.copyPlaybookSection=function(key){
-  const today=new Date().toISOString().split('T')[0];
+  const today=getPHTDateStr();
   const sections=buildPlaybookSections(today);
   const s=sections.find(x=>x.key===key);
   if(!s||!s.items.length){toast('No items in this section','error');return;}
@@ -3555,7 +3556,7 @@ window.addPlaybookLogEntry=function(){
   const val=(input?.value||'').trim();
   if(!val) return;
   const now=new Date();
-  const dateStr=now.toISOString().split('T')[0];
+  const dateStr=getPHTDateStr();
   const timeStr=now.toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit',hour12:true});
   const entries=getPlaybookLog(dateStr);
   entries.push({time:timeStr,text:val});
@@ -3566,7 +3567,7 @@ window.addPlaybookLogEntry=function(){
 };
 window.deletePlaybookLogEntry=function(idx){
   const now=new Date();
-  const dateStr=now.toISOString().split('T')[0];
+  const dateStr=getPHTDateStr();
   const entries=getPlaybookLog(dateStr);
   entries.splice(idx,1);
   savePlaybookLog(dateStr,entries);
@@ -3574,7 +3575,7 @@ window.deletePlaybookLogEntry=function(idx){
 };
 window.copyPlaybookLog=function(){
   const now=new Date();
-  const dateStr=now.toISOString().split('T')[0];
+  const dateStr=getPHTDateStr();
   const dateLabel=now.toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   const entries=getPlaybookLog(dateStr);
   if(!entries.length){toast('Nothing in today\'s log yet','info');return;}
@@ -3586,7 +3587,7 @@ window.playbookLogKeydown=function(e){if(e.key==='Enter'){e.preventDefault();add
 function renderPlaybook(){
   checkAutoResetCompleted();
   const now=new Date();
-  const todayStr=now.toISOString().split('T')[0];
+  const todayStr=getPHTDateStr();
   const dateStr=now.toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   const sections=buildPlaybookSections(todayStr);
   const statusColors={'Not Started':'#94a3b8','In Progress':'#2563eb','Waiting on Cath':'#d97706','Waiting on CoachVA':'#7c3aed','Blocked':'#dc2626','Complete':'#16a34a'};
@@ -9077,6 +9078,7 @@ async function rolloverOutstandingTasks(){
   if(!error){
     stale.forEach(t=>t.focus_date=todayPHT);
     renderTasks();
+    renderDashboard();
   }
 }
 
@@ -9146,7 +9148,7 @@ function buildSchedPickerBody(){
   const t=tasks.find(x=>x.id===taskId);
   if(!t) return '';
   const now=new Date();
-  const todayStr=now.toISOString().split('T')[0];
+  const todayStr=getPHTDateStr();
   const pickerMonth=window._schedPickerMonth;
   const close=`var m=document.getElementById('schedPickerModal');if(m)document.body.removeChild(m);`;
   const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -9155,9 +9157,8 @@ function buildSchedPickerBody(){
     // ---- Month list view ----
     const quickDays=[];
     for(let i=1;i<=7;i++){
-      const d=new Date(now);
-      d.setDate(now.getDate()+i);
-      const ds=d.toISOString().split('T')[0];
+      const ds=getPHTDateStr(i);
+      const d=new Date(ds+'T12:00:00');
       quickDays.push({label:i===1?'Tomorrow':days[d.getDay()]+' '+d.getDate(),value:ds});
     }
     const months=[];
@@ -9222,7 +9223,7 @@ window.showSchedulePicker=function(taskId){
 
 function renderScheduler(scheduledTasks){
   const now=new Date();
-  const todayStr=now.toISOString().split('T')[0];
+  const todayStr=getPHTDateStr();
 
   const headerTitle=schedulerSelectedMonth
     ? `<div style="display:flex;align-items:center;gap:8px;"><button onclick="backToMonths()" style="background:none;border:1px solid #d1d5db;border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700;color:#64748b;cursor:pointer;">&#8592; Months</button><span style="font-weight:700;font-size:14px;color:#0d9488;">&#128197; ${new Date(schedulerSelectedMonth+'-02').toLocaleString('en-AU',{month:'long',year:'numeric'})} <span style="font-weight:500;font-size:12px;color:#94a3b8;">(${scheduledTasks.filter(t=>(t.focus_date||'').startsWith(schedulerSelectedMonth)).length})</span></span></div>`
@@ -9308,7 +9309,7 @@ function renderTaskCard(t,showStar){
   const isBlocked=t.status==='Blocked';
   const needsDecision=t.decision_required==='Yes'&&t.status!=='Complete';
   const overdue=t.due_date&&!isDone&&new Date(t.due_date)<new Date();
-  const todayStr=new Date().toISOString().split('T')[0];
+  const todayStr=getPHTDateStr();
   const isFocused=t.focus_date===todayStr;
   const statusColors={'Not Started':'#94a3b8','In Progress':'#2563eb','Waiting on Cath':'#d97706','Waiting on CoachVA':'#7c3aed','Blocked':'#dc2626','Complete':'#16a34a'};
   const st=t.status||'Not Started';
@@ -9331,7 +9332,7 @@ function renderTaskCard(t,showStar){
 }
 
 window.toggleFocusTask=async function(id,focus){
-  const todayStr=new Date().toISOString().split('T')[0];
+  const todayStr=getPHTDateStr();
   const {error}=await supabase.from('tasks').update({focus_date:focus?todayStr:null}).eq('id',id);
   if(error){toast('Error: '+error.message,'error');return;}
   const t=tasks.find(x=>x.id===id);
@@ -9362,7 +9363,7 @@ function renderTaskSection(title,icon,color,items,showStar){
 function renderTasks(){
   const q=document.getElementById('tkSearch').value.toLowerCase();
   const view=document.getElementById('tkFilterView').value;
-  const todayStr=new Date().toISOString().split('T')[0];
+  const todayStr=getPHTDateStr();
   let filtered=tasks;
   if(q) filtered=filtered.filter(t=>(t.title+' '+(t.owner||'')+' '+(t.description||'')+' '+(t.task_type||'')).toLowerCase().includes(q));
 
@@ -9431,7 +9432,7 @@ window.toggleCopyMenu=function(){
 
 window.copyMorningList=function(){
   document.getElementById('copyListMenu').style.display='none';
-  const todayStr=new Date().toISOString().split('T')[0];
+  const todayStr=getPHTDateStr();
   const dateLabel=new Date().toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'});
   const active=tasks.filter(t=>t.status!=='Complete');
   const priorities=active.filter(t=>t.focus_date===todayStr).sort(taskSorter);
@@ -9448,9 +9449,27 @@ window.copyMorningList=function(){
   copyText(text,'Morning list');
 };
 
+window.sendMorningToTeams=function(){
+  document.getElementById('copyListMenu').style.display='none';
+  const todayStr=getPHTDateStr();
+  const dateLabel=new Date().toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'});
+  const active=tasks.filter(t=>t.status!=='Complete');
+  const priorities=active.filter(t=>t.focus_date===todayStr).sort(taskSorter);
+  const pendings=active.filter(t=>t.focus_date!==todayStr&&(t.work_category||'Task')==='Task').sort(taskSorter);
+  const actionPlan=active.filter(t=>(t.work_category)==='Action Plan').sort(taskSorter);
+  const bau=active.filter(t=>(t.work_category)==='BAU').sort(taskSorter);
+  let text=dateLabel+'\n\nGood morning, Cath.\nThese are the things I will work today:\n';
+  if(priorities.length){text+='\nPRIORITIES:\n';priorities.forEach(t=>{text+=t.title+'\n';});}
+  if(pendings.length){text+='\nPENDINGS:\n';pendings.forEach(t=>{text+=t.title+'\n';});}
+  if(actionPlan.length){text+='\n2026 Action Plan:\n';actionPlan.forEach(t=>{text+=t.title+'\n';});}
+  if(bau.length){text+='\nBusiness as Usual:\n';bau.forEach(t=>{text+=t.title+'\n';});}
+  text+='\nI will keep you updated of my progress.\nThanks, Cath!';
+  openTeamsChat(text);
+};
+
 window.copyAfternoonUpdate=function(){
   document.getElementById('copyListMenu').style.display='none';
-  const todayStr=new Date().toISOString().split('T')[0];
+  const todayStr=getPHTDateStr();
   const dateLabel=new Date().toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'});
   const active=tasks.filter(t=>t.status!=='Complete');
   const completedToday=tasks.filter(t=>t.status==='Complete'&&t.updated_at&&new Date(new Date(t.updated_at).getTime()+8*3600000).toISOString().split('T')[0]===todayStr);
@@ -11700,7 +11719,7 @@ function renderBills(){
   let filtered=[...bills];
 
   // Auto-mark overdue: if due_date < today and status is Upcoming
-  const today=new Date().toISOString().split('T')[0];
+  const today=getPHTDateStr();
   filtered.forEach(b=>{
     if(b.status==='Upcoming'&&b.due_date&&b.due_date<today) b._autoOverdue=true;
   });
@@ -12308,7 +12327,7 @@ async function handleToolCall(name,input){
     } else if(t==='prospects'){
       result+=items.map(p=>`- **${p.name}** | Status: ${p.status||'New'} | Role: ${p.role||'Individual'} | ${p.phone||p.email||'No contact'}${p.notes?' | '+p.notes:''}`).join('\n');
     } else if(t==='tasks'){
-      result+=items.map(tk=>`- **${tk.title}** | Owner: ${tk.owner||'—'} | ${tk.priority||'Normal'} | ${tk.status||'Not Started'} | Category: ${tk.work_category||'Task'} | Type: ${tk.task_type||'—'} | Due: ${tk.due_date||'—'}${tk.focus_date===new Date().toISOString().split('T')[0]?' | ⭐ TODAY\'S PRIORITY':''}${tk.decision_required==='Yes'?' | ⚠️ DECISION NEEDED':''}${tk.blocked_reason?' | Blocked: '+tk.blocked_reason:''}`).join('\n');
+      result+=items.map(tk=>`- **${tk.title}** | Owner: ${tk.owner||'—'} | ${tk.priority||'Normal'} | ${tk.status||'Not Started'} | Category: ${tk.work_category||'Task'} | Type: ${tk.task_type||'—'} | Due: ${tk.due_date||'—'}${tk.focus_date===getPHTDateStr()?' | ⭐ TODAY\'S PRIORITY':''}${tk.decision_required==='Yes'?' | ⚠️ DECISION NEEDED':''}${tk.blocked_reason?' | Blocked: '+tk.blocked_reason:''}`).join('\n');
     } else if(t==='referrers'){
       result+=items.map(r=>`- **${r.name}** | ${r.status||'Active'}`).join('\n');
     } else if(t==='trials'){
@@ -12392,7 +12411,7 @@ async function handleToolCall(name,input){
   // ADD TASK — matches saveTask() exactly
   if(name==='add_task'){
     if(!input.title) return {error:'Task title is required',result:null};
-    const todayStr=new Date().toISOString().split('T')[0];
+    const todayStr=getPHTDateStr();
     const data={
       title:input.title.trim(),
       description:(input.description||'').trim()||null,
@@ -12633,13 +12652,13 @@ async function handleToolCall(name,input){
       (t.title+' '+(t.description||'')+' '+(t.status||'')+' '+(t.priority||'')).toLowerCase().includes(q)
     ).slice(0,10);
     if(!matches.length) return {error:null,result:'No tasks found matching "'+input.query+'"'};
-    return {error:null,result:matches.map(t=>`**${t.title}** (ID: ${t.id})\n  Owner: ${t.owner||'—'} | Priority: ${t.priority||'Normal'} | Status: ${t.status||'Not Started'} | Category: ${t.work_category||'Task'} | Type: ${t.task_type||'—'} | Due: ${t.due_date||'—'}${t.focus_date===new Date().toISOString().split('T')[0]?'\n  ⭐ TODAY\'S PRIORITY':''}${t.decision_required==='Yes'?'\n  ⚠️ DECISION NEEDED':''}${t.blocked_reason?'\n  Blocked: '+t.blocked_reason:''}${t.description?'\n  '+t.description:''}`).join('\n\n')};
+    return {error:null,result:matches.map(t=>`**${t.title}** (ID: ${t.id})\n  Owner: ${t.owner||'—'} | Priority: ${t.priority||'Normal'} | Status: ${t.status||'Not Started'} | Category: ${t.work_category||'Task'} | Type: ${t.task_type||'—'} | Due: ${t.due_date||'—'}${t.focus_date===getPHTDateStr()?'\n  ⭐ TODAY\'S PRIORITY':''}${t.decision_required==='Yes'?'\n  ⚠️ DECISION NEEDED':''}${t.blocked_reason?'\n  Blocked: '+t.blocked_reason:''}${t.description?'\n  '+t.description:''}`).join('\n\n')};
   }
 
   // ADD TRIAL — auto-creates contact if none linked
   if(name==='add_trial'){
     if(!input.name) return {error:'Trial name is required.',result:null};
-    const today=new Date().toISOString().split('T')[0];
+    const today=getPHTDateStr();
     const data={
       name:input.name.trim(),
       email:(input.email||'').trim()||null,
