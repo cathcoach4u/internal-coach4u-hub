@@ -253,7 +253,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.50</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.51</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -9342,7 +9342,7 @@ function renderTaskCard(t,showStar){
 
   const starHtml=showStar!==false?`<span onclick="event.stopPropagation();toggleFocusTask('${t.id}',${isFocused?'false':'true'})" style="font-size:16px;cursor:pointer;color:${isFocused?'#f59e0b':'#d1d5db'};" title="${isFocused?'Remove from today':'Add to today\'s priorities'}">${isFocused?'&#9733;':'&#9734;'}</span>`:'';
 
-  const schedBtn=!isDone?`<button onclick="event.stopPropagation();showSchedulePicker('${t.id}')" style="background:none;border:1px solid #e2e8f0;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:600;color:#0d9488;cursor:pointer;flex-shrink:0;white-space:nowrap;" title="Schedule">&#128197;</button>`:'';
+  const schedBtn=!isDone?`<button onclick="event.stopPropagation();showSchedulePicker('${t.id}')" style="background:none;border:1px solid #0d9488;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:600;color:#0d9488;cursor:pointer;flex-shrink:0;white-space:nowrap;" title="Schedule">Move</button>`:'';
   return `<div onclick="openTaskModal('${t.id}')" style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;cursor:pointer;gap:8px;border-bottom:1px solid #f1f5f9;${isDone?'opacity:.5;':''}" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
     <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">
       ${starHtml}
