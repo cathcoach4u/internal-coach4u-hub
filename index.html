@@ -251,7 +251,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.23</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.24</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -1990,6 +1990,7 @@ async function loadAll(){
     renderSidebarNav('home');
     renderDashboard();
     document.getElementById('appLoader').style.display='none';
+    startCommsRealtime();
   }
 }
 
@@ -4612,6 +4613,33 @@ async function loadSmsMessages(){
   const {data,error}=await supabase.from('sms_messages').select('*').order('created_at',{ascending:true});
   if(data) smsMessages=data;
   if(error&&error.code!=='42P01') console.error('loadSmsMessages:',error);
+}
+
+let _commsRealtimeChannel=null;
+function startCommsRealtime(){
+  if(_commsRealtimeChannel) return;
+  _commsRealtimeChannel=supabase
+    .channel('comms-inbox')
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'sms_messages'},payload=>{
+      const msg=payload.new;
+      if(!msg||!msg.id) return;
+      if(smsMessages.some(m=>m.id===msg.id)) return;
+      smsMessages.push(msg);
+      const isOpen=msg.contact_id===smsSelectedContactId&&document.getElementById('screen-sms')?.style.display!=='none';
+      if(isOpen){
+        const thread=document.getElementById('smsThread');
+        if(thread){
+          thread.innerHTML=renderCommsThread(smsSelectedContactId,smsChannelFilter);
+          thread.scrollTop=thread.scrollHeight;
+        }
+      } else {
+        const contact=contacts.find(c=>c.id===msg.contact_id);
+        const name=contact?(contact.first_name||'')+' '+(contact.last_name||''):'New message';
+        toast(`&#128242; ${name.trim()}: ${msg.body.slice(0,60)}${msg.body.length>60?'…':''}`, 'info');
+      }
+      renderSmsContactList();
+    })
+    .subscribe();
 }
 
 function chPill(ch){
