@@ -253,7 +253,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.58</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.59</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -1000,9 +1000,6 @@ if('serviceWorker' in navigator){
     <div class="mob-grid-2">
       <div class="form-group"><label>Source</label>
         <select id="tkSource"><option>Chat</option><option>Email</option><option>Call</option><option>System</option><option>Self</option></select>
-      </div>
-      <div class="form-group"><label>Decision Required?</label>
-        <select id="tkDecision"><option value="No">No</option><option value="Yes">Yes — needs Cath's input</option></select>
       </div>
     </div>
     <div class="form-group"><label>Due Date</label><input id="tkDue" type="date"></div>
@@ -9347,7 +9344,6 @@ function renderTaskCard(t,showStar){
   const isDone=t.status==='Complete';
   const todayStr=getPHTDateStr();
   const isFocused=t.focus_date===todayStr;
-  const needsDecision=t.decision_required==='Yes'&&!isDone;
   const statusColors={'Not Started':'#94a3b8','In Progress':'#2563eb','Waiting on Cath':'#d97706','Waiting on CoachVA':'#7c3aed','Blocked':'#dc2626','Complete':'#16a34a'};
   const st=t.status||'Not Started';
   const stColor=statusColors[st]||'#64748b';
@@ -9361,8 +9357,7 @@ function renderTaskCard(t,showStar){
       <span style="font-size:13px;line-height:1.4;color:${isDone?'#94a3b8':'#1e293b'};${isDone?'text-decoration:line-through;':''}">${t.title}</span>
     </div>
     <div style="display:flex;align-items:center;gap:6px;padding-left:${showStar!==false?'23px':'0'};">
-      ${needsDecision?`<span style="font-size:9px;font-weight:700;color:#92400e;background:#fef3c7;padding:2px 6px;border-radius:4px;white-space:nowrap;">DECISION</span>`:''}
-      ${schedBtn}
+${schedBtn}
       <span style="font-size:10px;padding:2px 8px;border-radius:99px;background:${stColor}22;color:${stColor};font-weight:600;white-space:nowrap;">${st}</span>
     </div>
   </div>`;
@@ -9550,7 +9545,6 @@ window.openTaskModal=function(id){
   document.getElementById('tkPriority').value=t?t.priority||'Normal':'Normal';
   document.getElementById('tkStatus').value=t?t.status||'Not Started':'Not Started';
   document.getElementById('tkSource').value=t?t.source||'Chat':'Chat';
-  document.getElementById('tkDecision').value=t?t.decision_required||'No':'No';
   document.getElementById('tkDue').value=t?t.due_date||'':'';
   document.getElementById('tkBlocked').value=t?t.blocked_reason||'':'';
   document.getElementById('tkDelBtn').style.display=t?'inline-block':'none';
@@ -9658,7 +9652,6 @@ window.saveTask=async function(){
     priority:document.getElementById('tkPriority').value,
     status:document.getElementById('tkStatus').value,
     source:document.getElementById('tkSource').value,
-    decision_required:document.getElementById('tkDecision').value,
     due_date:document.getElementById('tkDue').value||null,
     blocked_reason:document.getElementById('tkStatus').value==='Blocked'?document.getElementById('tkBlocked').value.trim()||null:null
   };
