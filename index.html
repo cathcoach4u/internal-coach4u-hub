@@ -253,7 +253,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.62</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.63</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -645,11 +645,25 @@ if('serviceWorker' in navigator){
         <button class="btn btn-blue" onclick="openTaskModal()">+ Add Task</button>
         <div style="position:relative;display:inline-block;" id="copyListWrap">
           <button class="btn btn-gray" onclick="toggleCopyMenu()" style="white-space:nowrap;">&#128203; Copy List &#9662;</button>
-          <div id="copyListMenu" style="display:none;position:absolute;top:100%;right:0;margin-top:4px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:50;min-width:200px;overflow:hidden;">
-            <button onclick="copyMorningList()" style="display:flex;align-items:center;gap:8px;width:100%;padding:14px 16px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:600;color:#1e3a5f;font-family:inherit;text-align:left;" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background='none'">&#9728;&#65039; AM — Copy Morning Plan</button>
-            <button onclick="sendMorningToTeams()" style="display:flex;align-items:center;gap:8px;width:100%;padding:14px 16px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:600;color:#5558a3;font-family:inherit;text-align:left;" onmouseover="this.style.background='#f0f0ff'" onmouseout="this.style.background='none'">&#128172; AM — Send to Teams</button>
-            <div style="border-top:1px solid #f1f5f9;"></div>
-            <button onclick="copyAfternoonUpdate()" style="display:flex;align-items:center;gap:8px;width:100%;padding:14px 16px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:600;color:#1e3a5f;font-family:inherit;text-align:left;" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background='none'">&#127749; PM — End of Day Update</button>
+          <div id="copyListMenu" style="display:none;position:absolute;top:100%;right:0;margin-top:4px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:50;min-width:230px;overflow:hidden;">
+            <div style="padding:8px 14px 4px;font-size:10px;font-weight:700;color:#94a3b8;letter-spacing:1px;text-transform:uppercase;">Today</div>
+            <div style="display:flex;gap:0;border-top:1px solid #f1f5f9;">
+              <button onclick="copyTaskList('today')" style="flex:1;padding:10px 12px;border:none;background:none;cursor:pointer;font-size:12px;font-weight:600;color:#1e3a5f;font-family:inherit;text-align:center;" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background='none'">&#128203; Copy</button>
+              <div style="width:1px;background:#f1f5f9;"></div>
+              <button onclick="sendTaskListToTeams('today')" style="flex:1;padding:10px 12px;border:none;background:none;cursor:pointer;font-size:12px;font-weight:600;color:#5558a3;font-family:inherit;text-align:center;" onmouseover="this.style.background='#f0f0ff'" onmouseout="this.style.background='none'">&#128172; Teams</button>
+            </div>
+            <div style="padding:8px 14px 4px;font-size:10px;font-weight:700;color:#94a3b8;letter-spacing:1px;text-transform:uppercase;border-top:1px solid #f1f5f9;">Next 7 Days</div>
+            <div style="display:flex;gap:0;border-top:1px solid #f1f5f9;">
+              <button onclick="copyTaskList('week')" style="flex:1;padding:10px 12px;border:none;background:none;cursor:pointer;font-size:12px;font-weight:600;color:#1e3a5f;font-family:inherit;text-align:center;" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background='none'">&#128203; Copy</button>
+              <div style="width:1px;background:#f1f5f9;"></div>
+              <button onclick="sendTaskListToTeams('week')" style="flex:1;padding:10px 12px;border:none;background:none;cursor:pointer;font-size:12px;font-weight:600;color:#5558a3;font-family:inherit;text-align:center;" onmouseover="this.style.background='#f0f0ff'" onmouseout="this.style.background='none'">&#128172; Teams</button>
+            </div>
+            <div style="padding:8px 14px 4px;font-size:10px;font-weight:700;color:#94a3b8;letter-spacing:1px;text-transform:uppercase;border-top:1px solid #f1f5f9;">Entire List</div>
+            <div style="display:flex;gap:0;border-top:1px solid #f1f5f9;">
+              <button onclick="copyTaskList('all')" style="flex:1;padding:10px 12px;border:none;background:none;cursor:pointer;font-size:12px;font-weight:600;color:#1e3a5f;font-family:inherit;text-align:center;" onmouseover="this.style.background='#f0f6ff'" onmouseout="this.style.background='none'">&#128203; Copy</button>
+              <div style="width:1px;background:#f1f5f9;"></div>
+              <button onclick="sendTaskListToTeams('all')" style="flex:1;padding:10px 12px;border:none;background:none;cursor:pointer;font-size:12px;font-weight:600;color:#5558a3;font-family:inherit;text-align:center;" onmouseover="this.style.background='#f0f0ff'" onmouseout="this.style.background='none'">&#128172; Teams</button>
+            </div>
           </div>
         </div>
       </div>
@@ -9452,64 +9466,66 @@ window.toggleCopyMenu=function(){
   m.style.display=m.style.display==='block'?'none':'block';
 };
 
-window.copyMorningList=function(){
-  document.getElementById('copyListMenu').style.display='none';
+function buildTaskListText(scope){
   const todayStr=getPHTDateStr();
-  const dateLabel=new Date().toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'});
+  const dateLabel=new Intl.DateTimeFormat('en-AU',{day:'numeric',month:'long',year:'numeric',timeZone:'Australia/Sydney'}).format(new Date());
   const active=tasks.filter(t=>t.status!=='Complete');
-  const priorities=active.filter(t=>t.focus_date===todayStr).sort(taskSorter);
-  const pendings=active.filter(t=>t.focus_date!==todayStr&&(t.work_category||'Task')==='Task').sort(taskSorter);
-  const actionPlan=active.filter(t=>(t.work_category)==='Action Plan').sort(taskSorter);
-  const bau=active.filter(t=>(t.work_category)==='BAU').sort(taskSorter);
 
-  let text=dateLabel+'\n\nGood morning, Cath.\nThese are the things I will work today:\n';
-  if(priorities.length){text+='\nPRIORITIES:\n';priorities.forEach(t=>{text+=t.title+'\n';});}
-  if(pendings.length){text+='\nPENDINGS:\n';pendings.forEach(t=>{text+=t.title+'\n';});}
-  if(actionPlan.length){text+='\n2026 Action Plan:\n';actionPlan.forEach(t=>{text+=t.title+'\n';});}
-  if(bau.length){text+='\nBusiness as Usual:\n';bau.forEach(t=>{text+=t.title+'\n';});}
-  text+='\nI will keep you updated of my progress.\nThanks, Cath!';
-  copyText(text,'Morning list');
+  if(scope==='today'){
+    const todays=active.filter(t=>t.focus_date===todayStr).sort(taskSorter);
+    let text=dateLabel+'\n\nToday\'s Tasks:\n';
+    if(!todays.length){text+='\nNo tasks scheduled for today.';return text;}
+    todays.forEach(t=>{text+='\n\u2022 '+t.title+(t.status&&t.status!=='Not Started'?' ('+t.status+')':'');});
+    return text;
+  }
+
+  if(scope==='week'){
+    const cutoff=getAUDateStr(7);
+    const weekTasks=active.filter(t=>t.focus_date&&t.focus_date>=todayStr&&t.focus_date<=cutoff).sort((a,b)=>a.focus_date.localeCompare(b.focus_date)||taskSorter(a,b));
+    let text=dateLabel+'\n\nNext 7 Days:\n';
+    if(!weekTasks.length){text+='\nNo tasks scheduled for the next 7 days.';return text;}
+    let lastDate='';
+    weekTasks.forEach(t=>{
+      if(t.focus_date!==lastDate){
+        const d=new Intl.DateTimeFormat('en-AU',{weekday:'short',day:'numeric',month:'short'}).format(new Date(t.focus_date+'T00:00:00'));
+        text+='\n'+d+'\n';lastDate=t.focus_date;
+      }
+      text+='\u2022 '+t.title+(t.status&&t.status!=='Not Started'?' ('+t.status+')':'')+'\n';
+    });
+    return text.trimEnd();
+  }
+
+  // all
+  const sections=[
+    {label:'Today\'s Priorities',items:active.filter(t=>t.focus_date===todayStr).sort(taskSorter)},
+    {label:'In Progress',items:active.filter(t=>t.status==='In Progress'&&t.focus_date!==todayStr).sort(taskSorter)},
+    {label:'Blocked / Waiting',items:active.filter(t=>['Blocked','Waiting on Cath','Waiting on CoachVA'].includes(t.status)).sort(taskSorter)},
+    {label:'Tasks',items:active.filter(t=>(t.work_category||'Task')==='Task'&&t.focus_date!==todayStr&&!['In Progress','Blocked','Waiting on Cath','Waiting on CoachVA'].includes(t.status)).sort(taskSorter)},
+    {label:'2026 Action Plan',items:active.filter(t=>t.work_category==='Action Plan').sort(taskSorter)},
+    {label:'Business as Usual',items:active.filter(t=>t.work_category==='BAU').sort(taskSorter)},
+  ];
+  let text=dateLabel+'\n\nFull Task List:\n';
+  sections.forEach(s=>{
+    if(!s.items.length) return;
+    text+='\n'+s.label+':\n';
+    s.items.forEach(t=>{text+='\u2022 '+t.title+(t.status&&t.status!=='Not Started'?' ('+t.status+')':'')+'\n';});
+  });
+  return text.trimEnd();
+}
+
+window.copyTaskList=function(scope){
+  document.getElementById('copyListMenu').style.display='none';
+  const text=buildTaskListText(scope);
+  const labels={today:'Today\'s list',week:'7-day list',all:'Full list'};
+  copyText(text,labels[scope]||'List');
 };
 
-window.sendMorningToTeams=function(){
+window.sendTaskListToTeams=function(scope){
   document.getElementById('copyListMenu').style.display='none';
-  const todayStr=getPHTDateStr();
-  const dateLabel=new Date().toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'});
-  const active=tasks.filter(t=>t.status!=='Complete');
-  const priorities=active.filter(t=>t.focus_date===todayStr).sort(taskSorter);
-  const pendings=active.filter(t=>t.focus_date!==todayStr&&(t.work_category||'Task')==='Task').sort(taskSorter);
-  const actionPlan=active.filter(t=>(t.work_category)==='Action Plan').sort(taskSorter);
-  const bau=active.filter(t=>(t.work_category)==='BAU').sort(taskSorter);
-  let text=dateLabel+'\n\nGood morning, Cath.\nThese are the things I will work today:\n';
-  if(priorities.length){text+='\nPRIORITIES:\n';priorities.forEach(t=>{text+=t.title+'\n';});}
-  if(pendings.length){text+='\nPENDINGS:\n';pendings.forEach(t=>{text+=t.title+'\n';});}
-  if(actionPlan.length){text+='\n2026 Action Plan:\n';actionPlan.forEach(t=>{text+=t.title+'\n';});}
-  if(bau.length){text+='\nBusiness as Usual:\n';bau.forEach(t=>{text+=t.title+'\n';});}
-  text+='\nI will keep you updated of my progress.\nThanks, Cath!';
-  copyText(text,'Morning list copied');
-  const email='cath@coach4u.com.au';
-  const url='https://teams.microsoft.com/l/chat/0/0?users='+encodeURIComponent(email)+'&message='+encodeURIComponent(text);
-  setTimeout(()=>{const w=window.open(url,'_blank');setTimeout(()=>{try{if(w&&!w.closed)w.close();}catch(e){}},1500);},400);
-};
-
-window.copyAfternoonUpdate=function(){
-  document.getElementById('copyListMenu').style.display='none';
-  const todayStr=getPHTDateStr();
-  const dateLabel=new Date().toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'});
-  const active=tasks.filter(t=>t.status!=='Complete');
-  const completedToday=tasks.filter(t=>t.status==='Complete'&&t.updated_at&&new Date(t.updated_at).toLocaleDateString('en-CA',{timeZone:'Australia/Sydney'})===todayStr);
-  const inProgress=active.filter(t=>t.status==='In Progress').sort(taskSorter);
-  const blocked=active.filter(t=>t.status==='Blocked'||t.status==='Waiting on Cath'||t.status==='Waiting on CoachVA').sort(taskSorter);
-  const carried=active.filter(t=>t.focus_date===todayStr&&t.status!=='In Progress'&&t.status!=='Blocked'&&t.status!=='Waiting on Cath'&&t.status!=='Waiting on CoachVA').sort(taskSorter);
-
-  let text=dateLabel+'\n\nGood afternoon, Cath.\nHere is my end of day update:\n';
-  if(completedToday.length){text+='\nCOMPLETED TODAY:\n';completedToday.forEach(t=>{text+='\u2705 '+t.title+'\n';});}
-  if(inProgress.length){text+='\nIN PROGRESS:\n';inProgress.forEach(t=>{text+='\u{1F504} '+t.title+'\n';});}
-  if(blocked.length){text+='\nWAITING / BLOCKED:\n';blocked.forEach(t=>{const l=t.status==='Waiting on Cath'?'Waiting on Cath':t.status==='Waiting on CoachVA'?'Waiting on VA':'Blocked';text+='\u{26A0}\u{FE0F} '+t.title+' ('+l+')\n';});}
-  if(carried.length){text+='\nCARRIED TO TOMORROW:\n';carried.forEach(t=>{text+='\u{27A1}\u{FE0F} '+t.title+'\n';});}
-  if(!completedToday.length&&!inProgress.length&&!blocked.length&&!carried.length){text+='\nNo task updates for today.\n';}
-  text+='\nThanks, Cath!';
-  copyText(text,'PM update');
+  const text=buildTaskListText(scope);
+  const labels={today:'Today\'s list',week:'7-day list',all:'Full list'};
+  copyText(text,labels[scope]||'List');
+  setTimeout(()=>{const w=window.open('https://teams.microsoft.com/l/chat/0/0?users='+encodeURIComponent('cath@coach4u.com.au')+'&message='+encodeURIComponent(text),'_blank');setTimeout(()=>{try{if(w&&!w.closed)w.close();}catch(e){}},1500);},400);
 };
 
 // Close copy menu when tapping elsewhere
