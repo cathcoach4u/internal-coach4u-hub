@@ -251,7 +251,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.21</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.22</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -4696,7 +4696,7 @@ function renderCommsCompose(contactId, composeId, sendFn){
     ${allOut?'<div style="color:#dc2626;font-size:12px;text-align:center;padding:6px;">Contact has opted out of all messaging.</div>':
     `<div style="display:flex;gap:8px;align-items:flex-end;">
       <div style="flex:1;display:flex;flex-direction:column;gap:3px;">
-        <textarea id="${composeId}" placeholder="Type a message…" rows="2" style="width:100%;padding:9px 11px;border:1px solid #e2e8f0;border-radius:10px;font-size:13px;font-family:inherit;resize:none;box-sizing:border-box;" oninput="window._updateCharCount('${composeId}')" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();${sendFn};}"></textarea>
+        <textarea id="${composeId}" placeholder="Type a message…" rows="4" style="width:100%;padding:11px 13px;border:1px solid #e2e8f0;border-radius:10px;font-size:15px;font-family:inherit;resize:none;box-sizing:border-box;line-height:1.5;" oninput="window._updateCharCount('${composeId}')" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();${sendFn};}"></textarea>
         <div id="_cc_${composeId}" style="font-size:10px;color:#94a3b8;text-align:right;display:none;"></div>
       </div>
       <button id="_sendBtn_${composeId}" onclick="${sendFn}" style="background:#1e3a5f;color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;">Send</button>
