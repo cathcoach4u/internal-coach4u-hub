@@ -253,7 +253,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.52</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.53</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -3324,7 +3324,7 @@ function renderOpsDash(){
   const blocked=active.filter(t=>t.status==='Blocked');
   const waitingVA=active.filter(t=>t.status==='Waiting on CoachVA');
   const overdue=active.filter(t=>t.due_date&&new Date(t.due_date)<now);
-  const completedToday=tasks.filter(t=>t.status==='Complete'&&t.updated_at&&new Date(new Date(t.updated_at).getTime()+8*3600000).toISOString().split('T')[0]===todayStr);
+  const completedToday=tasks.filter(t=>t.status==='Complete'&&t.updated_at&&new Date(t.updated_at).toLocaleDateString('en-CA',{timeZone:'Australia/Sydney'})===todayStr);
   const focusToday=active.filter(t=>t.focus_date===todayStr);
 
   let html=`<div class="dash-cards">
@@ -3631,7 +3631,7 @@ function renderPlaybook(){
       const byDate={};
       [...items].sort((a,b)=>new Date(b.updated_at)-new Date(a.updated_at)).forEach(t=>{
         // Convert UTC to PHT (UTC+8) before grouping by date
-        const d=t.updated_at?new Date(new Date(t.updated_at).getTime()+8*3600000).toISOString().split('T')[0]:'';
+        const d=t.updated_at?new Date(t.updated_at).toLocaleDateString('en-CA',{timeZone:'Australia/Sydney'}):'';
         if(!byDate[d])byDate[d]=[];
         byDate[d].push(t);
       });
@@ -7083,7 +7083,7 @@ window.convertIntakeToTrial=async function(id){
     name:s.first_name+' '+s.last_name,
     email:s.email,
     phone:s.phone,
-    trial_start:new Date().toISOString().split('T')[0],
+    trial_start:getAUDateStr(),
     status:'Active',
     source:s.how_heard||'Intake Form',
     notes:'ADHD: '+( s.adhd_diagnosis||'')+(s.current_challenges?'\\nChallenges: '+s.current_challenges:'')+(s.wellbeing_goals?'\\nGoals: '+s.wellbeing_goals:''),
@@ -7455,7 +7455,7 @@ window.openTrialModal=function(id){
   document.getElementById('trialName').value=t?t.name||'':'';
   document.getElementById('trialEmail').value=t?t.email||'':'';
   document.getElementById('trialPhone').value=t?t.phone||'':'';
-  document.getElementById('trialStart').value=t?t.trial_start||'':new Date().toISOString().split('T')[0];
+  document.getElementById('trialStart').value=t?t.trial_start||'':getAUDateStr();
   document.getElementById('trialStatus').value=t?t.status||'Active':'Active';
   document.getElementById('trialSource').value=t?t.source||'':'';
   document.getElementById('trialNotes').value=t?t.notes||'':'';
@@ -7599,7 +7599,7 @@ window.convertTrialToMember=async function(){
   await supabase.from('client_members').insert({client_id:thqClient.id,contact_id:contactId}).select();
 
   // Set membership start date
-  const startDate=t.trial_start||new Date().toISOString().split('T')[0];
+  const startDate=t.trial_start||getAUDateStr();
   const renewDate=new Date(startDate);renewDate.setMonth(renewDate.getMonth()+6);
   await supabase.from('contacts').update({
     membership_start_date:startDate,
@@ -7623,7 +7623,7 @@ window.openNewMemberChoice=function(){
 window.openExistingToMemberModal=function(){
   document.getElementById('existMemContactId').value='';
   document.getElementById('existMemSearch').value='';
-  document.getElementById('existMemStart').value=new Date().toISOString().split('T')[0];
+  document.getElementById('existMemStart').value=getAUDateStr();
   document.getElementById('existMemBadge').style.display='none';
   document.getElementById('existMemSuggestions').style.display='none';
   document.getElementById('existMemDetails').style.display='none';
@@ -7668,7 +7668,7 @@ window.saveExistingAsMember=async function(){
   const contactId=document.getElementById('existMemContactId').value;
   if(!contactId){toast('Please search and select a contact first','error');return;}
   const c=contacts.find(x=>x.id===contactId);
-  const startDate=document.getElementById('existMemStart').value||new Date().toISOString().split('T')[0];
+  const startDate=document.getElementById('existMemStart').value||getAUDateStr();
 
   // Update contact type + membership dates
   const renewDate=new Date(startDate);renewDate.setMonth(renewDate.getMonth()+6);
@@ -7709,7 +7709,7 @@ window.openAddMemberModal=function(){
   document.getElementById('addMemName').value='';
   document.getElementById('addMemEmail').value='';
   document.getElementById('addMemPhone').value='';
-  document.getElementById('addMemStart').value=new Date().toISOString().split('T')[0];
+  document.getElementById('addMemStart').value=getAUDateStr();
   document.getElementById('addMemBadge').style.display='none';
   document.getElementById('addMemSuggestions').style.display='none';
   document.getElementById('addMemberModal').classList.add('open');
@@ -7751,7 +7751,7 @@ window.saveNewMember=async function(){
   let contactId=document.getElementById('addMemContactId').value;
   const email=document.getElementById('addMemEmail').value.trim()||null;
   const phone=document.getElementById('addMemPhone').value.trim()||null;
-  const startDate=document.getElementById('addMemStart').value||new Date().toISOString().split('T')[0];
+  const startDate=document.getElementById('addMemStart').value||getAUDateStr();
 
   // Find or create contact
   if(!contactId){
@@ -7905,7 +7905,7 @@ window.openRenewMember=function(contactId){
   document.getElementById('renewalStart').value=newStart.toISOString().split('T')[0];
   document.getElementById('renewalEnd').value=newEnd.toISOString().split('T')[0];
   document.getElementById('renewalAmount').value='';
-  document.getElementById('renewalDate').value=new Date().toISOString().split('T')[0];
+  document.getElementById('renewalDate').value=getAUDateStr();
   document.getElementById('renewalNotes').value='';
   document.getElementById('renewalDelBtn').style.display='none';
   document.getElementById('renewalModal').classList.add('open');
@@ -9060,12 +9060,12 @@ function toggleTkGroup(g){tkGroupState[g]=!tkGroupState[g];renderTasks();}
 window.toggleTkGroup=toggleTkGroup;
 
 // ── PHILIPPINES NIGHTLY ROLLOVER ─────────────────────────────────────────────
-function getPHTDateStr(offsetDays){
+function getPHTDateStr(offsetDays){return getAUDateStr(offsetDays);}
+function getAUDateStr(offsetDays){
+  // Always use Australia/Sydney — handles AEST (UTC+10) and AEDT (UTC+11) automatically
   const now=new Date();
-  // PHT = UTC+8 — always add 8h to UTC regardless of device timezone
-  const phtMs=now.getTime()+8*3600000+(offsetDays||0)*86400000;
-  const pht=new Date(phtMs);
-  return pht.toISOString().split('T')[0];
+  if(offsetDays) now.setDate(now.getDate()+offsetDays);
+  return now.toLocaleDateString('en-CA',{timeZone:'Australia/Sydney'});
 }
 
 async function rolloverOutstandingTasks(){
@@ -9414,7 +9414,7 @@ function renderTasks(){
     const taskCat=rest.filter(t=>!exclude.has(t.id)&&(t.work_category||'Task')==='Task').sort(taskSorter);
     const actionPlan=rest.filter(t=>!exclude.has(t.id)&&t.work_category==='Action Plan').sort(taskSorter);
     const bau=rest.filter(t=>!exclude.has(t.id)&&t.work_category==='BAU').sort(taskSorter);
-    const completedToday=filtered.filter(t=>t.status==='Complete'&&t.updated_at&&new Date(new Date(t.updated_at).getTime()+8*3600000).toISOString().split('T')[0]===todayStr);
+    const completedToday=filtered.filter(t=>t.status==='Complete'&&t.updated_at&&new Date(t.updated_at).toLocaleDateString('en-CA',{timeZone:'Australia/Sydney'})===todayStr);
 
     html+=renderScheduler(scheduled);
     html+=renderTaskSection("Today's Priorities",'&#9733;','#f59e0b',priorities,true);
@@ -9501,7 +9501,7 @@ window.copyAfternoonUpdate=function(){
   const todayStr=getPHTDateStr();
   const dateLabel=new Date().toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'});
   const active=tasks.filter(t=>t.status!=='Complete');
-  const completedToday=tasks.filter(t=>t.status==='Complete'&&t.updated_at&&new Date(new Date(t.updated_at).getTime()+8*3600000).toISOString().split('T')[0]===todayStr);
+  const completedToday=tasks.filter(t=>t.status==='Complete'&&t.updated_at&&new Date(t.updated_at).toLocaleDateString('en-CA',{timeZone:'Australia/Sydney'})===todayStr);
   const inProgress=active.filter(t=>t.status==='In Progress').sort(taskSorter);
   const blocked=active.filter(t=>t.status==='Blocked'||t.status==='Waiting on Cath'||t.status==='Waiting on CoachVA').sort(taskSorter);
   const carried=active.filter(t=>t.focus_date===todayStr&&t.status!=='In Progress'&&t.status!=='Blocked'&&t.status!=='Waiting on Cath'&&t.status!=='Waiting on CoachVA').sort(taskSorter);
@@ -10879,7 +10879,7 @@ window.openIssueForm=function(agentId){
   document.getElementById('issueTitle').value='';
   document.getElementById('issueDescription').value='';
   document.getElementById('issueFix').value='';
-  document.getElementById('issueDate').value=new Date().toISOString().split('T')[0];
+  document.getElementById('issueDate').value=getAUDateStr();
   document.getElementById('issueModal').classList.add('open');
 };
 
@@ -12541,7 +12541,7 @@ async function handleToolCall(name,input){
     if(input.due_date!==undefined) data.due_date=input.due_date||null;
     if(input.blocked_reason!==undefined) data.blocked_reason=input.blocked_reason.trim()||null;
     if(input.work_category) data.work_category=input.work_category;
-    if(input.focus_today===true) data.focus_date=new Date().toISOString().split('T')[0];
+    if(input.focus_today===true) data.focus_date=getAUDateStr();
     else if(input.focus_today===false) data.focus_date=null;
     if(!Object.keys(data).length) return {error:'No fields to update',result:null};
     const {error}=await supabase.from('tasks').update(data).eq('id',input.id);
@@ -12612,7 +12612,7 @@ async function handleToolCall(name,input){
       period_start:input.period_start||null,
       period_end:input.period_end||null,
       amount:input.amount||null,
-      renewed_date:input.renewed_date||new Date().toISOString().split('T')[0],
+      renewed_date:input.renewed_date||getAUDateStr(),
       notes:(input.notes||'').trim()||null
     };
     const {error}=await supabase.from('membership_renewals').insert(data).select();
@@ -12752,7 +12752,7 @@ async function handleToolCall(name,input){
       if(newCl) thqClient=newCl[0];
     }
     if(thqClient) await supabase.from('client_members').insert({client_id:thqClient.id,contact_id:contactId}).select();
-    const startDate=t.trial_start||new Date().toISOString().split('T')[0];
+    const startDate=t.trial_start||getAUDateStr();
     const renewDate=new Date(startDate);renewDate.setMonth(renewDate.getMonth()+6);
     await supabase.from('contacts').update({membership_start_date:startDate,renewal_date:renewDate.toISOString().split('T')[0]}).eq('id',contactId);
     await supabase.from('thrivehq_trials').update({status:'Converted'}).eq('id',input.id);
