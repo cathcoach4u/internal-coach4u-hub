@@ -253,7 +253,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.57</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.58</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -9067,29 +9067,44 @@ function getAUDateStr(offsetDays){
 }
 
 async function rolloverOutstandingTasks(){
-  // Catch-up on load: move any non-complete tasks with past focus_dates to today (PHT)
-  const todayPHT=getPHTDateStr();
-  const stale=tasks.filter(t=>t.focus_date&&t.focus_date<todayPHT&&t.status!=='Complete');
+  // Catch-up on load: move any non-complete tasks with past focus_date (or due_date) to today
+  const today=getAUDateStr();
+  const stale=tasks.filter(t=>t.status!=='Complete'&&(
+    (t.focus_date&&t.focus_date<today)||(t.due_date&&t.due_date<today)
+  ));
   if(!stale.length) return;
   const ids=stale.map(t=>t.id);
-  const {error}=await supabase.from('tasks').update({focus_date:todayPHT}).in('id',ids);
+  // Build update: always set focus_date to today; roll due_date forward only if it's also past
+  const updates=stale.map(t=>{
+    const u={id:t.id,focus_date:today};
+    if(t.due_date&&t.due_date<today) u.due_date=today;
+    return u;
+  });
+  // Supabase doesn't support per-row updates in bulk, so update all with shared fields then patch due_date
+  const {error}=await supabase.from('tasks').update({focus_date:today}).in('id',ids);
   if(!error){
-    stale.forEach(t=>t.focus_date=todayPHT);
+    // Update due_date individually for those that need it
+    const pastDue=stale.filter(t=>t.due_date&&t.due_date<today);
+    if(pastDue.length) await supabase.from('tasks').update({due_date:today}).in('id',pastDue.map(t=>t.id));
+    stale.forEach(t=>{t.focus_date=today;if(t.due_date&&t.due_date<today)t.due_date=today;});
     renderTasks();
     renderDashboard();
   }
 }
 
 async function rolloverTodayTasks(){
-  // Called at 11pm PHT: move today's outstanding tasks to tomorrow
-  const todayPHT=getPHTDateStr();
-  const tomorrowPHT=getPHTDateStr(1);
-  const toMove=tasks.filter(t=>t.focus_date===todayPHT&&t.status!=='Complete');
+  // Called at 11pm AU: move today's outstanding tasks to tomorrow
+  const today=getAUDateStr();
+  const tomorrow=getAUDateStr(1);
+  const toMove=tasks.filter(t=>t.focus_date===today&&t.status!=='Complete');
   if(!toMove.length){toast('All tasks already complete — nice work!','success',4000);return;}
   const ids=toMove.map(t=>t.id);
-  const {error}=await supabase.from('tasks').update({focus_date:tomorrowPHT}).in('id',ids);
+  // Roll both focus_date and due_date (if due today) to tomorrow
+  const {error}=await supabase.from('tasks').update({focus_date:tomorrow}).in('id',ids);
   if(!error){
-    toMove.forEach(t=>t.focus_date=tomorrowPHT);
+    const dueTodayIds=toMove.filter(t=>t.due_date===today).map(t=>t.id);
+    if(dueTodayIds.length) await supabase.from('tasks').update({due_date:tomorrow}).in('id',dueTodayIds);
+    toMove.forEach(t=>{t.focus_date=tomorrow;if(t.due_date===today)t.due_date=tomorrow;});
     toast(`${toMove.length} outstanding task${toMove.length>1?'s':''} moved to tomorrow`,'info',6000);
     renderTasks();
   }
