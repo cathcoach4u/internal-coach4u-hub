@@ -253,7 +253,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.56</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.57</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -9337,16 +9337,18 @@ function renderTaskCard(t,showStar){
   const st=t.status||'Not Started';
   const stColor=statusColors[st]||'#64748b';
 
-  const starHtml=showStar!==false?`<span onclick="event.stopPropagation();toggleFocusTask('${t.id}',${isFocused?'false':'true'})" style="font-size:15px;line-height:1;cursor:pointer;color:${isFocused?'#f59e0b':'#d1d5db'};flex-shrink:0;" title="${isFocused?'Remove from today':'Add to today\'s priorities'}">${isFocused?'&#9733;':'&#9734;'}</span>`:'';
-  const schedBtn=!isDone?`<button onclick="event.stopPropagation();showSchedulePicker('${t.id}')" style="background:none;border:1px solid #0d9488;border-radius:5px;padding:1px 7px;font-size:10px;font-weight:600;color:#0d9488;cursor:pointer;flex-shrink:0;white-space:nowrap;">Move</button>`:'';
+  const starHtml=showStar!==false?`<span onclick="event.stopPropagation();toggleFocusTask('${t.id}',${isFocused?'false':'true'})" style="font-size:15px;line-height:1;cursor:pointer;color:${isFocused?'#f59e0b':'#d1d5db'};margin-top:1px;flex-shrink:0;" title="${isFocused?'Remove from today':'Add to today\'s priorities'}">${isFocused?'&#9733;':'&#9734;'}</span>`:'';
+  const schedBtn=!isDone?`<button onclick="event.stopPropagation();showSchedulePicker('${t.id}')" style="background:none;border:1px solid #0d9488;border-radius:5px;padding:2px 10px;font-size:10px;font-weight:600;color:#0d9488;cursor:pointer;white-space:nowrap;">Move</button>`:'';
 
-  return `<div onclick="openTaskModal('${t.id}')" style="display:flex;align-items:center;padding:7px 12px;cursor:pointer;gap:8px;border-bottom:1px solid #f1f5f9;${isDone?'opacity:.45;':''}" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
-    ${starHtml}
-    <span style="font-size:12.5px;color:${isDone?'#94a3b8':'#1e293b'};flex:1;min-width:0;${isDone?'text-decoration:line-through;':''}">${t.title}</span>
-    <div style="display:flex;align-items:center;gap:5px;flex-shrink:0;">
-      ${needsDecision?'<span style="font-size:9px;font-weight:700;color:#92400e;white-space:nowrap;">DECISION</span>':''}
+  return `<div onclick="openTaskModal('${t.id}')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid #f1f5f9;${isDone?'opacity:.45;':''}" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+    <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;">
+      ${starHtml}
+      <span style="font-size:13px;line-height:1.4;color:${isDone?'#94a3b8':'#1e293b'};${isDone?'text-decoration:line-through;':''}">${t.title}</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;padding-left:${showStar!==false?'23px':'0'};">
+      ${needsDecision?`<span style="font-size:9px;font-weight:700;color:#92400e;background:#fef3c7;padding:2px 6px;border-radius:4px;white-space:nowrap;">DECISION</span>`:''}
       ${schedBtn}
-      <span style="font-size:10px;padding:2px 7px;border-radius:99px;background:${stColor}1a;color:${stColor};font-weight:600;white-space:nowrap;">${st}</span>
+      <span style="font-size:10px;padding:2px 8px;border-radius:99px;background:${stColor}22;color:${stColor};font-weight:600;white-space:nowrap;">${st}</span>
     </div>
   </div>`;
 }
