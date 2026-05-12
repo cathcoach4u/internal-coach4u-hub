@@ -44,9 +44,20 @@ Areas and their pages (defined at line ~2039):
 
 Every area's first page is a **Dashboard** so clicking an area tab never lands on a raw list.
 
+### Design principles
+
+**Cath values symmetry and visual consistency above all else.** When adding any UI element alongside existing ones, match spacing, sizing, font sizes, padding, border-radius, and interaction states exactly. Never introduce a new card, button, or row that differs in height, margin, or padding from its neighbours without a deliberate reason. When in doubt, copy the exact inline styles of the nearest equivalent element.
+
 ### Dashboard style convention
 
 All area dashboards use the **ThriveHQ nav-card grid** pattern: `display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px` with white cards, a 4px coloured left border, emoji icon (24px), bold title (14px `#1e3a5f`), and subtitle (11px `#64748b`). Hover reveals `box-shadow:0 4px 12px rgba(0,0,0,.08)`. Stat-counter cards (`dash-card` / `dc-icon` / `dc-info`) precede the nav grid where live data is available. `renderThqDash()` is the canonical reference.
+
+**Home dashboard gradient cards** (Coach4U Suite, Client List, Comms, ThriveHQ session) all use the same template:
+- `display:flex;align-items:center;gap:14px;padding:16px 20px;margin-bottom:10px;border-radius:12px`
+- Icon: `font-size:28px;flex-shrink:0`
+- Text block: `flex:1;min-width:0` — title `font-weight:700;font-size:15px;margin-bottom:2px`, subtitle `font-size:12px;opacity:.9;line-height:1.5`
+- Arrow: `font-size:18px;opacity:.85;flex-shrink:0` (→ `&#8594;`)
+- Hover: `box-shadow:0 4px 14px ...` transition
 
 ### Routing
 
