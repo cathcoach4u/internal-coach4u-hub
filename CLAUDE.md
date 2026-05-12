@@ -291,8 +291,8 @@ NDIS-Related Services (when applicable)
 
 ### Versioning
 
-- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.51.96**, line ~254)
-- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v429**)
+- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.55.64**, line ~254)
+- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v517**)
 - **Both must be bumped on every release**
 
 ### Code patterns
@@ -328,6 +328,34 @@ NDIS-Related Services (when applicable)
 - **Nav buttons are sticky** (`position:sticky;bottom:0`) — always visible on mobile regardless of page length
 - 4 rooms × 5 questions each, rated 1–10. Next button disabled until all 5 questions in current room are answered
 - Submissions write to `brain_pulse_submissions` in Internal Hub, then auto-sync to Dev DB `brain_pulse_results` via Edge Function webhook
+
+## Task Management (Admin > Task Management)
+
+### Date helpers
+
+- **`getAUDateStr(offsetDays?)`** — canonical date helper; returns `YYYY-MM-DD` in `Australia/Sydney` timezone (handles AEST UTC+10 and AEDT UTC+11 automatically via `Intl.DateTimeFormat('en-CA', {timeZone:'Australia/Sydney'})`). `offsetDays` shifts by whole days before formatting.
+- **`getPHTDateStr(offsetDays?)`** — alias for `getAUDateStr`; retained for historic call sites.
+- **`nextWorkday(dateStr)`** — given a `YYYY-MM-DD` string, returns the next working day: Friday → Monday (+3), Saturday → Monday (+2), Sunday → Monday (+1), any other day → +1.
+
+### Rollover behaviour
+
+- **Catch-up on load** (`rolloverOutstandingTasks`): any non-complete task whose `focus_date` or `due_date` is in the past is moved to today. Both fields are updated if stale.
+- **Nightly rollover** (`rolloverTodayTasks`, scheduled by `scheduleNightlyRollover` at 11 pm AU Sydney): today's outstanding tasks move to the **next workday** — Friday rolls to Monday, not Saturday. `due_date` also advances if it equals today. Toast says "moved to Monday" on a Friday rollover.
+- **No overdue badge**: tasks never show an overdue state; rollover keeps all dates current.
+
+### Task card layout
+
+- Two-row layout: title on top row, action buttons + status pill on bottom row.
+- Star (focus toggle) sits to the left of the title. Gold = focused today.
+- "Move" button opens the schedule picker; only visible on non-complete tasks.
+- No "Decision Required" field or badge.
+
+### Copy List menu
+
+- Three scopes: **Today** (tasks with `focus_date === today`), **Next 7 Days** (grouped by date, focus_date within 7 days), **Entire List** (all non-complete, grouped by section).
+- Each scope has a **Copy** button and a **Teams** button (sends to `cath@coach4u.com.au`).
+- Functions: `copyTaskList(scope)`, `sendTaskListToTeams(scope)`, internal `buildTaskListText(scope)`.
+- Teams link opens in new tab then closes after 1.5 s (iOS blank-tab fix).
 
 ## Git workflow
 
