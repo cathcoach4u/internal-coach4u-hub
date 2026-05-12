@@ -253,7 +253,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.72</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.73</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -1638,6 +1638,7 @@ let commsLists = [];
 let commsListMembers = [];
 let commsView = 'contacts'; // 'contacts' | 'groups'
 let commsActiveListId = null; // null | 'thrivehq' | UUID | 'new'
+let groupSendChannel = 'sms'; // 'sms' | 'whatsapp' | 'email'
 let tasks = [];
 let referrals = [];
 let pulseResults = [];
@@ -4890,6 +4891,12 @@ function renderSms(){
   const showList=!isMobile||commsMobileView==='list';
   const showThread=!isMobile||commsMobileView==='thread';
 
+  // Top pill tabs — full width, above the split panel
+  const viewPills=`<div style="display:flex;gap:6px;margin-bottom:10px;">
+    <button onclick="window._switchCommsView('contacts')" style="padding:8px 22px;border-radius:99px;border:2px solid ${commsView==='contacts'?'#1e3a5f':'#e2e8f0'};font-size:13px;font-weight:700;cursor:pointer;background:${commsView==='contacts'?'#1e3a5f':'#fff'};color:${commsView==='contacts'?'#fff':'#64748b'};transition:all .15s;">Contacts</button>
+    <button onclick="window._switchCommsView('groups')" style="padding:8px 22px;border-radius:99px;border:2px solid ${commsView==='groups'?'#0d9488':'#e2e8f0'};font-size:13px;font-weight:700;cursor:pointer;background:${commsView==='groups'?'#0d9488':'#fff'};color:${commsView==='groups'?'#fff':'#64748b'};transition:all .15s;">Groups</button>
+  </div>`;
+
   const filterBar=`<div style="padding:8px 12px;border-bottom:1px solid #e2e8f0;display:flex;gap:5px;flex-shrink:0;">
     <button onclick="setSmsChannelFilter('all')" style="flex:1;padding:5px;border-radius:6px;border:1px solid #e2e8f0;font-size:11px;font-weight:700;cursor:pointer;background:${smsChannelFilter==='all'?'#1e3a5f':'#f8fafc'};color:${smsChannelFilter==='all'?'#fff':'#64748b'};">All</button>
     <button onclick="setSmsChannelFilter('sms')" style="flex:1;padding:5px;border-radius:6px;border:1px solid #e2e8f0;font-size:11px;font-weight:700;cursor:pointer;background:${smsChannelFilter==='sms'?'#1d4ed8':'#f8fafc'};color:${smsChannelFilter==='sms'?'#fff':'#64748b'};">SMS</button>
@@ -4897,13 +4904,9 @@ function renderSms(){
     <button onclick="setSmsChannelFilter('email')" style="flex:1;padding:5px;border-radius:6px;border:1px solid #e2e8f0;font-size:11px;font-weight:700;cursor:pointer;background:${smsChannelFilter==='email'?'#c2410c':'#f8fafc'};color:${smsChannelFilter==='email'?'#fff':'#64748b'};">Email</button>
   </div>`;
 
-  const viewToggle=`<div style="padding:8px 12px;border-bottom:1px solid #e2e8f0;display:flex;gap:5px;flex-shrink:0;">
-    <button onclick="window._switchCommsView('contacts')" style="flex:1;padding:5px;border-radius:6px;border:1px solid #e2e8f0;font-size:11px;font-weight:700;cursor:pointer;background:${commsView==='contacts'?'#1e3a5f':'#f8fafc'};color:${commsView==='contacts'?'#fff':'#64748b'};">Contacts</button>
-    <button onclick="window._switchCommsView('groups')" style="flex:1;padding:5px;border-radius:6px;border:1px solid #e2e8f0;font-size:11px;font-weight:700;cursor:pointer;background:${commsView==='groups'?'#0d9488':'#f8fafc'};color:${commsView==='groups'?'#fff':'#64748b'};">Groups</button>
-  </div>`;
-  const listPanel=`<div style="display:${showList?'flex':'none'};flex-direction:column;${isMobile?'width:100%;':'width:260px;border-right:1px solid #e2e8f0;'}background:#f8fafc;flex-shrink:0;">
-    ${viewToggle}
-    ${inGroupsMode?renderGroupListSidebar():`<div style="padding:10px 12px;border-bottom:1px solid #e2e8f0;flex-shrink:0;"><input id="smsContactSearch" oninput="renderSmsContactList()" placeholder="Search contacts…" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box;"></div><div id="smsContactList" style="flex:1;overflow-y:auto;"></div>`}
+  const leftW=inGroupsMode?(isMobile?'100%':'190px'):(isMobile?'100%':'260px');
+  const listPanel=`<div style="display:${showList?'flex':'none'};flex-direction:column;${isMobile?'width:100%;':`width:${leftW};border-right:1px solid #e2e8f0;`}background:#f8fafc;flex-shrink:0;">
+    ${inGroupsMode?renderGroupListSidebar():`${filterBar}<div style="padding:10px 12px;border-bottom:1px solid #e2e8f0;flex-shrink:0;"><input id="smsContactSearch" oninput="renderSmsContactList()" placeholder="Search contacts…" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box;"></div><div id="smsContactList" style="flex:1;overflow-y:auto;"></div>`}
   </div>`;
 
   const threadHeader=selContact?`
@@ -4938,7 +4941,7 @@ function renderSms(){
     ${smsSelectedContactId?renderCommsCompose(smsSelectedContactId,'smsComposeBox','sendCommsMessage()'):''}
   </div>`;
 
-  el.innerHTML=`<div style="display:flex;height:calc(100vh - 120px);border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;background:#fff;">${listPanel}${threadPanel}</div>`;
+  el.innerHTML=`${viewPills}<div style="display:flex;height:calc(100vh - 158px);border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;background:#fff;">${listPanel}${threadPanel}</div>`;
 
   renderSmsContactList();
   const t=document.getElementById('smsThread');
@@ -4973,7 +4976,7 @@ window._commsBackToList=function(){commsMobileView='list';renderSms();};
 window._switchCommsView=function(v){
   commsView=v;
   if(v==='groups'){smsSelectedContactId=null;commsMobileView='list';}
-  else{commsActiveListId=null;}
+  else{commsActiveListId=null;groupSendChannel='sms';}
   renderSms();
 };
 
@@ -5196,42 +5199,83 @@ function renderGroupDetailPanel(isMob){
     members=contacts.filter(c=>mids.includes(c.id));
     canDelete=true;
   }
-  const eligible=members.filter(c=>!c.sms_opted_out&&c.phone);
+  // Channel selector determines eligible members and send method
+  const chSel=groupSendChannel||'sms';
+  let eligible,eligibleLabel,noEligibleMsg,sendBtnColor;
+  if(chSel==='sms'){
+    eligible=members.filter(c=>!c.sms_opted_out&&c.phone);
+    eligibleLabel=`${eligible.length} can receive SMS`;
+    noEligibleMsg='No eligible SMS recipients — all opted out or missing phone number.';
+    sendBtnColor='#1d4ed8';
+  } else if(chSel==='whatsapp'){
+    eligible=members.filter(c=>!c.whatsapp_opted_out&&c.phone);
+    eligibleLabel=`${eligible.length} can receive WhatsApp`;
+    noEligibleMsg='No eligible WhatsApp recipients — all opted out or missing phone number.';
+    sendBtnColor='#15803d';
+  } else {
+    eligible=members.filter(c=>c.email);
+    eligibleLabel=`${eligible.length} have email`;
+    noEligibleMsg='No email addresses on file for this group.';
+    sendBtnColor='#c2410c';
+  }
   const optedOut=members.filter(c=>c.sms_opted_out).length;
   const noPhone=members.filter(c=>!c.phone&&!c.sms_opted_out).length;
+
+  const channelPills=`<div style="display:flex;gap:5px;padding:8px 14px;border-bottom:1px solid #e2e8f0;flex-shrink:0;background:#fff;">
+    <span style="font-size:11px;color:#64748b;align-self:center;margin-right:2px;font-weight:600;">Send via:</span>
+    <button onclick="window._setGroupChannel('sms')" style="padding:5px 12px;border-radius:99px;border:2px solid ${chSel==='sms'?'#1d4ed8':'#e2e8f0'};font-size:11px;font-weight:700;cursor:pointer;background:${chSel==='sms'?'#1d4ed8':'#f8fafc'};color:${chSel==='sms'?'#fff':'#64748b'};">SMS</button>
+    <button onclick="window._setGroupChannel('whatsapp')" style="padding:5px 12px;border-radius:99px;border:2px solid ${chSel==='whatsapp'?'#15803d':'#e2e8f0'};font-size:11px;font-weight:700;cursor:pointer;background:${chSel==='whatsapp'?'#15803d':'#f8fafc'};color:${chSel==='whatsapp'?'#fff':'#64748b'};">WhatsApp</button>
+    <button onclick="window._setGroupChannel('email')" style="padding:5px 12px;border-radius:99px;border:2px solid ${chSel==='email'?'#c2410c':'#e2e8f0'};font-size:11px;font-weight:700;cursor:pointer;background:${chSel==='email'?'#c2410c':'#f8fafc'};color:${chSel==='email'?'#fff':'#64748b'};">Email</button>
+  </div>`;
+
   const memberRows=members.map(c=>{
     const name=`${c.first_name||''} ${c.last_name||''}`.trim();
-    const out=c.sms_opted_out,np=!c.phone;
-    const badge=out?'<span style="font-size:9px;background:#fee2e2;color:#dc2626;padding:1px 6px;border-radius:99px;font-weight:700;">OPTED OUT</span>':np?'<span style="font-size:9px;background:#fef3c7;color:#d97706;padding:1px 6px;border-radius:99px;font-weight:700;">NO PHONE</span>':'<span style="font-size:9px;background:#dcfce7;color:#15803d;padding:1px 6px;border-radius:99px;font-weight:700;">&#10003;</span>';
-    return `<div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid #f1f5f9;opacity:${(out||np)?'.55':'1'};">
+    let statusBadge;
+    if(chSel==='email'){
+      statusBadge=c.email
+        ?'<span style="font-size:9px;background:#dcfce7;color:#15803d;padding:1px 6px;border-radius:99px;font-weight:700;">&#10003; email</span>'
+        :'<span style="font-size:9px;background:#fef3c7;color:#d97706;padding:1px 6px;border-radius:99px;font-weight:700;">NO EMAIL</span>';
+    } else if(chSel==='whatsapp'){
+      const out=c.whatsapp_opted_out,np=!c.phone;
+      statusBadge=out?'<span style="font-size:9px;background:#fee2e2;color:#dc2626;padding:1px 6px;border-radius:99px;font-weight:700;">WA OUT</span>':np?'<span style="font-size:9px;background:#fef3c7;color:#d97706;padding:1px 6px;border-radius:99px;font-weight:700;">NO PHONE</span>':'<span style="font-size:9px;background:#dcfce7;color:#15803d;padding:1px 6px;border-radius:99px;font-weight:700;">&#10003; WA</span>';
+    } else {
+      const out=c.sms_opted_out,np=!c.phone;
+      statusBadge=out?'<span style="font-size:9px;background:#fee2e2;color:#dc2626;padding:1px 6px;border-radius:99px;font-weight:700;">OPTED OUT</span>':np?'<span style="font-size:9px;background:#fef3c7;color:#d97706;padding:1px 6px;border-radius:99px;font-weight:700;">NO PHONE</span>':'<span style="font-size:9px;background:#dcfce7;color:#15803d;padding:1px 6px;border-radius:99px;font-weight:700;">&#10003;</span>';
+    }
+    const ineligible=(chSel==='email'&&!c.email)||(chSel==='sms'&&(c.sms_opted_out||!c.phone))||(chSel==='whatsapp'&&(c.whatsapp_opted_out||!c.phone));
+    const contactDetail=chSel==='email'?(c.email||'No email'):(c.phone||'No phone');
+    return `<div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid #f1f5f9;opacity:${ineligible?'.55':'1'};">
       <div style="width:30px;height:30px;border-radius:50%;background:${isThq?'#0d9488':'#1e3a5f'};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">${(c.first_name||'?')[0].toUpperCase()}</div>
-      <div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:600;color:#1e293b;">${name.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div><div style="font-size:11px;color:#94a3b8;">${c.phone||'No phone'}</div></div>
-      ${badge}
+      <div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:600;color:#1e293b;">${name.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div><div style="font-size:11px;color:#94a3b8;">${contactDetail}</div></div>
+      ${statusBadge}
     </div>`;
   }).join('');
-  const _isTue=new Date().getDay()===2;
+
   const _tplKey=isThq?'thrivehq':commsActiveListId;
   const _templates=getGroupTemplates(_tplKey);
-  const _tueBanner='';
-  const _templateCards=_templates.map(t=>`<div style="border:1px solid #e2e8f0;border-radius:8px;padding:9px 11px;background:#fff;margin-bottom:6px;display:flex;align-items:flex-start;gap:8px;">
+  const _templateCards=_templates.map(t=>`<div style="border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;background:#fff;margin-bottom:7px;display:flex;align-items:flex-start;gap:8px;cursor:pointer;" onclick="window.loadGroupTemplate('${_tplKey}','${t.id}')" onmouseover="this.style.borderColor='#0d9488'" onmouseout="this.style.borderColor='#e2e8f0'">
     <div style="flex:1;min-width:0;">
-      <div style="font-size:12px;font-weight:700;color:#1e293b;margin-bottom:3px;">${t.name.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div>
-      <div style="font-size:11px;color:#64748b;line-height:1.45;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${t.body.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,' ')}</div>
+      <div style="font-size:12px;font-weight:700;color:#0d9488;margin-bottom:3px;">${t.name.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div>
+      <div style="font-size:11px;color:#475569;line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;">${t.body.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,' ')}</div>
     </div>
     <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;">
-      <button onclick="window.loadGroupTemplate('${_tplKey}','${t.id}')" style="font-size:11px;padding:4px 10px;background:#0d9488;color:#fff;border:none;border-radius:6px;cursor:pointer;white-space:nowrap;">Load</button>
-      <button onclick="window.deleteGroupTemplate('${_tplKey}','${t.id}')" style="font-size:11px;padding:4px 10px;background:none;border:1px solid #fecaca;color:#dc2626;border-radius:6px;cursor:pointer;white-space:nowrap;">Delete</button>
+      <span style="font-size:10px;background:#ccfbf1;color:#0d9488;padding:2px 8px;border-radius:99px;font-weight:700;white-space:nowrap;text-align:center;">Load</span>
+      <button onclick="event.stopPropagation();window.deleteGroupTemplate('${_tplKey}','${t.id}')" style="font-size:10px;padding:3px 8px;background:none;border:1px solid #fecaca;color:#dc2626;border-radius:99px;cursor:pointer;white-space:nowrap;">&#x2715;</button>
     </div>
   </div>`).join('');
+
+  const emailSubjectField=chSel==='email'?`<input id="groupEmailSubject" placeholder="Subject…" style="width:100%;padding:8px 11px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:6px;">`:'' ;
+
   return `<div style="padding:12px 14px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:8px;flex-shrink:0;position:sticky;top:0;background:#fff;z-index:2;">
     ${backBtn}
     <div style="flex:1;min-width:0;"><div style="font-weight:700;font-size:15px;color:#1e3a5f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${listName.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div>
-    <div style="font-size:11px;color:#64748b;">${members.length} member${members.length!==1?'s':''} &middot; ${eligible.length} can receive SMS${optedOut?' &middot; '+optedOut+' opted out':''}${noPhone?' &middot; '+noPhone+' no phone':''}</div></div>
+    <div style="font-size:11px;color:#64748b;">${members.length} member${members.length!==1?'s':''} &middot; ${eligibleLabel}</div></div>
     ${canDelete?`<button onclick="window.deleteCommsGroup('${commsActiveListId}')" style="font-size:11px;color:#dc2626;background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:6px;flex-shrink:0;">Delete</button>`:''}
   </div>
+  ${channelPills}
   <div style="flex:1;overflow-y:auto;">${memberRows||'<div style="padding:24px;color:#94a3b8;text-align:center;font-size:13px;">No members in this list</div>'}</div>
   <div style="border-top:1px solid #e2e8f0;background:#f8fafc;flex-shrink:0;">
-    <div style="padding:8px 12px 6px;display:flex;align-items:center;justify-content:space-between;">
+    <div style="padding:8px 12px 4px;display:flex;align-items:center;justify-content:space-between;">
       <span style="font-size:12px;font-weight:700;color:#475569;">&#128196; Templates${_templates.length?' ('+_templates.length+')':''}</span>
       <button onclick="window.toggleTplSaveForm('${_tplKey}')" style="font-size:11px;padding:4px 10px;background:none;border:1px solid #e2e8f0;color:#64748b;border-radius:6px;cursor:pointer;">+ Save as template</button>
     </div>
@@ -5242,43 +5286,66 @@ function renderGroupDetailPanel(isMob){
         <button onclick="window.saveGroupTemplateNamed('${_tplKey}')" style="font-size:11px;padding:5px 12px;background:#0d9488;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:700;">Save</button>
       </div>
     </div>
-    <div style="max-height:210px;overflow-y:auto;padding:0 12px 8px;">
-      ${_templates.length?_templateCards:'<div style="font-size:11px;color:#94a3b8;padding:2px 0 6px;">No templates yet — type a message below and save it here.</div>'}
+    <div style="max-height:180px;overflow-y:auto;padding:0 12px 8px;">
+      ${_templates.length?_templateCards:'<div style="font-size:11px;color:#94a3b8;padding:2px 0 6px;">No templates yet — type a message below and save it.</div>'}
     </div>
   </div>
   <div id="groupSendProgress" style="display:none;padding:8px 14px;background:#f0fdf4;border-top:1px solid #bbf7d0;font-size:12px;color:#15803d;text-align:center;"></div>
   <div style="padding:10px 12px;border-top:1px solid #e2e8f0;background:#fff;flex-shrink:0;">
     ${eligible.length>0
-      ?`${_tueBanner}<div style="display:flex;gap:8px;align-items:flex-end;">
-          <div style="flex:1;display:flex;flex-direction:column;gap:3px;">
-            <textarea id="groupComposeBox" placeholder="Message to all ${eligible.length} member${eligible.length!==1?'s':''}…" rows="2" style="width:100%;padding:9px 11px;border:1px solid #e2e8f0;border-radius:10px;font-size:13px;font-family:inherit;resize:none;box-sizing:border-box;" oninput="window._updateCharCount('groupComposeBox')"></textarea>
-            <div id="_cc_groupComposeBox" style="font-size:10px;color:#94a3b8;text-align:right;display:none;"></div>
+      ?`<div style="display:flex;flex-direction:column;gap:6px;">
+          ${emailSubjectField}
+          <div style="display:flex;gap:8px;align-items:flex-end;">
+            <div style="flex:1;display:flex;flex-direction:column;gap:3px;">
+              <textarea id="groupComposeBox" placeholder="Message to ${eligible.length} ${chSel==='email'?'recipient':'member'}${eligible.length!==1?'s':''}…" rows="2" style="width:100%;padding:9px 11px;border:1px solid #e2e8f0;border-radius:10px;font-size:13px;font-family:inherit;resize:none;box-sizing:border-box;" oninput="window._updateCharCount('groupComposeBox')"></textarea>
+              <div id="_cc_groupComposeBox" style="font-size:10px;color:#94a3b8;text-align:right;display:none;"></div>
+            </div>
+            <button onclick="window.sendGroupMessage('${commsActiveListId}')" style="background:${sendBtnColor};color:#fff;border:none;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;">Send to ${eligible.length}</button>
           </div>
-          <button onclick="window.sendGroupSms('${commsActiveListId}')" style="background:#0d9488;color:#fff;border:none;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;">Send to ${eligible.length}</button>
         </div>`
-      :'<div style="color:#dc2626;font-size:12px;text-align:center;padding:6px;">No eligible recipients — all opted out or missing phone number.</div>'
+      :`<div style="color:#dc2626;font-size:12px;text-align:center;padding:6px;">${noEligibleMsg}</div>`
     }
   </div>`;
 }
 
 window.selectCommsGroup=function(id){commsActiveListId=id;commsMobileView='thread';renderSms();};
+window._setGroupChannel=function(ch){groupSendChannel=ch;renderSms();};
 
-window.sendGroupSms=async function(listId){
+window.sendGroupSms=function(listId){groupSendChannel='sms';window.sendGroupMessage(listId);};
+
+window.sendGroupMessage=async function(listId){
   const compose=document.getElementById('groupComposeBox');
   const body=compose?.value.trim();
   if(!body){toast('Type a message first','error');return;}
+  const ch=groupSendChannel||'sms';
   const isThq=listId==='thrivehq';
   const members=isThq?getThqGroupContacts():contacts.filter(c=>commsListMembers.filter(m=>m.list_id===listId).map(m=>m.contact_id).includes(c.id));
-  const eligible=members.filter(c=>!c.sms_opted_out&&c.phone);
+  let eligible;
+  if(ch==='sms') eligible=members.filter(c=>!c.sms_opted_out&&c.phone);
+  else if(ch==='whatsapp') eligible=members.filter(c=>!c.whatsapp_opted_out&&c.phone);
+  else eligible=members.filter(c=>c.email);
   if(!eligible.length){toast('No eligible recipients','error');return;}
   const progressEl=document.getElementById('groupSendProgress');
   if(progressEl){progressEl.style.display='block';progressEl.textContent=`Sending 0 / ${eligible.length}…`;}
   const {data:{session}}=await supabase.auth.getSession();
   if(!session){toast('Not authenticated','error');return;}
   let sent=0,failed=0;
+  let endpoint,buildPayload;
+  if(ch==='sms'){
+    endpoint=`${SUPABASE_EDGE_URL}/send-sms`;
+    buildPayload=contact=>({to:contact.phone,body,contact_id:contact.id});
+  } else if(ch==='whatsapp'){
+    endpoint=`${SUPABASE_EDGE_URL}/send-whatsapp`;
+    buildPayload=contact=>({to:contact.phone,body,contact_id:contact.id});
+  } else {
+    const subjectEl=document.getElementById('groupEmailSubject');
+    const subject=(subjectEl?.value.trim())||'Message from Coach4U';
+    endpoint=`${SUPABASE_EDGE_URL}/send-email`;
+    buildPayload=contact=>({to:contact.email,subject,body,contact_id:contact.id});
+  }
   for(const contact of eligible){
     try{
-      const res=await fetch(`${SUPABASE_EDGE_URL}/send-sms`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},body:JSON.stringify({to:contact.phone,body,contact_id:contact.id})});
+      const res=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},body:JSON.stringify(buildPayload(contact))});
       if(res.ok) sent++; else failed++;
     }catch(e){failed++;}
     if(progressEl) progressEl.textContent=`Sending ${sent+failed} / ${eligible.length}… (${sent} sent${failed?' &middot; '+failed+' failed':''})`;
@@ -12331,7 +12398,7 @@ function renderAbout(){
     listItem('Cancellation Policy','Public branded policy page at /policies/cancellation/')+
     listItem('Cath Voice Reference','docs/cath-voice-tone-v1.md + inline CATH_VOICE_REFERENCE constant — single source of truth for all AI-generated tone')+
     listItem('Client Profile','Full-screen modal with teal header, scrollable body — Members, Reports &amp; Documents, Pulse Check-ins, Couple Dynamics AI, Notes. Pulse and Couple Dynamics sections are role-gated (Couple/Individual only). Flex column layout ensures correct scrolling on mobile including iPhone notch/home indicator.')+
-    listItem('Comms','SMS, WhatsApp and email threads for every contact. Group messaging to ThriveHQ (auto-populated) and custom lists — outbound only, replies land in individual threads. Named message template library per group with save, load, and delete. STOP reply auto-opts contacts out of SMS instantly. Individual threads with channel filter (All / SMS / WA / Email) and real-time inbound notifications.')+
+    listItem('Comms','SMS, WhatsApp and email threads for every contact. Contacts / Groups pill tabs at the top switch modes. Group messaging to ThriveHQ (auto-populated) and custom lists with per-channel send (SMS | WhatsApp | Email) — outbound only, replies land in individual threads. Email sends include a subject field. Named message template library per group with save, load (click card), and delete. STOP reply auto-opts contacts out of SMS instantly. Individual threads with channel filter (All / SMS / WA / Email) and real-time inbound notifications.')+
     listItem('C4U Bot','AI chat assistant — add prospects, contacts, tasks, search CRM, view dashboards')+
   '</ul>');
 

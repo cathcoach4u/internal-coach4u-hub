@@ -302,8 +302,8 @@ NDIS-Related Services (when applicable)
 
 ### Versioning
 
-- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.55.71**, line ~256)
-- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v524**)
+- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.55.73**, line ~256)
+- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v526**)
 - **Both must be bumped on every release**
 
 ### Code patterns
@@ -424,6 +424,13 @@ NDIS-Related Services (when applicable)
 - **Channels**: SMS (Text), WhatsApp, Email — filter buttons: All / SMS / WA / Email
 - **Realtime**: `startCommsRealtime()` subscribes to new `sms_messages` inserts; unread count badge on nav
 
+### Layout
+
+- **Top pill tabs** (`viewPills`): "Contacts" (navy) and "Groups" (teal) pill buttons sit above the split panel — full width, not inside the sidebar
+- `_switchCommsView(v)` switches `commsView` state; resets channel/selection on switch
+- **Contacts mode**: 260px left sidebar (contact list + channel filter + search); full-width thread panel
+- **Groups mode**: 190px left sidebar (group list); wider detail panel gives more room to the group compose area
+
 ### Individual messaging
 
 - `renderCommsThread(contactId, channelFilter)` — renders message history
@@ -434,7 +441,11 @@ NDIS-Related Services (when applicable)
 
 - **ThriveHQ Members** — auto-populated from all clients with `role='Community'` and `status='Active'`; function `getThqGroupContacts()`; cannot be deleted
 - **Custom lists** — stored in `comms_lists` (`filter_type='manual'`) with members in `comms_list_members`
-- `sendGroupSms(listId)` — sends to all eligible members (has phone + not opted out), shows live progress counter
+- **Channel selector** (SMS | WhatsApp | Email) shown inside the group detail panel header — state stored in `groupSendChannel` (`let groupSendChannel = 'sms'`)
+- `_setGroupChannel(ch)` — sets `groupSendChannel` and re-renders; eligible member count updates to match channel
+- `sendGroupMessage(listId)` — unified send function; routes to `send-sms`, `send-whatsapp`, or `send-email` Edge Function based on `groupSendChannel`; email sends include a subject field (`#groupEmailSubject`)
+- `sendGroupSms(listId)` — legacy shim: sets channel to sms then calls `sendGroupMessage`
+- Progress bar shows live per-message send status
 
 ### STOP auto opt-out
 
@@ -446,7 +457,7 @@ NDIS-Related Services (when applicable)
 - **Storage**: `localStorage` key `group_templates_{listId}` (e.g. `group_templates_thrivehq`) — JSON array of `{id, name, body, createdAt}`
 - **Helpers**: `getGroupTemplates(listId)`, `setGroupTemplates(listId, arr)`
 - **Migration**: if `group_templates_thrivehq` is empty on first load, migrates any legacy single template from `thq_tuesday_sms_template` automatically
-- **UI**: template panel sits between member list and compose area — shows each template as a card (name + 2-line preview + Load / Delete buttons). Button "+ Save as template" opens inline save form with name input.
+- **UI**: template panel sits between member list and compose area — each template is a clickable card (name in teal, 3-line body preview); clicking the card loads it; ✕ button deletes. Button "+ Save as template" opens inline save form with name input.
 - `window.saveGroupTemplateNamed(listId)` — saves current compose box content as named template
 - `window.loadGroupTemplate(listId, id)` — populates compose box from saved template
 - `window.deleteGroupTemplate(listId, id)` — removes template after confirm
