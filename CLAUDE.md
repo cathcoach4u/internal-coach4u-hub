@@ -74,7 +74,7 @@ The admin panel (`coach4Uapp-dashboard/admin.html`) reads from Internal Hub and 
 ### What gets copied
 
 | Internal Hub table | Fields copied | Dev DB table | Dev DB fields |
-|---|---|---|---|
+|---|---|---|
 | `contacts` | `first_name`, `last_name` | `users` | `name` |
 | `contacts` | `membership_start_date` | `users` | `membership_start_date` |
 | `contacts` | `renewal_date` | `users` | `membership_expires` |
@@ -302,8 +302,8 @@ NDIS-Related Services (when applicable)
 
 ### Versioning
 
-- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.55.76**, line ~256)
-- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v529**)
+- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.55.80**, line ~256)
+- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v536**)
 - **Both must be bumped on every release**
 
 ### Code patterns
@@ -470,7 +470,7 @@ NDIS-Related Services (when applicable)
 #### `renderThqSessionCard()` — Home dashboard action card
 - Injected into `#thqSessionCard` div by `renderDashboard()`
 - **Tuesday in term**: teal/blue gradient clickable card → `selectCommsGroup('thrivehq'); navTo('sms')`
-- **In term (other days)**: darker teal gradient, shows block dates + next Tuesday date; expandable full calendar in `<details>`
+- **In term (other days)**: darker teal gradient, clickable → `navTo('thqdash')`; shows block dates + next Tuesday date; no inline calendar (calendar lives in ThriveHQ Hub dashboard)
 - **Break**: slate gradient, shows break name + resume date; expandable full calendar
 - **Outside all blocks**: slate gradient, shows next block start; expandable full calendar
 
