@@ -253,7 +253,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.65</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.66</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -1999,6 +1999,7 @@ async function loadAgents(){
 async function loadAll(){
   try{
     await Promise.all([loadContacts(), loadClients(), loadTasks(), loadProspects(), loadProspectNotes(), loadReferrers(), loadRefPayments(), loadRenewals(), loadContactReports(), loadStrengthsInsights(), loadGallupRequests(), loadTrials(), loadTaskLogs(), loadFinanceTransactions(), loadBills(), loadIntakeSubmissions(), loadPulseResults(), loadBrainPulseSubmissions(), loadConnectionPulseSubmissions(), loadAgents(), loadSmsMessages(), loadCommsLists()]);
+    await processStopReplies();
     await bootstrapInAppAgents();
   }catch(e){
     console.error('loadAll error:',e);
@@ -4632,6 +4633,17 @@ async function loadSmsMessages(){
   if(error&&error.code!=='42P01') console.error('loadSmsMessages:',error);
 }
 
+async function processStopReplies(){
+  const stopIds=[...new Set(smsMessages
+    .filter(m=>m.direction==='inbound'&&m.body?.trim().toUpperCase()==='STOP'&&m.contact_id)
+    .map(m=>m.contact_id))];
+  const toOptOut=stopIds.filter(id=>{const c=contacts.find(x=>x.id===id);return c&&!c.sms_opted_out;});
+  if(!toOptOut.length) return;
+  await supabase.from('contacts').update({sms_opted_out:true}).in('id',toOptOut);
+  toOptOut.forEach(id=>{const c=contacts.find(x=>x.id===id);if(c) c.sms_opted_out=true;});
+  toast(`${toOptOut.length} contact${toOptOut.length!==1?'s':''} auto-opted out (replied STOP)`,'info');
+}
+
 let _commsRealtimeChannel=null;
 let commsUnreadCount=0;
 
@@ -4655,6 +4667,16 @@ function startCommsRealtime(){
       if(!msg||!msg.id) return;
       if(smsMessages.some(m=>m.id===msg.id)) return;
       smsMessages.push(msg);
+      if(msg.direction==='inbound'&&msg.body?.trim().toUpperCase()==='STOP'&&msg.contact_id){
+        const c=contacts.find(x=>x.id===msg.contact_id);
+        if(c&&!c.sms_opted_out){
+          supabase.from('contacts').update({sms_opted_out:true}).eq('id',c.id).then(()=>{
+            c.sms_opted_out=true;
+            toast(`${c.first_name||'Contact'} replied STOP — auto-opted out of SMS`,'info');
+            renderSms();
+          });
+        }
+      }
       const isOpen=msg.contact_id===smsSelectedContactId&&document.getElementById('screen-sms')?.style.display!=='none';
       if(isOpen){
         const thread=document.getElementById('smsThread');
@@ -5098,6 +5120,11 @@ function renderGroupDetailPanel(isMob){
       ${badge}
     </div>`;
   }).join('');
+  const _isTue=new Date().getDay()===2;
+  const _savedTpl=isThq?(localStorage.getItem('thq_tuesday_sms_template')||''):'';
+  const _tueBanner=isThq&&_isTue?'<div style="background:#fef3c7;border:1px solid #fbbf24;border-radius:8px;padding:8px 12px;margin-bottom:8px;font-size:12px;color:#92400e;">&#128197; <strong>It\'s Tuesday!</strong> Weekly ThriveHQ message due — load your saved template or type a new one below.</div>':'';
+  const _tplBtnLoad=_savedTpl?'<button onclick="window.loadTuesdayTemplate()" style="font-size:11px;padding:4px 10px;background:#0d9488;color:#fff;border:none;border-radius:6px;cursor:pointer;">Load template</button>':'<button disabled style="font-size:11px;padding:4px 10px;background:#e2e8f0;color:#94a3b8;border:none;border-radius:6px;cursor:default;">Load template</button>';
+  const _tplRow=isThq?`<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;"><span style="font-size:11px;color:#64748b;flex:1;">${_savedTpl?'&#128196; Template saved':'No template saved yet'}</span>${_tplBtnLoad}<button onclick="window.saveTuesdayTemplate()" style="font-size:11px;padding:4px 10px;background:none;border:1px solid #e2e8f0;color:#64748b;border-radius:6px;cursor:pointer;">Save as template</button></div>`:'';
   return `<div style="padding:12px 14px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:8px;flex-shrink:0;position:sticky;top:0;background:#fff;z-index:2;">
     ${backBtn}
     <div style="flex:1;min-width:0;"><div style="font-weight:700;font-size:15px;color:#1e3a5f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${listName.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div>
@@ -5108,7 +5135,7 @@ function renderGroupDetailPanel(isMob){
   <div id="groupSendProgress" style="display:none;padding:8px 14px;background:#f0fdf4;border-top:1px solid #bbf7d0;font-size:12px;color:#15803d;text-align:center;"></div>
   <div style="padding:10px 12px;border-top:1px solid #e2e8f0;background:#fff;flex-shrink:0;">
     ${eligible.length>0
-      ?`<div style="display:flex;gap:8px;align-items:flex-end;">
+      ?`${_tueBanner}${_tplRow}<div style="display:flex;gap:8px;align-items:flex-end;">
           <div style="flex:1;display:flex;flex-direction:column;gap:3px;">
             <textarea id="groupComposeBox" placeholder="Message to all ${eligible.length} member${eligible.length!==1?'s':''}…" rows="2" style="width:100%;padding:9px 11px;border:1px solid #e2e8f0;border-radius:10px;font-size:13px;font-family:inherit;resize:none;box-sizing:border-box;" oninput="window._updateCharCount('groupComposeBox')"></textarea>
             <div id="_cc_groupComposeBox" style="font-size:10px;color:#94a3b8;text-align:right;display:none;"></div>
@@ -5180,6 +5207,23 @@ window.deleteCommsGroup=async function(listId){
   commsMobileView='list';
   renderSms();
   toast('List deleted','success');
+};
+
+window.saveTuesdayTemplate=function(){
+  const el=document.getElementById('groupComposeBox');
+  const t=el?.value.trim();
+  if(!t){toast('Type a message first','error');return;}
+  localStorage.setItem('thq_tuesday_sms_template',t);
+  toast('Template saved','success');
+  renderSms();
+};
+
+window.loadTuesdayTemplate=function(){
+  const t=localStorage.getItem('thq_tuesday_sms_template');
+  if(!t){toast('No saved template','error');return;}
+  const el=document.getElementById('groupComposeBox');
+  if(el){el.value=t;window._updateCharCount&&window._updateCharCount('groupComposeBox');}
+  toast('Template loaded','success');
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
