@@ -1,0 +1,125 @@
+name: Patch ThriveHQ Activities with member selector
+
+on:
+  push:
+    paths:
+      - '.github/workflows/patch-activities-member-select.yml'
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Apply patch via Python
+        run: |
+          cat <<'PYEOF' > patch.py
+          import sys
+
+          with open('index.html', 'r', encoding='utf-8') as f:
+              content = f.read()
+
+          OLD = """// ── THRIVEHQ ACTIVITIES ──
+          function renderThqActivities(){
+            const el=document.getElementById('thqActivitiesContent');
+            if(!el) return;
+            const activities=[
+              {name:'Issue Clarifier',desc:'Find the core issue and a next step',icon:'&#x1F9ED;',url:'activities/issue-clarifier.html',color:'#1e3a5f'}
+            ];
+            let html=`<div style="margin-bottom:20px;">
+              <div style="font-family:'Quicksand','Inter',sans-serif;font-size:16px;font-weight:700;color:#1e3a5f;margin-bottom:4px;">Activities</div>
+              <div style="font-size:12px;color:#64748b;">Coaching activities and tools for ThriveHQ members</div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;">`;
+            activities.forEach(a=>{
+              html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid ${a.color};border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:8px;box-shadow:0 1px 3px rgba(0,0,0,.04);">
+                <div style="font-size:28px;line-height:1;">${a.icon}</div>
+                <div style="font-weight:700;color:#1e3a5f;font-size:14px;">${a.name}</div>
+                <div style="font-size:12px;color:#64748b;flex:1;">${a.desc}</div>
+                <a href="${a.url}" style="display:inline-block;margin-top:4px;background:#1e3a5f;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;font-family:inherit;text-align:center;">Open</a>
+              </div>`;
+            });
+            html+=`</div>`;
+            el.innerHTML=html;
+          }"""
+
+          NEW = """// ── THRIVEHQ ACTIVITIES ──
+          function renderThqActivities(){
+            const el=document.getElementById('thqActivitiesContent');
+            if(!el) return;
+            const thqMembers=getThqMembers('').sort((a,b)=>(a.contact.first_name+' '+a.contact.last_name).localeCompare(b.contact.first_name+' '+b.contact.last_name));
+            const activities=[
+              {name:'Issue Clarifier',desc:'Find the core issue and a next step',icon:'&#x1F9ED;',url:'activities/issue-clarifier.html',color:'#1e3a5f'}
+            ];
+            let html=`<div style="margin-bottom:20px;">
+              <div style="font-family:'Quicksand','Inter',sans-serif;font-size:16px;font-weight:700;color:#1e3a5f;margin-bottom:4px;">Activities</div>
+              <div style="font-size:12px;color:#64748b;">Coaching activities and tools for ThriveHQ members</div>
+            </div>
+            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px 16px;margin-bottom:18px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+              <div style="font-size:13px;font-weight:600;color:#1e3a5f;white-space:nowrap;">Session for</div>
+              <select id="thqActMember" style="flex:1;min-width:160px;border:1.5px solid #cbd5e1;border-radius:8px;padding:7px 10px;font-size:13px;font-family:inherit;color:#1e293b;background:#fff;cursor:pointer;">
+                <option value="">&#8212; Select member &#8212;</option>
+                ${thqMembers.map(m=>`<option value="${m.contact.id}">${m.contact.first_name} ${m.contact.last_name}</option>`).join('')}
+              </select>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;">`;
+            activities.forEach(a=>{
+              html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid ${a.color};border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:8px;box-shadow:0 1px 3px rgba(0,0,0,.04);">
+                <div style="font-size:28px;line-height:1;">${a.icon}</div>
+                <div style="font-weight:700;color:#1e3a5f;font-size:14px;">${a.name}</div>
+                <div style="font-size:12px;color:#64748b;flex:1;">${a.desc}</div>
+                <button onclick="openThqActivity('${a.url}')" style="display:inline-block;margin-top:4px;background:#1e3a5f;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;text-align:center;">Open</button>
+              </div>`;
+            });
+            html+=`</div>`;
+            el.innerHTML=html;
+          }
+
+          function openThqActivity(baseUrl){
+            const sel=document.getElementById('thqActMember');
+            if(!sel||!sel.value){toast('Select a member first','info');return;}
+            const contactId=sel.value;
+            const contactName=sel.options[sel.selectedIndex].text;
+            const url=baseUrl+'?contact='+encodeURIComponent(contactId)+'&name='+encodeURIComponent(contactName);
+            window.open(url,'_blank','noopener');
+          }"""
+
+          # Normalise indentation: strip leading spaces from each line of OLD/NEW
+          # The heredoc adds indentation — strip it
+          import textwrap
+          old_str = textwrap.dedent(OLD)
+          new_str = textwrap.dedent(NEW)
+
+          if old_str in content:
+              content = content.replace(old_str, new_str)
+              with open('index.html', 'w', encoding='utf-8') as f:
+                  f.write(content)
+              print('Patch applied successfully')
+          else:
+              # Try to find the marker and show context for debugging
+              idx = content.find('// ── THRIVEHQ ACTIVITIES ──')
+              if idx >= 0:
+                  print('Marker found but pattern did not match. Context:')
+                  print(repr(content[idx:idx+400]))
+              else:
+                  print('Marker not found in file')
+              sys.exit(1)
+          PYEOF
+          python3 patch.py
+
+      - name: Bump sw.js cache version to v532
+        run: sed -i "s|coach4u-crm-v531|coach4u-crm-v532|g" sw.js
+
+      - name: Remove this workflow
+        run: rm .github/workflows/patch-activities-member-select.yml
+
+      - name: Commit changes
+        run: |
+          git config user.name "cathcoach4u"
+          git config user.email "cath@coach4u.com.au"
+          git add index.html sw.js
+          git rm .github/workflows/patch-activities-member-select.yml
+          git commit -m "ThriveHQ Activities: add member selector and openThqActivity(); bump cache to v532"
+          git push
