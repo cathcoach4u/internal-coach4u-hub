@@ -253,7 +253,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.68</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.69</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -12316,7 +12316,7 @@ function renderAbout(){
   );
 
   html+=card('Features','<ul style="list-style:disc;padding-left:20px;margin:0;">'+
-    listItem('Home','At-a-glance dashboard: active prospects, intake forms to review, ThriveHQ trials, Gallup codes in flight — plus headline numbers and quick-nav to all areas')+
+    listItem('Home','At-a-glance dashboard: active prospects, intake forms to review, ThriveHQ trials, Gallup codes in flight. ThriveHQ session calendar card — shows current term/break status, Tuesday SMS reminder with one-tap Go to Comms button, and expandable full session calendar.')+
     listItem('CRM','Dashboard, Master List, Prospect List, Clients Dashboard, Client List, Intake Forms, Invoices. Client List groups (Couple, Individual, Organisation, Community/ThriveHQ, Archived) all start collapsed — click to expand.')+
     listItem('Referrers','Dashboard (Referral Hub) and referrer Payments tracking')+
     listItem('Pulses','Dashboard, SAFE Pulse, Brain Pulse, Connection Pulse — per-client mini portal with printable reports')+
@@ -12334,6 +12334,7 @@ function renderAbout(){
     listItem('Cancellation Policy','Public branded policy page at /policies/cancellation/')+
     listItem('Cath Voice Reference','docs/cath-voice-tone-v1.md + inline CATH_VOICE_REFERENCE constant — single source of truth for all AI-generated tone')+
     listItem('Client Profile','Full-screen modal with teal header, scrollable body — Members, Reports &amp; Documents, Pulse Check-ins, Couple Dynamics AI, Notes. Pulse and Couple Dynamics sections are role-gated (Couple/Individual only). Flex column layout ensures correct scrolling on mobile including iPhone notch/home indicator.')+
+    listItem('Comms','SMS, WhatsApp and email threads for every contact. Group messaging to ThriveHQ (auto-populated) and custom lists. Named message template library per group — save, preview, load, delete. STOP reply auto-opts contacts out of SMS instantly. Individual threads with channel filter (All / SMS / WA / Email) and real-time inbound notifications.')+
     listItem('C4U Bot','AI chat assistant — add prospects, contacts, tasks, search CRM, view dashboards')+
   '</ul>');
 

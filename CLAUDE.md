@@ -2,7 +2,7 @@
 
 ## Architecture
 
-Single-page CRM app hosted on GitHub Pages with a Supabase backend. All CRM functionality lives in one file: `index.html` (~7000+ lines). No build step, no framework — vanilla HTML/CSS/JS with inline `<script>` and `<style>` tags.
+Single-page CRM app hosted on GitHub Pages with a Supabase backend. All CRM functionality lives in one file: `index.html` (~13,000+ lines). No build step, no framework — vanilla HTML/CSS/JS with inline `<script>` and `<style>` tags.
 
 ### Key files
 
@@ -291,8 +291,8 @@ NDIS-Related Services (when applicable)
 
 ### Versioning
 
-- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.55.64**, line ~254)
-- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v517**)
+- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.55.68**, line ~256)
+- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v521**)
 - **Both must be bumped on every release**
 
 ### Code patterns
@@ -405,6 +405,52 @@ NDIS-Related Services (when applicable)
 
 - **Address fields**: `intake_submissions` has `address_line_1`, `address_line_2`, `suburb`, `state`, `postcode` columns. The intake forms collect all of these. The CRM viewer (`renderIntakeDetail` ~line 5985) shows them as a formatted address block below Personal Details — only rendered if at least one field is present.
 - **Template literal caution**: the Personal Details section uses a nested template literal for the address conditional. Ensure the outer `html+=\`...\`` is closed with a backtick+semicolon after the final `</div>` of the section card.
+
+## Comms (SMS / WhatsApp / Email)
+
+- **Screen**: `screen-sms`, nav area `Comms`
+- **Tables**: `sms_messages` (all threads), `comms_lists` (custom groups), `comms_list_members`
+- **Channels**: SMS (Text), WhatsApp, Email — filter buttons: All / SMS / WA / Email
+- **Realtime**: `startCommsRealtime()` subscribes to new `sms_messages` inserts; unread count badge on nav
+
+### Individual messaging
+
+- `renderCommsThread(contactId, channelFilter)` — renders message history
+- `sendCommsMessage()` — sends single-contact SMS/WA/Email via Supabase Edge Functions
+- Opt-out flags: `contacts.sms_opted_out`, `contacts.whatsapp_opted_out` — enforced at send time, shown as "SMS OUT" / "WA OUT" badges
+
+### Group messaging
+
+- **ThriveHQ Members** — auto-populated from all clients with `role='Community'` and `status='Active'`; function `getThqGroupContacts()`; cannot be deleted
+- **Custom lists** — stored in `comms_lists` (`filter_type='manual'`) with members in `comms_list_members`
+- `sendGroupSms(listId)` — sends to all eligible members (has phone + not opted out), shows live progress counter
+
+### STOP auto opt-out
+
+- `processStopReplies()` — called after `loadSmsMessages()` on boot; scans all inbound messages for body === `'STOP'` (case-insensitive) and sets `contacts.sms_opted_out = true` for any not already opted out
+- Realtime handler in `startCommsRealtime()` — catches new STOP replies live and opts out immediately with toast
+
+### Group message template library
+
+- **Storage**: `localStorage` key `group_templates_{listId}` (e.g. `group_templates_thrivehq`) — JSON array of `{id, name, body, createdAt}`
+- **Helpers**: `getGroupTemplates(listId)`, `setGroupTemplates(listId, arr)`
+- **Migration**: if `group_templates_thrivehq` is empty on first load, migrates any legacy single template from `thq_tuesday_sms_template` automatically
+- **UI**: template panel sits between member list and compose area — shows each template as a card (name + 2-line preview + Load / Delete buttons)
+- `window.toggleTplSaveForm(listId)` — shows inline save form with name input
+- `window.saveGroupTemplateNamed(listId)` — saves current compose box content as named template
+- `window.loadGroupTemplate(listId, id)` — populates compose box from saved template
+- `window.deleteGroupTemplate(listId, id)` — removes template after confirm
+
+### ThriveHQ session calendar (Home dashboard)
+
+- **Constant**: `THQ_TERM_BLOCKS` (array of `{start, end, type:'term'|'break', label}`) defined near top of script after Supabase init
+- **Function**: `renderThqSessionCard()` — called inside `renderDashboard()`, injects into `#thqSessionCard` div
+- **States**:
+  - **Tuesday in term** — teal/blue gradient card, "ThriveHQ SMS due today", full-width "Go to ThriveHQ Comms →" button, `window.selectCommsGroup('thrivehq'); navTo('sms')`
+  - **In term (other days)** — darker teal gradient, shows block dates + next Tuesday date
+  - **Break** — slate gradient, shows break name + when term resumes
+  - **Outside all blocks** — slate gradient, shows next block start date
+- Each state has an expandable `<details>` "View full session calendar" with colour-coded dot timeline
 
 ## Client detail — strengths reports
 
