@@ -253,7 +253,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.74</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.75</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -2315,6 +2315,50 @@ function renderThqSessionCard(){
   }
 }
 
+function renderThqTermCalendar(){
+  const today=getAUDateStr();
+  const fmtDate=s=>{const [y,m,d]=s.split('-');return new Date(+y,+m-1,+d).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'});};
+  const current=THQ_TERM_BLOCKS.find(b=>today>=b.start&&today<=b.end);
+  const dayOfWeek=new Date().getDay();
+  let statusBanner='';
+  if(current&&current.type==='term'){
+    const daysUntilTue=((2-dayOfWeek+7)%7)||7;
+    const nextTue=dayOfWeek===2?today:getAUDateStr(daysUntilTue);
+    const isTue=dayOfWeek===2;
+    statusBanner=`<div style="display:flex;align-items:center;gap:10px;background:${isTue?'#ccfbf1':'#f0fdf4'};border:1px solid ${isTue?'#5eead4':'#bbf7d0'};border-radius:10px;padding:10px 14px;margin-bottom:12px;">
+      <div style="font-size:20px;">${isTue?'&#128247;':'&#127775;'}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:700;color:#0f766e;">${isTue?'SMS due today':'In Term'}</div>
+        <div style="font-size:12px;color:#0d9488;">${isTue?'Tuesday — send ThriveHQ group message':'Next Tuesday: '+fmtDate(nextTue)}</div>
+      </div>
+      ${isTue?`<button onclick="window.selectCommsGroup('thrivehq');navTo('sms');" style="font-size:12px;font-weight:700;background:#0d9488;color:#fff;border:none;border-radius:8px;padding:7px 14px;cursor:pointer;white-space:nowrap;">Go to Comms &#8594;</button>`:''}
+    </div>`;
+  } else if(current&&current.type==='break'){
+    const nextTerm=THQ_TERM_BLOCKS.find(b=>b.type==='term'&&b.start>today);
+    statusBanner=`<div style="display:flex;align-items:center;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;margin-bottom:12px;">
+      <div style="font-size:20px;">&#128564;</div>
+      <div style="font-size:13px;color:#64748b;"><span style="font-weight:700;color:#475569;">${current.label.replace(' — No Sessions','')}</span>${nextTerm?' &middot; Term resumes '+fmtDate(nextTerm.start):''}</div>
+    </div>`;
+  }
+  const rows=THQ_TERM_BLOCKS.map(b=>{
+    const active=today>=b.start&&today<=b.end;
+    const past=today>b.end;
+    const isTerm=b.type==='term';
+    return `<div style="display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:8px;background:${active?(isTerm?'#f0fdf4':'#f8fafc'):'transparent'};margin-bottom:4px;opacity:${past?'.45':'1'};">
+      <div style="width:10px;height:10px;border-radius:50%;flex-shrink:0;background:${isTerm?(active?'#0d9488':'#5eead4'):(active?'#94a3b8':'#e2e8f0')};${active?'box-shadow:0 0 0 3px '+(isTerm?'rgba(13,148,136,.15)':'rgba(148,163,184,.15)'):''}"></div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:${active?'700':'500'};color:${active?(isTerm?'#0f766e':'#475569'):'#475569'};">${fmtDate(b.start)} – ${fmtDate(b.end)}</div>
+        <div style="font-size:11px;color:${isTerm?(active?'#0d9488':'#94a3b8'):'#94a3b8'};">${b.label}</div>
+      </div>
+      ${active?`<span style="font-size:10px;font-weight:700;background:${isTerm?'#ccfbf1':'#f1f5f9'};color:${isTerm?'#0d9488':'#475569'};padding:2px 8px;border-radius:99px;white-space:nowrap;">NOW</span>`:''}
+    </div>`;
+  }).join('');
+  return `<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;margin-bottom:14px;">
+    <div style="font-weight:700;font-size:14px;color:#1e3a5f;margin-bottom:12px;display:flex;align-items:center;gap:8px;">&#128197; 2026 Session Calendar</div>
+    ${statusBanner}${rows}
+  </div>`;
+}
+
 function renderDashboard(){
   document.getElementById('dcContacts').textContent=contacts.length;
   document.getElementById('dcClients').textContent=clients.filter(c=>c.status==='Active').length;
@@ -2790,7 +2834,7 @@ function renderResourcesDash(){
 function renderThqDash(){
   const el=document.getElementById('thqDashContent');
   if(!el) return;
-  let html=`<div style="margin-bottom:14px;">${renderThqSessionCard()}</div>`;
+  let html=renderThqTermCalendar();
   html+=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">
     <div onclick="navTo('thqtrials')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #16a34a;border-radius:12px;padding:18px 20px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
       <div style="font-size:24px;margin-bottom:8px;">&#127793;</div>

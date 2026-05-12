@@ -302,8 +302,8 @@ NDIS-Related Services (when applicable)
 
 ### Versioning
 
-- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.55.74**, line ~256)
-- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v527**)
+- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.55.75**, line ~256)
+- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v528**)
 - **Both must be bumped on every release**
 
 ### Code patterns
@@ -465,9 +465,9 @@ NDIS-Related Services (when applicable)
 ### ThriveHQ session calendar (Home dashboard + ThriveHQ Hub)
 
 - **Constant**: `THQ_TERM_BLOCKS` (array of `{start, end, type:'term'|'break', label}`) defined near top of script after Supabase init
-- **Function**: `renderThqSessionCard()` — shared; called in:
-  - `renderDashboard()` → injects into `#thqSessionCard` div (Home dashboard)
-  - `renderThqDash()` → prepended above the nav-card grid (ThriveHQ Hub dashboard)
+- **Functions**:
+  - `renderThqSessionCard()` — action card for Home dashboard; injected into `#thqSessionCard` by `renderDashboard()`
+  - `renderThqTermCalendar()` — always-expanded full calendar for ThriveHQ Hub; called in `renderThqDash()` above nav cards. Shows a status banner (in-term with next Tuesday date, or break name + resume date) plus all blocks as a styled list with NOW badge and Go to Comms button on Tuesdays in term.
 - **States**:
   - **Tuesday in term** — teal/blue gradient card, same clickable-card layout as Home hero cards (icon + title + subtitle + → arrow); onclick `window.selectCommsGroup('thrivehq'); navTo('sms')`
   - **In term (other days)** — darker teal gradient, shows block dates + next Tuesday date
