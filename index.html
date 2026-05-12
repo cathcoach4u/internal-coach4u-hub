@@ -253,7 +253,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.66</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.67</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -302,6 +302,8 @@ if('serviceWorker' in navigator){
         </div>
         <div style="font-size:18px;opacity:.85;flex-shrink:0;">&#8594;</div>
       </div>
+
+      <div id="thqSessionCard" style="margin-bottom:18px;"></div>
 
       <div style="font-family:'Quicksand','Inter',sans-serif;font-size:14px;font-weight:700;color:#1e3a5f;letter-spacing:.5px;text-transform:uppercase;margin:0 0 10px;">At a glance</div>
       <div class="dash-cards">
@@ -1544,6 +1546,15 @@ if('serviceWorker' in navigator){
 // ── SUPABASE ──
 const SUPABASE_URL = 'https://uoixetfvboevjxlkfyqy.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_m3qgSGvWF0n2TePf6vhqMw_9obUvJEJ';
+
+const THQ_TERM_BLOCKS=[
+  {start:'2026-04-20',end:'2026-07-03',type:'term',label:'Weekly sessions'},
+  {start:'2026-07-06',end:'2026-07-17',type:'break',label:'Winter Holidays — No Sessions'},
+  {start:'2026-07-20',end:'2026-09-25',type:'term',label:'Weekly sessions'},
+  {start:'2026-09-28',end:'2026-10-09',type:'break',label:'Spring Holidays — No Sessions'},
+  {start:'2026-10-12',end:'2026-12-12',type:'term',label:'Weekly sessions'},
+  {start:'2026-12-15',end:'2027-01-27',type:'break',label:'Christmas / New Year Break — No Sessions'},
+];
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth:{persistSession:true,autoRefreshToken:true}
 });
@@ -2227,6 +2238,81 @@ const dashGroupState={recentClients:false,recentContacts:false,upcomingTasks:fal
 function toggleDashGroup(g){dashGroupState[g]=!dashGroupState[g];renderDashboard();}
 window.toggleDashGroup=toggleDashGroup;
 
+function renderThqSessionCard(){
+  const today=getAUDateStr();
+  const dayOfWeek=new Date().getDay(); // 0=Sun,2=Tue
+  const current=THQ_TERM_BLOCKS.find(b=>today>=b.start&&today<=b.end);
+  const upcoming=THQ_TERM_BLOCKS.find(b=>b.start>today);
+  const isTuesday=dayOfWeek===2;
+
+  const fmtDate=s=>{const [y,m,d]=s.split('-');return new Date(+y,+m-1,+d).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'});};
+
+  const calRows=THQ_TERM_BLOCKS.map(b=>{
+    const active=today>=b.start&&today<=b.end;
+    const past=today>b.end;
+    const isTerm=b.type==='term';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #f1f5f9;opacity:${past?'.45':'1'};">
+      <div style="width:8px;height:8px;border-radius:50%;background:${active?(isTerm?'#0d9488':'#94a3b8'):(isTerm?'#ccfbf1':'#e2e8f0')};flex-shrink:0;${active?'box-shadow:0 0 0 3px '+(isTerm?'rgba(13,148,136,.2)':'rgba(148,163,184,.2)'):''}"></div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:12px;font-weight:${active?'700':'500'};color:${active?(isTerm?'#0d9488':'#475569'):'#64748b'};">${fmtDate(b.start)} – ${fmtDate(b.end)}</div>
+        <div style="font-size:11px;color:${active?(isTerm?'#0f766e':'#64748b'):'#94a3b8'};">${b.label}${active?' <span style="font-size:10px;font-weight:700;background:'+(isTerm?'#ccfbf1':'#f1f5f9')+';color:'+(isTerm?'#0d9488':'#475569')+';padding:1px 6px;border-radius:99px;margin-left:4px;">NOW</span>':''}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const calToggle=`<details style="margin-top:10px;"><summary style="font-size:11px;color:#64748b;cursor:pointer;list-style:none;display:flex;align-items:center;gap:4px;">&#128197; View full session calendar</summary><div style="margin-top:10px;padding:0 2px;">${calRows}</div></details>`;
+
+  if(current&&current.type==='term'){
+    if(isTuesday){
+      return `<div style="background:linear-gradient(135deg,#0d9488,#0891b2);border-radius:12px;padding:16px 20px;color:#fff;box-shadow:0 2px 8px rgba(13,148,136,.25);">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="font-size:28px;flex-shrink:0;">&#128248;</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:700;font-size:15px;margin-bottom:2px;">ThriveHQ SMS due today</div>
+            <div style="font-size:12px;opacity:.9;">It's Tuesday and you're in term (${fmtDate(current.start)} – ${fmtDate(current.end)}). Time to send the weekly group message.</div>
+          </div>
+          <button onclick="window.selectCommsGroup('thrivehq');navTo('sms');" style="background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.5);color:#fff;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;white-space:nowrap;">Go to Comms &#8594;</button>
+        </div>
+        ${calToggle.replace('style="','style="color:#fff;opacity:.85;')}
+      </div>`;
+    } else {
+      const daysUntilTue=((2-dayOfWeek+7)%7)||7;
+      const nextTue=getAUDateStr(daysUntilTue);
+      const nextTueStr=fmtDate(nextTue);
+      return `<div style="background:#f0fdfa;border:1.5px solid #99f6e4;border-radius:12px;padding:14px 18px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+          <div style="font-size:20px;">&#127775;</div>
+          <div style="font-weight:700;font-size:14px;color:#0f766e;">ThriveHQ — In Term</div>
+          <span style="font-size:10px;background:#ccfbf1;color:#0d9488;padding:2px 8px;border-radius:99px;font-weight:700;">ACTIVE</span>
+        </div>
+        <div style="font-size:12px;color:#0f766e;margin-bottom:2px;">${fmtDate(current.start)} – ${fmtDate(current.end)}</div>
+        <div style="font-size:12px;color:#64748b;">Next Tuesday SMS reminder: <strong style="color:#0d9488;">${nextTueStr}</strong></div>
+        ${calToggle}
+      </div>`;
+    }
+  } else if(current&&current.type==='break'){
+    const nextTerm=THQ_TERM_BLOCKS.find(b=>b.type==='term'&&b.start>today);
+    return `<div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:14px 18px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+        <div style="font-size:20px;">&#128564;</div>
+        <div style="font-weight:700;font-size:14px;color:#475569;">ThriveHQ — ${current.label.replace(' — No Sessions','')}</div>
+        <span style="font-size:10px;background:#f1f5f9;color:#64748b;padding:2px 8px;border-radius:99px;font-weight:700;">BREAK</span>
+      </div>
+      <div style="font-size:12px;color:#64748b;">${nextTerm?'Term resumes: <strong style=\'color:#0d9488;\'>'+fmtDate(nextTerm.start)+'</strong>':'No further term dates scheduled.'}</div>
+      ${calToggle}
+    </div>`;
+  } else {
+    return `<div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:14px 18px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="font-size:20px;">&#128197;</div>
+        <div style="flex:1;"><div style="font-weight:700;font-size:14px;color:#475569;">ThriveHQ Sessions</div>
+        <div style="font-size:12px;color:#64748b;">${upcoming?'Next block: '+fmtDate(upcoming.start):'No upcoming term dates scheduled.'}</div></div>
+      </div>
+      ${calToggle}
+    </div>`;
+  }
+}
+
 function renderDashboard(){
   document.getElementById('dcContacts').textContent=contacts.length;
   document.getElementById('dcClients').textContent=clients.filter(c=>c.status==='Active').length;
@@ -2254,6 +2340,8 @@ function renderDashboard(){
     card.querySelector('.dc-icon').style.background='#f1f5f9';
     card.querySelector('.dc-icon').style.color='#64748b';
   }
+  const thqCard=document.getElementById('thqSessionCard');
+  if(thqCard) thqCard.innerHTML=renderThqSessionCard();
 }
 
 // ── MODULES DASHBOARD ──
