@@ -253,7 +253,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.75</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.76</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -2320,42 +2320,64 @@ function renderThqTermCalendar(){
   const fmtDate=s=>{const [y,m,d]=s.split('-');return new Date(+y,+m-1,+d).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'});};
   const current=THQ_TERM_BLOCKS.find(b=>today>=b.start&&today<=b.end);
   const dayOfWeek=new Date().getDay();
-  let statusBanner='';
-  if(current&&current.type==='term'){
-    const daysUntilTue=((2-dayOfWeek+7)%7)||7;
-    const nextTue=dayOfWeek===2?today:getAUDateStr(daysUntilTue);
+  const upcoming=THQ_TERM_BLOCKS.find(b=>b.start>today);
+
+  // Build the NOW block — prominent featured card
+  let nowBlock='';
+  if(current){
+    const isTerm=current.type==='term';
     const isTue=dayOfWeek===2;
-    statusBanner=`<div style="display:flex;align-items:center;gap:10px;background:${isTue?'#ccfbf1':'#f0fdf4'};border:1px solid ${isTue?'#5eead4':'#bbf7d0'};border-radius:10px;padding:10px 14px;margin-bottom:12px;">
-      <div style="font-size:20px;">${isTue?'&#128247;':'&#127775;'}</div>
-      <div style="flex:1;min-width:0;">
-        <div style="font-size:13px;font-weight:700;color:#0f766e;">${isTue?'SMS due today':'In Term'}</div>
-        <div style="font-size:12px;color:#0d9488;">${isTue?'Tuesday — send ThriveHQ group message':'Next Tuesday: '+fmtDate(nextTue)}</div>
+    const daysUntilTue=((2-dayOfWeek+7)%7)||7;
+    const nextTue=isTue?today:getAUDateStr(daysUntilTue);
+    const bg=isTerm?(isTue?'linear-gradient(135deg,#0d9488,#0891b2)':'linear-gradient(135deg,#0f766e,#0d9488)'):'linear-gradient(135deg,#475569,#64748b)';
+    const icon=isTerm?(isTue?'&#128247;':'&#127775;'):'&#128564;';
+    const title=isTerm?(isTue?'SMS due today':'In Term — Weekly sessions'):(current.label.replace(' — No Sessions',''));
+    const sub=isTerm
+      ?(isTue?`${fmtDate(current.start)} – ${fmtDate(current.end)} &middot; Tuesday — send ThriveHQ group message`:`${fmtDate(current.start)} – ${fmtDate(current.end)} &middot; Next Tuesday: ${fmtDate(nextTue)}`)
+      :(()=>{const nt=THQ_TERM_BLOCKS.find(b=>b.type==='term'&&b.start>today);return nt?'Term resumes '+fmtDate(nt.start):'No further term dates scheduled.';})();
+    nowBlock=`<div style="background:${bg};border-radius:10px;padding:14px 16px;margin-bottom:14px;color:#fff;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="font-size:24px;flex-shrink:0;">${icon}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">
+            <span style="font-weight:700;font-size:14px;">${title}</span>
+            <span style="font-size:10px;font-weight:700;background:rgba(255,255,255,.25);padding:2px 8px;border-radius:99px;">NOW</span>
+          </div>
+          <div style="font-size:12px;opacity:.9;line-height:1.5;">${sub}</div>
+        </div>
+        ${isTerm&&isTue?`<button onclick="window.selectCommsGroup('thrivehq');navTo('sms');" style="font-size:12px;font-weight:700;background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:8px;padding:7px 12px;cursor:pointer;white-space:nowrap;flex-shrink:0;">Comms &#8594;</button>`:''}
       </div>
-      ${isTue?`<button onclick="window.selectCommsGroup('thrivehq');navTo('sms');" style="font-size:12px;font-weight:700;background:#0d9488;color:#fff;border:none;border-radius:8px;padding:7px 14px;cursor:pointer;white-space:nowrap;">Go to Comms &#8594;</button>`:''}
     </div>`;
-  } else if(current&&current.type==='break'){
-    const nextTerm=THQ_TERM_BLOCKS.find(b=>b.type==='term'&&b.start>today);
-    statusBanner=`<div style="display:flex;align-items:center;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;margin-bottom:12px;">
-      <div style="font-size:20px;">&#128564;</div>
-      <div style="font-size:13px;color:#64748b;"><span style="font-weight:700;color:#475569;">${current.label.replace(' — No Sessions','')}</span>${nextTerm?' &middot; Term resumes '+fmtDate(nextTerm.start):''}</div>
+  } else {
+    const label=upcoming?`Next block: ${fmtDate(upcoming.start)}`:'No upcoming sessions scheduled.';
+    nowBlock=`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px;">
+      <div style="font-size:22px;">&#128197;</div>
+      <div style="font-size:13px;color:#64748b;">${label}</div>
     </div>`;
   }
-  const rows=THQ_TERM_BLOCKS.map(b=>{
-    const active=today>=b.start&&today<=b.end;
+
+  // All other blocks in a collapsible section
+  const otherRows=THQ_TERM_BLOCKS.filter(b=>!(today>=b.start&&today<=b.end)).map(b=>{
     const past=today>b.end;
     const isTerm=b.type==='term';
-    return `<div style="display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:8px;background:${active?(isTerm?'#f0fdf4':'#f8fafc'):'transparent'};margin-bottom:4px;opacity:${past?'.45':'1'};">
-      <div style="width:10px;height:10px;border-radius:50%;flex-shrink:0;background:${isTerm?(active?'#0d9488':'#5eead4'):(active?'#94a3b8':'#e2e8f0')};${active?'box-shadow:0 0 0 3px '+(isTerm?'rgba(13,148,136,.15)':'rgba(148,163,184,.15)'):''}"></div>
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px;margin-bottom:3px;opacity:${past?'.4':'1'};">
+      <div style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:${isTerm?'#5eead4':'#e2e8f0'};"></div>
       <div style="flex:1;min-width:0;">
-        <div style="font-size:13px;font-weight:${active?'700':'500'};color:${active?(isTerm?'#0f766e':'#475569'):'#475569'};">${fmtDate(b.start)} – ${fmtDate(b.end)}</div>
-        <div style="font-size:11px;color:${isTerm?(active?'#0d9488':'#94a3b8'):'#94a3b8'};">${b.label}</div>
+        <div style="font-size:12px;font-weight:500;color:#374151;">${fmtDate(b.start)} – ${fmtDate(b.end)}</div>
+        <div style="font-size:11px;color:#94a3b8;">${b.label}</div>
       </div>
-      ${active?`<span style="font-size:10px;font-weight:700;background:${isTerm?'#ccfbf1':'#f1f5f9'};color:${isTerm?'#0d9488':'#475569'};padding:2px 8px;border-radius:99px;white-space:nowrap;">NOW</span>`:''}
     </div>`;
   }).join('');
+
   return `<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;margin-bottom:14px;">
-    <div style="font-weight:700;font-size:14px;color:#1e3a5f;margin-bottom:12px;display:flex;align-items:center;gap:8px;">&#128197; 2026 Session Calendar</div>
-    ${statusBanner}${rows}
+    <div style="font-weight:700;font-size:13px;color:#64748b;letter-spacing:.04em;text-transform:uppercase;margin-bottom:10px;">&#128197; 2026 Session Calendar</div>
+    ${nowBlock}
+    <details style="margin-top:2px;">
+      <summary style="font-size:12px;color:#64748b;cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px;padding:4px 0;user-select:none;">
+        <span style="font-size:10px;">&#9654;</span> View all term &amp; break dates
+      </summary>
+      <div style="margin-top:8px;padding-top:8px;border-top:1px solid #f1f5f9;">${otherRows}</div>
+    </details>
   </div>`;
 }
 

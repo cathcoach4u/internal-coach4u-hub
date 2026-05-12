@@ -302,8 +302,8 @@ NDIS-Related Services (when applicable)
 
 ### Versioning
 
-- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.55.75**, line ~256)
-- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v528**)
+- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.55.76**, line ~256)
+- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v529**)
 - **Both must be bumped on every release**
 
 ### Code patterns
