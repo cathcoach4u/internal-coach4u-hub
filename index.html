@@ -253,7 +253,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.73</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.74</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -2790,7 +2790,8 @@ function renderResourcesDash(){
 function renderThqDash(){
   const el=document.getElementById('thqDashContent');
   if(!el) return;
-  let html=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">
+  let html=`<div style="margin-bottom:14px;">${renderThqSessionCard()}</div>`;
+  html+=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">
     <div onclick="navTo('thqtrials')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #16a34a;border-radius:12px;padding:18px 20px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
       <div style="font-size:24px;margin-bottom:8px;">&#127793;</div>
       <div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">Trials</div>
@@ -12385,7 +12386,7 @@ function renderAbout(){
     listItem('Referrers','Dashboard (Referral Hub) and referrer Payments tracking')+
     listItem('Pulses','Dashboard, SAFE Pulse, Brain Pulse, Connection Pulse — per-client mini portal with printable reports')+
     listItem('Couples Hub','Dashboard, live Couples Intake worksheet (Port Institute 5-stage, save-to-records), Therapy Timelines, Betrayal First Aid')+
-    listItem('ThriveHQ Hub','Dashboard, Trials, Members, Renewals, Coaching Calls')+
+    listItem('ThriveHQ Hub','Dashboard shows the session calendar (term/break status, Tuesday SMS reminder, expandable full term schedule), plus Trials, Members, Renewals, Coaching Calls.')+
     listItem('Strengths Hub','Dashboard, Reports (Individual / Pair / Team Heatmap, Pre-session brief), Profiles, Domain Balance, Upload Report, Gallup Workflow SOP, Gallup Code Tracker. Profiles page starts with each contact collapsed — tap the row to expand their strength cards. Strength cards use a consistent ranked style: domain-coloured #rank badge, theme name, and description.')+
     listItem('Strengths AI','Personal Insights, What You Bring &amp; Need, Couple Dynamics, Adaptation Tips — all written in Cath\'s voice via direct Anthropic API. Couple Dynamics and Pulse sections shown only for Couple/Individual clients.')+
     listItem('Gallup Code Tracker','Full workflow tracker for CliftonStrengths assessment requests: one record per contact, stamp stages (New → Awaiting Payment → Purchased → Code Sent → Notified → Filed), quick-log form on page, edit modal for corrections')+

@@ -302,8 +302,8 @@ NDIS-Related Services (when applicable)
 
 ### Versioning
 
-- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.55.73**, line ~256)
-- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v526**)
+- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.55.74**, line ~256)
+- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v527**)
 - **Both must be bumped on every release**
 
 ### Code patterns
@@ -462,16 +462,19 @@ NDIS-Related Services (when applicable)
 - `window.loadGroupTemplate(listId, id)` — populates compose box from saved template
 - `window.deleteGroupTemplate(listId, id)` — removes template after confirm
 
-### ThriveHQ session calendar (Home dashboard)
+### ThriveHQ session calendar (Home dashboard + ThriveHQ Hub)
 
 - **Constant**: `THQ_TERM_BLOCKS` (array of `{start, end, type:'term'|'break', label}`) defined near top of script after Supabase init
-- **Function**: `renderThqSessionCard()` — called inside `renderDashboard()`, injects into `#thqSessionCard` div
+- **Function**: `renderThqSessionCard()` — shared; called in:
+  - `renderDashboard()` → injects into `#thqSessionCard` div (Home dashboard)
+  - `renderThqDash()` → prepended above the nav-card grid (ThriveHQ Hub dashboard)
 - **States**:
   - **Tuesday in term** — teal/blue gradient card, same clickable-card layout as Home hero cards (icon + title + subtitle + → arrow); onclick `window.selectCommsGroup('thrivehq'); navTo('sms')`
   - **In term (other days)** — darker teal gradient, shows block dates + next Tuesday date
   - **Break** — slate gradient, shows break name + when term resumes
   - **Outside all blocks** — slate gradient, shows next block start date
-- Tuesday banner in the group compose area has been removed — the Home dashboard card is the sole reminder
+- All states include an expandable `<details>` full session calendar (all blocks with NOW badge on active block)
+- Tuesday banner in the group compose area has been removed — the dashboard cards are the sole reminder
 - Note: group messages are outbound-only. Replies from recipients arrive in the individual contact's thread, not a group inbox.
 
 ## Client detail — strengths reports
