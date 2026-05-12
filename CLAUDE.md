@@ -302,8 +302,8 @@ NDIS-Related Services (when applicable)
 
 ### Versioning
 
-- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.55.68**, line ~256)
-- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v521**)
+- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.55.71**, line ~256)
+- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v524**)
 - **Both must be bumped on every release**
 
 ### Code patterns
@@ -446,8 +446,7 @@ NDIS-Related Services (when applicable)
 - **Storage**: `localStorage` key `group_templates_{listId}` (e.g. `group_templates_thrivehq`) — JSON array of `{id, name, body, createdAt}`
 - **Helpers**: `getGroupTemplates(listId)`, `setGroupTemplates(listId, arr)`
 - **Migration**: if `group_templates_thrivehq` is empty on first load, migrates any legacy single template from `thq_tuesday_sms_template` automatically
-- **UI**: template panel sits between member list and compose area — shows each template as a card (name + 2-line preview + Load / Delete buttons)
-- `window.toggleTplSaveForm(listId)` — shows inline save form with name input
+- **UI**: template panel sits between member list and compose area — shows each template as a card (name + 2-line preview + Load / Delete buttons). Button "+ Save as template" opens inline save form with name input.
 - `window.saveGroupTemplateNamed(listId)` — saves current compose box content as named template
 - `window.loadGroupTemplate(listId, id)` — populates compose box from saved template
 - `window.deleteGroupTemplate(listId, id)` — removes template after confirm
@@ -457,11 +456,12 @@ NDIS-Related Services (when applicable)
 - **Constant**: `THQ_TERM_BLOCKS` (array of `{start, end, type:'term'|'break', label}`) defined near top of script after Supabase init
 - **Function**: `renderThqSessionCard()` — called inside `renderDashboard()`, injects into `#thqSessionCard` div
 - **States**:
-  - **Tuesday in term** — teal/blue gradient card, "ThriveHQ SMS due today", full-width "Go to ThriveHQ Comms →" button, `window.selectCommsGroup('thrivehq'); navTo('sms')`
+  - **Tuesday in term** — teal/blue gradient card, same clickable-card layout as Home hero cards (icon + title + subtitle + → arrow); onclick `window.selectCommsGroup('thrivehq'); navTo('sms')`
   - **In term (other days)** — darker teal gradient, shows block dates + next Tuesday date
   - **Break** — slate gradient, shows break name + when term resumes
   - **Outside all blocks** — slate gradient, shows next block start date
-- Each state has an expandable `<details>` "View full session calendar" with colour-coded dot timeline
+- Tuesday banner in the group compose area has been removed — the Home dashboard card is the sole reminder
+- Note: group messages are outbound-only. Replies from recipients arrive in the individual contact's thread, not a group inbox.
 
 ## Client detail — strengths reports
 
