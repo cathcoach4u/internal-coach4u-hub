@@ -465,17 +465,21 @@ NDIS-Related Services (when applicable)
 ### ThriveHQ session calendar (Home dashboard + ThriveHQ Hub)
 
 - **Constant**: `THQ_TERM_BLOCKS` (array of `{start, end, type:'term'|'break', label}`) defined near top of script after Supabase init
-- **Functions**:
-  - `renderThqSessionCard()` — action card for Home dashboard; injected into `#thqSessionCard` by `renderDashboard()`
-  - `renderThqTermCalendar()` — always-expanded full calendar for ThriveHQ Hub; called in `renderThqDash()` above nav cards. Shows a status banner (in-term with next Tuesday date, or break name + resume date) plus all blocks as a styled list with NOW badge and Go to Comms button on Tuesdays in term.
-- **States**:
-  - **Tuesday in term** — teal/blue gradient card, same clickable-card layout as Home hero cards (icon + title + subtitle + → arrow); onclick `window.selectCommsGroup('thrivehq'); navTo('sms')`
-  - **In term (other days)** — darker teal gradient, shows block dates + next Tuesday date
-  - **Break** — slate gradient, shows break name + when term resumes
-  - **Outside all blocks** — slate gradient, shows next block start date
-- All states include an expandable `<details>` full session calendar (all blocks with NOW badge on active block)
-- Tuesday banner in the group compose area has been removed — the dashboard cards are the sole reminder
-- Note: group messages are outbound-only. Replies from recipients arrive in the individual contact's thread, not a group inbox.
+- **Two separate render functions** — different purpose, same data source:
+
+#### `renderThqSessionCard()` — Home dashboard action card
+- Injected into `#thqSessionCard` div by `renderDashboard()`
+- **Tuesday in term**: teal/blue gradient clickable card → `selectCommsGroup('thrivehq'); navTo('sms')`
+- **In term (other days)**: darker teal gradient, shows block dates + next Tuesday date; expandable full calendar in `<details>`
+- **Break**: slate gradient, shows break name + resume date; expandable full calendar
+- **Outside all blocks**: slate gradient, shows next block start; expandable full calendar
+
+#### `renderThqTermCalendar()` — ThriveHQ Hub dashboard calendar panel
+- Called in `renderThqDash()`, prepended above the nav-card grid
+- **NOW block**: prominent gradient card (teal in term, slate in break) with NOW badge, dates, and status subtitle. On Tuesdays in term shows an inline "Comms →" button
+- **All other blocks**: collapsed under a `<details>` "View all term & break dates" toggle — past blocks dimmed to 40% opacity
+- Tuesday banner in the group compose area has been removed — these dashboard cards are the sole reminder
+- Note: group messages are outbound-only. Replies arrive in individual contact threads, not a group inbox.
 
 ## Client detail — strengths reports
 
