@@ -43,6 +43,30 @@ body.activity-page {
   transition: color 0.15s;
 }
 .act-back-link:hover { color: var(--act-dark-blue); text-decoration: none; }
+.act-session-banner {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: var(--act-radius-md);
+  padding: 12px 18px;
+  margin-bottom: 24px;
+}
+.act-session-banner .act-session-icon { font-size: 1.2rem; }
+.act-session-banner .act-session-label {
+  font-family: var(--act-font-heading);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1d4ed8;
+}
+.act-save-status {
+  font-family: var(--act-font-heading);
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin-top: 14px;
+  min-height: 1.2em;
+}
 .act-header { text-align: center; margin-bottom: 36px; }
 .act-header h1 {
   font-family: var(--act-font-heading);
@@ -238,6 +262,11 @@ body.activity-page {
 
   <a class="act-back-link" href="../" onclick="history.back();return false;">&#8592; Back</a>
 
+  <div class="act-session-banner" id="sessionBanner">
+    <span class="act-session-icon">&#128100;</span>
+    <span class="act-session-label" id="sessionLabel"></span>
+  </div>
+
   <header class="act-header">
     <h1>Issue Clarifier</h1>
     <p>Sometimes the real issue is not the one on the surface. Five short steps to move from messy detail to a clear core, then a small next step you can act on.</p>
@@ -398,6 +427,8 @@ body.activity-page {
       <div class="act-conf-labels"><span>Not at all</span><span>Very confident</span></div>
     </div>
 
+    <div id="saveStatus" class="act-save-status"></div>
+
     <div class="act-button-row">
       <button class="act-btn act-btn-secondary" onclick="goToStep(5)">Back</button>
       <button class="act-btn act-btn-primary" onclick="startOver()">Start a new clarifier</button>
@@ -411,6 +442,19 @@ body.activity-page {
 </div>
 
 <script>
+const SUPABASE_URL = 'https://uoixetfvboevjxlkfyqy.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_m3qgSGvWF0n2TePf6vhqMw_9obUvJEJ';
+
+const _params     = new URLSearchParams(window.location.search);
+const _contactId  = _params.get('contact') || '';
+const _contactName = decodeURIComponent(_params.get('name') || '');
+
+if (_contactId && _contactName) {
+  const banner = document.getElementById('sessionBanner');
+  document.getElementById('sessionLabel').textContent = 'Session for: ' + _contactName;
+  banner.style.display = 'flex';
+}
+
 const SCOPE_AREA_LABEL = {
   me: 'Me', us: 'Us', work: 'Work', family: 'Family',
   health: 'Health', money: 'Money', time: 'Time', other: 'Other'
@@ -504,6 +548,49 @@ function buildSummary() {
   document.getElementById('jImpact').textContent     = state.impact;
   document.getElementById('jUnderneath').textContent = state.underneath;
   document.getElementById('jIssue').textContent      = state.issue;
+  if (_contactId) saveActivityRecord();
+}
+
+async function saveActivityRecord() {
+  const statusEl = document.getElementById('saveStatus');
+  statusEl.textContent = 'Saving session…';
+  statusEl.style.color = 'var(--act-light-blue)';
+  const record = {
+    contact_id:   _contactId,
+    contact_name: _contactName,
+    activity:     'Issue Clarifier',
+    completed_at: new Date().toISOString(),
+    scope_area:   state.scope.area,
+    scope_bundle: state.scope.bundle,
+    facts:        state.facts,
+    impact:       state.impact,
+    underneath:   state.underneath,
+    real_issue:   state.issue,
+    confidence:   state.confidence || 0
+  };
+  try {
+    const resp = await fetch(SUPABASE_URL + '/rest/v1/thrivehq_activity_records', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'apikey': SUPABASE_KEY,
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify(record)
+    });
+    if (resp.ok) {
+      statusEl.textContent = '✓ Session recorded against ' + _contactName;
+      statusEl.style.color = '#16a34a';
+    } else {
+      const msg = await resp.text();
+      throw new Error(msg);
+    }
+  } catch (e) {
+    console.error('Save failed:', e);
+    statusEl.textContent = 'Could not save — check the thrivehq_activity_records table exists in Supabase';
+    statusEl.style.color = '#dc2626';
+  }
 }
 
 function startOver() {
@@ -518,6 +605,7 @@ function startOver() {
     document.getElementById(id).disabled = true;
   });
   document.querySelectorAll('.act-conf-dot').forEach(d => d.classList.remove('selected'));
+  document.getElementById('saveStatus').textContent = '';
   goToStep(1);
 }
 </script>
