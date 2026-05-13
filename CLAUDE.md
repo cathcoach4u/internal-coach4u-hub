@@ -37,7 +37,7 @@ Areas and their pages (defined at line ~2039):
 - **Referrers**: Dashboard (Referral Hub), Payments
 - **Pulses**: Dashboard, SAFE Pulse, Brain Pulse (client selector for per-client mini-portal view)
 - **Hubs**: Dashboard, Couples Hub (Intake, Timelines, Betrayal First Aid), ThriveHQ Hub (Trials, Members, Renewals, Coaching Calls), Strengths Hub (Workflow SOP, Code Tracker, Reports, Profiles, Domain Balance, Upload Report)
-- **IT**: Dashboard, IT Projects, Agents, AI Strategy (cross-agent audit + chat), Writing Partner
+- **IT**: Dashboard, IT Projects, Agents, AI Strategy (cross-agent audit + chat), Writing Partner, Prompts
 - **Admin**: Dashboard, Task Management, Playbook (Lou's operational work), Company Resources
 - **Finance**: Dashboard, Income, Where Money Goes, Bills, Transactions
 - **About**: About
@@ -195,6 +195,16 @@ Parent agents represent the master system prompts for Copilot Studio. Child agen
 - **All stages**: "Copy list for SharePoint" outputs all stages with `════` title divider and `────` between sections
 - **Format**: Plain text, no markdown; designed to paste directly into SharePoint
 
+## Prompts (IT > Prompts)
+
+- **Page**: `screen-prompts`, render fn `renderPrompts()`
+- **Storage**: `localStorage` key `coach4u_prompts` — JSON array of `{id, name, body, createdAt}`
+- **Helpers**: `getPrompts()`, `savePrompts(arr)`
+- **Default prompt**: "Session Wrap-up" seeded on first load if localStorage is empty
+- **UI**: expand/collapse rows, Copy button (clipboard), Add/Edit modal (appended to `document.body` as singleton), Delete with confirm
+- **Window fns**: `togglePromptRow`, `copyPrompt`, `openPromptForm`, `closePromptForm`, `savePromptForm`, `deletePrompt`
+- No Supabase table — prompts are device-local only
+
 ## Strengths Hub
 
 ### Gallup Code Tracker (Hubs > Strengths Hub > Code Tracker)
@@ -302,8 +312,8 @@ NDIS-Related Services (when applicable)
 
 ### Versioning
 
-- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.55.80**, line ~256)
-- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v536**)
+- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.55.81**, line ~256)
+- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v538**)
 - **Both must be bumped on every release**
 
 ### Code patterns
