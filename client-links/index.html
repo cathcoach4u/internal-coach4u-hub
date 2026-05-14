@@ -18,15 +18,17 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f6ff;color:#1e293b;m
 .container{max-width:540px;margin:0 auto;padding:24px 20px 60px;}
 .group{background:#fff;border-radius:12px;border:1px solid #e2e8f0;margin-bottom:16px;overflow:hidden;}
 .group-label{font-family:'Quicksand',sans-serif;font-size:14px;font-weight:700;color:#1e3a5f;padding:14px 18px 0;}
-.link-item{display:flex;align-items:center;gap:12px;padding:13px 18px;border-top:1px solid #f1f5f9;text-decoration:none;color:#1e293b;transition:background .12s;}
+.link-item{display:flex;align-items:center;gap:12px;padding:13px 18px;border-top:1px solid #f1f5f9;}
 .group-label+.link-item{border-top:none;margin-top:8px;}
-.link-item:hover{background:#f8fafc;}
-.link-item:active{background:#f1f5f9;}
 .link-icon{font-size:20px;flex-shrink:0;width:32px;text-align:center;}
 .link-text{flex:1;min-width:0;}
 .link-text strong{display:block;font-size:14px;font-weight:600;color:#1e293b;}
 .link-text span{font-size:12px;color:#64748b;}
-.link-arrow{font-size:16px;color:#94a3b8;flex-shrink:0;}
+.link-btns{display:flex;gap:6px;flex-shrink:0;}
+.btn-copy{background:#f1f5f9;color:#1e3a5f;border:1px solid #e2e8f0;padding:5px 11px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;}
+.btn-copy:active{background:#e2e8f0;}
+.btn-open{background:#1e3a5f;color:#fff;border:none;padding:5px 11px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;}
+.btn-open:active{background:#16324f;}
 .footer{text-align:center;font-size:11px;color:#94a3b8;padding:0 20px 40px;line-height:1.8;}
 </style>
 </head>
@@ -42,78 +44,99 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f6ff;color:#1e293b;m
 
   <div class="group">
     <div class="group-label">Stay in touch</div>
-    <a href="http://wa.me/61485695168" class="link-item" target="_blank" rel="noopener">
+    <div class="link-item">
       <span class="link-icon">&#128172;</span>
       <div class="link-text">
         <strong>WhatsApp</strong>
         <span>Scheduling, reminders and general communication</span>
       </div>
-      <span class="link-arrow">&#8594;</span>
-    </a>
+      <div class="link-btns">
+        <button class="btn-copy" onclick="copyLink('http://wa.me/61485695168',this)">Copy</button>
+        <button class="btn-open" onclick="window.open('http://wa.me/61485695168','_blank')">Open</button>
+      </div>
+    </div>
   </div>
 
   <div class="group">
     <div class="group-label">Intake forms</div>
-    <a href="https://cathcoach4u.github.io/internal-coach4u-hub/intake/individual/" class="link-item" target="_blank" rel="noopener">
+    <div class="link-item">
       <span class="link-icon">&#128100;</span>
       <div class="link-text">
         <strong>Individual Intake Form</strong>
         <span>Individual coaching and counselling</span>
       </div>
-      <span class="link-arrow">&#8594;</span>
-    </a>
-    <a href="https://cathcoach4u.github.io/internal-coach4u-hub/intake/couples/" class="link-item" target="_blank" rel="noopener">
+      <div class="link-btns">
+        <button class="btn-copy" onclick="copyLink('https://cathcoach4u.github.io/internal-coach4u-hub/intake/individual/',this)">Copy</button>
+        <button class="btn-open" onclick="window.open('https://cathcoach4u.github.io/internal-coach4u-hub/intake/individual/','_blank')">Open</button>
+      </div>
+    </div>
+    <div class="link-item">
       <span class="link-icon">&#128147;</span>
       <div class="link-text">
         <strong>Couples Intake Form</strong>
         <span>Couples coaching and counselling</span>
       </div>
-      <span class="link-arrow">&#8594;</span>
-    </a>
-    <a href="https://cathcoach4u.github.io/internal-coach4u-hub/intake/thrivehq/" class="link-item" target="_blank" rel="noopener">
+      <div class="link-btns">
+        <button class="btn-copy" onclick="copyLink('https://cathcoach4u.github.io/internal-coach4u-hub/intake/couples/',this)">Copy</button>
+        <button class="btn-open" onclick="window.open('https://cathcoach4u.github.io/internal-coach4u-hub/intake/couples/','_blank')">Open</button>
+      </div>
+    </div>
+    <div class="link-item">
       <span class="link-icon">&#128170;</span>
       <div class="link-text">
         <strong>ThriveHQ Intake Form</strong>
         <span>ADHD group coaching membership</span>
       </div>
-      <span class="link-arrow">&#8594;</span>
-    </a>
+      <div class="link-btns">
+        <button class="btn-copy" onclick="copyLink('https://cathcoach4u.github.io/internal-coach4u-hub/intake/thrivehq/',this)">Copy</button>
+        <button class="btn-open" onclick="window.open('https://cathcoach4u.github.io/internal-coach4u-hub/intake/thrivehq/','_blank')">Open</button>
+      </div>
+    </div>
   </div>
 
   <div class="group">
     <div class="group-label">Payment</div>
-    <a href="https://pay.gocardless.com/billing/static/collect-customer-details?id=BRF01KRFKN55VGFWQEYHKKMSEM3ATNFS&initial=%2Fcollect-customer-details" class="link-item" target="_blank" rel="noopener">
+    <div class="link-item">
       <span class="link-icon">&#128179;</span>
       <div class="link-text">
         <strong>Direct Debit Authorisation</strong>
         <span>Set up your GoCardless payment mandate</span>
       </div>
-      <span class="link-arrow">&#8594;</span>
-    </a>
+      <div class="link-btns">
+        <button class="btn-copy" onclick="copyLink('https://pay.gocardless.com/billing/static/collect-customer-details?id=BRF01KRFKN55VGFWQEYHKKMSEM3ATNFS&initial=%2Fcollect-customer-details',this)">Copy</button>
+        <button class="btn-open" onclick="window.open('https://pay.gocardless.com/billing/static/collect-customer-details?id=BRF01KRFKN55VGFWQEYHKKMSEM3ATNFS&initial=%2Fcollect-customer-details','_blank')">Open</button>
+      </div>
+    </div>
   </div>
 
   <div class="group">
     <div class="group-label">Policies</div>
-    <a href="https://cathcoach4u.github.io/internal-coach4u-hub/policies/cancellation/" class="link-item" target="_blank" rel="noopener">
+    <div class="link-item">
       <span class="link-icon">&#128197;</span>
       <div class="link-text">
         <strong>Cancellation &amp; Rescheduling Policy</strong>
         <span>Fees and notice requirements</span>
       </div>
-      <span class="link-arrow">&#8594;</span>
-    </a>
+      <div class="link-btns">
+        <button class="btn-copy" onclick="copyLink('https://cathcoach4u.github.io/internal-coach4u-hub/policies/cancellation/',this)">Copy</button>
+        <button class="btn-open" onclick="window.open('https://cathcoach4u.github.io/internal-coach4u-hub/policies/cancellation/','_blank')">Open</button>
+      </div>
+    </div>
   </div>
 
   <div class="group">
     <div class="group-label">Sessions</div>
-    <a href="https://teams.microsoft.com/meet/4855206211068?p=fsRVVo4eEOHQVfIGm5" class="link-item" target="_blank" rel="noopener">
+    <div class="link-item">
       <span class="link-icon">&#128249;</span>
       <div class="link-text">
         <strong>Join Cath&rsquo;s Meeting Room</strong>
         <span>Microsoft Teams — all sessions run online</span>
       </div>
-      <span class="link-arrow">&#8594;</span>
-    </a>
+      <div class="link-btns">
+        <button class="btn-copy" onclick="copyLink('https://teams.microsoft.com/meet/4855206211068?p=fsRVVo4eEOHQVfIGm5',this)">Copy</button>
+        <button class="btn-open" onclick="window.open('https://teams.microsoft.com/meet/4855206211068?p=fsRVVo4eEOHQVfIGm5','_blank')">Open</button>
+      </div>
+    </div>
   </div>
 
 </div>
@@ -121,6 +144,22 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f6ff;color:#1e293b;m
 <div class="footer">
   SARUBA PTY LTD t/a Coach4U &middot; ABN 50 678 462 178
 </div>
+
+<script>
+function copyLink(url, btn) {
+  navigator.clipboard.writeText(url).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    btn.style.background = '#dcfce7';
+    btn.style.color = '#15803d';
+    setTimeout(() => {
+      btn.textContent = orig;
+      btn.style.background = '';
+      btn.style.color = '';
+    }, 1800);
+  });
+}
+</script>
 
 </body>
 </html>
