@@ -10,44 +10,42 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Quicksand:wght@600;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#f0f4f8;color:#1e293b;min-height:100vh}
+body{font-family:'Inter',system-ui,sans-serif;background:#f0f4f8;color:#1e293b;min-height:100vh}
 .header{background:linear-gradient(135deg,#1e3a5f 0%,#234b78 100%);color:#fff;padding:28px 24px;text-align:center}
 .header img{width:48px;height:48px;border-radius:12px;background:#fff;padding:2px;margin-bottom:8px;display:block;margin-left:auto;margin-right:auto;}
 .header h1{font-family:'Quicksand',sans-serif;font-size:22px;font-weight:700;line-height:1.3;margin-bottom:6px}
-.header p{font-size:14px;color:rgba(255,255,255,.8);line-height:1.5;max-width:480px;margin:0 auto}
+.header p{font-size:13px;color:rgba(255,255,255,.75);line-height:1.5;max-width:480px;margin:0 auto}
 .container{max-width:580px;margin:0 auto;padding:24px 16px 60px}
 .section{background:#fff;border-radius:12px;padding:22px 24px;margin-bottom:16px;border:1px solid #e2e8f0}
 .section-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:12px}
-.section h2{font-size:17px;font-weight:700;color:#1e3a5f;margin-bottom:8px;line-height:1.3}
+.section h2{font-size:17px;font-weight:700;color:#1e3a5f;margin-bottom:16px;line-height:1.3}
 .section p{font-size:14px;color:#475569;line-height:1.7;margin-bottom:0}
-.section p+p{margin-top:10px}
-.step{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid #f1f5f9}
+.step{display:flex;gap:14px;padding:16px 0;border-bottom:1px solid #f1f5f9}
 .step:last-child{border-bottom:none;padding-bottom:0}
 .step:first-child{padding-top:0}
-.step-num{width:28px;height:28px;border-radius:50%;background:#1e3a5f;color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.step-num{width:28px;height:28px;border-radius:50%;background:#1e3a5f;color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
 .step-body{flex:1;min-width:0}
-.step-title{font-size:15px;font-weight:700;color:#1e3a5f;margin-bottom:4px}
-.step-meta{font-size:11px;font-weight:700;letter-spacing:.5px;color:#0891b2;margin-bottom:6px;text-transform:uppercase}
+.step-title{font-size:15px;font-weight:700;color:#1e3a5f;margin-bottom:3px}
+.step-meta{font-size:11px;font-weight:700;letter-spacing:.5px;color:#0891b2;margin-bottom:8px;text-transform:uppercase}
 .step-desc{font-size:13px;color:#475569;line-height:1.65}
-.pricing-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #f1f5f9}
-.pricing-row:last-child{border-bottom:none;padding-bottom:0}
-.pricing-row:first-child{padding-top:0}
-.pricing-label{flex:1;min-width:0}
-.pricing-label strong{display:block;font-size:14px;font-weight:600;color:#1e3a5f;margin-bottom:2px}
-.pricing-label span{font-size:12px;color:#64748b}
-.pricing-amount{text-align:right;flex-shrink:0}
-.pricing-amount strong{display:block;font-size:15px;font-weight:700;color:#1e3a5f}
-.pricing-amount span{font-size:11px;color:#94a3b8}
-.pricing-amount.free strong{color:#15803d}
-.intake-btn{display:flex;align-items:center;justify-content:center;gap:10px;background:#1e3a5f;color:#fff;border-radius:10px;padding:16px 24px;text-decoration:none;font-size:15px;font-weight:700;transition:background .15s}
+.note{background:#f8fafc;border-radius:8px;padding:11px 14px;font-size:12px;color:#64748b;line-height:1.6;margin-top:12px;border-left:3px solid #e2e8f0}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead tr{border-bottom:2px solid #e2e8f0}
+thead th{text-align:left;padding:0 12px 10px 0;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#94a3b8;font-weight:700}
+thead th:last-child{text-align:right;padding-right:0}
+tbody tr{border-bottom:1px solid #f1f5f9}
+tbody tr:last-child{border-bottom:none}
+tbody td{padding:11px 12px 11px 0;color:#475569;vertical-align:middle}
+tbody td:first-child{font-weight:600;color:#1e3a5f}
+tbody td:last-child{text-align:right;padding-right:0;font-weight:700;color:#1e3a5f;white-space:nowrap}
+.free-tag{color:#15803d}
+.intake-btn{display:flex;align-items:center;justify-content:center;background:#1e3a5f;color:#fff;border-radius:10px;padding:15px 24px;text-decoration:none;font-size:15px;font-weight:700;transition:background .15s}
 .intake-btn:hover{background:#2d5280}
-.policy-link{display:flex;align-items:center;gap:10px;color:#0891b2;text-decoration:none;font-size:14px;font-weight:600;margin-top:14px}
+.policy-link{display:inline-flex;align-items:center;gap:8px;color:#0891b2;text-decoration:none;font-size:14px;font-weight:600;margin-top:14px}
 .policy-link:hover{text-decoration:underline}
-.note{background:#f8fafc;border-radius:8px;padding:12px 14px;font-size:12px;color:#64748b;line-height:1.6;margin-top:12px;border-left:3px solid #e2e8f0}
 .footer{text-align:center;font-size:11px;color:#94a3b8;padding:0 16px 32px;line-height:1.8}
 @media(max-width:400px){
-  .pricing-row{flex-direction:column;gap:4px}
-  .pricing-amount{text-align:left}
+  tbody td:last-child{white-space:normal}
 }
 </style>
 </head>
@@ -56,100 +54,86 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#f0f4f
 <div class="header">
   <img src="../C4U.png" alt="Coach4U">
   <h1>Couples Counselling &amp; Coaching — Process &amp; Pricing</h1>
-  <p>How sessions work, what to expect at each stage, and what it costs.</p>
+  <p>Understanding how sessions work, what to expect at each stage, and what it costs.</p>
 </div>
 
 <div class="container">
 
-  <!-- How it works -->
   <div class="section">
     <div class="section-label">The process</div>
     <h2>What to expect</h2>
-    <br>
     <div class="step">
       <div class="step-num">1</div>
       <div class="step-body">
         <div class="step-title">Free connection call</div>
         <div class="step-meta">30 minutes &middot; No charge</div>
-        <div class="step-desc">A complimentary consultation to understand what is happening, answer your questions, and explain how the process works. This is an opportunity to check fit before committing.</div>
+        <div class="step-desc">A complimentary consultation to understand what is happening for you both, answer your questions, and explain how the work unfolds. This is your opportunity to check fit before committing.</div>
       </div>
     </div>
     <div class="step">
       <div class="step-num">2</div>
       <div class="step-body">
         <div class="step-title">Couples intake session</div>
-        <div class="step-meta">2 hours</div>
-        <div class="step-desc">A comprehensive intake session where formal documentation begins. The focus is on building safety, understanding relationship patterns, and clarifying goals and priorities for the work ahead.</div>
+        <div class="step-meta">2 hours &middot; $500 + GST</div>
+        <div class="step-desc">A comprehensive intake session where the formal work begins. The focus is on building safety, understanding your relationship patterns, and clarifying goals and priorities. This session includes documentation and initial assessment.</div>
       </div>
     </div>
     <div class="step">
       <div class="step-num">3</div>
       <div class="step-body">
         <div class="step-title">Ongoing sessions</div>
-        <div class="step-meta">1.5 hours</div>
-        <div class="step-desc">Regular sessions focused on practical strategies, communication patterns, emotional safety, and strengthening the relationship. Approaches include EFT, Gottman, Imago, Narrative Therapy, and strengths-based work.</div>
+        <div class="step-meta">1.5 hours &middot; $375 + GST per session</div>
+        <div class="step-desc">Regular sessions focused on practical strategies, communication patterns, emotional safety, and strengthening connection. Approaches include EFT, Gottman, Imago, Narrative Therapy, and strengths-based work.</div>
         <div class="note">All sessions are conducted online via Microsoft Teams.</div>
       </div>
     </div>
   </div>
 
-  <!-- Pricing -->
   <div class="section">
     <div class="section-label">Fees</div>
-    <h2>Pricing</h2>
-    <br>
-    <div class="pricing-row">
-      <div class="pricing-label">
-        <strong>Free connection call</strong>
-        <span>30 minutes</span>
-      </div>
-      <div class="pricing-amount free">
-        <strong>No charge</strong>
-      </div>
-    </div>
-    <div class="pricing-row">
-      <div class="pricing-label">
-        <strong>Couples intake session</strong>
-        <span>2 hours</span>
-      </div>
-      <div class="pricing-amount">
-        <strong>$500</strong>
-        <span>+ GST</span>
-      </div>
-    </div>
-    <div class="pricing-row">
-      <div class="pricing-label">
-        <strong>Ongoing couples sessions</strong>
-        <span>1.5 hours per session</span>
-      </div>
-      <div class="pricing-amount">
-        <strong>$375</strong>
-        <span>+ GST</span>
-      </div>
-    </div>
-    <div class="pricing-row">
-      <div class="pricing-label">
-        <strong>Hourly rate</strong>
-        <span>Per hour reference</span>
-      </div>
-      <div class="pricing-amount">
-        <strong>$250</strong>
-        <span>+ GST per hour</span>
-      </div>
-    </div>
+    <h2>Session costs</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Session type</th>
+          <th>Duration</th>
+          <th>Cost</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Free connection call</td>
+          <td>30 minutes</td>
+          <td class="free-tag">No charge</td>
+        </tr>
+        <tr>
+          <td>Couples intake session</td>
+          <td>2 hours</td>
+          <td>$500 + GST</td>
+        </tr>
+        <tr>
+          <td>Ongoing couples sessions</td>
+          <td>1.5 hours</td>
+          <td>$375 + GST</td>
+        </tr>
+        <tr>
+          <td>Hourly rate reference</td>
+          <td>Per hour</td>
+          <td>$250 + GST</td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 
-  <!-- Cancellation Policy -->
   <div class="section">
     <div class="section-label">Cancellation &amp; Rescheduling</div>
     <h2>Cancellation policy</h2>
-    <p>Please read the cancellation and rescheduling policy before your first session. It outlines the notice requirements and any fees that apply.</p>
+    <p>Please read the cancellation and rescheduling policy before your first session. It outlines notice requirements and any fees that apply.</p>
     <a href="https://cathcoach4u.github.io/internal-coach4u-hub/policies/cancellation/" class="policy-link" target="_blank" rel="noopener">
       &#128197; View Cancellation &amp; Rescheduling Policy &#8594;
     </a>
   </div>
 
-  <!-- Intake form -->
   <div class="section">
     <div class="section-label">Next step</div>
     <h2>Complete the intake form</h2>
