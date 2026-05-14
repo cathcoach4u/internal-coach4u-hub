@@ -253,7 +253,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.84</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.85</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -2968,6 +2968,7 @@ function renderResourcesDash(){
     ${policyLinks.map(renderLinkRow).join('')}
     ${renderExtLinkRow({label:'Payment Mandate',url:'https://pay.gocardless.com/billing/static/collect-customer-details?id=BRF01KRFKN55VGFWQEYHKKMSEM3ATNFS&initial=%2Fcollect-customer-details',icon:'&#128179;',desc:'GoCardless direct debit authorisation for new clients'})}
     ${renderExtLinkRow({label:"Cath's Meeting Room",url:'https://teams.microsoft.com/meet/4855206211068?p=fsRVVo4eEOHQVfIGm5',icon:'&#128249;',desc:'Microsoft Teams video session link'})}
+    ${renderExtLinkRow({label:'WhatsApp',url:'http://wa.me/61485695168',icon:'&#128172;',desc:'Coach4U WhatsApp — scheduling, reminders and client comms'})}
   </div>`;
 
   const thrivehqLinks=[
