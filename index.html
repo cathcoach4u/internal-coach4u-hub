@@ -253,7 +253,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.82</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.83</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -2539,22 +2539,7 @@ function renderCrmDash(){
 function renderCouplesDash(){
   const el=document.getElementById('couplesDashContent');
   if(!el) return;
-  const baseUrl=window.location.origin+window.location.pathname.replace(/\/index\.html$/,'').replace(/\/$/,'');
-  function extLinkRow(icon,label,desc,url){
-    const esc=url.replace(/"/g,'&quot;');
-    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #f1f5f9;border-radius:8px;margin-bottom:6px;flex-wrap:wrap;">
-      <span style="font-size:18px;">${icon}</span>
-      <div style="flex:1;min-width:160px;">
-        <div style="font-weight:600;font-size:13px;color:#1e293b;">${label}</div>
-        <div style="font-size:11px;color:#64748b;">${desc}</div>
-        <div style="font-size:11px;color:#94a3b8;word-break:break-all;margin-top:2px;">${url}</div>
-      </div>
-      <button type="button" data-url="${esc}" data-label="${label} link" onclick="copyPublicLink(this)" style="background:#003366;color:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">Copy</button>
-      <button type="button" data-url="${esc}" onclick="openPublicLink(this)" style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;padding:6px 14px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">Open</button>
-    </div>`;
-  }
-  const cancellationUrl=baseUrl+'/policies/cancellation/';
-  let html=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px;">
+  let html=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">
     <div onclick="navTo('couplesintake')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #b87a90;border-radius:12px;padding:18px 20px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
       <div style="font-size:24px;margin-bottom:8px;">&#128221;</div>
       <div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">Couples Intake</div>
@@ -2570,13 +2555,6 @@ function renderCouplesDash(){
       <div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">Betrayal First Aid</div>
       <div style="font-size:11px;color:#64748b;">PORT recovery framework</div>
     </div>
-  </div>
-  <div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #b87a90;border-radius:12px;padding:18px 20px;">
-    <div style="font-weight:700;color:#1e3a5f;font-size:15px;margin-bottom:4px;">&#128147; Client Tools &amp; Links</div>
-    <div style="font-size:12px;color:#64748b;margin-bottom:12px;">All couple client-facing links in one place. Copy to send, or open to preview.</div>
-    ${extLinkRow('&#128179;','Payment Mandate','GoCardless direct debit authorisation for new couples clients','https://pay.gocardless.com/billing/static/collect-customer-details?id=BRF01KRFKN55VGFWQEYHKKMSEM3ATNFS&initial=%2Fcollect-customer-details')}
-    ${extLinkRow('&#128197;','Cancellation &amp; Rescheduling Policy','Client-facing cancellation policy page',cancellationUrl)}
-    ${extLinkRow('&#128249;','Cath\'s Meeting Room','Microsoft Teams video session link','https://teams.microsoft.com/meet/4855206211068?p=fsRVVo4eEOHQVfIGm5')}
   </div>`;
   el.innerHTML=html;
 }
@@ -2982,6 +2960,8 @@ function renderResourcesDash(){
     <div style="font-weight:700;color:#1e3a5f;font-size:15px;margin-bottom:4px;">&#128147; Couples</div>
     <div style="font-size:12px;color:#64748b;margin-bottom:12px;">Send to a couple after their connection call.</div>
     ${[{label:'Couples Welcome Page',path:'/couples-welcome/',icon:'&#128147;',desc:'WhatsApp link, process, pricing and intake form'},{label:'Couples Intake Form',path:'/intake/couples/',icon:'&#128221;',desc:'Couples counselling intake'}].map(renderLinkRow).join('')}
+    ${renderExtLinkRow({label:'Payment Mandate',url:'https://pay.gocardless.com/billing/static/collect-customer-details?id=BRF01KRFKN55VGFWQEYHKKMSEM3ATNFS&initial=%2Fcollect-customer-details',icon:'&#128179;',desc:'GoCardless direct debit authorisation for new clients'})}
+    ${renderExtLinkRow({label:"Cath's Meeting Room",url:'https://teams.microsoft.com/meet/4855206211068?p=fsRVVo4eEOHQVfIGm5',icon:'&#128249;',desc:'Microsoft Teams video session link'})}
   </div>`;
 
   html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #d97706;border-radius:12px;padding:18px 20px;margin-bottom:14px;">
@@ -3014,9 +2994,6 @@ function renderResourcesDash(){
     ${thrivehqLinks.map(renderExtLinkRow).join('')}
   </div>`;
 
-  html+=`<div style="background:#f8fafc;border:1px dashed #cbd5e1;border-radius:12px;padding:14px 18px;font-size:12px;color:#64748b;line-height:1.6;">
-    <strong style="color:#1e3a5f;">Want more links inlined here?</strong> The Linktree also has WhatsApp Admin Portal, GoCardless Mandate, Cath's meeting room, and Sonia's meeting room. Share the URLs and they can be added here for one-click copy.
-  </div>`;
 
   el.innerHTML=html;
 }
