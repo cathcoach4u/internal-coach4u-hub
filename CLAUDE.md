@@ -19,6 +19,9 @@ Single-page CRM app hosted on GitHub Pages with a Supabase backend. All CRM func
 | `writing-partner/` | Writing Partner AI helper (separate PWA) |
 | `bot/`, `bot.html` | Bot interface |
 | `schema.sql` | Original DB schema reference |
+| `client-links/index.html` | Public all-in-one client links page — WhatsApp, intake forms, GoCardless, cancellation policy, Teams room. Each row has Copy and Open buttons. Matches intake form style (Inter/Quicksand, gradient header, C4U.png logo). |
+| `couples-process/index.html` | Public Couples Counselling & Coaching process & pricing page — 3-step process, session costs table, prominent Teams block, cancellation policy link, intake form button. Previously named `couples-welcome/`. |
+| `policies/cancellation/index.html` | Public cancellation & rescheduling policy page |
 
 ### Supabase backend
 
@@ -74,7 +77,7 @@ The admin panel (`coach4Uapp-dashboard/admin.html`) reads from Internal Hub and 
 ### What gets copied
 
 | Internal Hub table | Fields copied | Dev DB table | Dev DB fields |
-|---|---|---|
+|---|---|---|---|
 | `contacts` | `first_name`, `last_name` | `users` | `name` |
 | `contacts` | `membership_start_date` | `users` | `membership_start_date` |
 | `contacts` | `renewal_date` | `users` | `membership_expires` |
@@ -104,12 +107,15 @@ The Home dashboard (front screen of the CRM) has a navy/blue gradient launchpad 
 
 ## Company Resources (Admin > Company Resources)
 
-`renderResourcesDash()` — shareable public links for clients. Sections:
-- **Intake Forms**: ThriveHQ, Couples, Individual intake form URLs (relative to app base URL)
-- **Policies**: Cancellation & Rescheduling policy page (`policies/cancellation/index.html`)
-- **ThriveHQ Client Links**: external links to `cathcoach4u.github.io/yourthrivehqcoach/` — Links Page, Weekly Coaching Flow, Session Rhythm
+`renderResourcesDash()` — shareable public links for clients. Sections (in order):
 
-Each row has **Copy** and **Open** buttons. Internal links use `renderLinkRow()` (builds URL from `baseUrl + path`); external links use `renderExtLinkRow()` (absolute URL). The Linktree featured card was removed — the Linktree URL is no longer shown here.
+1. **Essential Client Links card** — featured card at the top linking to `/client-links/` (the all-in-one public page). Has Copy and Open buttons.
+2. **Process & Pricing** (pink left border) — `couples-process/` page link
+3. **Intake Forms** (blue left border) — ThriveHQ, Couples, Individual intake form URLs
+4. **Policies & Useful Links** (amber left border) — Cancellation & Rescheduling policy, GoCardless Payment Mandate (external), Cath's Teams meeting room (external), WhatsApp (external)
+5. **ThriveHQ Client Links** — external links to `cathcoach4u.github.io/yourthrivehqcoach/`
+
+Each row has **Copy** and **Open** buttons. All Open buttons use `window.open(url,'_blank')` so links open in a new tab. Internal links use `renderLinkRow()` (builds URL from `baseUrl + path`); external links use `renderExtLinkRow()` (absolute URL).
 
 Policy rows can additionally carry a **Share text** button by setting a `shareText: (url) => string` callback on the entry. The generated text is stored in `window._shareTexts` (keyed by path) and copied via `window.copyShareText`. The cancellation policy row uses this to copy a ready-to-send client message in Cath's voice.
 
@@ -312,8 +318,8 @@ NDIS-Related Services (when applicable)
 
 ### Versioning
 
-- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.55.81**, line ~256)
-- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v538**)
+- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.55.90**, line ~256)
+- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v548**)
 - **Both must be bumped on every release**
 
 ### Code patterns
