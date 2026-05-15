@@ -253,7 +253,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.56.1</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.56.2</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -4936,9 +4936,26 @@ const clientGroupState={Couple:true,Individual:true,Business:true,Organisation:t
 function toggleClientGroup(g){clientGroupState[g]=!clientGroupState[g];renderClients();}
 window.toggleClientGroup=toggleClientGroup;
 
+let mandateFilterStatus='all'; // 'all' | 'active' | 'pending'
+window.filterByMandateStatus=function(status){mandateFilterStatus=status;renderClients();}
+
 function renderClients(){
   const q=document.getElementById('clSearch').value.toLowerCase();
-  const filtered=clients.filter(c=>(c.relationship_name+' '+c.role+' '+c.status+' '+c.practitioner).toLowerCase().includes(q));
+  let filtered=clients.filter(c=>(c.relationship_name+' '+c.role+' '+c.status+' '+c.practitioner).toLowerCase().includes(q));
+
+  // Apply mandate filter
+  if(mandateFilterStatus==='active'){
+    filtered=filtered.filter(c=>{
+      const memberMandates=(c.members||[]).map(mid=>getContactMandate(mid)).filter(Boolean);
+      return memberMandates.length===c.members.length&&memberMandates.every(m=>m.status==='active');
+    });
+  } else if(mandateFilterStatus==='pending'){
+    filtered=filtered.filter(c=>{
+      const memberMandates=(c.members||[]).map(mid=>getContactMandate(mid)).filter(Boolean);
+      return memberMandates.length>0&&memberMandates.some(m=>m.status!=='active');
+    });
+  }
+
   const groupOrder=['Couple','Individual','Business','Organisation'];
   const groupLabels={'Couple':'Couples','Individual':'Individuals','Business':'Business','Organisation':'Community','Other':'Other','Archived':'Archived'};
   // Separate active from archived (Completed)
@@ -4946,7 +4963,14 @@ function renderClients(){
   const archived=filtered.filter(c=>c.status==='Completed');
   const grouped={};
   active.forEach(c=>{const g=c.role||'Other';if(!grouped[g])grouped[g]=[];grouped[g].push(c);});
-  let html='';
+
+  // Build filter buttons
+  let html=`<div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;">
+    <button onclick="window.filterByMandateStatus('all')" style="padding:6px 12px;border-radius:99px;border:1px solid ${mandateFilterStatus==='all'?'#e2e8f0':'#e2e8f0'};font-size:12px;font-weight:600;cursor:pointer;background:${mandateFilterStatus==='all'?'#fff':'#fff'};color:${mandateFilterStatus==='all'?'#1e3a5f':'#64748b'};">All</button>
+    <button onclick="window.filterByMandateStatus('active')" style="padding:6px 12px;border-radius:99px;border:1px solid #15803d;font-size:12px;font-weight:600;cursor:pointer;background:${mandateFilterStatus==='active'?'#f0fdf4':'#fff'};color:${mandateFilterStatus==='active'?'#15803d':'#64748b'};">✓ Mandate Received</button>
+    <button onclick="window.filterByMandateStatus('pending')" style="padding:6px 12px;border-radius:99px;border:1px solid #d97706;font-size:12px;font-weight:600;cursor:pointer;background:${mandateFilterStatus==='pending'?'#fffbeb':'#fff'};color:${mandateFilterStatus==='pending'?'#d97706':'#64748b'};">⏳ Pending</button>
+  </div>`;
+
   const renderGroup=(g,items,label)=>{
     if(!items||!items.length)return;
     const collapsed=clientGroupState[g]||false;
