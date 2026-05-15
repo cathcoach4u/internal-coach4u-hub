@@ -253,7 +253,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.56.3</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.56.4</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -7608,27 +7608,75 @@ window.openIntakeDetail=function(id){
   <div style="font-size:12px;color:#94a3b8;margin-bottom:16px;">Submitted ${date}</div>`;
 
   // Personal Details
-  html+=`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:12px;">
-    <div style="font-weight:700;font-size:13px;color:#1e3a5f;margin-bottom:10px;">Personal Details</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px;">
-    ${field('Name',s.first_name+' '+s.last_name)}
-    ${field('Preferred Name',s.preferred_name)}
-    ${field('Email',s.email)}
-    ${field('Phone',s.phone)}
-    ${field('Date of Birth',s.date_of_birth)}
-    ${field('Occupation',s.occupation)}
-    ${ft==='couples'?field('Partner Name',s.secondary_name):''}
-    ${ft==='couples'?field('Partner Email',s.secondary_email):''}
-    </div>
-    ${(s.address_line_1||s.suburb)?`<div style="margin-top:10px;padding-top:10px;border-top:1px solid #e2e8f0;">
+  function addressBlock(line1,line2,suburb,state,postcode){
+    if(!line1&&!suburb&&!state&&!postcode) return '';
+    const cityLine=[suburb,state,postcode].filter(Boolean).join(' ');
+    return `<div style="margin-top:10px;padding-top:10px;border-top:1px solid #e2e8f0;">
       <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;">Address</div>
       <div style="font-size:13px;color:#1e293b;line-height:1.6;">
-        ${s.address_line_1?`<div>${s.address_line_1}</div>`:''}
-        ${s.address_line_2?`<div>${s.address_line_2}</div>`:''}
-        ${[s.suburb,s.state,s.postcode].filter(Boolean).join(' ')?`<div>${[s.suburb,s.state,s.postcode].filter(Boolean).join(' ')}</div>`:''}
+        ${line1?`<div>${line1}</div>`:''}
+        ${line2?`<div>${line2}</div>`:''}
+        ${cityLine?`<div>${cityLine}</div>`:''}
       </div>
-    </div>`:''}
-    </div></div>`;
+    </div>`;
+  }
+  function emergencyBlock(name,phone,relation){
+    if(!name&&!phone) return '';
+    return `<div style="margin-top:10px;padding-top:10px;border-top:1px solid #e2e8f0;">
+      <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;">Emergency Contact</div>
+      <div style="font-size:13px;color:#1e293b;line-height:1.6;">
+        ${name?`<div>${name}${relation?' ('+relation+')':''}</div>`:''}
+        ${phone?`<div>${phone}</div>`:''}
+      </div>
+    </div>`;
+  }
+
+  if(ft==='couples'){
+    const p1Name=(s.preferred_name||s.first_name)+' '+s.last_name;
+    const p2Name=s.secondary_preferred_name?(s.secondary_preferred_name+' '+(s.secondary_name||'').split(' ').slice(1).join(' ')).trim():(s.secondary_name||'');
+    const sameAddr=s.secondary_address_line_1?(
+      (s.secondary_address_line_1||'')===(s.address_line_1||'')&&
+      (s.secondary_postcode||'')===(s.postcode||'')
+    ):true;
+
+    html+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-left:4px solid #b87a90;border-radius:10px;padding:16px;">
+        <div style="font-weight:700;font-size:13px;color:#1e3a5f;margin-bottom:10px;">Partner 1 &mdash; ${p1Name||'(no name)'}</div>
+        ${field('Full Name',s.first_name+' '+s.last_name)}
+        ${field('Preferred Name',s.preferred_name)}
+        ${field('Email',s.email)}
+        ${field('Phone',s.phone)}
+        ${addressBlock(s.address_line_1,s.address_line_2,s.suburb,s.state,s.postcode)}
+        ${emergencyBlock(s.emergency_contact_name,s.emergency_contact_phone,s.emergency_contact_relationship)}
+      </div>
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-left:4px solid #5c8a7a;border-radius:10px;padding:16px;">
+        <div style="font-weight:700;font-size:13px;color:#1e3a5f;margin-bottom:10px;">Partner 2 &mdash; ${p2Name||'(no name)'}</div>
+        ${field('Full Name',s.secondary_name)}
+        ${field('Preferred Name',s.secondary_preferred_name)}
+        ${field('Email',s.secondary_email)}
+        ${field('Phone',s.secondary_phone)}
+        ${(s.secondary_address_line_1||s.secondary_suburb)
+          ?(sameAddr
+            ?`<div style="margin-top:10px;padding-top:10px;border-top:1px solid #e2e8f0;"><div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;">Address</div><div style="font-size:13px;color:#64748b;font-style:italic;">Same as Partner 1</div></div>`
+            :addressBlock(s.secondary_address_line_1,s.secondary_address_line_2,s.secondary_suburb,s.secondary_state,s.secondary_postcode))
+          :''}
+        ${emergencyBlock(s.secondary_emergency_contact_name,s.secondary_emergency_contact_phone,null)}
+      </div>
+    </div>`;
+  } else {
+    html+=`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:12px;">
+      <div style="font-weight:700;font-size:13px;color:#1e3a5f;margin-bottom:10px;">Personal Details</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px;">
+      ${field('Name',s.first_name+' '+s.last_name)}
+      ${field('Preferred Name',s.preferred_name)}
+      ${field('Email',s.email)}
+      ${field('Phone',s.phone)}
+      ${field('Date of Birth',s.date_of_birth)}
+      ${field('Occupation',s.occupation)}
+      </div>
+      ${addressBlock(s.address_line_1,s.address_line_2,s.suburb,s.state,s.postcode)}
+    </div>`;
+  }
 
   // Program-specific section
   if(ft==='thrivehq'){
@@ -7665,8 +7713,8 @@ window.openIntakeDetail=function(id){
     <div style="font-weight:700;font-size:13px;color:#1e3a5f;margin-bottom:10px;">Health & Safety</div>
     ${field('Other Health Conditions',s.health_conditions)}
     ${field('Previous Coaching/Group',s.previous_coaching?'Yes'+(s.previous_coaching_details?' — '+s.previous_coaching_details:''):'No')}
-    ${field('Emergency Contact',s.emergency_contact_name+(s.emergency_contact_relationship?' ('+s.emergency_contact_relationship+')':''))}
-    ${field('Emergency Phone',s.emergency_contact_phone)}
+    ${ft!=='couples'?field('Emergency Contact',s.emergency_contact_name+(s.emergency_contact_relationship?' ('+s.emergency_contact_relationship+')':'')):''}
+    ${ft!=='couples'?field('Emergency Phone',s.emergency_contact_phone):''}
   </div>`;
 
   // Consent — backwards compatible with old 5-field + new single consent

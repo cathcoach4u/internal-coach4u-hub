@@ -120,6 +120,14 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f6ff;color:#1e293b;m
       </select></div>
     </div>
 
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-top:16px;">
+      <div style="font-weight:700;font-size:12px;color:#1e3a5f;margin-bottom:10px;">Your Emergency Contact <span style="color:#ef4444;">*</span></div>
+      <div class="row">
+        <div class="form-group"><label>Name</label><input id="fEmName"></div>
+        <div class="form-group"><label>Phone</label><input id="fEmPhone" type="tel"></div>
+      </div>
+    </div>
+
     <div class="partner-box">
       <div class="box-title">Partner's Details</div>
       <div class="row">
@@ -127,7 +135,62 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f6ff;color:#1e293b;m
         <div class="form-group"><label>Partner's Last Name <span class="req">*</span></label><input id="fPartnerLastName"></div>
       </div>
       <div class="form-group"><label>Partner's Preferred Name</label><input id="fPartnerPreferred" placeholder="What should we call them?"></div>
-      <div class="form-group"><label>Partner's Email</label><input id="fPartnerEmail" type="email"></div>
+      <div class="row">
+        <div class="form-group"><label>Partner's Email</label><input id="fPartnerEmail" type="email"></div>
+        <div class="form-group"><label>Partner's Phone</label><input id="fPartnerPhone" type="tel"></div>
+      </div>
+
+      <div style="margin:10px 0 8px;display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" id="fPartnerSameAddress" checked onchange="togglePartnerAddress()" style="width:16px;height:16px;accent-color:#3b82f6;">
+        <label for="fPartnerSameAddress" style="font-size:12px;font-weight:600;color:#475569;cursor:pointer;">Partner has the same address as me</label>
+      </div>
+      <div id="fPartnerAddressBlock" style="display:none;">
+        <div class="form-group"><label>Partner's Street Address</label><input id="fPartnerAddress1" placeholder="e.g. 12 Smith Street"></div>
+        <div class="form-group"><label>Partner's Address Line 2 <span style="color:#94a3b8;font-weight:400;">(optional)</span></label><input id="fPartnerAddress2" placeholder="Unit, apartment, PO Box"></div>
+        <div class="row">
+          <div class="form-group"><label>Suburb</label><input id="fPartnerSuburb"></div>
+          <div class="form-group"><label>Postcode</label><input id="fPartnerPostcode" inputmode="numeric" maxlength="5"></div>
+          <div class="form-group"><label>State / Region</label><select id="fPartnerState">
+            <option value="">Select...</option>
+            <optgroup label="Australia">
+              <option value="ACT">ACT</option>
+              <option value="NSW">NSW</option>
+              <option value="NT">NT</option>
+              <option value="QLD">QLD</option>
+              <option value="SA">SA</option>
+              <option value="TAS">TAS</option>
+              <option value="VIC">VIC</option>
+              <option value="WA">WA</option>
+            </optgroup>
+            <optgroup label="New Zealand">
+              <option value="NZ-AUK">Auckland</option>
+              <option value="NZ-BOP">Bay of Plenty</option>
+              <option value="NZ-CAN">Canterbury</option>
+              <option value="NZ-GIS">Gisborne</option>
+              <option value="NZ-HKB">Hawke's Bay</option>
+              <option value="NZ-MWT">Manawatu-Wanganui</option>
+              <option value="NZ-MBH">Marlborough</option>
+              <option value="NZ-NSN">Nelson</option>
+              <option value="NZ-NTL">Northland</option>
+              <option value="NZ-OTA">Otago</option>
+              <option value="NZ-STL">Southland</option>
+              <option value="NZ-TKI">Taranaki</option>
+              <option value="NZ-TAS">Tasman</option>
+              <option value="NZ-WKO">Waikato</option>
+              <option value="NZ-WGN">Wellington</option>
+              <option value="NZ-WTC">West Coast</option>
+            </optgroup>
+          </select></div>
+        </div>
+      </div>
+
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-top:12px;">
+        <div style="font-weight:700;font-size:12px;color:#1e3a5f;margin-bottom:10px;">Partner's Emergency Contact <span style="color:#ef4444;">*</span></div>
+        <div class="row">
+          <div class="form-group"><label>Name</label><input id="fPartnerEmName"></div>
+          <div class="form-group"><label>Phone</label><input id="fPartnerEmPhone" type="tel"></div>
+        </div>
+      </div>
     </div>
 
     <div class="form-group" style="margin-top:16px;">
@@ -147,12 +210,8 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f6ff;color:#1e293b;m
       <input id="fHowHeardOther" placeholder="Let us know how you found us...">
     </div>
 
-    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-top:16px;">
-      <div style="font-weight:700;font-size:12px;color:#1e3a5f;margin-bottom:10px;">Emergency Contact <span style="color:#ef4444;">*</span></div>
-      <div class="row">
-        <div class="form-group"><label>Name</label><input id="fEmName"></div>
-        <div class="form-group"><label>Phone</label><input id="fEmPhone" type="tel"></div>
-      </div>
+    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px 14px;margin-top:16px;font-size:12px;color:#1e3a5f;line-height:1.5;">
+      <strong>One form per couple.</strong> This form captures details for both of you &mdash; your partner doesn't need to submit a separate form.
     </div>
 
     <div class="hp"><label>Leave blank</label><input id="fWebsite" tabindex="-1" autocomplete="off"></div>
@@ -281,11 +340,13 @@ function validateStep(n){
     if(!g('fFirstName')||!g('fLastName')){showError('First and last name are required.');return false;}
     if(!g('fEmail')||!g('fEmail').includes('@')){showError('Valid email is required.');return false;}
     if(!g('fPartnerFirstName')||!g('fPartnerLastName')){showError("Partner's first and last name are required.");return false;}
-    if(!g('fEmName')||!g('fEmPhone')){showError('Emergency contact is required.');return false;}
+    if(!g('fEmName')||!g('fEmPhone')){showError('Your emergency contact is required.');return false;}
+    if(!g('fPartnerEmName')||!g('fPartnerEmPhone')){showError("Partner's emergency contact is required.");return false;}
   }
   return true;
 }
 function toggleHowHeardOther(){document.getElementById('fHowHeardOtherWrap').style.display=document.getElementById('fHowHeard').value==='Other'?'block':'none';}
+function togglePartnerAddress(){document.getElementById('fPartnerAddressBlock').style.display=document.getElementById('fPartnerSameAddress').checked?'none':'block';}
 
 async function submitForm(){
   hideError();
@@ -305,6 +366,7 @@ async function submitForm(){
   if(!supabase){showError('Still loading — please try again in a moment.');btn.disabled=false;btn.textContent='Submit';return;}
   const howHeard=g('fHowHeard')==='Other'&&g('fHowHeardOther')?'Other: '+g('fHowHeardOther'):(g('fHowHeard')||null);
   const partnerFull=(g('fPartnerFirstName')+' '+g('fPartnerLastName')).trim();
+  const sameAddr=document.getElementById('fPartnerSameAddress').checked;
   const {error}=await supabase.from('intake_submissions').insert({
     form_type:'couples',
     first_name:g('fFirstName'),
@@ -323,13 +385,21 @@ async function submitForm(){
     secondary_name:partnerFull,
     secondary_preferred_name:g('fPartnerPreferred')||null,
     secondary_email:g('fPartnerEmail')||null,
+    secondary_phone:g('fPartnerPhone')||null,
+    secondary_address_line_1:sameAddr?(g('fAddress1')||null):(g('fPartnerAddress1')||null),
+    secondary_address_line_2:sameAddr?(g('fAddress2')||null):(g('fPartnerAddress2')||null),
+    secondary_suburb:sameAddr?(g('fSuburb')||null):(g('fPartnerSuburb')||null),
+    secondary_state:sameAddr?(g('fState')||null):(g('fPartnerState')||null),
+    secondary_postcode:sameAddr?(g('fPostcode')||null):(g('fPartnerPostcode')||null),
+    secondary_emergency_contact_name:g('fPartnerEmName'),
+    secondary_emergency_contact_phone:g('fPartnerEmPhone'),
     relationship_status:g('fRelStatus'),
     relationship_length:g('fRelLength')||null,
     areas_of_interest:getChips('areasChips')||null,
     current_challenges:g('fChallenges')||null,
     wellbeing_goals:g('fGoals')||null,
     consent_accepted:c1&&c2&&c3&&c4&&c5,
-    consent_version:'couples-v3-five-checkboxes',
+    consent_version:'couples-v4-per-partner-details',
     signature_name:g('fFirstName')+' '+g('fLastName')
   });
 
@@ -346,14 +416,19 @@ function save(){try{localStorage.setItem('couples_intake',JSON.stringify({
   fEmail:g('fEmail'),fPhone:g('fPhone'),fAddress1:g('fAddress1'),fAddress2:g('fAddress2'),fSuburb:g('fSuburb'),fState:g('fState'),fPostcode:g('fPostcode'),fHowHeard:g('fHowHeard'),fHowHeardOther:g('fHowHeardOther'),
   fEmName:g('fEmName'),fEmPhone:g('fEmPhone'),
   fPartnerFirstName:g('fPartnerFirstName'),fPartnerLastName:g('fPartnerLastName'),fPartnerPreferred:g('fPartnerPreferred'),
-  fPartnerEmail:g('fPartnerEmail'),fRelStatus:g('fRelStatus'),fRelLength:g('fRelLength'),
+  fPartnerEmail:g('fPartnerEmail'),fPartnerPhone:g('fPartnerPhone'),
+  fPartnerSameAddress:document.getElementById('fPartnerSameAddress').checked,
+  fPartnerAddress1:g('fPartnerAddress1'),fPartnerAddress2:g('fPartnerAddress2'),fPartnerSuburb:g('fPartnerSuburb'),fPartnerState:g('fPartnerState'),fPartnerPostcode:g('fPartnerPostcode'),
+  fPartnerEmName:g('fPartnerEmName'),fPartnerEmPhone:g('fPartnerEmPhone'),
+  fRelStatus:g('fRelStatus'),fRelLength:g('fRelLength'),
   fChallenges:g('fChallenges'),fGoals:g('fGoals'),areas:getChips('areasChips')
 }));}catch(e){}}
 function restore(){try{const s=JSON.parse(localStorage.getItem('couples_intake'));if(!s)return;
-  ['fFirstName','fLastName','fPreferred','fEmail','fPhone','fAddress1','fAddress2','fSuburb','fState','fPostcode','fEmName','fEmPhone','fPartnerFirstName','fPartnerLastName','fPartnerPreferred','fPartnerEmail','fChallenges','fGoals','fHowHeardOther'].forEach(id=>{if(s[id])document.getElementById(id).value=s[id];});
+  ['fFirstName','fLastName','fPreferred','fEmail','fPhone','fAddress1','fAddress2','fSuburb','fState','fPostcode','fEmName','fEmPhone','fPartnerFirstName','fPartnerLastName','fPartnerPreferred','fPartnerEmail','fPartnerPhone','fPartnerAddress1','fPartnerAddress2','fPartnerSuburb','fPartnerState','fPartnerPostcode','fPartnerEmName','fPartnerEmPhone','fChallenges','fGoals','fHowHeardOther'].forEach(id=>{if(s[id])document.getElementById(id).value=s[id];});
   if(s.fHowHeard){document.getElementById('fHowHeard').value=s.fHowHeard;toggleHowHeardOther();}
   if(s.fRelStatus)document.getElementById('fRelStatus').value=s.fRelStatus;
   if(s.fRelLength)document.getElementById('fRelLength').value=s.fRelLength;
+  if(s.fPartnerSameAddress===false){document.getElementById('fPartnerSameAddress').checked=false;togglePartnerAddress();}
   if(s.areas){const a=s.areas.split(', ');document.querySelectorAll('#areasChips .chip').forEach(c=>{if(a.includes(c.textContent))c.classList.add('selected');});}
 }catch(e){}}
 document.addEventListener('input',()=>{clearTimeout(window._t);window._t=setTimeout(save,500);});
