@@ -253,7 +253,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.95</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.96</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -5170,6 +5170,7 @@ function renderSms(){
 
   const isMobile=window.innerWidth<640;
   const inGroupsMode=commsView==='groups';
+  const inTemplatesMode=commsView==='templates';
   const showList=!isMobile||commsMobileView==='list';
   const showThread=!isMobile||commsMobileView==='thread';
 
@@ -5177,6 +5178,7 @@ function renderSms(){
   const viewPills=`<div style="display:flex;gap:6px;margin-bottom:10px;">
     <button onclick="window._switchCommsView('contacts')" style="padding:8px 22px;border-radius:99px;border:2px solid ${commsView==='contacts'?'#1e3a5f':'#e2e8f0'};font-size:13px;font-weight:700;cursor:pointer;background:${commsView==='contacts'?'#1e3a5f':'#fff'};color:${commsView==='contacts'?'#fff':'#64748b'};transition:all .15s;">Contacts</button>
     <button onclick="window._switchCommsView('groups')" style="padding:8px 22px;border-radius:99px;border:2px solid ${commsView==='groups'?'#0d9488':'#e2e8f0'};font-size:13px;font-weight:700;cursor:pointer;background:${commsView==='groups'?'#0d9488':'#fff'};color:${commsView==='groups'?'#fff':'#64748b'};transition:all .15s;">Groups</button>
+    <button onclick="window._switchCommsView('templates')" style="padding:8px 22px;border-radius:99px;border:2px solid ${commsView==='templates'?'#7c3aed':'#e2e8f0'};font-size:13px;font-weight:700;cursor:pointer;background:${commsView==='templates'?'#7c3aed':'#fff'};color:${commsView==='templates'?'#fff':'#64748b'};transition:all .15s;">Templates</button>
   </div>`;
 
   const filterBar=`<div style="padding:8px 12px;border-bottom:1px solid #e2e8f0;display:flex;gap:5px;flex-shrink:0;">
@@ -5186,9 +5188,9 @@ function renderSms(){
     <button onclick="setSmsChannelFilter('email')" style="flex:1;padding:5px;border-radius:6px;border:1px solid #e2e8f0;font-size:11px;font-weight:700;cursor:pointer;background:${smsChannelFilter==='email'?'#c2410c':'#f8fafc'};color:${smsChannelFilter==='email'?'#fff':'#64748b'};">Email</button>
   </div>`;
 
-  const leftW=inGroupsMode?(isMobile?'100%':'190px'):(isMobile?'100%':'260px');
+  const leftW=(inGroupsMode||inTemplatesMode)?(isMobile?'100%':'190px'):(isMobile?'100%':'260px');
   const listPanel=`<div style="display:${showList?'flex':'none'};flex-direction:column;${isMobile?'width:100%;':`width:${leftW};border-right:1px solid #e2e8f0;`}background:#f8fafc;flex-shrink:0;">
-    ${inGroupsMode?renderGroupListSidebar():`${filterBar}<div style="padding:10px 12px;border-bottom:1px solid #e2e8f0;flex-shrink:0;"><input id="smsContactSearch" oninput="renderSmsContactList()" placeholder="Search contacts…" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box;"></div><div id="smsContactList" style="flex:1;overflow-y:auto;"></div>`}
+    ${inTemplatesMode?renderTemplatesList():inGroupsMode?renderGroupListSidebar():`${filterBar}<div style="padding:10px 12px;border-bottom:1px solid #e2e8f0;flex-shrink:0;"><input id="smsContactSearch" oninput="renderSmsContactList()" placeholder="Search contacts…" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box;"></div><div id="smsContactList" style="flex:1;overflow-y:auto;"></div>`}
   </div>`;
 
   const threadHeader=selContact?`
@@ -5211,7 +5213,9 @@ function renderSms(){
     </div>
   `:'<div style="color:#94a3b8;font-size:13px;">Select a contact</div>';
 
-  const threadPanel=inGroupsMode
+  const threadPanel=inTemplatesMode
+    ?`<div style="display:${showThread?'flex':'none'};flex-direction:column;flex:1;min-width:0;min-height:0;">${renderTemplateDetail()}</div>`
+    :inGroupsMode
     ?`<div style="display:${showThread?'flex':'none'};flex-direction:column;flex:1;min-width:0;min-height:0;">${renderGroupDetailPanel(isMobile)}</div>`
     :`<div style="display:${showThread?'flex':'none'};flex-direction:column;flex:1;min-width:0;min-height:0;">
     <div style="padding:10px 14px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:8px;min-height:54px;flex-shrink:0;position:sticky;top:0;background:#fff;z-index:2;">
@@ -5258,6 +5262,7 @@ window._commsBackToList=function(){commsMobileView='list';renderSms();};
 window._switchCommsView=function(v){
   commsView=v;
   if(v==='groups'){smsSelectedContactId=null;commsMobileView='list';}
+  else if(v==='templates'){smsSelectedContactId=null;commsActiveListId=null;}
   else{commsActiveListId=null;groupSendChannel='sms';}
   renderSms();
 };
@@ -5672,6 +5677,54 @@ window.deleteCommsGroup=async function(listId){
   toast('List deleted','success');
 };
 
+// TEMPLATES SECTION
+let commsTemplateSelected=null;
+function renderTemplatesList(){
+  const programs=['thrivehq','couples','individual'];
+  const programLabels={thrivehq:'ThriveHQ',couples:'Couples',individual:'Individuals'};
+  const items=programs.map(prog=>{
+    const temps=getGroupTemplates(prog);
+    const count=temps.length;
+    const sel=commsTemplateSelected===prog;
+    return `<div onclick="window.selectCommTemplate('${prog}')" style="padding:12px 14px;border-bottom:1px solid #f1f5f9;cursor:pointer;background:${sel?'#e8f4ff':'transparent'};" onmouseover="this.style.background='${sel?'#e8f4ff':'#f1f5f9'}'" onmouseout="this.style.background='${sel?'#e8f4ff':'transparent'}'">
+      <div style="font-weight:600;font-size:13px;color:#1e293b;">${programLabels[prog]}</div>
+      <div style="font-size:11px;color:#94a3b8;margin-top:2px;">${count} template${count!==1?'s':''}</div>
+    </div>`;
+  }).join('');
+  return `<div style="padding:8px 12px;border-bottom:1px solid #e2e8f0;font-size:12px;font-weight:700;color:#475569;flex-shrink:0;">Programs</div><div style="flex:1;overflow-y:auto;">${items}</div>`;
+}
+
+function renderTemplateDetail(){
+  if(!commsTemplateSelected) return `<div style="display:flex;align-items:center;justify-content:center;flex:1;color:#94a3b8;font-size:13px;padding:32px;">Select a program to view templates</div>`;
+  const label={thrivehq:'ThriveHQ',couples:'Couples',individual:'Individuals'}[commsTemplateSelected];
+  const temps=getGroupTemplates(commsTemplateSelected);
+  const templateCards=temps.map(t=>`<div style="border:1px solid #e2e8f0;border-radius:8px;padding:12px;background:#fff;margin-bottom:8px;">
+    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px;">
+      <div style="font-size:13px;font-weight:700;color:#1e3a5f;">${t.name.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div>
+      <button onclick="event.stopPropagation();window.copyTemplateText('${commsTemplateSelected}','${t.id}')" style="font-size:10px;padding:3px 8px;background:#e8f4ff;color:#2563eb;border:none;border-radius:6px;cursor:pointer;white-space:nowrap;font-weight:600;">Copy</button>
+    </div>
+    <div style="font-size:12px;color:#475569;line-height:1.6;white-space:pre-wrap;margin-bottom:10px;background:#f8fafc;padding:10px;border-radius:6px;max-height:120px;overflow-y:auto;">${t.body.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div>
+    <button onclick="event.stopPropagation();window.deleteGroupTemplate('${commsTemplateSelected}','${t.id}')" style="font-size:10px;padding:4px 8px;background:none;border:1px solid #fecaca;color:#dc2626;border-radius:6px;cursor:pointer;width:100%;font-weight:600;">Delete</button>
+  </div>`).join('');
+  return `<div style="padding:12px 14px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:8px;flex-shrink:0;position:sticky;top:0;background:#fff;z-index:2;">
+    <div style="flex:1;"><div style="font-weight:700;font-size:15px;color:#1e3a5f;">${label} Templates</div><div style="font-size:11px;color:#64748b;">${temps.length} template${temps.length!==1?'s':''}</div></div>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:12px 14px;background:#f8fafc;">${temps.length?templateCards:'<div style="font-size:12px;color:#94a3b8;text-align:center;padding:20px;">No templates for this program yet.</div>'}</div>`;
+}
+
+window.selectCommTemplate=function(prog){
+  commsTemplateSelected=prog;
+  commsMobileView='thread';
+  renderSms();
+};
+
+window.copyTemplateText=function(prog,id){
+  const t=getGroupTemplates(prog).find(x=>x.id===id);
+  if(!t){toast('Template not found','error');return;}
+  if(typeof copyText==='function'){copyText(t.body,'Template');return;}
+  navigator.clipboard&&navigator.clipboard.writeText(t.body).then(()=>toast('Template copied','success')).catch(()=>toast('Copy failed','error'));
+};
+
 function getGroupTemplates(listId){
   const key='group_templates_'+listId;
   try{
@@ -5684,6 +5737,11 @@ function getGroupTemplates(listId){
         localStorage.removeItem('thq_tuesday_sms_template');
         return migrated;
       }
+    }
+    if(!stored&&listId==='couples'){
+      const couplDefault=[{id:'welcome',name:'Welcome to couples intake',body:'Hi [Name],\nThank you for connecting with Cath and sharing your needs.\n\nTo move forward, please review and complete the next steps here:\nhttps://cathcoach4u.github.io/internal-coach4u-hub/couples-process/\n\nThere are two forms to complete. These take around 10 to 15 minutes and allow Cath to prepare for your intake session.\n\nOnce both forms are received, we will send your intake session booking.\n\nThanks\nLou',createdAt:new Date().toISOString()}];
+      localStorage.setItem(key,JSON.stringify(couplDefault));
+      return couplDefault;
     }
     return JSON.parse(stored||'[]');
   }catch(e){return[];}
