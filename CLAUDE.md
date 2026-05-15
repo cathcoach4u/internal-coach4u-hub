@@ -515,6 +515,33 @@ print(r.status_code, r.text[:200])
 - Tuesday banner in the group compose area has been removed — these dashboard cards are the sole reminder
 - Note: group messages are outbound-only. Replies arrive in individual contact threads, not a group inbox.
 
+## Pending Implementation
+
+Two major areas remain to be completed:
+
+### 1. WhatsApp Integration
+- Full WhatsApp channel support in Comms (SMS + Email already working)
+- Update Edge Function to handle WhatsApp sending via provider API
+- Test message delivery and receipt handling
+- May require different rate limiting and formatting than SMS
+
+### 2. GoCardless Payment Mandate Backend Setup
+**Frontend UI completed** (Phases 1-7):
+- Mandate data loading on startup
+- Contact card, client list, and dashboard displays
+- Couples intake checklist integration
+- Filtering by mandate status
+- Auto-progress tracking helper
+
+**Backend still needed**:
+- Create `payment_mandates` table in Supabase (SQL in GOCARDLESS_SETUP.md)
+- Deploy `gocardless-webhook` Edge Function (TypeScript code in GOCARDLESS_SETUP.md)
+- Configure webhook in GoCardless dashboard
+- Add environment variables: `GOCARDLESS_ACCESS_TOKEN`, `GOCARDLESS_WEBHOOK_SECRET`
+- Test end-to-end with sample mandate
+
+See `GOCARDLESS_SETUP.md`, `GOCARDLESS_CRM_NEXT_STEPS.md`, and `GOCARDLESS_ROADMAP.md` for complete implementation guides.
+
 ## Client detail — strengths reports
 
 - **Reports section** in the client modal (`#clReportsSection`, HTML ~line 1020) renders per-linked-member cards showing the three report types (Gallup, Personal Insights, Bring Need) from `contact_reports`.
