@@ -253,7 +253,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.98</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.55.99</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -4905,6 +4905,8 @@ function renderClientCard(c){
   const members=(c.members||[]).map(mid=>getContactName(mid));
   const borderColor=c.status==='Active'?'#16a34a':c.status==='On Hold'?'#eab308':'#94a3b8';
   const ref=c.referred_by?referrals.find(r=>r.id===c.referred_by):null;
+  const memberMandates=(c.members||[]).map(mid=>getContactMandate(mid)).filter(Boolean);
+  const mandateBadges=memberMandates.map(m=>getMandateStatusBadge(m.status)).join('');
   return `<div onclick="openClientProfile('${c.id}')" style="background:#fff;border:1px solid #e2e8f0;border-left:3px solid ${borderColor};border-radius:8px;padding:14px 16px;display:flex;gap:12px;align-items:center;cursor:pointer;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
     <div style="flex:1;min-width:0;">
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
@@ -4913,6 +4915,7 @@ function renderClientCard(c){
         ${ref?'<span style="font-size:11px;padding:2px 8px;border-radius:99px;background:#dbeafe;color:#2563eb;font-weight:500;">Referred by '+ref.name+'</span>':''}
       </div>
       ${members.length>1?'<div style="font-size:12px;color:#64748b;margin-top:4px;">'+members.join(', ')+'</div>':''}
+      ${mandateBadges?'<div style="display:flex;align-items:center;gap:6px;margin-top:8px;">'+mandateBadges+'</div>':''}
     </div>
     <div style="display:flex;gap:6px;flex-shrink:0;">
       ${c.file_notes_link?'<a href="'+c.file_notes_link+'" target="_blank" onclick="event.stopPropagation()" style="background:none;border:1px solid #bfdbfe;border-radius:6px;padding:6px 12px;font-size:12px;color:#2563eb;cursor:pointer;text-decoration:none;font-weight:500;">File Notes</a>':''}
