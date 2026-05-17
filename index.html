@@ -253,7 +253,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.56.4</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.56.5</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -7810,6 +7810,100 @@ window.convertIntakeToClient=async function(id){
   if(!s) return;
   const ft=s.form_type||'individual';
 
+  // ── COUPLES: create both partner contacts + a Couple client + link members ──
+  if(ft==='couples'){
+    // Partner 1 (submitter)
+    let p1Id;
+    const p1Existing=contacts.find(c=>c.email&&s.email&&c.email.toLowerCase()===s.email.toLowerCase());
+    if(p1Existing){
+      p1Id=p1Existing.id;
+      await supabase.from('contacts').update({contact_type:'Client',preferred_name:s.preferred_name||p1Existing.preferred_name||null,phone:s.phone||p1Existing.phone||null}).eq('id',p1Id);
+    } else {
+      const {data:p1Ins,error:p1Err}=await supabase.from('contacts').insert({
+        first_name:s.first_name,last_name:s.last_name,
+        preferred_name:s.preferred_name||null,
+        email:s.email||null,phone:s.phone||null,
+        contact_type:'Client'
+      }).select();
+      if(p1Err){toast('Error creating Partner 1: '+p1Err.message,'error');return;}
+      p1Id=p1Ins[0].id;
+    }
+
+    // Partner 2 (from secondary_* fields)
+    const partnerWords=(s.secondary_name||'').trim().split(/\s+/);
+    const p2First=partnerWords[0]||'';
+    const p2Last=partnerWords.slice(1).join(' ')||s.last_name||'';
+    let p2Id=null;
+    if(p2First){
+      let p2Existing=null;
+      if(s.secondary_email) p2Existing=contacts.find(c=>c.email&&c.email.toLowerCase()===s.secondary_email.toLowerCase());
+      if(!p2Existing) p2Existing=contacts.find(c=>(c.first_name||'').toLowerCase()===p2First.toLowerCase()&&(c.last_name||'').toLowerCase()===p2Last.toLowerCase());
+      if(p2Existing){
+        p2Id=p2Existing.id;
+        await supabase.from('contacts').update({
+          contact_type:'Client',
+          preferred_name:s.secondary_preferred_name||p2Existing.preferred_name||null,
+          email:s.secondary_email||p2Existing.email||null,
+          phone:s.secondary_phone||p2Existing.phone||null
+        }).eq('id',p2Id);
+      } else {
+        const {data:p2Ins,error:p2Err}=await supabase.from('contacts').insert({
+          first_name:p2First,last_name:p2Last,
+          preferred_name:s.secondary_preferred_name||null,
+          email:s.secondary_email||null,phone:s.secondary_phone||null,
+          contact_type:'Client'
+        }).select();
+        if(p2Err){toast('Error creating Partner 2: '+p2Err.message,'error');return;}
+        p2Id=p2Ins[0].id;
+      }
+    }
+
+    // Relationship name: "Last – First & First" if shared surname, else "First Last & First Last"
+    const p1Display=s.preferred_name||s.first_name;
+    const p2Display=s.secondary_preferred_name||p2First;
+    let relName;
+    if(p2Last&&(s.last_name||'').toLowerCase()===p2Last.toLowerCase()){
+      relName=`${s.last_name} – ${p1Display} & ${p2Display}`;
+    } else if(p2First){
+      relName=`${p1Display} ${s.last_name} & ${p2Display} ${p2Last}`.trim();
+    } else {
+      relName=`${p1Display} ${s.last_name}`.trim();
+    }
+
+    // Notes
+    const notes=[];
+    if(s.relationship_status) notes.push('Relationship: '+s.relationship_status);
+    if(s.relationship_length) notes.push('Length: '+s.relationship_length);
+    if(s.areas_of_interest) notes.push('Areas: '+s.areas_of_interest);
+    if(s.current_challenges) notes.push('Challenges: '+s.current_challenges);
+    if(s.wellbeing_goals) notes.push('Goals: '+s.wellbeing_goals);
+
+    // Create the Couple client
+    const {data:clIns,error:clErr}=await supabase.from('clients').insert({
+      relationship_name:relName,
+      role:'Couple',
+      status:'Active',
+      practitioner:'Cath Baker',
+      notes:notes.join('\n')||null
+    }).select();
+    if(clErr){toast('Error creating client: '+clErr.message,'error');return;}
+    const clientId=clIns[0].id;
+
+    // Link both contacts
+    const members=[{client_id:clientId,contact_id:p1Id}];
+    if(p2Id) members.push({client_id:clientId,contact_id:p2Id});
+    const {error:mErr}=await supabase.from('client_members').insert(members);
+    if(mErr){toast('Couple created but linking failed: '+mErr.message,'error');}
+
+    await supabase.from('intake_submissions').update({status:'Converted',contact_id:p1Id}).eq('id',id);
+    await Promise.all([loadContacts(),loadClients(),loadIntakeSubmissions()]);
+    renderIntakeSubmissions();
+    toast(`Couple "${relName}" created with ${p2Id?'both partners':'1 partner'} linked`,'success');
+    closeModal('intakeDetailModal');
+    return;
+  }
+
+  // ── INDIVIDUAL: single contact (unchanged) ──
   const existing=contacts.find(c=>c.email&&s.email&&c.email.toLowerCase()===s.email.toLowerCase());
   let contactId;
   if(existing){
@@ -7817,16 +7911,13 @@ window.convertIntakeToClient=async function(id){
     await supabase.from('contacts').update({contact_type:'Client'}).eq('id',contactId);
   } else {
     const notes=[];
-    if(ft==='couples'){
-      if(s.relationship_status) notes.push('Relationship: '+s.relationship_status);
-      if(s.secondary_name) notes.push('Partner: '+s.secondary_name);
-    } else {
-      if(s.service_focus) notes.push('Focus: '+s.service_focus);
-    }
+    if(s.service_focus) notes.push('Focus: '+s.service_focus);
     if(s.current_challenges) notes.push('Challenges: '+s.current_challenges);
     if(s.wellbeing_goals) notes.push('Goals: '+s.wellbeing_goals);
     const {data:inserted,error:cErr}=await supabase.from('contacts').insert({
-      first_name:s.first_name,last_name:s.last_name,email:s.email,phone:s.phone,
+      first_name:s.first_name,last_name:s.last_name,
+      preferred_name:s.preferred_name||null,
+      email:s.email,phone:s.phone,
       contact_type:'Client',notes:notes.join('\n')||null
     }).select();
     if(cErr){toast('Error creating contact: '+cErr.message,'error');return;}
