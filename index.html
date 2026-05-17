@@ -253,7 +253,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.56.5</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.56.6</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -1804,7 +1804,7 @@ AVAILABLE TOOLS:
 **Create:**
 - add_contact: Add to master list (needs first_name + last_name)
 - add_prospect: Add prospect (needs name, optionally link contact_id)
-- add_task: Add task (needs title). Fields: owner (Cath Baker/CoachVA Lou), requester, task_type (Admin/Finance/Client/Tech/Personal/System), priority (Urgent/Normal/Low), status (Not Started/In Progress/Waiting on Cath/Waiting on CoachVA/Blocked/Complete), source (Chat/Email/Call/System/Self), decision_required (Yes/No), due_date, blocked_reason, work_category (Task/Action Plan/BAU), focus_today (true to add to today's priorities)
+- add_task: Add task (needs title). Fields: owner (Cath Baker/CoachVA Lou), requester, task_type (Admin/Finance/Client/Tech/Personal/System), priority (Urgent/Normal/Low), status (Not Started/In Progress/Waiting on Cath/Waiting on CoachVA/Blocked/Complete), source (Chat/Email/Call/System/Self), decision_required (Yes/No), due_date, blocked_reason, work_category (Task/Action Plan/BAU), focus_today (true to schedule for today on the planner calendar)
 - add_task_log: Add a communication log to a task (needs task_id + message). Types: STATUS UPDATE, ACTION REQUIRED, CONFIRMATION REQUEST, BLOCKED, NOTE
 - add_renewal: Add ThriveHQ membership renewal (needs contact_id, period_start, period_end)
 - add_referrer_payment: Add referrer payment (needs referrer_id, amount)
@@ -1844,7 +1844,7 @@ RULES:
 12. Task owners are "Cath Baker" or "CoachVA (Lou)"
 13. When creating tasks, set decision_required to "Yes" if Cath needs to make a decision on it
 14. Task categories: "Task" (regular one-off tasks), "Action Plan" (strategic goals for 2026), "BAU" (Business As Usual — recurring daily monitoring like emails, social media)
-15. Use focus_today=true to add a task to today's priorities (Lou's daily focus). Tasks auto-expire from priorities the next day.
+15. Use focus_today=true to schedule a task on today's planner calendar. Incomplete scheduled tasks roll forward to the next workday automatically.
 16. Lou's Day view shows 4 sections: Priorities (today's focus), Pending (backlog tasks), Action Plan (strategic goals), BAU (daily recurring)`
   },
   {
@@ -3712,13 +3712,8 @@ function renderOpsDash(){
   const blocked=active.filter(t=>t.status==='Blocked');
   const waitingVA=active.filter(t=>t.status==='Waiting on CoachVA');
   const completedToday=tasks.filter(t=>t.status==='Complete'&&t.updated_at&&new Date(t.updated_at).toLocaleDateString('en-CA',{timeZone:'Australia/Sydney'})===todayStr);
-  const focusToday=active.filter(t=>t.focus_date===todayStr);
 
   let html=`<div class="dash-cards">
-    <div class="dash-card" onclick="navTo('playbook')" style="cursor:pointer;${focusToday.length?'box-shadow:0 0 0 2px #f59e0b;':''}">
-      <div class="dc-icon" style="background:#fef3c7;color:#d97706;">&#9733;</div>
-      <div class="dc-info"><h4>${focusToday.length}</h4><p>Today's Focus</p></div>
-    </div>
     <div class="dash-card" onclick="navTo('tasks');document.getElementById('tkFilterView').value='waiting';filterTasks();" style="cursor:pointer;">
       <div class="dc-icon" style="background:${blocked.length?'#fef2f2':'#eff6ff'};color:${blocked.length?'#dc2626':'#2563eb'};">&#128683;</div>
       <div class="dc-info"><h4>${blocked.length+waitingVA.length}</h4><p>Blocked / Waiting</p></div>
@@ -3868,11 +3863,8 @@ window.copyCompletedWeek=function(){
 };
 function buildPlaybookSections(todayStr){
   const resetAt=getCompletedResetAt();
-  const active=tasks.filter(t=>t.status!=='Complete');
-  const priorities=active.filter(t=>t.focus_date===todayStr).sort(taskSorter);
   const completedSinceReset=tasks.filter(t=>t.status==='Complete'&&t.updated_at&&t.updated_at>resetAt);
   return [
-    {key:'priorities',label:"Today's Priorities",icon:'&#9733;',color:'#f59e0b',items:priorities},
     {key:'completed',label:'Completed',icon:'&#10004;',color:'#16a34a',items:completedSinceReset}
   ];
 }
@@ -4086,7 +4078,7 @@ function renderProcedures(){
   <div style="background:#f0f6ff;border:1px solid #bfdbfe;border-radius:10px;padding:16px 20px;margin-bottom:24px;">
     <div style="font-weight:700;font-size:14px;color:#1e3a5f;margin-bottom:8px;">&#128161; If Someone Else is Covering</div>
     <div style="font-size:13px;color:#475569;line-height:1.7;">
-      <p style="margin-bottom:8px;">1. <strong>Check the Work Log</strong> — it shows today's live priorities and what's pending</p>
+      <p style="margin-bottom:8px;">1. <strong>Check the Work Log</strong> — it shows what's been completed today and what's still pending</p>
       <p style="margin-bottom:8px;">2. <strong>Follow the Daily Procedures</strong> above (Morning / Midday / End of Day)</p>
       <p style="margin-bottom:8px;">3. <strong>Use the Quick Links</strong> to access all tools (Xero, Teams, NDIS portal, etc.)</p>
       <p style="margin-bottom:8px;">4. <strong>Post updates to Cath via Teams</strong> — use the Copy List button in Active Tasks</p>
@@ -10189,34 +10181,22 @@ async function loadTaskLogs(){
 function renderTaskCard(t,showStar){
   const isDone=t.status==='Complete';
   const todayStr=getPHTDateStr();
-  const isFocused=t.focus_date===todayStr;
   const statusColors={'Not Started':'#94a3b8','In Progress':'#2563eb','Waiting on Cath':'#d97706','Waiting on CoachVA':'#7c3aed','Blocked':'#dc2626','Complete':'#16a34a'};
   const st=t.status||'Not Started';
   const stColor=statusColors[st]||'#64748b';
 
-  const starHtml=showStar!==false?`<span onclick="event.stopPropagation();toggleFocusTask('${t.id}',${isFocused?'false':'true'})" style="font-size:15px;line-height:1;cursor:pointer;color:${isFocused?'#f59e0b':'#d1d5db'};margin-top:1px;flex-shrink:0;" title="${isFocused?'Remove from today':'Add to today\'s priorities'}">${isFocused?'&#9733;':'&#9734;'}</span>`:'';
   const schedBtn=!isDone?`<button onclick="event.stopPropagation();showSchedulePicker('${t.id}')" style="background:none;border:1px solid #0d9488;border-radius:5px;padding:2px 10px;font-size:10px;font-weight:600;color:#0d9488;cursor:pointer;white-space:nowrap;">Move</button>`:'';
 
   return `<div onclick="openTaskModal('${t.id}')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid #f1f5f9;${isDone?'opacity:.45;':''}" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
     <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;">
-      ${starHtml}
       <span style="font-size:13px;line-height:1.4;color:${isDone?'#94a3b8':'#1e293b'};${isDone?'text-decoration:line-through;':''}">${t.title}</span>
     </div>
-    <div style="display:flex;align-items:center;gap:6px;padding-left:${showStar!==false?'23px':'0'};">
+    <div style="display:flex;align-items:center;gap:6px;">
 ${schedBtn}
       <span style="font-size:10px;padding:2px 8px;border-radius:99px;background:${stColor}22;color:${stColor};font-weight:600;white-space:nowrap;">${st}</span>
     </div>
   </div>`;
 }
-
-window.toggleFocusTask=async function(id,focus){
-  const todayStr=getPHTDateStr();
-  const {error}=await supabase.from('tasks').update({focus_date:focus?todayStr:null}).eq('id',id);
-  if(error){toast('Error: '+error.message,'error');return;}
-  const t=tasks.find(x=>x.id===id);
-  if(t) t.focus_date=focus?todayStr:null;
-  renderTasks();
-};
 
 function taskSorter(a,b){
   if(a.due_date&&b.due_date) return a.due_date.localeCompare(b.due_date);
@@ -10246,22 +10226,17 @@ function renderTasks(){
 
   {
     const active=filtered.filter(t=>t.status!=='Complete');
-    const priorities=active.filter(t=>t.focus_date===todayStr).sort(taskSorter);
-    const priorityIds=new Set(priorities.map(t=>t.id));
-    const rest=active.filter(t=>!priorityIds.has(t.id));
     const scheduled=active.filter(t=>t.focus_date&&t.focus_date>=todayStr).sort((a,b)=>a.focus_date.localeCompare(b.focus_date));
-    const scheduledIds=new Set(scheduled.map(t=>t.id));
-    const blocked=rest.filter(t=>!scheduledIds.has(t.id)&&t.status==='Blocked').sort(taskSorter);
+    const blocked=active.filter(t=>t.status==='Blocked').sort(taskSorter);
     const blockedIds=new Set(blocked.map(t=>t.id));
-    const inProgress=rest.filter(t=>!scheduledIds.has(t.id)&&!blockedIds.has(t.id)&&t.status==='In Progress').sort(taskSorter);
+    const inProgress=active.filter(t=>!blockedIds.has(t.id)&&t.status==='In Progress').sort(taskSorter);
     const inProgressIds=new Set(inProgress.map(t=>t.id));
-    const exclude=new Set([...priorityIds,...scheduledIds,...blockedIds,...inProgressIds]);
-    const taskCat=rest.filter(t=>!exclude.has(t.id)&&(t.work_category||'Task')==='Task').sort(taskSorter);
-    const actionPlan=rest.filter(t=>!exclude.has(t.id)&&t.work_category==='Action Plan').sort(taskSorter);
-    const bau=rest.filter(t=>!exclude.has(t.id)&&t.work_category==='BAU').sort(taskSorter);
+    const exclude=new Set([...blockedIds,...inProgressIds]);
+    const taskCat=active.filter(t=>!exclude.has(t.id)&&(t.work_category||'Task')==='Task').sort(taskSorter);
+    const actionPlan=active.filter(t=>!exclude.has(t.id)&&t.work_category==='Action Plan').sort(taskSorter);
+    const bau=active.filter(t=>!exclude.has(t.id)&&t.work_category==='BAU').sort(taskSorter);
 
     html+=renderScheduler(scheduled);
-    html+=renderTaskSection("Today's Priorities",'&#9733;','#f59e0b',priorities,true);
     html+=renderTaskSection('Blocked','&#128683;','#dc2626',blocked,true);
     html+=renderTaskSection('In Progress','&#9654;','#2563eb',inProgress,true);
     html+=renderTaskSection('Tasks','&#128203;','#64748b',taskCat,true);
