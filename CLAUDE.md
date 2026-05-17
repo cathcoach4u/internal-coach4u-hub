@@ -113,7 +113,13 @@ The Home dashboard (front screen of the CRM) has a navy/blue gradient launchpad 
 2. **Process & Pricing** (pink left border) — `couples-process/` page link
 3. **Intake Forms** (blue left border) — ThriveHQ, Couples, Individual intake form URLs
 4. **Policies & Useful Links** (amber left border) — Cancellation & Rescheduling policy, GoCardless Payment Mandate (external), Cath's Teams meeting room (external), WhatsApp (external)
-5. **ThriveHQ Client Links** — external links to `cathcoach4u.github.io/yourthrivehqcoach/`
+5. **ThriveHQ Client Links** (green left border) — four external links, **all in the `cathcoach4u/yourthrivehqcoach` repo** (not this one):
+   - **Links Page** → `yourthrivehqcoach/links.html`
+   - **Weekly Coaching Flow** → `yourthrivehqcoach/weekly-coaching-flow.html`
+   - **Session Rhythm** → `yourthrivehqcoach/session-rhythm.html`
+   - **FocusHQ** → `yourthrivehqcoach/body-doubling.html` (body-doubling session page; any FocusHQ form edits live there, not in this repo)
+
+   Section is tagged with `id="thqClientLinksSection"` so the ThriveHQ Hub "Client Links" card can scroll directly to it via `window.openThqClientLinks()`.
 
 Each row has **Copy** and **Open** buttons. All Open buttons use `window.open(url,'_blank')` so links open in a new tab. Internal links use `renderLinkRow()` (builds URL from `baseUrl + path`); external links use `renderExtLinkRow()` (absolute URL).
 
@@ -122,6 +128,21 @@ Policy rows can additionally carry a **Share text** button by setting a `shareTe
 ## Public Gallup Code Request Form
 
 `gallup-request/index.html` is a public PWA at `/gallup-request/?org=<client.id>`. Used by corporate orgs (e.g. Lifestart) so their staff can self-serve a CliftonStrengths code request without going through Cath. The link surfaces inside the Client Modal: when role is **Organisation** and the client has been saved, a green panel appears at the top of the modal with the per-org URL plus Copy and Open buttons (`#clPublicGallupSection`, render fn `updatePublicGallupSection()`). Submission writes a `gallup_code_requests` row with `status='New'`, links the contact via `client_members`, and shows up immediately in the main CRM Code Tracker pipeline.
+
+## ThriveHQ Hub (Hubs > ThriveHQ Hub)
+
+`renderThqDash()` — dashboard with the term calendar (NOW block) at top, then a 6-card nav grid. **All six cards stay inside this repo:**
+
+| Card | navTo | Notes |
+|---|---|---|
+| 🌱 Trials | `thqtrials` | Trial management |
+| 👥 Members | `thrivehq` | Member onboarding |
+| 🔄 Renewals | `thqrenewals` | Renewal tracking |
+| 📞 Coaching Calls | `thqcalls` | Call scheduling |
+| 🎯 Activities | `thqactivities` | Opens `activities/issue-clarifier.html` (this repo) |
+| 🔗 Client Links | `openThqClientLinks()` | Jumps to Admin > Company Resources, auto-scrolls to `#thqClientLinksSection` |
+
+The "Client Links" card surfaces the four **external** ThriveHQ pages (Links Page, Weekly Coaching Flow, Session Rhythm, FocusHQ) — those all live in the `cathcoach4u/yourthrivehqcoach` repo. See the Company Resources section above for the exact URLs and which file each maps to. **Edits to FocusHQ / body-doubling / weekly flow content must be made in `yourthrivehqcoach`, not here.**
 
 ## Pulses
 
