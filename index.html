@@ -253,7 +253,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.56.7</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.56.8</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -4031,14 +4031,14 @@ function renderPlaybook(){
       });
       return Object.entries(byDate).map(([d,its])=>{
         const label=d?new Date(d+'T12:00:00').toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long'}):'Unknown date';
-        const titlesJson=JSON.stringify(its.map(t=>t.title)).replace(/'/g,"\\'");
+        const titlesAttr=JSON.stringify(its.map(t=>t.title)).replace(/&/g,'&amp;').replace(/"/g,'&quot;');
         const rows=its.map(t=>`<div onclick="openTaskModal('${t.id}')" style="display:flex;align-items:center;padding:4px 0;cursor:pointer;gap:6px;">
           <span style="font-size:13px;color:#1e293b;flex:1;min-width:0;">&#10004; ${t.title}</span>
         </div>`).join('');
         return `<div style="margin-bottom:8px;">
           <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0 3px;border-top:1px solid #f1f5f9;">
             <span style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.8px;">${label}</span>
-            <button onclick="copyCompletedDay('${label}',${titlesJson})" style="background:none;border:1px solid #e2e8f0;border-radius:5px;padding:2px 8px;font-size:10px;color:#64748b;cursor:pointer;font-weight:600;font-family:inherit;flex-shrink:0;">&#128203; Copy day</button>
+            <button onclick="copyCompletedDay('${label}',${titlesAttr})" style="background:none;border:1px solid #e2e8f0;border-radius:5px;padding:2px 8px;font-size:10px;color:#64748b;cursor:pointer;font-weight:600;font-family:inherit;flex-shrink:0;">&#128203; Copy day</button>
           </div>
           ${rows}
         </div>`;
