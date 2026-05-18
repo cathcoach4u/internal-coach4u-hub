@@ -168,6 +168,25 @@ All pulse pages live under the **Pulses** area. Screen IDs `clipulse`/`clibrainp
   - **Filed sessions in Supabase** table `couples_intake_sessions` — one row per session, upserted on `draft_id`. Columns: `draft_id` (unique), `client_id` (FK → clients), `p1_name`, `p2_name`, `session_date`, `step_notes` (JSONB keyed by step index 0–4), timestamps.
 - **Save behaviour**: toolbar has "Save Draft" (localStorage) and "Save to Records" (upsert to Supabase). Each stage also has its own "Save this stage" button that does both.
 
+### Couples Intake Form (intake/couples/index.html)
+
+- **Two-step form**: Step 1 captures details for both partners; Step 2 captures relationship & consent
+- **Per-partner capture**:
+  - **Partner 1 (You)**: First/Last name, preferred name, email, phone, address (full), emergency contact (name + phone)
+  - **Partner 2 (Partner's Details)**: First/Last name, preferred name, email, phone, address block with "same address as me" toggle (if unchecked, shows separate address fields), emergency contact (name + phone)
+  - Both emergency contacts are required; form validation enforces this
+- **Address handling**: Each partner has full address fields (street, line 2, suburb, postcode, state/region) with AU+NZ state dropdown. Partner's address can be toggled to "same as mine" to hide the block.
+- **Submission creates**:
+  - `intake_submissions` row with columns: `first_name`, `last_name`, `preferred_name`, `email`, `phone`, `address_line_1`, `address_line_2`, `suburb`, `state`, `postcode` for Partner 1
+  - Additional columns for Partner 2: `secondary_first_name`, `secondary_last_name`, `secondary_preferred_name`, `secondary_email`, `secondary_phone`, `secondary_address_line_1`, `secondary_address_line_2`, `secondary_suburb`, `secondary_state`, `secondary_postcode`, `secondary_emergency_contact_name`, `secondary_emergency_contact_phone`
+  - Plus emergency contact for Partner 1: `emergency_contact_name`, `emergency_contact_phone`
+- **CRM viewer** (`renderIntakeDetail`): Displays couples intake as two side-by-side cards (Partner 1 in pink, Partner 2 in green), each showing full details including phone, address, and emergency contact
+- **Convert to client** (`convertIntakeToClient`): 
+  - Creates two `contacts` rows (one per partner) with respective names, emails, phones
+  - Creates one `clients` row with `role='Couple'` and auto-generated relationship name (e.g. "Smith – Sarah & James" if shared surname)
+  - Links both contacts to the client via `client_members` with role 'Partner'
+  - Used when intake is converted from prospect status
+
 ### Other Couples Hub Pages
 - **Therapy Timelines**: Reference guide for therapy timeline expectations with 5-phase model
 - **Betrayal First Aid**: PORT 4-phase recovery model with exercise summary and safety guidelines
@@ -339,8 +358,8 @@ NDIS-Related Services (when applicable)
 
 ### Versioning
 
-- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.55.90**, line ~256)
-- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v548**)
+- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.56.8**, line ~256)
+- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v566**)
 - **Both must be bumped on every release**
 
 ### Code patterns
@@ -387,16 +406,17 @@ NDIS-Related Services (when applicable)
 
 ### Rollover behaviour
 
-- **Catch-up on load** (`rolloverOutstandingTasks`): any non-complete task whose `focus_date` or `due_date` is in the past is moved to today. Both fields are updated if stale.
-- **Nightly rollover** (`rolloverTodayTasks`, scheduled by `scheduleNightlyRollover` at 11 pm AU Sydney): today's outstanding tasks move to the **next workday** — Friday rolls to Monday, not Saturday. `due_date` also advances if it equals today. Toast says "moved to Monday" on a Friday rollover.
+- **Catch-up on load** (`rolloverOutstandingTasks`): called on app boot; any non-complete task whose `focus_date` or `due_date` is in the past is moved to today. Both fields are updated if stale.
+- **Nightly rollover** (`rolloverTodayTasks`, scheduled by `scheduleNightlyRollover` at 11 pm AU Sydney): any task with `focus_date === today` that is not complete moves to the **next workday** — Friday → Monday (+3), Saturday/Sunday → Monday, other days → +1. `due_date` also advances if it equals today. Toast says "moved to {DAY}" (e.g. "moved to Monday") on each rollover.
 - **No overdue badge**: tasks never show an overdue state; rollover keeps all dates current.
+- **Focus date semantics**: `focus_date` is the planner calendar date; it drives rollover and is the filter for "Today" views. The concept of "Today's Priorities" has been removed from the UI (no section, no star button) — focus_date is purely internal to the scheduler.
 
 ### Task card layout
 
-- Two-row layout: title on top row, action buttons + status pill on bottom row.
-- Star (focus toggle) sits to the left of the title. Gold = focused today.
-- "Move" button opens the schedule picker; only visible on non-complete tasks.
-- No "Decision Required" field or badge.
+- Two-row layout: title on top row, action buttons + status pill on bottom row
+- "Move" button opens the schedule picker; only visible on non-complete tasks
+- Status pill shows task state (Not Started, In Progress, Complete)
+- **No star button or "Today's Priorities" badge**: the focus_date concept is used only for scheduling/rollover, not for visible priority tagging
 
 ### Copy List menu
 
