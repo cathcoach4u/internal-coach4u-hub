@@ -253,7 +253,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.57.14</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.57.15</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -1532,6 +1532,7 @@ if('serviceWorker' in navigator){
     <div class="modal-actions">
       <button class="btn btn-red" id="billDeleteBtn" style="margin-right:auto;display:none;" onclick="deleteBill()">Delete</button>
       <button class="btn btn-gray" onclick="closeModal('billModal')">Cancel</button>
+      <button class="btn btn-green" id="billRenewBtn" style="display:none;" onclick="markPaidAndRenew()">&#10003; Paid &amp; Renew</button>
       <button class="btn btn-blue" onclick="saveBill()">Save Bill</button>
     </div>
   </div>
@@ -12866,6 +12867,7 @@ window.openBillModal=function(id){
       document.getElementById('billStatus').value=b.status||'Upcoming';
       document.getElementById('billNotes').value=b.notes||'';
       document.getElementById('billDeleteBtn').style.display='';
+      document.getElementById('billRenewBtn').style.display='';
     }
   }
   m.classList.add('open');
@@ -12907,6 +12909,43 @@ window.deleteBill=async function(){
   await loadBills();
   renderBills();
   toast('Bill deleted','success');
+};
+
+window.markPaidAndRenew=async function(){
+  const id=document.getElementById('billId').value;
+  if(!id) return;
+  const b=bills.find(x=>x.id===id);
+  if(!b) return;
+
+  // Mark current as Paid
+  const {error:e1}=await supabase.from('bills').update({status:'Paid'}).eq('id',id);
+  if(e1){toast('Error: '+e1.message,'error');return;}
+
+  // Create next year's entry (due_date +1 year)
+  let nextDue=null;
+  if(b.due_date){
+    const d=new Date(b.due_date+'T00:00:00');
+    d.setFullYear(d.getFullYear()+1);
+    nextDue=d.toISOString().slice(0,10);
+  }
+  const newRow={
+    name:b.name,
+    amount:b.amount||0,
+    due_date:nextDue,
+    frequency:b.frequency||'Annual',
+    category:b.category||'',
+    status:'Upcoming',
+    notes:b.notes||''
+  };
+  const {error:e2}=await supabase.from('bills').insert(newRow);
+  if(e2){toast('Marked paid but could not create next year: '+e2.message,'error');return;}
+
+  closeModal('billModal');
+  await loadBills();
+  renderBills();
+  if(document.getElementById('insurList')) renderInsurance();
+  if(document.getElementById('finDashContent')) renderFinDash();
+  toast('Marked as paid — next year\'s renewal added','success');
 };
 
 // ── AUTH ──
