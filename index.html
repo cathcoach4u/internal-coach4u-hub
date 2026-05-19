@@ -253,7 +253,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.57.5</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.57.6</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -12630,7 +12630,12 @@ function renderBills(){
   const totalUpcoming=upcoming.reduce((s,b)=>s+(b.amount||0),0);
   const totalOverdue=overdue.reduce((s,b)=>s+(b.amount||0),0);
 
-  let html='<div class="dash-cards" style="margin-bottom:20px;">';
+  let html='<div style="display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #e2e8f0;border-left:4px solid #0891b2;border-radius:10px;padding:11px 16px;margin-bottom:16px;">'
+    +'<span style="font-size:18px;flex-shrink:0;">&#128196;</span>'
+    +'<div style="flex:1;min-width:0;"><div style="font-weight:700;font-size:13px;color:#1e3a5f;">Insurance Files</div><div style="font-size:11px;color:#64748b;">SharePoint — Legal &amp; Compliance</div></div>'
+    +'<a href="https://netorgft4053847.sharepoint.com/:f:/s/coach4U-LegalandCompliance/IgC7h75zh_iRTLQZ3vCxh7T4AVZVc2wMEWIwIS8AspX_W3E?e=hWMgN3" target="_blank" rel="noopener" style="flex-shrink:0;background:#0891b2;color:#fff;border-radius:6px;padding:6px 14px;font-size:11px;font-weight:700;text-decoration:none;">Open ↗</a>'
+    +'</div>';
+  html+='<div class="dash-cards" style="margin-bottom:20px;">';
   html+=`<div class="dash-card"><div class="dc-icon amber">&#128196;</div><div class="dc-info"><h4>${upcoming.length}</h4><p>Upcoming &middot; $${totalUpcoming.toLocaleString('en-AU',{minimumFractionDigits:2})}</p></div></div>`;
   html+=`<div class="dash-card"><div class="dc-icon" style="background:#fef2f2;color:#ef4444;">&#9888;</div><div class="dc-info"><h4>${overdue.length}</h4><p>Overdue &middot; $${totalOverdue.toLocaleString('en-AU',{minimumFractionDigits:2})}</p></div></div>`;
   html+=`<div class="dash-card"><div class="dc-icon green">&#9989;</div><div class="dc-info"><h4>${paid.length}</h4><p>Paid</p></div></div>`;
