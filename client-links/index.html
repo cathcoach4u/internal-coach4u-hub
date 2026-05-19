@@ -27,7 +27,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f6ff;color:#1e293b;m
 .link-btns{display:flex;gap:6px;flex-shrink:0;}
 .btn-copy{background:#f1f5f9;color:#1e3a5f;border:1px solid #e2e8f0;padding:5px 11px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;}
 .btn-copy:active{background:#e2e8f0;}
-.btn-open{background:#1e3a5f;color:#fff;border:none;padding:5px 11px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;}
+.btn-open{background:#1e3a5f;color:#fff;border:none;padding:5px 11px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-block;}
 .btn-open:active{background:#16324f;}
 .footer{text-align:center;font-size:11px;color:#94a3b8;padding:0 20px 40px;line-height:1.8;}
 </style>
@@ -52,7 +52,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f6ff;color:#1e293b;m
       </div>
       <div class="link-btns">
         <button class="btn-copy" onclick="copyLink('http://wa.me/61485695168',this)">Copy</button>
-        <button class="btn-open" onclick="window.open('http://wa.me/61485695168','_blank')">Open</button>
+        <a class="btn-open" href="http://wa.me/61485695168" target="_blank" rel="noopener noreferrer">Open</a>
       </div>
     </div>
   </div>
@@ -67,7 +67,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f6ff;color:#1e293b;m
       </div>
       <div class="link-btns">
         <button class="btn-copy" onclick="copyLink('https://cathcoach4u.github.io/internal-coach4u-hub/intake/individual/',this)">Copy</button>
-        <button class="btn-open" onclick="window.open('https://cathcoach4u.github.io/internal-coach4u-hub/intake/individual/','_blank')">Open</button>
+        <a class="btn-open" href="https://cathcoach4u.github.io/internal-coach4u-hub/intake/individual/" target="_blank" rel="noopener noreferrer">Open</a>
       </div>
     </div>
     <div class="link-item">
@@ -78,7 +78,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f6ff;color:#1e293b;m
       </div>
       <div class="link-btns">
         <button class="btn-copy" onclick="copyLink('https://cathcoach4u.github.io/internal-coach4u-hub/intake/couples/',this)">Copy</button>
-        <button class="btn-open" onclick="window.open('https://cathcoach4u.github.io/internal-coach4u-hub/intake/couples/','_blank')">Open</button>
+        <a class="btn-open" href="https://cathcoach4u.github.io/internal-coach4u-hub/intake/couples/" target="_blank" rel="noopener noreferrer">Open</a>
       </div>
     </div>
     <div class="link-item">
@@ -89,7 +89,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f6ff;color:#1e293b;m
       </div>
       <div class="link-btns">
         <button class="btn-copy" onclick="copyLink('https://cathcoach4u.github.io/internal-coach4u-hub/intake/thrivehq/',this)">Copy</button>
-        <button class="btn-open" onclick="window.open('https://cathcoach4u.github.io/internal-coach4u-hub/intake/thrivehq/','_blank')">Open</button>
+        <a class="btn-open" href="https://cathcoach4u.github.io/internal-coach4u-hub/intake/thrivehq/" target="_blank" rel="noopener noreferrer">Open</a>
       </div>
     </div>
   </div>
@@ -104,7 +104,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f6ff;color:#1e293b;m
       </div>
       <div class="link-btns">
         <button class="btn-copy" onclick="copyLink('https://pay.gocardless.com/billing/static/collect-customer-details?id=BRF01KRFKN55VGFWQEYHKKMSEM3ATNFS&initial=%2Fcollect-customer-details',this)">Copy</button>
-        <button class="btn-open" onclick="window.open('https://pay.gocardless.com/billing/static/collect-customer-details?id=BRF01KRFKN55VGFWQEYHKKMSEM3ATNFS&initial=%2Fcollect-customer-details','_blank')">Open</button>
+        <a class="btn-open" href="https://pay.gocardless.com/billing/static/collect-customer-details?id=BRF01KRFKN55VGFWQEYHKKMSEM3ATNFS&initial=%2Fcollect-customer-details" target="_blank" rel="noopener noreferrer">Open</a>
       </div>
     </div>
   </div>
@@ -119,7 +119,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f6ff;color:#1e293b;m
       </div>
       <div class="link-btns">
         <button class="btn-copy" onclick="copyLink('https://cathcoach4u.github.io/internal-coach4u-hub/policies/cancellation/',this)">Copy</button>
-        <button class="btn-open" onclick="window.open('https://cathcoach4u.github.io/internal-coach4u-hub/policies/cancellation/','_blank')">Open</button>
+        <a class="btn-open" href="https://cathcoach4u.github.io/internal-coach4u-hub/policies/cancellation/" target="_blank" rel="noopener noreferrer">Open</a>
       </div>
     </div>
   </div>
@@ -129,12 +129,12 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f6ff;color:#1e293b;m
     <div class="link-item">
       <span class="link-icon">&#128249;</span>
       <div class="link-text">
-        <strong>Join Cath&rsquo;s Meeting Room</strong>
+        <strong>Join Cath’s Meeting Room</strong>
         <span>Microsoft Teams — all sessions run online</span>
       </div>
       <div class="link-btns">
         <button class="btn-copy" onclick="copyLink('https://teams.microsoft.com/meet/4855206211068?p=fsRVVo4eEOHQVfIGm5',this)">Copy</button>
-        <button class="btn-open" onclick="window.open('https://teams.microsoft.com/meet/4855206211068?p=fsRVVo4eEOHQVfIGm5','_blank')">Open</button>
+        <a class="btn-open" href="https://teams.microsoft.com/meet/4855206211068?p=fsRVVo4eEOHQVfIGm5" target="_blank" rel="noopener noreferrer">Open</a>
       </div>
     </div>
   </div>
