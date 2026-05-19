@@ -42,6 +42,14 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f4f8;color:#1e293b;m
 .wa-btn:hover{background:#1daa53}
 .sms-btn{background:#e2e8f0;color:#1e3a5f}
 .sms-btn:hover{background:#cbd5e1}
+.wa-block{display:flex;flex-direction:column;gap:12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:18px 20px;margin-top:4px}
+.wa-block-top{display:flex;align-items:center;gap:12px}
+.wa-block-text{flex:1;min-width:0}
+.wa-block-text strong{display:block;font-size:14px;font-weight:700;color:#15803d;margin-bottom:2px}
+.wa-block-text span{font-size:12px;color:#475569}
+.wa-join-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:#25d366;color:#fff;border-radius:9px;padding:13px 20px;text-decoration:none;font-size:14px;font-weight:700;transition:background .15s;width:100%}
+.wa-join-btn:hover{background:#1daa53}
+.both-note{background:#fefce8;border:1px solid #fde68a;border-radius:8px;padding:11px 14px;font-size:13px;color:#92400e;font-weight:600;display:flex;align-items:flex-start;gap:8px;margin-top:4px}
 .policy-link{display:inline-flex;align-items:center;gap:8px;color:#0891b2;text-decoration:none;font-size:14px;font-weight:600;margin-top:12px}
 .policy-link:hover{text-decoration:underline}
 .footer{text-align:center;font-size:11px;color:#94a3b8;padding:0 16px 32px;line-height:1.8}
@@ -95,6 +103,31 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f4f8;color:#1e293b;m
     <h2>Your intake session</h2>
     <p>During the 2-hour session, Cath will guide you both through a series of questions about your relationship — your history, patterns, what's been hard, and what you're hoping for. There's no right or wrong way to answer. Just come as you are.</p>
     <p>All you need to do is join via the Microsoft Teams link below. No Teams account is required — it opens in your browser.</p>
+  </div>
+
+  <!-- WhatsApp group chat -->
+  <div class="section">
+    <div class="section-label">Stay connected</div>
+    <h2>WhatsApp group chat</h2>
+    <p>To keep communication easy, Cath sets up a WhatsApp group chat with both of you. It's used for scheduling, reminders, and any quick questions between sessions.</p>
+    <p><strong>Both of you need to message Cath on WhatsApp</strong> so she can add you both to the group.</p>
+
+    <div class="wa-block">
+      <div class="wa-block-top">
+        <span class="teams-icon">&#128172;</span>
+        <div class="wa-block-text">
+          <strong>Message Cath on WhatsApp</strong>
+          <span>Tap the button below — both partners need to do this</span>
+        </div>
+      </div>
+      <a href="https://wa.me/61485695168" target="_blank" rel="noopener" class="wa-join-btn">
+        &#128172; Open WhatsApp
+      </a>
+    </div>
+
+    <div class="both-note">
+      &#9888;&#65039; Both partners need to tap this — Cath can't add you to the group until she has both numbers.
+    </div>
   </div>
 
   <!-- Teams join link -->
