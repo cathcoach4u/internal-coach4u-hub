@@ -253,7 +253,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.58.4</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.58.5</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -2565,7 +2565,26 @@ function renderCrmDash(){
 function renderCouplesDash(){
   const el=document.getElementById('couplesDashContent');
   if(!el) return;
-  let html=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">
+  const baseUrl=window.location.origin+window.location.pathname.replace(/\/index\.html$/,'').replace(/\/$/,'');
+  function _cplLinkRow(l){
+    const full=baseUrl+l.path;
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #f1f5f9;border-radius:8px;margin-bottom:6px;flex-wrap:wrap;">
+      <span style="font-size:18px;">${l.icon}</span>
+      <div style="flex:1;min-width:160px;">
+        <div style="font-weight:600;font-size:13px;color:#1e293b;">${l.label}</div>
+        <div style="font-size:11px;color:#64748b;">${l.desc}</div>
+        <div style="font-size:11px;color:#94a3b8;word-break:break-all;margin-top:2px;">${full}</div>
+      </div>
+      <button type="button" data-url="${full}" data-label="${l.label} link" onclick="copyPublicLink(this)" style="background:#003366;color:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">Copy</button>
+      <button type="button" onclick="window.open('${full}','_blank')" style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;padding:6px 14px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">Open &#8599;</button>
+    </div>`;
+  }
+  const clientLinks=[
+    {label:'Couples Process &amp; Pricing',path:'/couples-process/',icon:'&#128203;',desc:'How sessions work, session types, fees and next steps'},
+    {label:'Couples — After Intake &amp; Direct Debit',path:'/couples-thankyou/',icon:'&#127881;',desc:'Send once intake form + direct debit are both complete'},
+    {label:'Couples — Ongoing Sessions',path:'/couples-ongoing/',icon:'&#128279;',desc:'Send after the 2-hour intake — Teams link, billing policy, cancellation'}
+  ];
+  let html=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:16px;">
     <div onclick="navTo('couplesintake')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #b87a90;border-radius:12px;padding:18px 20px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
       <div style="font-size:24px;margin-bottom:8px;">&#128221;</div>
       <div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">Couples Intake</div>
@@ -2581,6 +2600,11 @@ function renderCouplesDash(){
       <div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">Betrayal First Aid</div>
       <div style="font-size:11px;color:#64748b;">PORT recovery framework</div>
     </div>
+  </div>
+  <div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #b87a90;border-radius:12px;padding:18px 20px;">
+    <div style="font-weight:700;color:#1e3a5f;font-size:15px;margin-bottom:4px;">&#128203; Client Links</div>
+    <div style="font-size:12px;color:#64748b;margin-bottom:12px;">Send to clients at each stage of the couples journey.</div>
+    ${clientLinks.map(_cplLinkRow).join('')}
   </div>`;
   el.innerHTML=html;
 }
@@ -3002,15 +3026,6 @@ function renderResourcesDash(){
     </div>
   </div>`;
 
-  html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #b87a90;border-radius:12px;padding:18px 20px;margin-bottom:14px;">
-    <div style="font-weight:700;color:#1e3a5f;font-size:15px;margin-bottom:4px;">&#128203; Process &amp; Pricing</div>
-    <div style="font-size:12px;color:#64748b;margin-bottom:12px;">Send to prospective clients to confirm the pricing and process.</div>
-    ${[
-      {label:'Couples Process &amp; Pricing',path:'/couples-process/',icon:'&#128203;',desc:'How sessions work, session types, fees and next steps'},
-      {label:'Couples — After Intake &amp; Direct Debit',path:'/couples-thankyou/',icon:'&#127881;',desc:'Send once intake form + direct debit are both complete'},
-      {label:'Couples — Ongoing Sessions',path:'/couples-ongoing/',icon:'&#128279;',desc:'Send after the 2-hour intake — Teams link, billing policy, cancellation'}
-    ].map(renderLinkRow).join('')}
-  </div>`;
 
   html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #2563eb;border-radius:12px;padding:18px 20px;margin-bottom:14px;">
     <div style="font-weight:700;color:#1e3a5f;font-size:15px;margin-bottom:4px;">&#128221; Intake Forms</div>
@@ -8234,6 +8249,11 @@ window.newCouplesIntake=function(){
 };
 
 window.printCouplesIntake=function(){window.print();};
+
+window.toggleCoupSessionMenu=function(){
+  const el=document.getElementById('coupSessionMenu');
+  if(el) el.style.display=el.style.display==='none'?'flex':'none';
+};
 
 window.fileCouplesIntakeToRecords=async function(){
   const state=collectCouplesIntakeState();
