@@ -253,7 +253,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.59.1</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.59.2</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -400,6 +400,9 @@ if('serviceWorker' in navigator){
     </div>
     <div class="screen" id="screen-couplesdash">
       <div id="couplesDashContent"></div>
+    </div>
+    <div class="screen" id="screen-couplesclientlinks">
+      <div id="couplesClientLinksContent"></div>
     </div>
     <div class="screen" id="screen-couplestimelines">
       <div id="couplesTimelinesContent"></div>
@@ -2055,7 +2058,7 @@ window.navTo = function(tab,btn){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+tab).classList.add('active');
   window.scrollTo(0,0);
-  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ Hub',thqintake:'Intake Forms',strdash:'Strengths Hub',opsdash:'Admin',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',sms:'Comms',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Profiles',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Active Tasks',playbook:'Work Log',procedures:'Daily Procedures',quicklinks:'Quick Links',itprojects:'IT Projects',agents:'Agents',writingpartner:'Writing Partner',findash:'Finance',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fininsurance:'Insurance',fintxns:'Transactions',findev:'Development Business',thqbrainpulse:'Brain Pulse',thqactivities:'Activities',clibrainpulse:'Brain Pulse',cliconnection:'Connection Pulse',thqpulse:'SAFE Pulse',clipulse:'SAFE Pulse',pulsesdash:'Pulses',couplesintake:'Couples Intake',couplesdash:'Couples Hub',couplestimelines:'Therapy Timelines',couplesbetrayal:'Betrayal First Aid',itdash:'IT',resourcesdash:'Resources',agentsai:'AI Strategy',prompts:'Prompts',strreports:'Strengths Reports',strdomains:'Domain Balance',strupload:'Upload Report',strcodes:'Gallup Code Tracker',strsop:'Gallup Workflow SOP'};
+  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ Hub',thqintake:'Intake Forms',strdash:'Strengths Hub',opsdash:'Admin',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',sms:'Comms',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Profiles',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Active Tasks',playbook:'Work Log',procedures:'Daily Procedures',quicklinks:'Quick Links',itprojects:'IT Projects',agents:'Agents',writingpartner:'Writing Partner',findash:'Finance',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fininsurance:'Insurance',fintxns:'Transactions',findev:'Development Business',thqbrainpulse:'Brain Pulse',thqactivities:'Activities',clibrainpulse:'Brain Pulse',cliconnection:'Connection Pulse',thqpulse:'SAFE Pulse',clipulse:'SAFE Pulse',pulsesdash:'Pulses',couplesintake:'Couples Intake',couplesdash:'Couples Hub',couplesclientlinks:'Client Links',couplestimelines:'Therapy Timelines',couplesbetrayal:'Betrayal First Aid',itdash:'IT',resourcesdash:'Resources',agentsai:'AI Strategy',prompts:'Prompts',strreports:'Strengths Reports',strdomains:'Domain Balance',strupload:'Upload Report',strcodes:'Gallup Code Tracker',strsop:'Gallup Workflow SOP'};
   document.getElementById('pageTitle').textContent=titles[tab]||'Coach4U';
   // Sync area tab
   const area=pageToArea[tab]||'home';
@@ -2075,6 +2078,7 @@ window.navTo = function(tab,btn){
   if(tab==='dashboard') renderDashboard();
   if(tab==='pulsesdash') renderPulsesDash();
   if(tab==='couplesdash') renderCouplesDash();
+  if(tab==='couplesclientlinks') renderCouplesClientLinks();
   if(tab==='couplestimelines') renderCouplesTimelines();
   if(tab==='couplesbetrayal') renderCouplesBetrayal();
   if(tab==='itdash') renderItDash();
@@ -2567,34 +2571,7 @@ function renderCouplesDash(){
   if(!el) return;
   const baseUrl=window.location.origin+window.location.pathname.replace(/\/index\.html$/,'').replace(/\/$/,'');
 
-  const clientLinks=[
-    {stage:'After connection call',label:'Couples Process &amp; Pricing',path:'/couples-process/',desc:'Process, what to expect, fees and next steps'},
-    {stage:'After intake form &amp; direct debit',label:'Couples — You\'re All Set',path:'/couples-thankyou/',desc:'Confirms everything is in place before the intake session'},
-    {stage:'After 2-hour intake session',label:'Couples — Ongoing Sessions',path:'/couples-ongoing/',desc:'Teams link, billing policy and cancellation policy'}
-  ];
-  function _cplStageRow(l,i,arr){
-    const full=baseUrl+l.path;
-    const isLast=i===arr.length-1;
-    return `<div style="padding:14px 0;${isLast?'':'border-bottom:1px solid #f1f5f9;'}">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-        <span style="background:#b87a90;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;flex-shrink:0;">Step ${i+1}</span>
-        <span style="font-size:11px;color:#64748b;font-weight:600;">${l.stage}</span>
-      </div>
-      <div style="font-weight:700;font-size:13px;color:#1e3a5f;margin-bottom:2px;">${l.label}</div>
-      <div style="font-size:11px;color:#64748b;margin-bottom:8px;">${l.desc}</div>
-      <div style="font-size:11px;color:#94a3b8;word-break:break-all;margin-bottom:8px;">${full}</div>
-      <div style="display:flex;gap:8px;">
-        <button type="button" data-url="${full}" data-label="${l.label} link" onclick="copyPublicLink(this)" style="background:#003366;color:#fff;border:none;padding:7px 18px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">Copy</button>
-        <button type="button" onclick="window.open('${full}','_blank')" style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;padding:7px 18px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">Open &#8599;</button>
-      </div>
-    </div>`;
-  }
-  let html=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #b87a90;border-radius:12px;padding:18px 20px;margin-bottom:16px;">
-    <div style="font-weight:700;color:#1e3a5f;font-size:15px;margin-bottom:2px;">&#128203; Client Links</div>
-    <div style="font-size:12px;color:#64748b;margin-bottom:4px;">Send to clients at each stage of the couples journey.</div>
-    ${clientLinks.map(_cplStageRow).join('')}
-  </div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">
+  let html=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">
     <div onclick="navTo('couplesintake')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #b87a90;border-radius:12px;padding:18px 20px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
       <div style="font-size:24px;margin-bottom:8px;">&#128221;</div>
       <div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">Couples Intake</div>
@@ -2610,9 +2587,50 @@ function renderCouplesDash(){
       <div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">Betrayal First Aid</div>
       <div style="font-size:11px;color:#64748b;">PORT recovery framework</div>
     </div>
+    <div onclick="navTo('couplesclientlinks')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #b87a90;border-radius:12px;padding:18px 20px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
+      <div style="font-size:24px;margin-bottom:8px;">&#128203;</div>
+      <div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">Client Links</div>
+      <div style="font-size:11px;color:#64748b;">Links to send at each stage</div>
+    </div>
   </div>`;
   el.innerHTML=html;
 }
+
+function renderCouplesClientLinks(){
+  const el=document.getElementById('couplesClientLinksContent');
+  if(!el) return;
+  const baseUrl=window.location.origin+window.location.pathname.replace(/\/index\.html$/,'').replace(/\/$/,'');
+  const links=[
+    {stage:'You have reached out for an appointment',label:'Couples Process &amp; Pricing',path:'/couples-process/',desc:'Process, what to expect, fees and next steps'},
+    {stage:'After intake form &amp; direct debit',label:'Couples — You\'re All Set',path:'/couples-thankyou/',desc:'Confirms everything is in place before the intake session'},
+    {stage:'After 2-hour intake session',label:'Couples — Ongoing Sessions',path:'/couples-ongoing/',desc:'Teams link, billing policy and cancellation policy'}
+  ];
+  function row(l,i,arr){
+    const full=baseUrl+l.path;
+    const isLast=i===arr.length-1;
+    return `<div style="padding:14px 0;${isLast?'':'border-bottom:1px solid #f1f5f9;'}">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <span style="background:#b87a90;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;flex-shrink:0;">Step ${i+1}</span>
+        <span style="font-size:11px;color:#64748b;font-weight:600;">${l.stage}</span>
+      </div>
+      <div style="font-weight:700;font-size:14px;color:#1e3a5f;margin-bottom:2px;">${l.label}</div>
+      <div style="font-size:12px;color:#64748b;margin-bottom:8px;">${l.desc}</div>
+      <div style="font-size:11px;color:#94a3b8;word-break:break-all;margin-bottom:8px;">${full}</div>
+      <div style="display:flex;gap:8px;">
+        <button type="button" data-url="${full}" data-label="${l.label} link" onclick="copyPublicLink(this)" style="background:#003366;color:#fff;border:none;padding:7px 18px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">Copy</button>
+        <button type="button" onclick="window.open('${full}','_blank')" style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;padding:7px 18px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">Open &#8599;</button>
+      </div>
+    </div>`;
+  }
+  let html=`<div onclick="navTo('couplesdash')" style="font-size:13px;color:#b87a90;font-weight:600;cursor:pointer;margin-bottom:16px;display:inline-block;">&larr; Back to Couples</div>
+  <div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #b87a90;border-radius:12px;padding:18px 20px;">
+    <div style="font-family:'Quicksand','Inter',sans-serif;font-size:17px;font-weight:700;color:#1e3a5f;margin-bottom:4px;">&#128203; Client Links</div>
+    <div style="font-size:12px;color:#64748b;margin-bottom:4px;">Send to clients at each stage of the couples journey.</div>
+    ${links.map(row).join('')}
+  </div>`;
+  el.innerHTML=html;
+}
+window.renderCouplesClientLinks=renderCouplesClientLinks;
 
 function therapyTimelinesHTML(opts){
   opts=opts||{};
@@ -3195,19 +3213,21 @@ function renderStrDash(){
   if(!el) return;
   const baseUrl=window.location.origin+window.location.pathname.replace(/\/index\.html$/,'').replace(/\/$/,'');
   const strClientLinks=[
-    {label:'CliftonStrengths Assessment Guide',path:'/gallup-guide/',icon:'&#127919;',desc:'Send to clients before they complete their Gallup assessment'}
+    {stage:'Client wants to do Gallup',label:'CliftonStrengths — What It Is &amp; How It Works',path:'/gallup-intro/',desc:'Overview of the assessment, what they\'ll get, and how to proceed'},
+    {stage:'Assessment purchased — code sent',label:'CliftonStrengths Assessment Guide',path:'/gallup-guide/',desc:'How to complete the assessment and what happens after'}
   ];
-  function _strLinkRow(l){
+
+  function _strStageRow(l,i,arr){
     const full=baseUrl+l.path;
-    return `<div style="display:flex;flex-direction:column;gap:8px;padding:10px 12px;border:1px solid #f1f5f9;border-radius:8px;margin-bottom:6px;">
-      <div style="display:flex;align-items:flex-start;gap:10px;">
-        <span style="font-size:18px;flex-shrink:0;">${l.icon}</span>
-        <div style="flex:1;min-width:0;">
-          <div style="font-weight:600;font-size:13px;color:#1e293b;">${l.label}</div>
-          <div style="font-size:11px;color:#64748b;">${l.desc}</div>
-          <div style="font-size:11px;color:#94a3b8;word-break:break-all;margin-top:2px;">${full}</div>
-        </div>
+    const isLast=i===arr.length-1;
+    return `<div style="padding:14px 0;${isLast?'':'border-bottom:1px solid #f1f5f9;'}">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <span style="background:#16a34a;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;flex-shrink:0;">Step ${i+1}</span>
+        <span style="font-size:11px;color:#64748b;font-weight:600;">${l.stage}</span>
       </div>
+      <div style="font-weight:700;font-size:13px;color:#1e3a5f;margin-bottom:2px;">${l.label}</div>
+      <div style="font-size:11px;color:#64748b;margin-bottom:8px;">${l.desc}</div>
+      <div style="font-size:11px;color:#94a3b8;word-break:break-all;margin-bottom:8px;">${full}</div>
       <div style="display:flex;gap:8px;">
         <button type="button" data-url="${full}" data-label="${l.label} link" onclick="copyPublicLink(this)" style="background:#003366;color:#fff;border:none;padding:7px 18px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">Copy</button>
         <button type="button" onclick="window.open('${full}','_blank')" style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;padding:7px 18px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">Open &#8599;</button>
@@ -3215,9 +3235,9 @@ function renderStrDash(){
     </div>`;
   }
   let html=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #16a34a;border-radius:12px;padding:18px 20px;margin-bottom:16px;">
-    <div style="font-weight:700;color:#1e3a5f;font-size:15px;margin-bottom:4px;">&#127919; Client Links</div>
-    <div style="font-size:12px;color:#64748b;margin-bottom:12px;">Send to clients at the relevant stage of their strengths journey.</div>
-    ${strClientLinks.map(_strLinkRow).join('')}
+    <div style="font-weight:700;color:#1e3a5f;font-size:15px;margin-bottom:2px;">&#127919; Client Links</div>
+    <div style="font-size:12px;color:#64748b;margin-bottom:4px;">Send to clients at each stage of their strengths journey.</div>
+    ${strClientLinks.map(_strStageRow).join('')}
   </div>`;
   html+=`<div onclick="navTo('strupload')" style="background:linear-gradient(135deg,#15803d,#16a34a);color:#fff;border-radius:12px;padding:16px 20px;margin-bottom:14px;cursor:pointer;display:flex;align-items:center;gap:14px;box-shadow:0 2px 8px rgba(21,128,61,.2);" onmouseover="this.style.boxShadow='0 4px 14px rgba(21,128,61,.3)'" onmouseout="this.style.boxShadow='0 2px 8px rgba(21,128,61,.2)'">
       <div style="font-size:28px;">&#10024;</div>
