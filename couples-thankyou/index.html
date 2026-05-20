@@ -18,7 +18,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f4f8;color:#1e293b;m
 .container{max-width:580px;margin:0 auto;padding:24px 16px 60px}
 .section{background:#fff;border-radius:12px;padding:22px 24px;margin-bottom:16px;border:1px solid #e2e8f0}
 .section-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:12px}
-.section h2{font-size:17px;font-weight:700;color:#1e3a5f;margin-bottom:14px;line-height:1.3}
+.section h2{font-size:17px;font-weight:700;color:#1e3a5f;margin-bottom:16px;line-height:1.3}
 .section p{font-size:14px;color:#475569;line-height:1.7;margin-bottom:10px}
 .section p:last-child{margin-bottom:0}
 .confirm-check{width:28px;height:28px;border-radius:6px;background:#15803d;display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;font-weight:800;flex-shrink:0;margin-top:2px}
@@ -27,29 +27,36 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f4f8;color:#1e293b;m
 .confirm-row:first-child{padding-top:0}
 .confirm-title{font-size:14px;font-weight:700;color:#1e3a5f;margin-bottom:2px}
 .confirm-sub{font-size:13px;color:#64748b}
-.teams-block{display:flex;flex-direction:column;gap:12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:18px 20px;margin-top:4px}
+.step{display:flex;gap:14px;padding:16px 0;border-bottom:1px solid #f1f5f9}
+.step:last-child{border-bottom:none;padding-bottom:0}
+.step:first-child{padding-top:0}
+.step-num{width:28px;height:28px;border-radius:50%;background:#1e3a5f;color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.step-body{flex:1;min-width:0}
+.step-title{font-size:15px;font-weight:700;color:#1e3a5f;margin-bottom:3px}
+.step-desc{font-size:13px;color:#475569;line-height:1.65}
+.teams-block{display:flex;flex-direction:column;gap:12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:16px 18px;margin-top:12px}
 .teams-top{display:flex;align-items:center;gap:12px}
-.teams-icon{font-size:24px;flex-shrink:0}
+.teams-icon{font-size:22px;flex-shrink:0}
 .teams-text{flex:1;min-width:0}
-.teams-text strong{display:block;font-size:14px;font-weight:700;color:#1e3a5f;margin-bottom:2px}
+.teams-text strong{display:block;font-size:13px;font-weight:700;color:#1e3a5f;margin-bottom:2px}
 .teams-text span{font-size:12px;color:#475569}
 .teams-join-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:#1e3a5f;color:#fff;border-radius:9px;padding:13px 20px;text-decoration:none;font-size:14px;font-weight:700;transition:background .15s;width:100%}
 .teams-join-btn:hover{background:#2d5280}
-.save-note{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:11px 14px;font-size:13px;color:#15803d;font-weight:600;display:flex;align-items:center;gap:8px;margin-top:4px}
-.contact-row{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
+.save-note{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:11px 14px;font-size:13px;color:#15803d;font-weight:600;display:flex;align-items:center;gap:8px;margin-top:8px}
+.contact-row{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
 .contact-btn{display:inline-flex;align-items:center;gap:7px;padding:10px 16px;border-radius:9px;font-size:13px;font-weight:700;text-decoration:none;transition:all .15s;flex:1;justify-content:center;min-width:130px}
 .wa-btn{background:#25d366;color:#fff}
 .wa-btn:hover{background:#1daa53}
 .sms-btn{background:#e2e8f0;color:#1e3a5f}
 .sms-btn:hover{background:#cbd5e1}
-.wa-block{display:flex;flex-direction:column;gap:12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:18px 20px;margin-top:4px}
-.wa-block-top{display:flex;align-items:center;gap:12px}
+.wa-block{display:flex;flex-direction:column;gap:12px;background:#f0fdf4;border:2px solid #25d366;border-radius:10px;padding:16px 18px;margin-top:12px}
+.wa-block-top{display:flex;align-items:center;gap:10px}
 .wa-block-text{flex:1;min-width:0}
-.wa-block-text strong{display:block;font-size:14px;font-weight:700;color:#15803d;margin-bottom:2px}
+.wa-block-text strong{display:block;font-size:13px;font-weight:700;color:#15803d;margin-bottom:2px}
 .wa-block-text span{font-size:12px;color:#475569}
 .wa-join-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:#25d366;color:#fff;border-radius:9px;padding:13px 20px;text-decoration:none;font-size:14px;font-weight:700;transition:background .15s;width:100%}
 .wa-join-btn:hover{background:#1daa53}
-.both-note{background:#fefce8;border:1px solid #fde68a;border-radius:8px;padding:11px 14px;font-size:13px;color:#92400e;font-weight:600;display:flex;align-items:flex-start;gap:8px;margin-top:4px}
+.both-note{background:#fefce8;border:1px solid #fde68a;border-radius:8px;padding:11px 14px;font-size:13px;color:#92400e;font-weight:600;display:flex;align-items:flex-start;gap:8px;margin-top:8px}
 .policy-link{display:inline-flex;align-items:center;gap:8px;color:#0891b2;text-decoration:none;font-size:14px;font-weight:600;margin-top:12px}
 .policy-link:hover{text-decoration:underline}
 .footer{text-align:center;font-size:11px;color:#94a3b8;padding:0 16px 32px;line-height:1.8}
@@ -68,7 +75,6 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f4f8;color:#1e293b;m
 
 <div class="container">
 
-  <!-- Confirmation -->
   <div class="section">
     <div class="section-label">Confirmed</div>
 
@@ -97,78 +103,79 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f4f8;color:#1e293b;m
     </div>
   </div>
 
-  <!-- What to expect -->
   <div class="section">
-    <div class="section-label">What to expect</div>
-    <h2>Your intake session</h2>
-    <p>During the 2-hour session, Cath will guide you both through a series of questions about your relationship — your history, patterns, what's been hard, and what you're hoping for. There's no right or wrong way to answer. Just come as you are.</p>
-    <p>All you need to do is join via the Microsoft Teams link below. No Teams account is required — it opens in your browser.</p>
-  </div>
+    <div class="section-label">What's set up</div>
+    <h2>Everything you need</h2>
 
-  <!-- WhatsApp group chat -->
-  <div class="section">
-    <div class="section-label">Stay connected</div>
-    <h2>WhatsApp group chat</h2>
-    <p>To keep communication easy, Cath sets up a WhatsApp group chat with both of you. It's used for scheduling, reminders, and any quick questions between sessions.</p>
-    <p><strong>Both of you need to message Cath on WhatsApp</strong> so she can add you both to the group.</p>
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <div class="step-title">Your 2-hour intake session</div>
+        <div class="step-desc">Cath will guide you both through a series of questions about your relationship — your history, patterns, what's been hard, and what you're hoping for. There's no right or wrong way to answer. Just come as you are.</div>
+        <div class="step-desc" style="margin-top:8px;">All sessions run online via Microsoft Teams. No account required — it opens in your browser.</div>
+      </div>
+    </div>
 
-    <div class="wa-block">
-      <div class="wa-block-top">
-        <span class="teams-icon">&#128172;</span>
-        <div class="wa-block-text">
-          <strong>Message us to get set up in the WhatsApp group</strong>
-          <span>Tap the button below — both partners need to do this</span>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <div class="step-title">Connect on WhatsApp</div>
+        <div class="step-desc">Cath sets up a WhatsApp group with both of you for scheduling, reminders, and quick questions between sessions. Both of you need to message Cath so she can add you to the group.</div>
+        <div class="wa-block">
+          <div class="wa-block-top">
+            <span class="teams-icon">&#128172;</span>
+            <div class="wa-block-text">
+              <strong>Message us to get set up in the WhatsApp group</strong>
+              <span>Tap the button below — both partners need to do this</span>
+            </div>
+          </div>
+          <a href="https://wa.me/61485695168" target="_blank" rel="noopener" class="wa-join-btn">
+            &#128172; Message us on WhatsApp
+          </a>
+        </div>
+        <div class="both-note">&#9888;&#65039; Both partners need to tap this separately — we can't add you to the group until we have both numbers.</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <div class="step-title">Join via Microsoft Teams</div>
+        <div class="step-desc">Use this link to join your session on the day. No Teams account required — it opens in your browser.</div>
+        <div class="teams-block">
+          <div class="teams-top">
+            <span class="teams-icon">&#128249;</span>
+            <div class="teams-text">
+              <strong>Cath's Teams room</strong>
+              <span>Use this link to join your session on the day</span>
+            </div>
+          </div>
+          <a href="https://teams.microsoft.com/meet/4855206211068?p=fsRVVo4eEOHQVfIGm5" target="_blank" rel="noopener" class="teams-join-btn">
+            &#128279; Join meeting
+          </a>
+        </div>
+        <div class="save-note">&#128278; Keep this page bookmarked — use this link for every session</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <div class="step-title">Questions or issues on the day?</div>
+        <div class="step-desc">If anything comes up — tech issues, running late, or need to reschedule — reach out straight away via WhatsApp or text.</div>
+        <div class="contact-row">
+          <a href="https://wa.me/61485695168" target="_blank" rel="noopener" class="contact-btn wa-btn">
+            &#128172; WhatsApp
+          </a>
+          <a href="sms:0485695168" class="contact-btn sms-btn">
+            &#128241; Text 0485 695 168
+          </a>
         </div>
       </div>
-      <a href="https://wa.me/61485695168" target="_blank" rel="noopener" class="wa-join-btn">
-        &#128172; Message us on WhatsApp
-      </a>
     </div>
 
-    <div class="both-note">
-      &#9888;&#65039; Both partners need to tap this separately — we can't add you to the group until we have both numbers.
-    </div>
   </div>
 
-  <!-- Teams join link -->
-  <div class="section">
-    <div class="section-label">Your session link</div>
-    <h2>Join via Microsoft Teams</h2>
-
-    <div class="teams-block">
-      <div class="teams-top">
-        <span class="teams-icon">&#128249;</span>
-        <div class="teams-text">
-          <strong>Cath's Teams room</strong>
-          <span>Use this link to join your session on the day</span>
-        </div>
-      </div>
-      <a href="https://teams.microsoft.com/meet/4855206211068?p=fsRVVo4eEOHQVfIGm5" target="_blank" rel="noopener" class="teams-join-btn">
-        &#128279; Join meeting
-      </a>
-    </div>
-
-    <div class="save-note">
-      &#128278; Keep this page bookmarked — use this link for every session
-    </div>
-  </div>
-
-  <!-- Day-of support -->
-  <div class="section">
-    <div class="section-label">On the day</div>
-    <h2>Questions or issues?</h2>
-    <p>If anything comes up on the day — tech issues, running late, or need to reschedule — reach out straight away via WhatsApp or text.</p>
-    <div class="contact-row">
-      <a href="https://wa.me/61485695168" target="_blank" rel="noopener" class="contact-btn wa-btn">
-        &#128172; WhatsApp
-      </a>
-      <a href="sms:0485695168" class="contact-btn sms-btn">
-        &#128241; Text 0485 695 168
-      </a>
-    </div>
-  </div>
-
-  <!-- Cancellation policy -->
   <div class="section">
     <div class="section-label">Policies</div>
     <h2>Cancellation &amp; Rescheduling</h2>
