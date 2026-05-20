@@ -253,7 +253,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.59.3</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.59.4</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -2605,7 +2605,7 @@ function renderCouplesClientLinks(){
   if(!el) return;
   const baseUrl=window.location.origin+window.location.pathname.replace(/\/index\.html$/,'').replace(/\/$/,'');
   const links=[
-    {stage:'You have reached out for an appointment',label:'Couples Process &amp; Pricing',path:'/couples-process/',desc:'Process, what to expect, fees and next steps'},
+    {stage:'After connection call — agreed to proceed',label:'Couples Process &amp; Pricing',path:'/couples-process/',desc:'Process, what to expect, fees and next steps'},
     {stage:'After intake form &amp; direct debit',label:'Couples — You\'re All Set',path:'/couples-thankyou/',desc:'Confirms everything is in place before the intake session'},
     {stage:'After 2-hour intake session',label:'Couples — Ongoing Sessions',path:'/couples-ongoing/',desc:'Teams link, billing policy and cancellation policy'}
   ];
