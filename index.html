@@ -253,7 +253,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.57.18</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.57.19</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -2032,7 +2032,7 @@ async function loadAgents(){
 }
 async function loadAll(){
   try{
-    await Promise.all([loadContacts(), loadClients(), loadTasks(), loadProspects(), loadProspectNotes(), loadReferrers(), loadRefPayments(), loadRenewals(), loadContactReports(), loadStrengthsInsights(), loadGallupRequests(), loadTrials(), loadTaskLogs(), loadFinanceTransactions(), loadBills(), loadIntakeSubmissions(), loadPulseResults(), loadBrainPulseSubmissions(), loadConnectionPulseSubmissions(), loadAgents(), loadSmsMessages(), loadCommsLists(), loadPaymentMandates()]);
+    await Promise.all([loadContacts(), loadClients(), loadTasks(), loadProspects(), loadProspectNotes(), loadReferrers(), loadRefPayments(), loadRenewals(), loadContactReports(), loadStrengthsInsights(), loadGallupRequests(), loadTrials(), loadTaskLogs(), loadFinanceTransactions(), loadBills(), loadIntakeSubmissions(), loadPulseResults(), loadBrainPulseSubmissions(), loadConnectionPulseSubmissions(), loadAgents(), loadSmsMessages(), loadCommsLists(), loadPaymentMandates(), loadPrompts()]);
     await processStopReplies();
     await bootstrapInAppAgents();
   }catch(e){
@@ -2780,29 +2780,15 @@ function renderItDash(){
 }
 
 // ── PROMPTS ──
-const PROMPTS_KEY = 'coach4u_prompts';
-const DEFAULT_PROMPTS = [
-  {
-    id: 'session-wrap',
-    name: 'Session Wrap-up',
-    body: `Review what changed this session and:\n\nUpdate Personal-hub/CLAUDE.md with any new features, decisions, architectural changes, or context a future session would need to know\nCheck the About page (index.html) — if any new features were added, update the features list and Supabase tables section\nConfirm the version number in CLAUDE.md matches the current app version\nKeep updates concise — add only what's new or changed, don't rewrite existing content`,
-    createdAt: '2026-05-13'
-  }
-];
-
-function getPrompts(){
-  try{
-    const raw=localStorage.getItem(PROMPTS_KEY);
-    if(raw){const parsed=JSON.parse(raw);if(Array.isArray(parsed)&&parsed.length>0)return parsed;}
-  }catch(e){}
-  return JSON.parse(JSON.stringify(DEFAULT_PROMPTS));
+async function loadPrompts(){
+  const {data,error}=await supabase.from('prompts').select('*').order('created_at');
+  if(!error&&data) promptsList=data;
 }
-function savePrompts(arr){localStorage.setItem(PROMPTS_KEY,JSON.stringify(arr));}
 
 function renderPrompts(){
   const el=document.getElementById('promptsContent');
   if(!el) return;
-  const prompts=getPrompts();
+  const prompts=promptsList;
   let html=`<div style="padding:0 0 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
     <div style="flex:1;font-size:13px;color:#475569;">Saved prompts for Claude Code and AI sessions. Click a row to expand and copy.</div>
     <button class="btn btn-blue" onclick="openPromptForm()">+ Add Prompt</button>
@@ -2871,7 +2857,7 @@ window.togglePromptRow=function(id){
   if(body) body.style.display=body.style.display==='none'?'block':'none';
 };
 window.copyPrompt=function(id){
-  const p=getPrompts().find(x=>x.id===id);
+  const p=promptsList.find(x=>x.id===id);
   if(!p) return;
   navigator.clipboard.writeText(p.body).then(()=>toast('Prompt copied','success')).catch(()=>toast('Copy failed','error'));
 };
@@ -2880,7 +2866,7 @@ window.openPromptForm=function(id){
   if(!ov){renderPrompts();return;}
   document.getElementById('promptFormId').value=id||'';
   if(id){
-    const p=getPrompts().find(x=>x.id===id);
+    const p=promptsList.find(x=>x.id===id);
     if(p){document.getElementById('promptFormTitle').textContent='Edit Prompt';document.getElementById('promptFormName').value=p.name;document.getElementById('promptFormBody').value=p.body;}
   } else {
     document.getElementById('promptFormTitle').textContent='Add Prompt';
@@ -2893,26 +2879,28 @@ window.closePromptForm=function(){
   const ov=document.getElementById('promptFormOverlay');
   if(ov) ov.style.display='none';
 };
-window.savePromptForm=function(){
+window.savePromptForm=async function(){
   const name=(document.getElementById('promptFormName').value||'').trim();
   const body=(document.getElementById('promptFormBody').value||'').trim();
   if(!name||!body){toast('Name and prompt text are required','error');return;}
   const id=document.getElementById('promptFormId').value;
-  const prompts=getPrompts();
+  let error;
   if(id){
-    const idx=prompts.findIndex(x=>x.id===id);
-    if(idx>-1){prompts[idx].name=name;prompts[idx].body=body;}
+    ({error}=await supabase.from('prompts').update({name,body}).eq('id',id));
   } else {
-    prompts.push({id:'p'+Date.now(),name,body,createdAt:getAUDateStr()});
+    ({error}=await supabase.from('prompts').insert({name,body}));
   }
-  savePrompts(prompts);
+  if(error){toast('Error saving prompt: '+error.message,'error');return;}
   closePromptForm();
-  toast(id?'Prompt updated':'Prompt saved','success');
+  await loadPrompts();
   renderPrompts();
+  toast(id?'Prompt updated':'Prompt saved','success');
 };
-window.deletePrompt=function(id){
+window.deletePrompt=async function(id){
   if(!confirm('Delete this prompt?')) return;
-  savePrompts(getPrompts().filter(x=>x.id!==id));
+  const {error}=await supabase.from('prompts').delete().eq('id',id);
+  if(error){toast('Error deleting prompt: '+error.message,'error');return;}
+  await loadPrompts();
   renderPrompts();
 };
 
@@ -12658,6 +12646,7 @@ function renderFinTransactions(){
 
 // ── BILLS ──
 let bills=[];
+let promptsList=[];
 
 async function loadBills(){
   const {data,error}=await supabase.from('bills').select('*').order('due_date',{ascending:true});
