@@ -253,7 +253,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.58.6</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.58.7</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -3033,6 +3033,14 @@ function renderResourcesDash(){
     ${intakeLinks.map(renderLinkRow).join('')}
   </div>`;
 
+  html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #16a34a;border-radius:12px;padding:18px 20px;margin-bottom:14px;">
+    <div style="font-weight:700;color:#1e3a5f;font-size:15px;margin-bottom:4px;">&#127919; Strengths</div>
+    <div style="font-size:12px;color:#64748b;margin-bottom:12px;">Send to clients at the relevant stage of their strengths journey.</div>
+    ${[
+      {label:'CliftonStrengths Assessment Guide',path:'/gallup-guide/',icon:'&#127919;',desc:'Send to clients before they complete their Gallup assessment'}
+    ].map(renderLinkRow).join('')}
+  </div>`;
+
   html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #d97706;border-radius:12px;padding:18px 20px;margin-bottom:14px;">
     <div style="font-weight:700;color:#1e3a5f;font-size:15px;margin-bottom:4px;">&#128196; Policies &amp; Useful Links</div>
     <div style="font-size:12px;color:#64748b;margin-bottom:12px;">Client-facing policies and session tools.</div>
@@ -3197,6 +3205,28 @@ function renderStrDash(){
       <div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">Domain Balance</div>
       <div style="font-size:11px;color:#64748b;">4 domain overview</div>
     </div>
+  </div>`;
+  const baseUrl=window.location.origin+window.location.pathname.replace(/\/index\.html$/,'').replace(/\/$/,'');
+  const strClientLinks=[
+    {label:'CliftonStrengths Assessment Guide',path:'/gallup-guide/',icon:'&#127919;',desc:'Send to clients before they complete their Gallup assessment'}
+  ];
+  function _strLinkRow(l){
+    const full=baseUrl+l.path;
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #f1f5f9;border-radius:8px;margin-bottom:6px;flex-wrap:wrap;">
+      <span style="font-size:18px;">${l.icon}</span>
+      <div style="flex:1;min-width:160px;">
+        <div style="font-weight:600;font-size:13px;color:#1e293b;">${l.label}</div>
+        <div style="font-size:11px;color:#64748b;">${l.desc}</div>
+        <div style="font-size:11px;color:#94a3b8;word-break:break-all;margin-top:2px;">${full}</div>
+      </div>
+      <button type="button" data-url="${full}" data-label="${l.label} link" onclick="copyPublicLink(this)" style="background:#003366;color:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">Copy</button>
+      <button type="button" onclick="window.open('${full}','_blank')" style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;padding:6px 14px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">Open &#8599;</button>
+    </div>`;
+  }
+  html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #16a34a;border-radius:12px;padding:18px 20px;margin-top:16px;">
+    <div style="font-weight:700;color:#1e3a5f;font-size:15px;margin-bottom:4px;">&#127919; Client Links</div>
+    <div style="font-size:12px;color:#64748b;margin-bottom:12px;">Send to clients at the relevant stage of their strengths journey.</div>
+    ${strClientLinks.map(_strLinkRow).join('')}
   </div>`;
   el.innerHTML=html;
 }
