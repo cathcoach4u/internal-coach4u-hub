@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Your Ongoing Sessions | Coach4U</title>
+<link rel="icon" href="../icon-192.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Quicksand:wght@600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:#f0f4f8;color:#1e293b;min-height:100vh}
+.header{background:linear-gradient(135deg,#1e3a5f 0%,#234b78 100%);color:#fff;padding:28px 24px;text-align:center}
+.header img{width:48px;height:48px;border-radius:12px;background:#fff;padding:2px;margin-bottom:8px;display:block;margin-left:auto;margin-right:auto}
+.header h1{font-family:'Quicksand',sans-serif;font-size:22px;font-weight:700;line-height:1.3;margin-bottom:6px}
+.header p{font-size:13px;color:rgba(255,255,255,.75);line-height:1.5;max-width:480px;margin:0 auto}
+.container{max-width:580px;margin:0 auto;padding:24px 16px 60px}
+.section{background:#fff;border-radius:12px;padding:22px 24px;margin-bottom:16px;border:1px solid #e2e8f0}
+.section-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:12px}
+.section h2{font-size:17px;font-weight:700;color:#1e3a5f;margin-bottom:16px;line-height:1.3}
+.section p{font-size:14px;color:#475569;line-height:1.7;margin-bottom:10px}
+.section p:last-child{margin-bottom:0}
+.confirm-check{width:28px;height:28px;border-radius:6px;background:#15803d;display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;font-weight:800;flex-shrink:0;margin-top:2px}
+.confirm-row{display:flex;gap:14px;align-items:flex-start;padding:10px 0;border-bottom:1px solid #f1f5f9}
+.confirm-row:last-child{border-bottom:none;padding-bottom:0}
+.confirm-row:first-child{padding-top:0}
+.confirm-title{font-size:14px;font-weight:700;color:#1e3a5f;margin-bottom:2px}
+.confirm-sub{font-size:13px;color:#64748b}
+.step{display:flex;gap:14px;padding:16px 0;border-bottom:1px solid #f1f5f9}
+.step:last-child{border-bottom:none;padding-bottom:0}
+.step:first-child{padding-top:0}
+.step-num{width:28px;height:28px;border-radius:50%;background:#1e3a5f;color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.step-body{flex:1;min-width:0}
+.step-title{font-size:15px;font-weight:700;color:#1e3a5f;margin-bottom:3px}
+.step-desc{font-size:13px;color:#475569;line-height:1.65}
+.teams-block{display:flex;flex-direction:column;gap:12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:16px 18px;margin-top:12px}
+.teams-top{display:flex;align-items:center;gap:12px}
+.teams-icon{font-size:22px;flex-shrink:0}
+.teams-text{flex:1;min-width:0}
+.teams-text strong{display:block;font-size:13px;font-weight:700;color:#1e3a5f;margin-bottom:2px}
+.teams-text span{font-size:12px;color:#475569}
+.teams-join-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:#1e3a5f;color:#fff;border-radius:9px;padding:13px 20px;text-decoration:none;font-size:14px;font-weight:700;transition:background .15s;width:100%}
+.teams-join-btn:hover{background:#2d5280}
+.save-note{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:11px 14px;font-size:13px;color:#15803d;font-weight:600;display:flex;align-items:center;gap:8px;margin-top:8px}
+.policy-block{background:#f8fafc;border-left:3px solid #e2e8f0;border-radius:0 8px 8px 0;padding:14px 16px;margin-top:12px}
+.policy-block ul{margin:0;padding-left:18px;list-style:disc}
+.policy-block li{font-size:13px;color:#475569;line-height:1.7;margin-bottom:4px}
+.policy-block li:last-child{margin-bottom:0}
+.contact-row{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+.contact-btn{display:inline-flex;align-items:center;gap:7px;padding:10px 16px;border-radius:9px;font-size:13px;font-weight:700;text-decoration:none;transition:all .15s;flex:1;justify-content:center;min-width:130px}
+.wa-btn{background:#25d366;color:#fff}
+.wa-btn:hover{background:#1daa53}
+.sms-btn{background:#e2e8f0;color:#1e3a5f}
+.sms-btn:hover{background:#cbd5e1}
+.policy-link{display:inline-flex;align-items:center;gap:8px;color:#0891b2;text-decoration:none;font-size:14px;font-weight:600;margin-top:12px}
+.policy-link:hover{text-decoration:underline}
+.footer{text-align:center;font-size:11px;color:#94a3b8;padding:0 16px 32px;line-height:1.8}
+@media(max-width:400px){
+  .contact-btn{min-width:100%}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <img src="../C4U.png" alt="Coach4U">
+  <h1>Your ongoing sessions</h1>
+  <p>Everything you need as you continue working with Cath.</p>
+</div>
+
+<div class="container">
+
+  <div class="section">
+    <div class="section-label">Confirmed</div>
+
+    <div class="confirm-row">
+      <div class="confirm-check">&#10003;</div>
+      <div>
+        <div class="confirm-title">Intake session complete</div>
+        <div class="confirm-sub">Cath has your full background and you've been introduced to the process</div>
+      </div>
+    </div>
+
+    <div class="confirm-row">
+      <div class="confirm-check">&#10003;</div>
+      <div>
+        <div class="confirm-title">Ongoing sessions set up</div>
+        <div class="confirm-sub">You're ready to continue — keep this page handy for every session</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">What you need</div>
+    <h2>For every session</h2>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <div class="step-title">Join via Microsoft Teams</div>
+        <div class="step-desc">This is the same link for every session — you don't need a new link each time. No Teams account required, it opens in your browser.</div>
+        <div class="teams-block">
+          <div class="teams-top">
+            <span class="teams-icon">&#128249;</span>
+            <div class="teams-text">
+              <strong>Cath's Teams room</strong>
+              <span>Use this link to join every session</span>
+            </div>
+          </div>
+          <a href="https://teams.microsoft.com/meet/4855206211068?p=fsRVVo4eEOHQVfIGm5" target="_blank" rel="noopener" class="teams-join-btn">
+            &#128279; Join meeting
+          </a>
+        </div>
+        <div class="save-note">&#128278; Save or bookmark this page — you'll use this link every time</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <div class="step-title">Sessions &amp; billing</div>
+        <div class="step-desc">A few things to keep in mind about how sessions work:</div>
+        <div class="policy-block">
+          <ul>
+            <li>The session begins when both partners are on the call</li>
+            <li>Sessions are held and billed based on the scheduled time rather than exact minutes used — this allows flexibility to respond to what's most supportive in the moment</li>
+            <li>Sessions may sometimes finish a little early or run slightly over, depending on what's needed</li>
+            <li>The full scheduled session time remains the basis for invoicing</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <div class="step-title">Cancellation &amp; rescheduling</div>
+        <div class="step-desc">Please give as much notice as possible if you need to cancel or reschedule. The full cancellation and rescheduling policy is here:</div>
+        <a href="https://cathcoach4u.github.io/internal-coach4u-hub/policies/cancellation/" class="policy-link" target="_blank" rel="noopener">
+          &#128197; View Cancellation &amp; Rescheduling Policy &#8594;
+        </a>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <div class="step-title">Questions or issues on the day?</div>
+        <div class="step-desc">If anything comes up — tech issues, running late, or need to reschedule — reach out straight away via WhatsApp or text.</div>
+        <div class="contact-row">
+          <a href="https://wa.me/61485695168" target="_blank" rel="noopener" class="contact-btn wa-btn">
+            &#128172; WhatsApp
+          </a>
+          <a href="sms:0485695168" class="contact-btn sms-btn">
+            &#128241; Text 0485 695 168
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<div class="footer">
+  SARUBA PTY LTD t/a Coach4U &middot; ABN 50 678 462 178
+</div>
+
+</body>
+</html>
