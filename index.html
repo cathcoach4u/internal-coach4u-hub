@@ -253,7 +253,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.59.9</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.60.0</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -12362,7 +12362,52 @@ function renderFinDash(){
   });
   html+='</div>';
 
-  const txns=financeTransactions.filter(t=>!finIsBalance(t.account));
+  // Payment platforms
+  html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px 20px;margin-bottom:16px;">
+    <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:14px;">Payment Platforms</div>
+
+    <div style="border-bottom:1px solid #f1f5f9;padding-bottom:16px;margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+        <span style="font-size:20px;">&#128179;</span>
+        <div>
+          <div style="font-weight:700;font-size:14px;color:#1e3a5f;">GoCardless</div>
+          <div style="font-size:11px;color:#64748b;">Primary — direct debit, mandates, payouts</div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:#475569;line-height:1.7;margin-bottom:10px;">Access payments, subscriptions, customers and payouts. Log in with email and password — a 6-digit verification code will be sent to Cath's phone ending in <strong style="color:#1e3a5f;">337</strong>.</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;gap:8px;">
+          <button onclick="navigator.clipboard.writeText('https://manage.gocardless.com/sign-in').then(()=>toast('Copied','success'))" style="background:#003366;color:#fff;border:none;padding:7px 16px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">Copy link</button>
+          <button onclick="window.open('https://manage.gocardless.com/sign-in','_blank')" style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;padding:7px 16px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">Open &#8599;</button>
+        </div>
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px;">
+          <div style="font-size:11px;font-weight:700;color:#1e3a5f;margin-bottom:6px;">&#128279; GoCardless for Xero</div>
+          <div style="font-size:11px;color:#64748b;margin-bottom:8px;">Access via the link in the main GoCardless dashboard. Areas: Dashboard · Customers · Invoices · Reconciliation · Settings</div>
+          <div style="display:flex;gap:8px;">
+            <button onclick="navigator.clipboard.writeText('https://manage.gocardless.com/sign-in').then(()=>toast('Copied','success'))" style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">Copy GC link</button>
+            <button onclick="window.open('https://manage.gocardless.com/sign-in','_blank')" style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">Open GC &#8599;</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+        <span style="font-size:20px;">&#128179;</span>
+        <div>
+          <div style="font-weight:700;font-size:14px;color:#1e3a5f;">Stripe</div>
+          <div style="font-size:11px;color:#64748b;">Occasional — credit card payments only</div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:#475569;line-height:1.7;margin-bottom:10px;">Used for clients who cannot set up a GoCardless direct debit mandate — for example, international clients. Not used regularly.</div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="navigator.clipboard.writeText('https://dashboard.stripe.com/login').then(()=>toast('Copied','success'))" style="background:#003366;color:#fff;border:none;padding:7px 16px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">Copy link</button>
+        <button onclick="window.open('https://dashboard.stripe.com/login','_blank')" style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;padding:7px 16px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">Open &#8599;</button>
+      </div>
+    </div>
+  </div>`;
+
+
   if(!txns.length){
     el.innerHTML=html;
     return;
