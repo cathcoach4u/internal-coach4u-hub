@@ -27,19 +27,17 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f4f8;color:#1e293b;m
 .confirm-row:first-child{padding-top:0}
 .confirm-title{font-size:14px;font-weight:700;color:#1e3a5f;margin-bottom:2px}
 .confirm-sub{font-size:13px;color:#64748b}
-.report-row{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid #f1f5f9}
-.report-row:last-child{border-bottom:none;padding-bottom:0}
-.report-row:first-child{padding-top:0}
-.report-icon{font-size:20px;flex-shrink:0;margin-top:2px}
-.report-text{flex:1;min-width:0}
-.report-title{font-size:13px;font-weight:700;color:#1e3a5f;margin-bottom:3px}
-.report-sub{font-size:12px;color:#64748b;line-height:1.6}
-.reflect-block{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:16px 18px;margin-top:4px}
-.reflect-block p{font-size:13px;color:#1e3a5f;line-height:1.7;margin-bottom:8px}
-.reflect-block p:last-child{margin-bottom:0}
-.reflect-block ul{margin:0 0 0 16px;padding:0}
-.reflect-block ul li{font-size:13px;color:#1e3a5f;line-height:1.7;margin-bottom:4px}
-.reflect-block ul li:last-child{margin-bottom:0}
+.row{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid #f1f5f9}
+.row:last-child{border-bottom:none;padding-bottom:0}
+.row:first-child{padding-top:0}
+.row-icon{font-size:20px;flex-shrink:0;margin-top:2px}
+.row-text{flex:1;min-width:0}
+.row-title{font-size:13px;font-weight:700;color:#1e3a5f;margin-bottom:3px}
+.row-sub{font-size:12px;color:#64748b;line-height:1.6}
+.tip-block{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:14px 16px;margin-top:4px}
+.tip-block ul{margin:0 0 0 16px;padding:0}
+.tip-block ul li{font-size:13px;color:#475569;line-height:1.7;margin-bottom:4px}
+.tip-block ul li:last-child{margin-bottom:0}
 .footer{text-align:center;font-size:11px;color:#94a3b8;padding:0 16px 32px;line-height:1.8}
 </style>
 </head>
@@ -78,27 +76,27 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f4f8;color:#1e293b;m
     <div class="section-label">What Cath is preparing</div>
     <h2>Your Personalised Strengths Report</h2>
 
-    <div class="report-row">
-      <div class="report-icon">&#127775;</div>
-      <div class="report-text">
-        <div class="report-title">Your Full 34 ranked profile</div>
-        <div class="report-sub">All 34 CliftonStrengths themes ranked in order — from your most dominant to those that take more energy. Cath accesses this directly through Gallup as an accredited coach.</div>
+    <div class="row">
+      <div class="row-icon">&#127775;</div>
+      <div class="row-text">
+        <div class="row-title">Your Full 34 ranked profile</div>
+        <div class="row-sub">All 34 CliftonStrengths themes ranked in order — from your most dominant to those that take more energy. Cath accesses this directly through Gallup as an accredited coach.</div>
       </div>
     </div>
 
-    <div class="report-row">
-      <div class="report-icon">&#128196;</div>
-      <div class="report-text">
-        <div class="report-title">Personal Insights report</div>
-        <div class="report-sub">A personalised narrative written by Cath that reflects on your top strengths — how they show up for you, where they serve you well, and where they can work against you if overused.</div>
+    <div class="row">
+      <div class="row-icon">&#128196;</div>
+      <div class="row-text">
+        <div class="row-title">Personal Insights report</div>
+        <div class="row-sub">A personalised narrative written by Cath that reflects on your top strengths — how they show up for you, where they serve you well, and where they can work against you if overused.</div>
       </div>
     </div>
 
-    <div class="report-row">
-      <div class="report-icon">&#129309;</div>
-      <div class="report-text">
-        <div class="report-title">Bring &amp; Need summary</div>
-        <div class="report-sub">A summary of what you naturally bring to relationships and teams — and what you tend to need from others. Useful in both personal and professional contexts.</div>
+    <div class="row">
+      <div class="row-icon">&#129309;</div>
+      <div class="row-text">
+        <div class="row-title">Bring &amp; Need summary</div>
+        <div class="row-sub">A summary of what you naturally bring to relationships and teams — and what you tend to need from others. Useful in both personal and professional contexts.</div>
       </div>
     </div>
 
@@ -115,7 +113,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f4f8;color:#1e293b;m
     <div class="section-label">In the meantime</div>
     <h2>A few things to reflect on</h2>
     <p>You don't need to prepare anything formal — but if you'd like to arrive ready for a richer conversation, consider these:</p>
-    <div class="reflect-block">
+    <div class="tip-block">
       <ul>
         <li>Which patterns in how you think or work have always felt completely natural to you?</li>
         <li>Where do you find yourself energised by a task — and where does it feel like a drain?</li>

@@ -34,6 +34,13 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f4f8;color:#1e293b;m
 .step-body{flex:1;min-width:0}
 .step-title{font-size:15px;font-weight:700;color:#1e3a5f;margin-bottom:3px}
 .step-desc{font-size:13px;color:#475569;line-height:1.65}
+.row{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid #f1f5f9}
+.row:last-child{border-bottom:none;padding-bottom:0}
+.row:first-child{padding-top:0}
+.row-icon{font-size:20px;flex-shrink:0;margin-top:2px}
+.row-text{flex:1;min-width:0}
+.row-title{font-size:13px;font-weight:700;color:#1e3a5f;margin-bottom:3px}
+.row-sub{font-size:12px;color:#64748b;line-height:1.6}
 .tip-block{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:14px 16px;margin-top:12px}
 .tip-block strong{display:block;font-size:13px;font-weight:700;color:#1e3a5f;margin-bottom:8px}
 .tip-block ul{margin:0 0 0 16px;padding:0}
@@ -43,13 +50,6 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f4f8;color:#1e293b;m
 .success-note{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:11px 14px;font-size:13px;color:#15803d;font-weight:600;display:flex;align-items:center;gap:8px;margin-top:10px}
 .wa-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:#25d366;color:#fff;border-radius:9px;padding:13px 20px;text-decoration:none;font-size:14px;font-weight:700;transition:background .15s;width:100%;margin-top:12px}
 .wa-btn:hover{background:#1daa53}
-.what-next-row{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid #f1f5f9}
-.what-next-row:last-child{border-bottom:none;padding-bottom:0}
-.what-next-row:first-child{padding-top:0}
-.what-next-icon{font-size:18px;flex-shrink:0;margin-top:1px}
-.what-next-text{flex:1;min-width:0}
-.what-next-title{font-size:13px;font-weight:700;color:#1e3a5f;margin-bottom:2px}
-.what-next-sub{font-size:12px;color:#64748b;line-height:1.55}
 .footer{text-align:center;font-size:11px;color:#94a3b8;padding:0 16px 32px;line-height:1.8}
 </style>
 </head>
@@ -121,7 +121,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f4f8;color:#1e293b;m
       <div class="step-num">3</div>
       <div class="step-body">
         <div class="step-title">Let Cath know you're done</div>
-        <div class="step-desc">Once you've completed the assessment, send Cath a quick message. You don't need to do anything with the results yourself — Cath will access your Full 34 report directly and prepare your personalised strengths report from her end. She'll be in touch once it's ready.</div>
+        <div class="step-desc">Once you've completed the assessment, send Cath a quick message. You don't need to do anything with the results yourself — Cath will access your Full 34 report directly and prepare your personalised strengths report. She'll be in touch once it's ready.</div>
         <a href="https://wa.me/61485695168" target="_blank" rel="noopener" class="wa-btn">
           &#128172; Message Cath on WhatsApp
         </a>
@@ -134,27 +134,27 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f4f8;color:#1e293b;m
     <div class="section-label">After you're done</div>
     <h2>What happens next</h2>
 
-    <div class="what-next-row">
-      <div class="what-next-icon">&#128202;</div>
-      <div class="what-next-text">
-        <div class="what-next-title">Cath accesses your results</div>
-        <div class="what-next-sub">As an accredited Gallup Strengths Coach, Cath can access your Full 34 report directly — you don't need to download or send anything.</div>
+    <div class="row">
+      <div class="row-icon">&#128202;</div>
+      <div class="row-text">
+        <div class="row-title">Cath accesses your results</div>
+        <div class="row-sub">As an accredited Gallup Strengths Coach, Cath can access your Full 34 report directly — you don't need to download or send anything.</div>
       </div>
     </div>
 
-    <div class="what-next-row">
-      <div class="what-next-icon">&#128196;</div>
-      <div class="what-next-text">
-        <div class="what-next-title">Your strengths report is prepared</div>
-        <div class="what-next-sub">Cath prepares a personalised Strengths report — including your Personal Insights and a Bring &amp; Need summary — ready to use in your session.</div>
+    <div class="row">
+      <div class="row-icon">&#128196;</div>
+      <div class="row-text">
+        <div class="row-title">Your strengths report is prepared</div>
+        <div class="row-sub">Cath prepares a personalised Strengths report — including your Personal Insights and a Bring &amp; Need summary — ready to use in your session.</div>
       </div>
     </div>
 
-    <div class="what-next-row">
-      <div class="what-next-icon">&#127919;</div>
-      <div class="what-next-text">
-        <div class="what-next-title">Strengths integrated into your coaching</div>
-        <div class="what-next-sub">Your results become a working tool throughout your coaching — not a one-off exercise. Expect to return to them regularly.</div>
+    <div class="row">
+      <div class="row-icon">&#127919;</div>
+      <div class="row-text">
+        <div class="row-title">Strengths integrated into your coaching</div>
+        <div class="row-sub">Your results become a working tool throughout your coaching — not a one-off exercise. Expect to return to them regularly.</div>
       </div>
     </div>
 

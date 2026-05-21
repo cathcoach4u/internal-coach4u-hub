@@ -28,20 +28,18 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f4f8;color:#1e293b;m
 .step-body{flex:1;min-width:0}
 .step-title{font-size:15px;font-weight:700;color:#1e3a5f;margin-bottom:3px}
 .step-desc{font-size:13px;color:#475569;line-height:1.65}
-.detail-block{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px 16px;margin-top:12px}
-.detail-block p{font-size:13px;color:#475569;line-height:1.65;margin-bottom:0}
-.detail-block strong{color:#1e3a5f}
-.info-block{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:14px 16px;margin-top:12px}
-.info-block p{font-size:13px;color:#1e3a5f;line-height:1.65;margin-bottom:0}
+.row{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid #f1f5f9}
+.row:last-child{border-bottom:none;padding-bottom:0}
+.row:first-child{padding-top:0}
+.row-icon{font-size:20px;flex-shrink:0;margin-top:2px}
+.row-text{flex:1;min-width:0}
+.row-title{font-size:13px;font-weight:700;color:#1e3a5f;margin-bottom:3px}
+.row-sub{font-size:12px;color:#64748b;line-height:1.6}
+.tip-block{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:14px 16px;margin-top:12px}
+.tip-block strong{display:block;font-size:13px;font-weight:700;color:#1e3a5f;margin-bottom:6px}
+.tip-block p{font-size:13px;color:#1e3a5f;line-height:1.65;margin-bottom:0}
 .wa-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:#25d366;color:#fff;border-radius:9px;padding:13px 20px;text-decoration:none;font-size:14px;font-weight:700;transition:background .15s;width:100%;margin-top:12px}
 .wa-btn:hover{background:#1daa53}
-.what-next-row{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid #f1f5f9}
-.what-next-row:last-child{border-bottom:none;padding-bottom:0}
-.what-next-row:first-child{padding-top:0}
-.what-next-icon{font-size:18px;flex-shrink:0;margin-top:1px}
-.what-next-text{flex:1;min-width:0}
-.what-next-title{font-size:13px;font-weight:700;color:#1e3a5f;margin-bottom:2px}
-.what-next-sub{font-size:12px;color:#64748b;line-height:1.55}
 .footer{text-align:center;font-size:11px;color:#94a3b8;padding:0 16px 32px;line-height:1.8}
 </style>
 </head>
@@ -64,9 +62,10 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f4f8;color:#1e293b;m
       <div class="step-body">
         <div class="step-title">Make payment for your assessment</div>
         <div class="step-desc">The CliftonStrengths Full 34 assessment is purchased by Cath on your behalf through Gallup. Payment is required before your assessment can be registered.</div>
-        <div class="detail-block">
-          <p><strong>Cost:</strong> $[PRICE] <!-- TODO: confirm assessment fee --><br>
-          <strong>How to pay:</strong> $[PAYMENT METHOD] <!-- TODO: confirm payment method --></p>
+        <div class="tip-block">
+          <strong>Payment details</strong>
+          <p>Cost: $[PRICE] <!-- TODO: confirm assessment fee --><br>
+          How to pay: $[PAYMENT METHOD] <!-- TODO: confirm payment method --></p>
         </div>
       </div>
     </div>
@@ -75,13 +74,14 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f4f8;color:#1e293b;m
       <div class="step-num">2</div>
       <div class="step-body">
         <div class="step-title">Send Cath your details via WhatsApp</div>
-        <div class="step-desc">Cath needs a couple of details to register the assessment correctly with Gallup. Please send the following:</div>
-        <div class="detail-block">
-          <p><strong>Your full name</strong> — as you'd like it registered<br><br>
-          <strong>Your email address</strong> — this is where your Gallup invitation will be sent. Make sure it's an address you check regularly.</p>
+        <div class="step-desc">Cath needs a couple of details to register the assessment correctly with Gallup. Please send the following in your message:</div>
+        <div class="tip-block">
+          <strong>What to include</strong>
+          <p>&#128100; Your full name — as you'd like it registered<br><br>
+          &#128231; Your email address — this is where your Gallup invitation will be sent. Make sure it's an address you check regularly.</p>
         </div>
         <a href="https://wa.me/61485695168" target="_blank" rel="noopener" class="wa-btn">
-          &#128172; Send details to Cath on WhatsApp
+          &#128172; Send your details to Cath on WhatsApp
         </a>
       </div>
     </div>
@@ -92,27 +92,27 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f4f8;color:#1e293b;m
     <div class="section-label">After you've paid and sent your details</div>
     <h2>What happens next</h2>
 
-    <div class="what-next-row">
-      <div class="what-next-icon">&#128273;</div>
-      <div class="what-next-text">
-        <div class="what-next-title">Cath purchases your assessment</div>
-        <div class="what-next-sub">Once payment and your details are received, Cath purchases your CliftonStrengths Full 34 assessment through Gallup and registers it to your email address.</div>
+    <div class="row">
+      <div class="row-icon">&#128273;</div>
+      <div class="row-text">
+        <div class="row-title">Cath purchases your assessment</div>
+        <div class="row-sub">Once payment and your details are received, Cath purchases your CliftonStrengths Full 34 assessment through Gallup and registers it to your email address.</div>
       </div>
     </div>
 
-    <div class="what-next-row">
-      <div class="what-next-icon">&#128231;</div>
-      <div class="what-next-text">
-        <div class="what-next-title">You'll receive a guide from Cath</div>
-        <div class="what-next-sub">Cath will send you a separate guide with everything you need to know before you sit down to complete the assessment — including tips for getting the most accurate result.</div>
+    <div class="row">
+      <div class="row-icon">&#128231;</div>
+      <div class="row-text">
+        <div class="row-title">You'll receive a guide from Cath</div>
+        <div class="row-sub">Cath will send you a separate guide with everything you need to know before you sit down to complete the assessment — including tips for getting the most accurate result.</div>
       </div>
     </div>
 
-    <div class="what-next-row">
-      <div class="what-next-icon">&#128386;</div>
-      <div class="what-next-text">
-        <div class="what-next-title">Gallup invitation arrives in your inbox</div>
-        <div class="what-next-sub">You'll receive a direct invitation from Gallup with a personalised link to your assessment. The link is unique to you — don't forward it to anyone else.</div>
+    <div class="row">
+      <div class="row-icon">&#128386;</div>
+      <div class="row-text">
+        <div class="row-title">Gallup invitation arrives in your inbox</div>
+        <div class="row-sub">You'll receive a direct invitation from Gallup with a personalised link to your assessment. The link is unique to you — don't forward it to anyone else.</div>
       </div>
     </div>
 
