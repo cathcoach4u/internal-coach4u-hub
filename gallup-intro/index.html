@@ -43,9 +43,17 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f4f8;color:#1e293b;m
 .row-sub{font-size:12px;color:#64748b;line-height:1.6}
 .tip-block{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:14px 16px;margin-top:12px}
 .tip-block p{font-size:13px;color:#1e3a5f;line-height:1.65;margin-bottom:0}
+.pricing-block{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px 16px;margin-top:12px}
+.pricing-block p{font-size:13px;color:#15803d;line-height:1.7;margin-bottom:0}
+.timing-block{background:#fefce8;border:1px solid #fde68a;border-radius:8px;padding:11px 14px;font-size:13px;color:#92400e;display:flex;align-items:flex-start;gap:8px;margin-top:10px}
+.form-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:#1e3a5f;color:#fff;border-radius:9px;padding:13px 20px;text-decoration:none;font-size:14px;font-weight:700;transition:background .15s;width:100%;margin-top:12px}
+.form-btn:hover{background:#2d5280}
 .wa-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:#25d366;color:#fff;border-radius:9px;padding:13px 20px;text-decoration:none;font-size:14px;font-weight:700;transition:background .15s;width:100%;margin-top:12px}
 .wa-btn:hover{background:#1daa53}
 .footer{text-align:center;font-size:11px;color:#94a3b8;padding:0 16px 32px;line-height:1.8}
+@media(max-width:400px){
+  .form-btn,.wa-btn{font-size:13px;padding:12px 16px}
+}
 </style>
 </head>
 <body>
@@ -116,36 +124,35 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f4f8;color:#1e293b;m
   </div>
 
   <div class="section">
-    <div class="section-label">How it works</div>
-    <h2>What happens next</h2>
+    <div class="section-label">What to do now</div>
+    <h2>Getting started</h2>
 
     <div class="step">
       <div class="step-num">1</div>
       <div class="step-body">
-        <div class="step-title">Confirm you'd like to go ahead</div>
-        <div class="step-desc">Once you've had a read through this, send Cath a message to let her know you'd like to proceed. Cath will then send you the next steps — including payment details and what information she needs from you to get the assessment registered.</div>
-        <a href="https://wa.me/61485695168" target="_blank" rel="noopener" class="wa-btn">
-          &#128172; Message Cath on WhatsApp
-        </a>
+        <div class="step-title">Complete the confirmation form</div>
+        <div class="step-desc">Use the form below to confirm you'd like to go ahead. This registers your request in our system so we can arrange your assessment code.</div>
+        <a id="formBtn" href="#" class="form-btn">&#128203; Complete confirmation form</a>
       </div>
     </div>
 
     <div class="step">
       <div class="step-num">2</div>
       <div class="step-body">
-        <div class="step-title">Pay and provide your details</div>
-        <div class="step-desc">Cath will send you a link to pay for the assessment and will ask for your details so she can register it with Gallup on your behalf.</div>
-        <div class="tip-block">
-          <p>The assessment takes around 30–45 minutes. Once registered, you'll receive a separate guide from Cath with everything you need to know before you sit down to complete it.</p>
+        <div class="step-title">Payment</div>
+        <div class="step-desc">Once your details have been received, payment will be processed using the direct debit authority you've already set up — the amount will be deducted from your nominated bank account.</div>
+        <div class="pricing-block">
+          <p>&#128176; <strong>$135 per assessment — GST free</strong><br>You will receive a tax invoice for this payment.</p>
         </div>
+        <div class="timing-block">&#128197; We aim to have this completed by your 2nd session. At the latest, your 3rd session.</div>
       </div>
     </div>
 
     <div class="step">
       <div class="step-num">3</div>
       <div class="step-body">
-        <div class="step-title">Complete and notify Cath</div>
-        <div class="step-desc">Once you've completed the assessment, let Cath know. She'll access your results, prepare your personalised report, and bring it into your next session.</div>
+        <div class="step-title">You'll receive updated instructions</div>
+        <div class="step-desc">Once Coach4U has purchased your assessment code from Gallup, we'll send you a separate page with everything you need to know before completing the assessment — including tips for getting the most accurate result.</div>
       </div>
     </div>
 
@@ -171,5 +178,14 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f4f8;color:#1e293b;m
   SARUBA PTY LTD t/a Coach4U &middot; ABN 50 678 462 178
 </div>
 
+<script>
+(function(){
+  const params=new URLSearchParams(window.location.search);
+  const org=params.get('org');
+  const btn=document.getElementById('formBtn');
+  const base='https://cathcoach4u.github.io/internal-coach4u-hub/gallup-request/';
+  btn.href=org?base+'?org='+encodeURIComponent(org):base;
+})();
+</script>
 </body>
 </html>
