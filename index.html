@@ -253,7 +253,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.60.1</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.61.0</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -817,6 +817,10 @@ if('serviceWorker' in navigator){
         </div>
       </div>
       <div id="finTxnList"></div>
+    </div>
+
+    <div class="screen" id="screen-finpayments">
+      <div id="finPaymentsContent"></div>
     </div>
 
     <!-- COUPLES INTAKE (Port Institute Worksheet) -->
@@ -2038,7 +2042,7 @@ async function loadAgents(){
 }
 async function loadAll(){
   try{
-    await Promise.all([loadContacts(), loadClients(), loadTasks(), loadProspects(), loadProspectNotes(), loadReferrers(), loadRefPayments(), loadRenewals(), loadContactReports(), loadStrengthsInsights(), loadGallupRequests(), loadTrials(), loadTaskLogs(), loadFinanceTransactions(), loadBills(), loadIntakeSubmissions(), loadPulseResults(), loadBrainPulseSubmissions(), loadConnectionPulseSubmissions(), loadAgents(), loadSmsMessages(), loadCommsLists(), loadPaymentMandates(), loadPrompts(), loadAppSettings(), loadPlaybookLog(), loadGroupTemplates()]);
+    await Promise.all([loadContacts(), loadClients(), loadTasks(), loadProspects(), loadProspectNotes(), loadReferrers(), loadRefPayments(), loadRenewals(), loadContactReports(), loadStrengthsInsights(), loadGallupRequests(), loadTrials(), loadTaskLogs(), loadFinanceTransactions(), loadBills(), loadIntakeSubmissions(), loadPulseResults(), loadBrainPulseSubmissions(), loadConnectionPulseSubmissions(), loadAgents(), loadSmsMessages(), loadCommsLists(), loadPaymentMandates(), loadPrompts(), loadAppSettings(), loadPlaybookLog(), loadGroupTemplates(), loadPaymentPlatforms()]);
     await processStopReplies();
     await bootstrapInAppAgents();
   }catch(e){
@@ -2061,7 +2065,7 @@ window.navTo = function(tab,btn){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+tab).classList.add('active');
   window.scrollTo(0,0);
-  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ Hub',thqintake:'Intake Forms',strdash:'Strengths Hub',opsdash:'Admin',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',sms:'Comms',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Profiles',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Active Tasks',playbook:'Work Log',procedures:'Daily Procedures',quicklinks:'Quick Links',itprojects:'IT Projects',agents:'Agents',writingpartner:'Writing Partner',findash:'Finance',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fininsurance:'Insurance',fintxns:'Transactions',findev:'Development Business',thqbrainpulse:'Brain Pulse',thqactivities:'Activities',clibrainpulse:'Brain Pulse',cliconnection:'Connection Pulse',thqpulse:'SAFE Pulse',clipulse:'SAFE Pulse',pulsesdash:'Pulses',couplesintake:'Couples Intake',couplesdash:'Couples Hub',couplesclientlinks:'Client Links',couplestimelines:'Therapy Timelines',couplesbetrayal:'Betrayal First Aid',itdash:'IT',resourcesdash:'Resources',agentsai:'AI Strategy',prompts:'Prompts',strreports:'Strengths Reports',strdomains:'Domain Balance',strupload:'Upload Report',strcodes:'Gallup Code Tracker',strsop:'Gallup Workflow SOP',strclientlinks:'Client Links'};
+  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ Hub',thqintake:'Intake Forms',strdash:'Strengths Hub',opsdash:'Admin',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',sms:'Comms',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Profiles',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Active Tasks',playbook:'Work Log',procedures:'Daily Procedures',quicklinks:'Quick Links',itprojects:'IT Projects',agents:'Agents',writingpartner:'Writing Partner',findash:'Finance',finpayments:'Payment Platforms',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fininsurance:'Insurance',fintxns:'Transactions',findev:'Development Business',thqbrainpulse:'Brain Pulse',thqactivities:'Activities',clibrainpulse:'Brain Pulse',cliconnection:'Connection Pulse',thqpulse:'SAFE Pulse',clipulse:'SAFE Pulse',pulsesdash:'Pulses',couplesintake:'Couples Intake',couplesdash:'Couples Hub',couplesclientlinks:'Client Links',couplestimelines:'Therapy Timelines',couplesbetrayal:'Betrayal First Aid',itdash:'IT',resourcesdash:'Resources',agentsai:'AI Strategy',prompts:'Prompts',strreports:'Strengths Reports',strdomains:'Domain Balance',strupload:'Upload Report',strcodes:'Gallup Code Tracker',strsop:'Gallup Workflow SOP',strclientlinks:'Client Links'};
   document.getElementById('pageTitle').textContent=titles[tab]||'Coach4U';
   // Sync area tab
   const area=pageToArea[tab]||'home';
@@ -2137,6 +2141,7 @@ window.navTo = function(tab,btn){
   if(tab==='agentsai') renderAgentsAI();
   if(tab==='prompts') renderPrompts();
   if(tab==='findash') renderFinDash();
+  if(tab==='finpayments') renderFinPayments();
   if(tab==='finincome') renderFinIncome();
   if(tab==='finspend') renderFinSpend();
   if(tab==='finbills') renderBills();
@@ -2170,7 +2175,7 @@ const areaConfig={
   hubs:{label:'Hubs',pages:[{id:'modulesdash',icon:'&#128200;',label:'Dashboard'},{id:'couplesdash',icon:'&#128149;',label:'Couples Hub'},{id:'thqdash',icon:'&#128170;',label:'ThriveHQ Hub'},{id:'strdash',icon:'&#127919;',label:'Strengths Hub'}]},
   it:{label:'IT',pages:[{id:'itdash',icon:'&#128200;',label:'Dashboard'},{id:'itprojects',icon:'&#9881;',label:'IT Projects'},{id:'agents',icon:'&#129302;',label:'Agents'},{id:'agentsai',icon:'&#10024;',label:'AI Strategy'},{id:'writingpartner',icon:'&#9997;',label:'Writing Partner'},{id:'prompts',icon:'&#128196;',label:'Prompts'}]},
   operations:{label:'Admin',pages:[{id:'opsdash',icon:'&#128736;',label:'Dashboard'},{id:'tasks',icon:'&#9989;',label:'Active Tasks'},{id:'playbook',icon:'&#128214;',label:'Work Log'},{id:'procedures',icon:'&#128221;',label:'Daily Procedures'},{id:'quicklinks',icon:'&#128279;',label:'Quick Links'},{id:'resourcesdash',icon:'&#128279;',label:'Company Resources'}]},
-  finance:{label:'Finance',pages:[{id:'findash',icon:'&#128176;',label:'Dashboard'},{id:'finincome',icon:'&#128181;',label:'Income'},{id:'finspend',icon:'&#128200;',label:'Where Money Goes'},{id:'finbills',icon:'&#128196;',label:'Bills'},{id:'fininsurance',icon:'&#128737;',label:'Insurance'},{id:'fintxns',icon:'&#128203;',label:'Transactions'}]},
+  finance:{label:'Finance',pages:[{id:'findash',icon:'&#128176;',label:'Dashboard'},{id:'finpayments',icon:'&#128179;',label:'Payment Platforms'},{id:'finincome',icon:'&#128181;',label:'Income'},{id:'finspend',icon:'&#128200;',label:'Where Money Goes'},{id:'finbills',icon:'&#128196;',label:'Bills'},{id:'fininsurance',icon:'&#128737;',label:'Insurance'},{id:'fintxns',icon:'&#128203;',label:'Transactions'}]},
   devbusiness:{label:'Development Business',pages:[{id:'findev',icon:'&#128640;',label:'Overview'}]},
   about:{label:'About',pages:[{id:'about',icon:'&#8505;',label:'About'}]}
 };
@@ -12193,12 +12198,66 @@ window.deleteTemplate=async function(id){
 
 // ── FINANCE ──
 let financeTransactions=[];
+let paymentPlatforms=[];
 const FIN_INCOME_ACCOUNTS=['Sales','Other Revenue','Interest Income','MHPN Payments'];
 const FIN_BALANCE_ACCOUNTS=['Wages Payable - Payroll','PAYG Withholdings Payable','Superannuation Payable','GST','Loan'];
 
 async function loadFinanceTransactions(){
   const {data,error}=await supabase.from('finance_transactions').select('*').order('transaction_date',{ascending:true});
   if(!error&&data) financeTransactions=data;
+}
+
+async function loadPaymentPlatforms(){
+  const {data,error}=await supabase.from('payment_platforms').select('*').order('sort_order',{ascending:true});
+  if(!error&&data) paymentPlatforms=data;
+}
+
+function renderFinPayments(){
+  const el=document.getElementById('finPaymentsContent');
+  if(!el) return;
+  let html='<div style="max-width:600px;">';
+  html+='<div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">';
+  html+=`<button onclick="navTo('findash')" style="background:#f0f4f8;border:1px solid #e2e8f0;padding:7px 14px;border-radius:8px;font-size:13px;font-weight:600;color:#1e3a5f;cursor:pointer;">&#8592; Dashboard</button>`;
+  html+='<h2 style="font-size:17px;font-weight:700;color:#1e3a5f;margin:0;">Payment Platforms</h2>';
+  html+='</div>';
+
+  if(!paymentPlatforms.length){
+    html+='<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:32px;text-align:center;color:#64748b;"><div style="font-size:36px;margin-bottom:12px;">&#128179;</div><div style="font-size:14px;">No payment platforms found.<br>Run the SQL setup in Supabase to add GoCardless and Stripe.</div></div>';
+    html+='</div>';
+    el.innerHTML=html;
+    return;
+  }
+
+  paymentPlatforms.forEach((p,i)=>{
+    const subs=(p.sub_services||[]);
+    const isLast=i===paymentPlatforms.length-1;
+    html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px 22px;margin-bottom:12px;">`;
+    html+=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:${p.description||subs.length?'10px':'0'};">`;
+    html+=`<span style="font-size:22px;">&#128179;</span>`;
+    html+=`<div style="flex:1;min-width:0;"><div style="font-weight:700;font-size:15px;color:#1e3a5f;">${p.name}</div>`;
+    if(p.subtitle) html+=`<div style="font-size:12px;color:#64748b;">${p.subtitle}</div>`;
+    html+=`</div></div>`;
+    if(p.description) html+=`<div style="font-size:13px;color:#475569;line-height:1.7;margin-bottom:12px;">${p.description.replace(/337/,'<strong style="color:#1e3a5f;">337</strong>')}</div>`;
+    html+=`<div style="display:flex;gap:8px;margin-bottom:${subs.length?'12px':'0'};">`;
+    html+=`<button onclick="navigator.clipboard.writeText('${p.url}').then(()=>toast('Copied','success'))" style="background:#003366;color:#fff;border:none;padding:7px 16px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">Copy link</button>`;
+    html+=`<button onclick="window.open('${p.url}','_blank')" style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;padding:7px 16px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">Open &#8599;</button>`;
+    html+=`</div>`;
+    subs.forEach(s=>{
+      html+=`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-top:4px;">`;
+      html+=`<div style="font-size:12px;font-weight:700;color:#1e3a5f;margin-bottom:4px;">&#128279; ${s.name}</div>`;
+      if(s.description) html+=`<div style="font-size:12px;color:#64748b;margin-bottom:8px;">${s.description}</div>`;
+      if(s.url){
+        html+=`<div style="display:flex;gap:8px;">`;
+        html+=`<button onclick="navigator.clipboard.writeText('${s.url}').then(()=>toast('Copied','success'))" style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">Copy link</button>`;
+        html+=`<button onclick="window.open('${s.url}','_blank')" style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">Open &#8599;</button>`;
+        html+=`</div>`;
+      }
+      html+=`</div>`;
+    });
+    html+=`</div>`;
+  });
+  html+='</div>';
+  el.innerHTML=html;
 }
 
 function finParseAmount(s){
@@ -12348,6 +12407,7 @@ function renderFinDash(){
   // Nav cards
   html+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px;">';
   const navCards=[
+    {id:'finpayments',icon:'&#128179;',label:'Payment Platforms',color:'#003366',bg:'#f0f4ff',border:'#c7d2fe'},
     {id:'finincome',icon:'&#128181;',label:'Income',color:'#16a34a',bg:'#f0fdf4',border:'#bbf7d0'},
     {id:'finspend',icon:'&#128200;',label:'Expenses',color:'#dc2626',bg:'#fef2f2',border:'#fecaca'},
     {id:'finbills',icon:'&#128196;',label:'Bills',color:'#d97706',bg:'#fffbeb',border:'#fde68a'},
@@ -12361,52 +12421,6 @@ function renderFinDash(){
     </div>`;
   });
   html+='</div>';
-
-  // Payment platforms
-  html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px 20px;margin-bottom:16px;">
-    <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:14px;">Payment Platforms</div>
-
-    <div style="border-bottom:1px solid #f1f5f9;padding-bottom:16px;margin-bottom:16px;">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-        <span style="font-size:20px;">&#128179;</span>
-        <div>
-          <div style="font-weight:700;font-size:14px;color:#1e3a5f;">GoCardless</div>
-          <div style="font-size:11px;color:#64748b;">Primary — direct debit, mandates, payouts</div>
-        </div>
-      </div>
-      <div style="font-size:12px;color:#475569;line-height:1.7;margin-bottom:10px;">Access payments, subscriptions, customers and payouts. Log in with email and password — a 6-digit verification code will be sent to Cath's phone ending in <strong style="color:#1e3a5f;">337</strong>.</div>
-      <div style="display:flex;flex-direction:column;gap:8px;">
-        <div style="display:flex;gap:8px;">
-          <button onclick="navigator.clipboard.writeText('https://manage.gocardless.com/sign-in').then(()=>toast('Copied','success'))" style="background:#003366;color:#fff;border:none;padding:7px 16px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">Copy link</button>
-          <button onclick="window.open('https://manage.gocardless.com/sign-in','_blank')" style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;padding:7px 16px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">Open &#8599;</button>
-        </div>
-        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px;">
-          <div style="font-size:11px;font-weight:700;color:#1e3a5f;margin-bottom:6px;">&#128279; GoCardless for Xero</div>
-          <div style="font-size:11px;color:#64748b;margin-bottom:8px;">Access via the link in the main GoCardless dashboard. Areas: Dashboard · Customers · Invoices · Reconciliation · Settings</div>
-          <div style="display:flex;gap:8px;">
-            <button onclick="navigator.clipboard.writeText('https://manage.gocardless.com/sign-in').then(()=>toast('Copied','success'))" style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">Copy GC link</button>
-            <button onclick="window.open('https://manage.gocardless.com/sign-in','_blank')" style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">Open GC &#8599;</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div>
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-        <span style="font-size:20px;">&#128179;</span>
-        <div>
-          <div style="font-weight:700;font-size:14px;color:#1e3a5f;">Stripe</div>
-          <div style="font-size:11px;color:#64748b;">Occasional — credit card payments only</div>
-        </div>
-      </div>
-      <div style="font-size:12px;color:#475569;line-height:1.7;margin-bottom:10px;">Used for clients who cannot set up a GoCardless direct debit mandate — for example, international clients. Not used regularly.</div>
-      <div style="display:flex;gap:8px;">
-        <button onclick="navigator.clipboard.writeText('https://dashboard.stripe.com/login').then(()=>toast('Copied','success'))" style="background:#003366;color:#fff;border:none;padding:7px 16px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">Copy link</button>
-        <button onclick="window.open('https://dashboard.stripe.com/login','_blank')" style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;padding:7px 16px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">Open &#8599;</button>
-      </div>
-    </div>
-  </div>`;
-
 
   const txns=financeTransactions.filter(t=>!finIsBalance(t.account));
   if(!txns.length){
