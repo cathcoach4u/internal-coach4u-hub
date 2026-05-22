@@ -253,7 +253,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.62.3</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.62.4</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -5873,6 +5873,21 @@ window.deleteCommsGroup=async function(listId){
 
 // TEMPLATES SECTION
 let commsTemplateSelected=null;
+let commsTplFormVisible=false;
+let commsTplEditId=null;
+
+function getTplOrder(prog){try{const o=localStorage.getItem('comms_tpl_order_'+prog);return o?JSON.parse(o):null;}catch(e){return null;}}
+function saveTplOrder(prog,ids){try{localStorage.setItem('comms_tpl_order_'+prog,JSON.stringify(ids));}catch(e){}}
+function getSortedTemplates(prog){
+  const temps=getGroupTemplates(prog);
+  const order=getTplOrder(prog);
+  if(!order||!order.length) return temps;
+  const map=Object.fromEntries(temps.map(t=>[t.id,t]));
+  const sorted=order.filter(id=>map[id]).map(id=>map[id]);
+  const rest=temps.filter(t=>!order.includes(t.id));
+  return [...sorted,...rest];
+}
+
 function renderTemplatesList(){
   const programs=['thrivehq','couples','individual'];
   const programLabels={thrivehq:'ThriveHQ',couples:'Couples',individual:'Individuals'};
@@ -5880,7 +5895,7 @@ function renderTemplatesList(){
     const temps=getGroupTemplates(prog);
     const count=temps.length;
     const sel=commsTemplateSelected===prog;
-    return `<div onclick="window.selectCommTemplate('${prog}')" style="padding:12px 14px;border-bottom:1px solid #f1f5f9;cursor:pointer;background:${sel?'#e8f4ff':'transparent'};" onmouseover="this.style.background='${sel?'#e8f4ff':'#f1f5f9'}'" onmouseout="this.style.background='${sel?'#e8f4ff':'transparent'}'">
+    return `<div onclick="window.selectCommTemplate('${prog}')" style="padding:12px 14px;border-bottom:1px solid #f1f5f9;cursor:pointer;background:${sel?'#ede9fe':'transparent'};" onmouseover="this.style.background='${sel?'#ede9fe':'#f1f5f9'}'" onmouseout="this.style.background='${sel?'#ede9fe':'transparent'}'">
       <div style="font-weight:600;font-size:13px;color:#1e293b;">${programLabels[prog]}</div>
       <div style="font-size:11px;color:#94a3b8;margin-top:2px;">${count} template${count!==1?'s':''}</div>
     </div>`;
@@ -5890,30 +5905,116 @@ function renderTemplatesList(){
 
 function renderTemplateDetail(){
   if(!commsTemplateSelected) return `<div style="display:flex;align-items:center;justify-content:center;flex:1;color:#94a3b8;font-size:13px;padding:32px;">Select a program to view templates</div>`;
-  const label={thrivehq:'ThriveHQ',couples:'Couples',individual:'Individuals'}[commsTemplateSelected];
-  const temps=getGroupTemplates(commsTemplateSelected);
-  const templateCards=temps.map(t=>`<div style="border:1px solid #e2e8f0;border-radius:8px;padding:12px;background:#fff;margin-bottom:8px;">
-    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px;">
-      <div style="font-size:13px;font-weight:700;color:#1e3a5f;">${t.name.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div>
-      <button onclick="event.stopPropagation();window.copyTemplateText('${commsTemplateSelected}','${t.id}')" style="font-size:10px;padding:3px 8px;background:#e8f4ff;color:#2563eb;border:none;border-radius:6px;cursor:pointer;white-space:nowrap;font-weight:600;">Copy</button>
+  const prog=commsTemplateSelected;
+  const label={thrivehq:'ThriveHQ',couples:'Couples',individual:'Individuals'}[prog];
+  const temps=getSortedTemplates(prog);
+  const editT=commsTplEditId?temps.find(t=>t.id===commsTplEditId):null;
+  const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  const escAttr=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+
+  const formHtml=commsTplFormVisible?`<div style="border:2px solid #7c3aed;border-radius:10px;padding:14px;background:#faf5ff;margin-bottom:12px;">
+    <div style="font-weight:700;font-size:13px;color:#7c3aed;margin-bottom:10px;">${editT?'Edit Template':'New Template'}</div>
+    <div style="margin-bottom:8px;"><label style="font-size:11px;font-weight:700;color:#475569;display:block;margin-bottom:4px;">Name</label>
+      <input id="tplFormName" value="${editT?escAttr(editT.name):''}" placeholder="Template name" style="width:100%;padding:8px;border:1px solid #d8b4fe;border-radius:6px;font-size:13px;box-sizing:border-box;"></div>
+    <div style="margin-bottom:10px;"><label style="font-size:11px;font-weight:700;color:#475569;display:block;margin-bottom:4px;">Message</label>
+      <textarea id="tplFormBody" rows="6" placeholder="Message text..." style="width:100%;padding:8px;border:1px solid #d8b4fe;border-radius:6px;font-size:13px;box-sizing:border-box;font-family:inherit;resize:vertical;">${editT?esc(editT.body):''}</textarea></div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="window.saveTplForm('${prog}')" style="flex:1;padding:8px;background:#7c3aed;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">${editT?'Save Changes':'Add Template'}</button>
+      <button onclick="window.closeTplForm()" style="padding:8px 16px;background:#f1f5f9;color:#475569;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">Cancel</button>
     </div>
-    <div style="font-size:12px;color:#475569;line-height:1.6;white-space:pre-wrap;margin-bottom:10px;background:#f8fafc;padding:10px;border-radius:6px;max-height:120px;overflow-y:auto;">${t.body.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div>
-    <button onclick="event.stopPropagation();window.deleteGroupTemplate('${commsTemplateSelected}','${t.id}')" style="font-size:10px;padding:4px 8px;background:none;border:1px solid #fecaca;color:#dc2626;border-radius:6px;cursor:pointer;width:100%;font-weight:600;">Delete</button>
-  </div>`).join('');
+  </div>`:'';
+
+  const templateCards=temps.map((t,i)=>{
+    const isFirst=i===0, isLast=i===temps.length-1;
+    const arrowStyle=(dis)=>`font-size:12px;padding:3px 8px;background:${dis?'#f1f5f9':'#f8fafc'};color:${dis?'#cbd5e1':'#475569'};border:1px solid #e2e8f0;border-radius:5px;cursor:${dis?'default':'pointer'};font-weight:700;line-height:1;`;
+    return `<div style="border:1px solid #e2e8f0;border-radius:8px;padding:12px;background:#fff;margin-bottom:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px;gap:6px;">
+        <div style="font-size:13px;font-weight:700;color:#1e3a5f;flex:1;min-width:0;">${esc(t.name)}</div>
+        <div style="display:flex;gap:4px;flex-shrink:0;align-items:center;">
+          <button onclick="event.stopPropagation();window.moveTplUp('${prog}','${t.id}')" ${isFirst?'disabled':''} title="Move up" style="${arrowStyle(isFirst)}">&#8593;</button>
+          <button onclick="event.stopPropagation();window.moveTplDown('${prog}','${t.id}')" ${isLast?'disabled':''} title="Move down" style="${arrowStyle(isLast)}">&#8595;</button>
+          <button onclick="event.stopPropagation();window.openTplForm('${prog}','${t.id}')" title="Edit" style="font-size:11px;padding:3px 8px;background:#f8fafc;color:#475569;border:1px solid #e2e8f0;border-radius:5px;cursor:pointer;font-weight:600;">Edit</button>
+          <button onclick="event.stopPropagation();window.copyTemplateText('${prog}','${t.id}')" style="font-size:11px;padding:3px 8px;background:#e8f4ff;color:#2563eb;border:none;border-radius:5px;cursor:pointer;font-weight:600;">Copy</button>
+        </div>
+      </div>
+      <div style="font-size:12px;color:#475569;line-height:1.6;white-space:pre-wrap;margin-bottom:10px;background:#f8fafc;padding:10px;border-radius:6px;max-height:120px;overflow-y:auto;">${esc(t.body)}</div>
+      <button onclick="event.stopPropagation();window.deleteGroupTemplate('${prog}','${t.id}')" style="font-size:10px;padding:4px 8px;background:none;border:1px solid #fecaca;color:#dc2626;border-radius:6px;cursor:pointer;width:100%;font-weight:600;">Delete</button>
+    </div>`;
+  }).join('');
+
   return `<div style="padding:12px 14px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:8px;flex-shrink:0;position:sticky;top:0;background:#fff;z-index:2;">
     <div style="flex:1;"><div style="font-weight:700;font-size:15px;color:#1e3a5f;">${label} Templates</div><div style="font-size:11px;color:#64748b;">${temps.length} template${temps.length!==1?'s':''}</div></div>
+    <button onclick="window.openTplForm('${prog}')" style="padding:6px 14px;background:#7c3aed;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">+ Add</button>
   </div>
-  <div style="flex:1;overflow-y:auto;padding:12px 14px;background:#f8fafc;">${temps.length?templateCards:'<div style="font-size:12px;color:#94a3b8;text-align:center;padding:20px;">No templates for this program yet.</div>'}</div>`;
+  <div style="flex:1;overflow-y:auto;padding:12px 14px;background:#f8fafc;">${formHtml}${temps.length?templateCards:'<div style="font-size:12px;color:#94a3b8;text-align:center;padding:20px;">No templates for this program yet. Click + Add to create one.</div>'}</div>`;
 }
 
 window.selectCommTemplate=function(prog){
   commsTemplateSelected=prog;
+  commsTplFormVisible=false;
+  commsTplEditId=null;
   commsMobileView='thread';
   renderSms();
 };
 
+window.openTplForm=function(prog,id){
+  commsTplFormVisible=true;
+  commsTplEditId=id||null;
+  commsTemplateSelected=prog;
+  renderSms();
+  setTimeout(()=>document.getElementById('tplFormName')?.focus(),50);
+};
+
+window.closeTplForm=function(){
+  commsTplFormVisible=false;
+  commsTplEditId=null;
+  renderSms();
+};
+
+window.saveTplForm=async function(prog){
+  const name=(document.getElementById('tplFormName')?.value||'').trim();
+  const body=(document.getElementById('tplFormBody')?.value||'').trim();
+  if(!name){toast('Enter a template name','error');return;}
+  if(!body){toast('Enter a message body','error');return;}
+  if(commsTplEditId){
+    const {error}=await supabase.from('group_message_templates').update({name,body}).eq('id',commsTplEditId);
+    if(error){toast('Error saving: '+error.message,'error');return;}
+    toast('Template updated','success');
+  } else {
+    const {data,error}=await supabase.from('group_message_templates').insert({list_id:prog,name,body}).select().single();
+    if(error){toast('Error saving: '+error.message,'error');return;}
+    if(data){
+      const existing=getSortedTemplates(prog).map(t=>t.id);
+      saveTplOrder(prog,[...existing,data.id]);
+    }
+    toast('Template added','success');
+  }
+  await loadGroupTemplates();
+  commsTplFormVisible=false;
+  commsTplEditId=null;
+  renderSms();
+};
+
+window.moveTplUp=function(prog,id){
+  const ids=getSortedTemplates(prog).map(t=>t.id);
+  const idx=ids.indexOf(id);
+  if(idx<=0) return;
+  [ids[idx-1],ids[idx]]=[ids[idx],ids[idx-1]];
+  saveTplOrder(prog,ids);
+  renderSms();
+};
+
+window.moveTplDown=function(prog,id){
+  const ids=getSortedTemplates(prog).map(t=>t.id);
+  const idx=ids.indexOf(id);
+  if(idx<0||idx>=ids.length-1) return;
+  [ids[idx+1],ids[idx]]=[ids[idx],ids[idx+1]];
+  saveTplOrder(prog,ids);
+  renderSms();
+};
+
 window.copyTemplateText=function(prog,id){
-  const t=getGroupTemplates(prog).find(x=>x.id===id);
+  const t=getSortedTemplates(prog).find(x=>x.id===id);
   if(!t){toast('Template not found','error');return;}
   if(typeof copyText==='function'){copyText(t.body,'Template');return;}
   navigator.clipboard&&navigator.clipboard.writeText(t.body).then(()=>toast('Template copied','success')).catch(()=>toast('Copy failed','error'));
@@ -5962,6 +6063,8 @@ window.deleteGroupTemplate=async function(listId,id){
   if(!confirm('Delete this template?')) return;
   const {error}=await supabase.from('group_message_templates').delete().eq('id',id);
   if(error){toast('Error deleting template: '+error.message,'error');return;}
+  const order=getTplOrder(listId);
+  if(order) saveTplOrder(listId,order.filter(x=>x!==id));
   await loadGroupTemplates();
   toast('Template deleted','success');
   renderSms();
