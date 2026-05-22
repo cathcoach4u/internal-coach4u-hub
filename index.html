@@ -253,7 +253,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.61.1</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.61.2</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -12699,7 +12699,17 @@ function renderFinSpend(){
 function renderFinDev(){
   const el=document.getElementById('finDevContent');
   const devTotal=25+153;
-  let html=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:16px;">
+  let html=`<div onclick="window.open('https://cathcoach4u.github.io/coach4Uapp-dashboard/','_blank')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #1e3a5f;border-radius:12px;padding:16px;margin-bottom:16px;cursor:pointer;transition:box-shadow .2s;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow=''">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div style="font-size:24px;">&#128640;</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:700;font-size:14px;color:#1e3a5f;margin-bottom:2px;">Coach4U Suite Dashboard</div>
+        <div style="font-size:11px;color:#64748b;">Central launchpad — all apps, repos, and dev tools in one place</div>
+      </div>
+      <div style="font-size:18px;opacity:.6;color:#1e3a5f;">&#8594;</div>
+    </div>
+  </div>
+  <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:16px;">
     <h3 style="margin:0 0 4px;font-size:15px;color:#1e3a5f;">Running Costs</h3>
     <p style="margin:0 0 14px;font-size:12px;color:#94a3b8;">Fixed monthly costs for running and building the hub</p>
     <div style="font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;">External App Costs</div>`;
