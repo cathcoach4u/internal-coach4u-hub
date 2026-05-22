@@ -526,10 +526,11 @@ print(r.status_code, r.text[:200])
 
 ### Layout
 
-- **Top pill tabs** (`viewPills`): "Contacts" (navy) and "Groups" (teal) pill buttons sit above the split panel — full width, not inside the sidebar
+- **Top pill tabs** (`viewPills`): "Contacts" (navy), "Groups" (teal), and "Templates" (purple) pill buttons sit above the split panel — full width, not inside the sidebar
 - `_switchCommsView(v)` switches `commsView` state; resets channel/selection on switch
 - **Contacts mode**: 260px left sidebar (contact list + channel filter + search); full-width thread panel
 - **Groups mode**: 190px left sidebar (group list); wider detail panel gives more room to the group compose area
+- **Templates mode**: 190px left sidebar (program list: ThriveHQ, Couples, Individuals); detail panel shows template cards for the selected program
 
 ### Individual messaging
 
@@ -554,13 +555,15 @@ print(r.status_code, r.text[:200])
 
 ### Group message template library
 
-- **Storage**: `localStorage` key `group_templates_{listId}` (e.g. `group_templates_thrivehq`) — JSON array of `{id, name, body, createdAt}`
-- **Helpers**: `getGroupTemplates(listId)`, `setGroupTemplates(listId, arr)`
-- **Migration**: if `group_templates_thrivehq` is empty on first load, migrates any legacy single template from `thq_tuesday_sms_template` automatically
-- **UI**: template panel sits between member list and compose area — each template is a clickable card (name in teal, 3-line body preview); clicking the card loads it; ✕ button deletes. Button "+ Save as template" opens inline save form with name input.
-- `window.saveGroupTemplateNamed(listId)` — saves current compose box content as named template
-- `window.loadGroupTemplate(listId, id)` — populates compose box from saved template
-- `window.deleteGroupTemplate(listId, id)` — removes template after confirm
+- **Storage**: Supabase table `group_message_templates` — columns: `id`, `list_id` (program key: `thrivehq` / `couples` / `individual`), `name`, `body`, `created_at`
+- **Load**: `loadGroupTemplates()` fetches all rows ordered by `created_at`; cached in `groupTemplatesCache` (dict keyed by `list_id`)
+- **Ordering**: per-program display order stored in `localStorage` key `comms_tpl_order_{prog}` (e.g. `comms_tpl_order_thrivehq`) as JSON array of IDs. `getSortedTemplates(prog)` applies this order; new templates are appended; deleted templates are removed.
+- **Templates tab UI** (`renderTemplateDetail()`): sticky header with program name + **+ Add** button; inline purple form for add/edit (name + body fields); each card has ↑ ↓ reorder arrows, Edit, Copy, Delete.
+- **Helpers**: `getTplOrder(prog)`, `saveTplOrder(prog, ids)`, `getSortedTemplates(prog)`
+- **Window fns**: `openTplForm(prog, id?)` — opens add/edit form; `closeTplForm()` — cancels; `saveTplForm(prog)` — inserts or updates in Supabase; `moveTplUp(prog, id)` / `moveTplDown(prog, id)` — reorder; `copyTemplateText(prog, id)` — copies body to clipboard
+- `window.saveGroupTemplateNamed(listId)` — saves from group compose box (used in Groups tab); appends to order
+- `window.loadGroupTemplate(listId, id)` — populates group compose box from saved template
+- `window.deleteGroupTemplate(listId, id)` — removes from Supabase and cleans up localStorage order
 
 ### ThriveHQ session calendar (Home dashboard + ThriveHQ Hub)
 
