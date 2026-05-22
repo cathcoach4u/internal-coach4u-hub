@@ -253,7 +253,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.61.2</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.62.0</span>
     </div>
   </div>
   <div class="area-tabs" id="areaTabs">
@@ -13365,7 +13365,7 @@ function renderAbout(){
     listItem('Gallup Code Tracker','Full workflow tracker for CliftonStrengths assessment requests: one record per contact, stamp stages (New → Awaiting Payment → Purchased → Code Sent → Notified → Filed), quick-log form on page, edit modal for corrections')+
     listItem('IT','Dashboard, IT Projects, Agents (parent/child with versioning + SharePoint export), AI Strategy (cross-agent audit + chat), Writing Partner')+
     listItem('Admin','Dashboard, Task Management, Playbook — Lou\'s operational work, Company Resources. Task Management: two-row cards (title + status/actions), star-focus toggle, nightly rollover at 11 pm AU (Fri → Mon), catch-up rollover on load. Copy List menu: Today / Next 7 Days / Entire List, each with Copy and Send to Teams.')+
-    listItem('Finance','Dashboard, Income, Where Money Goes, Bills, Transactions (Xero CSV import)')+
+    listItem('Finance','Dashboard, Payment Platforms (GoCardless + Stripe login info loaded from Supabase), Income, Where Money Goes, Bills, Insurance, Transactions (Xero CSV import). Bills: Paid &amp; Renew creates next year\'s entry with blank amount and notes — only name, category, frequency and due date carry over.')+
     listItem('Development Business','Running costs (Supabase, Claude API) and possible pricing reference for development apps — 7 app tiers from Relationship to Developer Coach4U')+
     listItem('Prospects','Sales pipeline: status tracking, dated activity logs, follow-up dates, overdue highlighting, intake form linking')+
     listItem('Intake Forms','Public forms (ThriveHQ, Couples, Individual) — full AU/NZ address (street, suburb, state, postcode), partner preferred name. Address is displayed in the CRM intake review view.')+
@@ -13413,6 +13413,7 @@ function renderAbout(){
     tableItem('couples_intake_sessions','Couples intake worksheet sessions (stage-by-stage notes JSONB, linked to client)')+
     tableItem('strengths_insights','AI-generated strengths readings per contact: personal_insights, bring_need, adaptation_tips, couple_dynamics')+
     tableItem('bot_config','AI bot system prompt, model, and API configuration')+
+    tableItem('payment_platforms','Payment platform login info (GoCardless, Stripe) — name, subtitle, description, URL, login note, sub-services JSONB, sort order')+
   '</ul>');
 
   html+=card('Pages','<ul style="list-style:disc;padding-left:20px;margin:0;">'+
@@ -13420,6 +13421,8 @@ function renderAbout(){
     '<li style="margin:6px 0;font-size:14px;color:#334155;"><strong style="color:#1e3a5f;">gallup-request/</strong> — Public Gallup CliftonStrengths code request form for corporate orgs (per-org URL <code>?org=&lt;client.id&gt;</code>)</li>'+
     '<li style="margin:6px 0;font-size:14px;color:#334155;"><strong style="color:#1e3a5f;">intake/thrivehq/</strong>, <strong style="color:#1e3a5f;">intake/couples/</strong>, <strong style="color:#1e3a5f;">intake/individual/</strong> — Public intake forms</li>'+
     '<li style="margin:6px 0;font-size:14px;color:#334155;"><strong style="color:#1e3a5f;">policies/cancellation/</strong> — Public Cancellation &amp; Rescheduling Policy</li>'+
+    '<li style="margin:6px 0;font-size:14px;color:#334155;"><strong style="color:#1e3a5f;">couples-process/</strong>, <strong style="color:#1e3a5f;">couples-thankyou/</strong>, <strong style="color:#1e3a5f;">couples-ongoing/</strong> — Couples journey process pages (sent via WhatsApp at each stage). Shared template: "[Service] — Process" h1, "Confirmed" first section, consistent CSS.</li>'+
+    '<li style="margin:6px 0;font-size:14px;color:#334155;"><strong style="color:#1e3a5f;">gallup-intro/</strong>, <strong style="color:#1e3a5f;">gallup-next/</strong>, <strong style="color:#1e3a5f;">gallup-guide/</strong>, <strong style="color:#1e3a5f;">gallup-complete/</strong> — Gallup Strengths journey process pages (sent via WhatsApp at each stage). gallup-intro: $135/assessment, GST free, direct debit, aim for by 2nd session.</li>'+
     '<li style="margin:6px 0;font-size:14px;color:#334155;"><strong style="color:#1e3a5f;">portal/</strong> — Client-facing SAFE Pulse portal (check-in &amp; printable report)</li>'+
     '<li style="margin:6px 0;font-size:14px;color:#334155;"><strong style="color:#1e3a5f;">brain-pulse/</strong> — Client-facing Brain Pulse portal</li>'+
     '<li style="margin:6px 0;font-size:14px;color:#334155;"><strong style="color:#1e3a5f;">writing-partner/</strong> — Writing Partner helper</li>'+

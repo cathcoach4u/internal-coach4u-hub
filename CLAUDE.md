@@ -20,14 +20,38 @@ Single-page CRM app hosted on GitHub Pages with a Supabase backend. All CRM func
 | `bot/`, `bot.html` | Bot interface |
 | `schema.sql` | Original DB schema reference |
 | `client-links/index.html` | Public all-in-one client links page — WhatsApp, intake forms, GoCardless, cancellation policy, Teams room. Each row has Copy and Open buttons. Matches intake form style (Inter/Quicksand, gradient header, C4U.png logo). |
-| `couples-process/index.html` | Public Couples Counselling & Coaching process & pricing page — 3-step process, session costs table, prominent Teams block, cancellation policy link, intake form button. Previously named `couples-welcome/`. |
 | `policies/cancellation/index.html` | Public cancellation & rescheduling policy page |
+
+### Client-facing process pages
+
+All 7 process pages share a consistent template: `[Service] — Process` h1, stage-specific subtitle, first section always "Confirmed" with green checkmarks. CSS design system: Inter/Quicksand, navy gradient header, `.section` / `.section-label` / `.step` / `.confirm-check` / `.confirm-row` / `.row` / `.tip-block`.
+
+**Couples journey** (sent via WhatsApp at each stage):
+
+| File | Stage | Sent when |
+|------|-------|-----------|
+| `couples-process/index.html` | Process & pricing overview | After connection call — agreed to proceed |
+| `couples-thankyou/index.html` | Intake booked | After intake form & direct debit set up |
+| `couples-ongoing/index.html` | Ongoing sessions reference | After 2-hour intake session complete |
+
+`couples-ongoing` notes: session begins when both partners join; closes if either leaves (full scheduled time still billed); the client is the couple — sessions cannot proceed with one person absent.
+
+**Gallup Strengths journey** (sent via WhatsApp at each stage):
+
+| File | Stage | Sent when |
+|------|-------|-----------|
+| `gallup-intro/index.html` | Introduction & what's involved | Cath has spoken to client about the assessment |
+| `gallup-next/index.html` | Payment + register details | Client has confirmed they want to go ahead |
+| `gallup-guide/index.html` | How to complete the assessment | Payment received, code purchased and sent |
+| `gallup-complete/index.html` | Report being prepared | Client has completed the assessment |
+
+`gallup-intro` pricing: $135 per assessment, GST free, invoice issued, payment via existing direct debit mandate. Timing: aim for by 2nd session, 3rd at latest.
 
 ### Supabase backend
 
 - **URL**: `https://uoixetfvboevjxlkfyqy.supabase.co`
 - **Client init**: Line ~1018 of `index.html`
-- **Tables**: contacts, clients, client_members, tasks, prospects, prospect_notes, pulse_results, brain_pulse_submissions, intake_submissions, trials, renewals, task_logs, referrers, referrer_payments, finance_transactions, bills, contact_reports, agents, agent_versions, agent_issues, agent_stages, agent_templates, agent_ai_sessions, couples_intake_sessions, strengths_insights
+- **Tables**: contacts, clients, client_members, tasks, prospects, prospect_notes, pulse_results, brain_pulse_submissions, intake_submissions, trials, renewals, task_logs, referrers, referrer_payments, finance_transactions, bills, contact_reports, agents, agent_versions, agent_issues, agent_stages, agent_templates, agent_ai_sessions, couples_intake_sessions, strengths_insights, payment_platforms
 - **RLS**: Enabled on all tables via Supabase policies
 - **Auth**: Anonymous key (publishable) — no user auth, RLS relies on anon role
 
@@ -42,7 +66,7 @@ Areas and their pages (defined at line ~2039):
 - **Hubs**: Dashboard, Couples Hub (Intake, Timelines, Betrayal First Aid), ThriveHQ Hub (Trials, Members, Renewals, Coaching Calls), Strengths Hub (Workflow SOP, Code Tracker, Reports, Profiles, Domain Balance, Upload Report)
 - **IT**: Dashboard, IT Projects, Agents, AI Strategy (cross-agent audit + chat), Writing Partner, Prompts
 - **Admin**: Dashboard, Task Management, Playbook (Lou's operational work), Company Resources
-- **Finance**: Dashboard, Income, Where Money Goes, Bills, Transactions
+- **Finance**: Dashboard, Payment Platforms, Income, Where Money Goes, Bills, Insurance, Transactions
 - **About**: About
 
 Every area's first page is a **Dashboard** so clicking an area tab never lands on a raw list.
@@ -358,8 +382,8 @@ NDIS-Related Services (when applicable)
 
 ### Versioning
 
-- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.56.8**, line ~256)
-- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v566**)
+- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.61.2**, line ~256)
+- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v613**)
 - **Both must be bumped on every release**
 
 ### Code patterns
