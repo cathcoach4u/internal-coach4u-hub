@@ -51,7 +51,7 @@ All 7 process pages share a consistent template: `[Service] — Process` h1, sta
 
 - **URL**: `https://uoixetfvboevjxlkfyqy.supabase.co`
 - **Client init**: Line ~1018 of `index.html`
-- **Tables**: contacts, clients, client_members, tasks, prospects, prospect_notes, pulse_results, brain_pulse_submissions, intake_submissions, trials, renewals, task_logs, referrers, referrer_payments, finance_transactions, bills, contact_reports, agents, agent_versions, agent_issues, agent_stages, agent_templates, agent_ai_sessions, couples_intake_sessions, strengths_insights, payment_platforms
+- **Tables**: agents, agent_ai_sessions, agent_issues, agent_stages, agent_templates, agent_versions, app_settings, bills, brain_pulse_submissions, client_members, clients, comms_list_members, comms_lists, connection_pulse_submissions, contact_reports, contacts, couples_intake_sessions, finance_transactions, gallup_code_requests, group_message_templates, intake_submissions, membership_renewals, payment_mandates, payment_platforms, playbook_log, prompts, prospect_notes, prospects, pulse_results, referrer_members, referrer_payments, referrers, sms_messages, strengths_insights, task_logs, tasks, thrivehq_trials
 - **RLS**: Enabled on all tables via Supabase policies
 - **Auth**: Anonymous key (publishable) — no user auth, RLS relies on anon role
 
@@ -268,12 +268,9 @@ Parent agents represent the master system prompts for Copilot Studio. Child agen
 ## Prompts (IT > Prompts)
 
 - **Page**: `screen-prompts`, render fn `renderPrompts()`
-- **Storage**: `localStorage` key `coach4u_prompts` — JSON array of `{id, name, body, createdAt}`
-- **Helpers**: `getPrompts()`, `savePrompts(arr)`
-- **Default prompt**: "Session Wrap-up" seeded on first load if localStorage is empty
+- **Storage**: Supabase table `prompts` — columns: `id`, `name`, `body`, `created_at`. Loaded into `promptsList` via `loadPrompts()` on boot.
 - **UI**: expand/collapse rows, Copy button (clipboard), Add/Edit modal (appended to `document.body` as singleton), Delete with confirm
 - **Window fns**: `togglePromptRow`, `copyPrompt`, `openPromptForm`, `closePromptForm`, `savePromptForm`, `deletePrompt`
-- No Supabase table — prompts are device-local only
 
 ## Strengths Hub
 
@@ -382,8 +379,8 @@ NDIS-Related Services (when applicable)
 
 ### Versioning
 
-- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.61.2**, line ~256)
-- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v613**)
+- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.62.6**, line ~256)
+- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v620**)
 - **Both must be bumped on every release**
 
 ### Code patterns
