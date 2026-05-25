@@ -38,7 +38,6 @@ serve(async (req) => {
 
     const event = JSON.parse(rawBody)
 
-    // Only process payment events
     if (event.type !== 'charge.succeeded' && event.type !== 'payment_intent.succeeded') {
       return new Response(JSON.stringify({ received: true, skipped: event.type }), { status: 200 })
     }
@@ -48,23 +47,31 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     )
 
-    let amountCents = 0
-    let description = ''
-    let createdAt   = Date.now() / 1000
-    let reference   = ''
+    let amountCents    = 0
+    let description    = ''
+    let createdAt      = Date.now() / 1000
+    let reference      = ''
+    let customerName   = ''
+    let customerEmail  = ''
+    let stripeCustomerId = ''
 
     if (event.type === 'charge.succeeded') {
-      const charge  = event.data.object
-      amountCents   = charge.amount
-      description   = charge.description || charge.billing_details?.name || charge.receipt_email || 'Stripe payment'
-      createdAt     = charge.created
-      reference     = charge.id
+      const charge     = event.data.object
+      amountCents      = charge.amount
+      description      = charge.description || ''
+      createdAt        = charge.created
+      reference        = charge.id
+      customerName     = charge.billing_details?.name || ''
+      customerEmail    = charge.billing_details?.email || charge.receipt_email || ''
+      stripeCustomerId = typeof charge.customer === 'string' ? charge.customer : ''
     } else {
-      const pi      = event.data.object
-      amountCents   = pi.amount
-      description   = pi.description || pi.receipt_email || 'Stripe payment'
-      createdAt     = pi.created
-      reference     = pi.id
+      const pi         = event.data.object
+      amountCents      = pi.amount
+      description      = pi.description || ''
+      createdAt        = pi.created
+      reference        = pi.id
+      customerEmail    = pi.receipt_email || ''
+      stripeCustomerId = typeof pi.customer === 'string' ? pi.customer : ''
     }
 
     const gross            = Math.round(amountCents) / 100
@@ -72,15 +79,28 @@ serve(async (req) => {
     const net              = Math.round((gross - gst) * 100) / 100
     const transaction_date = new Date(createdAt * 1000).toISOString().split('T')[0]
 
-    const { error } = await supabase.from('finance_transactions').insert({
-      account:          'Sales',
+    // Try to match to a contact by email
+    let contact_id: string | null = null
+    if (customerEmail) {
+      const { data: matched } = await supabase
+        .from('contacts')
+        .select('id')
+        .ilike('email', customerEmail)
+        .maybeSingle()
+      if (matched) contact_id = matched.id
+    }
+
+    const { error } = await supabase.from('stripe_payments').insert({
+      contact_id,
+      stripe_reference:    reference,
+      stripe_customer_id:  stripeCustomerId || null,
+      customer_name:       customerName || null,
+      customer_email:      customerEmail || null,
+      description:         description.substring(0, 500) || null,
       transaction_date,
-      source:           'Stripe',
-      description:      description.substring(0, 500),
       gross,
       gst,
       net,
-      reference,
     })
 
     if (error) {
@@ -88,7 +108,7 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: error.message }), { status: 500 })
     }
 
-    console.log(`Stripe ${event.type} recorded: ${gross} on ${transaction_date}`)
+    console.log(`Stripe ${event.type} recorded: $${gross} on ${transaction_date}`)
     return new Response(JSON.stringify({ received: true }), { status: 200 })
 
   } catch (e) {
