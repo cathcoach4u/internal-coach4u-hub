@@ -31,8 +31,12 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#f0f6ff;c
 .sidebar-footer{margin-top:auto;padding:16px 16px;font-size:11px;color:rgba(255,255,255,.3);border-top:1px solid rgba(255,255,255,.08);}
 
 /* ── AREA TABS ── */
-.area-tabs{display:flex;gap:0;background:#fff;border-bottom:2px solid #e2e8f0;padding:0 32px;position:sticky;top:0;z-index:40;}
-.area-tab{padding:14px 20px;font-size:13px;font-weight:600;color:#64748b;cursor:pointer;border:none;background:none;font-family:inherit;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .15s;white-space:nowrap;}
+.area-tabs-wrap{position:sticky;top:0;z-index:40;background:#fff;border-bottom:2px solid #e2e8f0;}
+.area-tabs-wrap::after{content:'';position:absolute;top:0;right:0;bottom:2px;width:32px;pointer-events:none;background:linear-gradient(to right,rgba(255,255,255,0),#fff 70%);opacity:0;transition:opacity .2s;}
+.area-tabs-wrap.has-overflow::after{opacity:1;}
+.area-tabs{display:flex;gap:0;padding:0 32px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.area-tabs::-webkit-scrollbar{display:none;}
+.area-tab{padding:14px 14px;font-size:13px;font-weight:600;color:#64748b;cursor:pointer;border:none;background:none;font-family:inherit;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .15s;white-space:nowrap;flex-shrink:0;}
 .area-tab:hover{color:#1e3a5f;background:#f8fafc;}
 .area-tab.active{color:#1e3a5f;border-bottom-color:#3b82f6;}
 .area-tab .tab-icon{margin-right:6px;}
@@ -126,7 +130,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
   .mobile-toggle{display:block!important;}
   .mobile-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:55;}
   .mobile-overlay.show{display:block;}
-  .area-tabs{display:none;}
+  .area-tabs-wrap{display:none;}
   .content{padding:14px max(16px, env(safe-area-inset-right)) calc(14px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));}
   .header{padding:calc(12px + env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 12px max(16px, env(safe-area-inset-left));position:sticky;top:0;z-index:30;gap:8px;}
   .header h2{font-size:17px;}
@@ -160,7 +164,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
 @media print{
   body{background:#fff !important;margin:0 !important;padding:0 !important;-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;color-adjust:exact !important}
   *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;color-adjust:exact !important}
-  .sidebar,.header,.area-tabs,.toolbar,.mobile-nav,.mobile-toggle,.no-print,#aiFab,#aiChat,.mobile-overlay{display:none !important}
+  .sidebar,.header,.area-tabs,.area-tabs-wrap,.toolbar,.mobile-nav,.mobile-toggle,.no-print,#aiFab,#aiChat,.mobile-overlay{display:none !important}
   .main{margin-left:0 !important;min-height:auto !important}
   .content{padding:0 !important}
   .screen:not(.active){display:none !important}
@@ -253,19 +257,21 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.62.6</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.62.7</span>
     </div>
   </div>
-  <div class="area-tabs" id="areaTabs">
-    <button class="area-tab active" onclick="switchArea('home')"><span class="tab-icon">&#9776;</span>Home</button>
-    <button class="area-tab" onclick="switchArea('crm')"><span class="tab-icon">&#128202;</span>CRM</button>
-    <button class="area-tab" onclick="switchArea('referrers')"><span class="tab-icon">&#128200;</span>Referrers</button>
-    <button class="area-tab" onclick="switchArea('pulses')"><span class="tab-icon">&#128147;</span>Pulses</button>
-    <button class="area-tab" onclick="switchArea('hubs')"><span class="tab-icon">&#128152;</span>Hubs</button>
-    <button class="area-tab" onclick="switchArea('it')"><span class="tab-icon">&#128187;</span>IT</button>
-    <button class="area-tab" onclick="switchArea('operations')"><span class="tab-icon">&#128736;</span>Admin</button>
-    <button class="area-tab" onclick="switchArea('finance')"><span class="tab-icon">&#128176;</span>Finance</button>
-    <button class="area-tab" onclick="switchArea('devbusiness')"><span class="tab-icon">&#128640;</span>Dev Biz</button>
+  <div class="area-tabs-wrap" id="areaTabsWrap">
+    <div class="area-tabs" id="areaTabs">
+      <button class="area-tab active" onclick="switchArea('home')"><span class="tab-icon">&#9776;</span>Home</button>
+      <button class="area-tab" onclick="switchArea('crm')"><span class="tab-icon">&#128202;</span>CRM</button>
+      <button class="area-tab" onclick="switchArea('referrers')"><span class="tab-icon">&#128200;</span>Referrers</button>
+      <button class="area-tab" onclick="switchArea('pulses')"><span class="tab-icon">&#128147;</span>Pulses</button>
+      <button class="area-tab" onclick="switchArea('hubs')"><span class="tab-icon">&#128152;</span>Hubs</button>
+      <button class="area-tab" onclick="switchArea('it')"><span class="tab-icon">&#128187;</span>IT</button>
+      <button class="area-tab" onclick="switchArea('operations')"><span class="tab-icon">&#128736;</span>Admin</button>
+      <button class="area-tab" onclick="switchArea('finance')"><span class="tab-icon">&#128176;</span>Finance</button>
+      <button class="area-tab" onclick="switchArea('devbusiness')"><span class="tab-icon">&#128640;</span>Dev Biz</button>
+    </div>
   </div>
   <div id="screenDebug" style="display:none;background:#fef3c7;border-bottom:1px solid #fcd34d;padding:6px 10px;font-family:'Segoe UI',monospace;font-size:10px;color:#92400e;word-break:break-all;line-height:1.4;"></div>
   <div class="content">
@@ -2236,12 +2242,30 @@ window.switchArea=function(area){
   const tabs=document.querySelectorAll('.area-tab');
   const areaKeys=Object.keys(areaConfig);
   const idx=areaKeys.indexOf(area);
-  if(idx>=0&&tabs[idx]) tabs[idx].classList.add('active');
+  if(idx>=0&&tabs[idx]){
+    tabs[idx].classList.add('active');
+    tabs[idx].scrollIntoView({block:'nearest',inline:'nearest',behavior:'smooth'});
+  }
   // Navigate to first page in the area
   const firstPage=areaConfig[area].pages[0];
   if(firstPage) navTo(firstPage.id);
   renderSidebarNav(area);
 };
+
+// ── AREA TAB OVERFLOW INDICATOR ──
+function updateAreaTabsOverflow(){
+  const tabs=document.getElementById('areaTabs');
+  const wrap=document.getElementById('areaTabsWrap');
+  if(!tabs||!wrap) return;
+  const more=tabs.scrollWidth - tabs.clientWidth - tabs.scrollLeft > 4;
+  wrap.classList.toggle('has-overflow', more);
+}
+document.addEventListener('DOMContentLoaded', ()=>{
+  const tabs=document.getElementById('areaTabs');
+  if(tabs) tabs.addEventListener('scroll', updateAreaTabsOverflow, {passive:true});
+  window.addEventListener('resize', updateAreaTabsOverflow);
+  updateAreaTabsOverflow();
+});
 
 // ── MOBILE NAV ──
 window.openMobile = function(){
