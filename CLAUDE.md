@@ -51,7 +51,7 @@ All 7 process pages share a consistent template: `[Service] — Process` h1, sta
 
 - **URL**: `https://uoixetfvboevjxlkfyqy.supabase.co`
 - **Client init**: Line ~1018 of `index.html`
-- **Tables**: agents, agent_ai_sessions, agent_issues, agent_stages, agent_templates, agent_versions, app_settings, bills, brain_pulse_submissions, client_members, clients, comms_list_members, comms_lists, connection_pulse_submissions, contact_reports, contacts, couples_intake_sessions, finance_transactions, gallup_code_requests, group_message_templates, intake_submissions, membership_renewals, payment_mandates, payment_platforms, playbook_log, prompts, prospect_notes, prospects, pulse_results, referrer_members, referrer_payments, referrers, sms_messages, strengths_insights, task_logs, tasks, thrivehq_trials
+- **Tables**: agents, agent_ai_sessions, agent_issues, agent_stages, agent_templates, agent_versions, app_settings, bills, brain_pulse_submissions, client_members, clients, comms_list_members, comms_lists, connection_pulse_submissions, contact_reports, contacts, couples_intake_sessions, finance_transactions, gallup_code_requests, group_message_templates, intake_submissions, membership_renewals, payment_mandates, payment_platforms, playbook_log, prompts, prospect_notes, prospects, pulse_results, referrer_members, referrer_payments, referrers, sms_messages, strengths_insights, stripe_payments, task_logs, tasks, thrivehq_trials
 - **RLS**: Enabled on all tables via Supabase policies
 - **Auth**: Anonymous key (publishable) — no user auth, RLS relies on anon role
 
@@ -66,7 +66,7 @@ Areas and their pages (defined at line ~2039):
 - **Hubs**: Dashboard, Couples Hub (Intake, Timelines, Betrayal First Aid), ThriveHQ Hub (Trials, Members, Renewals, Coaching Calls), Strengths Hub (Workflow SOP, Code Tracker, Reports, Profiles, Domain Balance, Upload Report)
 - **IT**: Dashboard, IT Projects, Agents, AI Strategy (cross-agent audit + chat), Writing Partner, Prompts
 - **Admin**: Dashboard, Task Management, Playbook (Lou's operational work), Company Resources
-- **Finance**: Dashboard, Payment Platforms, Income, Where Money Goes, Bills, Insurance, Transactions
+- **Finance**: Dashboard, Payment Platforms, Income, Where Money Goes, Bills, Insurance, Transactions, Stripe Payments
 - **About**: About
 
 Every area's first page is a **Dashboard** so clicking an area tab never lands on a raw list.
@@ -580,6 +580,16 @@ print(r.status_code, r.text[:200])
 - **All other blocks**: collapsed under a `<details>` "View all term & break dates" toggle — past blocks dimmed to 40% opacity
 - Tuesday banner in the group compose area has been removed — these dashboard cards are the sole reminder
 - Note: group messages are outbound-only. Replies arrive in individual contact threads, not a group inbox.
+
+## Stripe Payments (Finance > Stripe Payments)
+
+- **Page**: `screen-finstripe`, render fn `renderStripePayments()`
+- **Table**: `stripe_payments` — one row per Stripe payment received via webhook
+- **Columns**: `id`, `contact_id` (FK → contacts, nullable), `stripe_reference`, `stripe_customer_id`, `customer_name`, `customer_email`, `description`, `transaction_date`, `gross`, `gst`, `net`, `created_at`
+- **Edge function**: `supabase/functions/stripe-webhook/index.ts` — listens for `charge.succeeded` and `payment_intent.succeeded` events; auto-matches to a contact by email if possible
+- **Webhook registered in Stripe**: destination `stripe-webhook`, Active, listening to 2 events; signing secret stored in Supabase as `STRIPE_WEBHOOK_SECRET`
+- **Display**: table of all payments sorted newest first — date, client name (linked contact or Stripe billing name), description, gross/GST/net, Stripe reference
+- **Not mixed with `finance_transactions`**: that table is for Xero CSV imports only; Stripe payments have their own dedicated table and screen
 
 ## Pending Implementation
 
