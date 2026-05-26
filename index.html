@@ -257,7 +257,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.63.0</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.63.1</span>
     </div>
   </div>
   <div class="area-tabs-wrap" id="areaTabsWrap">
@@ -5918,8 +5918,8 @@ function getSortedTemplates(prog){
 }
 
 function renderTemplatesList(){
-  const programs=['thrivehq','couples','individual','general'];
-  const programLabels={thrivehq:'ThriveHQ',couples:'Couples',individual:'Individuals',general:'General'};
+  const programs=['thrivehq','couples','individual','gallup','general'];
+  const programLabels={thrivehq:'ThriveHQ',couples:'Couples',individual:'Individuals',gallup:'Gallup Strengths',general:'General'};
   const items=programs.map(prog=>{
     const temps=getGroupTemplates(prog);
     const count=temps.length;
@@ -5936,7 +5936,7 @@ function renderTemplateDetail(){
   if(!commsTemplateSelected) return `<div style="display:flex;align-items:center;justify-content:center;flex:1;color:#94a3b8;font-size:13px;padding:32px;">Select a program to view templates</div>`;
   const prog=commsTemplateSelected;
   const isMobile=window.innerWidth<640;
-  const label={thrivehq:'ThriveHQ',couples:'Couples',individual:'Individuals',general:'General'}[prog];
+  const label={thrivehq:'ThriveHQ',couples:'Couples',individual:'Individuals',gallup:'Gallup Strengths',general:'General'}[prog];
   const temps=getSortedTemplates(prog);
   const editT=commsTplEditId?temps.find(t=>t.id===commsTplEditId):null;
   const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');
