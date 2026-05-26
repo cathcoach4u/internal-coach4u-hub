@@ -527,7 +527,7 @@ print(r.status_code, r.text[:200])
 - `_switchCommsView(v)` switches `commsView` state; resets channel/selection on switch
 - **Contacts mode**: 260px left sidebar (contact list + channel filter + search); full-width thread panel
 - **Groups mode**: 190px left sidebar (group list); wider detail panel gives more room to the group compose area
-- **Templates mode**: 190px left sidebar (program list: ThriveHQ, Couples, Individuals); detail panel shows template cards for the selected program
+- **Templates mode**: 190px left sidebar (program list: ThriveHQ, Couples, Individuals, Gallup Strengths, General); detail panel shows template cards for the selected program
 
 ### Individual messaging
 
@@ -552,7 +552,7 @@ print(r.status_code, r.text[:200])
 
 ### Group message template library
 
-- **Storage**: Supabase table `group_message_templates` — columns: `id`, `list_id` (program key: `thrivehq` / `couples` / `individual`), `name`, `body`, `created_at`
+- **Storage**: Supabase table `group_message_templates` — columns: `id`, `list_id` (program key: `thrivehq` / `couples` / `individual` / `gallup` / `general`), `name`, `body`, `created_at`
 - **Load**: `loadGroupTemplates()` fetches all rows ordered by `created_at`; cached in `groupTemplatesCache` (dict keyed by `list_id`)
 - **Ordering**: per-program display order stored in `localStorage` key `comms_tpl_order_{prog}` (e.g. `comms_tpl_order_thrivehq`) as JSON array of IDs. `getSortedTemplates(prog)` applies this order; new templates are appended; deleted templates are removed.
 - **Templates tab UI** (`renderTemplateDetail()`): sticky header with program name + **+ Add** button; inline purple form for add/edit (name + body fields); each card has ↑ ↓ reorder arrows, Edit, Copy, Delete.
