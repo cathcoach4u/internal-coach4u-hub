@@ -257,7 +257,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.64.1</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.64.2</span>
     </div>
   </div>
   <div class="area-tabs-wrap" id="areaTabsWrap">
@@ -3170,30 +3170,27 @@ function renderThqDash(){
     </div>
   </div>`;
   const thqLinks=[
+    {label:'Getting Started',url:'https://cathcoach4u.github.io/internal-coach4u-hub/thrivehq-welcome/',icon:'&#127381;',desc:'Payment & welcome page — send to new members'},
     {label:'Links Page',url:'https://cathcoach4u.github.io/yourthrivehqcoach/links.html',icon:'&#128279;',desc:'ThriveHQ client resource hub'},
     {label:'Weekly Coaching Flow',url:'https://cathcoach4u.github.io/yourthrivehqcoach/weekly-coaching-flow.html',icon:'&#128197;',desc:'Week-by-week coaching flow guide'},
-    {label:'Session Rhythm',url:'https://cathcoach4u.github.io/yourthrivehqcoach/session-rhythm.html',icon:'&#127381;',desc:'Session structure and rhythm reference'},
+    {label:'Session Rhythm',url:'https://cathcoach4u.github.io/yourthrivehqcoach/session-rhythm.html',icon:'&#9971;',desc:'Session structure and rhythm reference'},
     {label:'FocusHQ',url:'https://cathcoach4u.github.io/yourthrivehqcoach/body-doubling.html',icon:'&#128101;',desc:'FocusHQ session info for ThriveHQ clients'}
   ];
-  function _thqExtRow(l){
-    return `<div style="display:flex;flex-direction:column;gap:8px;padding:10px 12px;border:1px solid #f1f5f9;border-radius:8px;margin-bottom:6px;">
-      <div style="display:flex;align-items:flex-start;gap:10px;">
-        <span style="font-size:18px;flex-shrink:0;">${l.icon}</span>
-        <div style="flex:1;min-width:0;">
-          <div style="font-weight:600;font-size:13px;color:#1e293b;">${l.label}</div>
-          <div style="font-size:11px;color:#64748b;">${l.desc}</div>
-          <div style="font-size:11px;color:#94a3b8;word-break:break-all;margin-top:2px;">${l.url}</div>
-        </div>
+  function _thqExtRow(l,i){
+    return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;${i<thqLinks.length-1?'border-bottom:1px solid #f1f5f9;':''}">
+      <span style="font-size:18px;flex-shrink:0;">${l.icon}</span>
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:600;font-size:13px;color:#1e293b;">${l.label}</div>
+        <div style="font-size:11px;color:#64748b;">${l.desc}</div>
       </div>
-      <div style="display:flex;gap:8px;">
-        <button type="button" data-url="${l.url}" data-label="${l.label} link" onclick="copyPublicLink(this)" style="background:#003366;color:#fff;border:none;padding:7px 18px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">Copy</button>
-        <button type="button" onclick="window.open('${l.url}','_blank')" style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;padding:7px 18px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">Open &#8599;</button>
+      <div style="display:flex;gap:6px;flex-shrink:0;">
+        <button type="button" data-url="${l.url}" data-label="${l.label} link" onclick="copyPublicLink(this)" style="background:#003366;color:#fff;border:none;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">Copy</button>
+        <button type="button" onclick="window.open('${l.url}','_blank')" style="background:#f0f4f8;color:#003366;border:1px solid #e2e8f0;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">Open &#8599;</button>
       </div>
     </div>`;
   }
   html+=`<div id="thqClientLinksSection" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #16a34a;border-radius:12px;padding:18px 20px;margin-top:16px;">
-    <div style="font-weight:700;color:#1e3a5f;font-size:15px;margin-bottom:4px;">&#127981; Client Links</div>
-    <div style="font-size:12px;color:#64748b;margin-bottom:12px;">Coaching resources to share with ThriveHQ members.</div>
+    <div style="font-weight:700;color:#1e3a5f;font-size:15px;margin-bottom:14px;">&#128279; Client Links</div>
     ${thqLinks.map(_thqExtRow).join('')}
   </div>`;
   el.innerHTML=html;
