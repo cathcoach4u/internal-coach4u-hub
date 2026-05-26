@@ -21,10 +21,27 @@ Single-page CRM app hosted on GitHub Pages with a Supabase backend. All CRM func
 | `schema.sql` | Original DB schema reference |
 | `client-links/index.html` | Public all-in-one client links page — WhatsApp, intake forms, GoCardless, cancellation policy, Teams room. Each row has Copy and Open buttons. Matches intake form style (Inter/Quicksand, gradient header, C4U.png logo). |
 | `policies/cancellation/index.html` | Public cancellation & rescheduling policy page |
+| `thrivehq-welcome/index.html` | Client-facing ThriveHQ onboarding page — sent via WhatsApp when a new member says yes. Shows confirmed stage, two GoCardless payment options (upfront $1,053 / weekly $45), 26-week commitment note, The Cath Guarantee, and what happens next. Linked from ThriveHQ Hub Client Links. |
 
 ### Client-facing process pages
 
-All 7 process pages share a consistent template: `[Service] — Process` h1, stage-specific subtitle, first section always "Confirmed" with green checkmarks. CSS design system: Inter/Quicksand, navy gradient header, `.section` / `.section-label` / `.step` / `.confirm-check` / `.confirm-row` / `.row` / `.tip-block`.
+All process pages share a consistent template: `[Service] — Process` h1, stage-specific subtitle. CSS design system: Inter/Quicksand, navy gradient header, `.section` / `.section-label` / `.step` / `.confirm-check` / `.confirm-row` / `.row` / `.tip-block`. Footer: `SARUBA PTY LTD t/a Coach4U · ABN 50 678 462 178`.
+
+#### Page formula — always follow this structure in order:
+
+1. **Header** — navy gradient, Coach4U logo (`../C4U.png`), `h1` title (`[Service] — Process` or `[Service] — Getting Started`), subtitle describing the stage
+2. **Confirmed section** — _always first_, always present. Green checkmarks (`.confirm-check`) showing the stage(s) the client has already completed — anchors them with what's done before asking them to act. Never remove this section.
+3. **Action section** — what the client needs to do now (`.step` numbered steps, payment cards, or a form)
+4. **What happens next** — brief, 1–3 rows or a short paragraph. Not a full recap — just enough to reassure.
+5. **Questions / contact** — simple line or small section. WhatsApp link as the primary channel.
+
+**Language rule:** All client-facing pages use team language ("the team", "we", "us") throughout — except the **Cath Guarantee**, which uses "I" intentionally as a personal commitment.
+
+**New page checklist:**
+- Confirmed section at top ✓
+- Team language (no "Cath" except in the guarantee) ✓
+- Link added to ThriveHQ Hub Client Links section or Company Resources as appropriate ✓
+- Page listed in the Key files table above ✓
 
 **Couples journey** (sent via WhatsApp at each stage):
 
