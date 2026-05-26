@@ -26,26 +26,17 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f4f8;color:#1e293b;m
 .confirm-row:first-child{padding-top:0}
 .confirm-title{font-size:14px;font-weight:700;color:#1e3a5f;margin-bottom:2px}
 .confirm-sub{font-size:13px;color:#64748b}
-.intro-note{font-size:13px;color:#64748b;line-height:1.65;margin-bottom:18px}
-.commitment-note{font-size:11px;color:#92400e;font-weight:600;margin-top:10px;text-align:center}
-.pay-main{background:#f0fdf4;border:2px solid #15803d;border-radius:12px;padding:18px 20px;display:flex;flex-direction:column;gap:12px}
-.payment-badge{display:inline-flex;align-items:center;gap:5px;background:#15803d;color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;margin-bottom:2px;width:fit-content}
-.payment-label{font-size:15px;font-weight:700;color:#1e3a5f;margin-bottom:2px}
-.payment-price{font-size:28px;font-weight:700;color:#1e3a5f;line-height:1.1}
-.payment-price span{font-size:13px;font-weight:500;color:#64748b}
-.payment-saving{font-size:12px;font-weight:600;color:#15803d;margin-top:3px}
-.payment-detail{font-size:12px;color:#64748b;margin-top:1px}
-.pay-main-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:#15803d;color:#fff;border-radius:9px;padding:13px 20px;text-decoration:none;font-size:14px;font-weight:700;transition:background .15s;width:100%}
-.pay-main-btn:hover{background:#166534}
-.pay-or{display:flex;align-items:center;gap:10px;margin:12px 0}
-.pay-or-line{flex:1;height:1px;background:#e2e8f0}
-.pay-or-text{font-size:11px;color:#94a3b8;font-weight:600;white-space:nowrap}
-.pay-alt{display:flex;align-items:center;gap:12px;padding:12px 16px;border:1px solid #e2e8f0;border-radius:10px;background:#fff}
-.pay-alt-info{flex:1;min-width:0}
-.pay-alt-price{font-size:15px;font-weight:700;color:#475569}
-.pay-alt-detail{font-size:11px;color:#94a3b8;margin-top:1px}
-.pay-alt-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:#f0f4f8;color:#475569;border:1px solid #e2e8f0;border-radius:8px;padding:8px 14px;text-decoration:none;font-size:12px;font-weight:600;white-space:nowrap;flex-shrink:0}
-.pay-alt-btn:hover{background:#e2e8f0}
+.pay-card{border:1px solid #e2e8f0;border-radius:12px;padding:18px 20px;display:flex;flex-direction:column;gap:14px;background:#fff;margin-bottom:10px}
+.pay-card:last-of-type{margin-bottom:0}
+.pay-badge{display:inline-flex;align-items:center;gap:4px;background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;font-size:11px;font-weight:700;padding:2px 9px;border-radius:99px;margin-bottom:6px;width:fit-content}
+.pay-label{font-size:14px;font-weight:700;color:#1e3a5f;margin-bottom:4px}
+.pay-price{font-size:24px;font-weight:700;color:#1e3a5f;line-height:1.1}
+.pay-price span{font-size:13px;font-weight:400;color:#64748b}
+.pay-meta{font-size:12px;color:#64748b;margin-top:3px}
+.pay-saving{font-size:12px;font-weight:600;color:#15803d;margin-top:2px}
+.pay-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:#1e3a5f;color:#fff;border-radius:9px;padding:12px 20px;text-decoration:none;font-size:13px;font-weight:700;transition:background .15s;width:100%}
+.pay-btn:hover{background:#163059}
+.commitment-note{font-size:11px;color:#92400e;font-weight:600;margin-top:12px;text-align:center}
 .guarantee{background:#1e3a5f;border-radius:12px;padding:22px 24px;margin-bottom:16px;color:#fff}
 .guarantee-header{display:flex;align-items:center;gap:10px;margin-bottom:14px}
 .guarantee-icon{font-size:26px;flex-shrink:0}
@@ -84,35 +75,29 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f4f8;color:#1e293b;m
 
   <div class="section">
     <div class="section-label">Your next step</div>
-    <h2>Choose your payment option</h2>
+    <h2>Secure your spot</h2>
 
-    <p class="intro-note">You'll be working with Lou, who looks after the ThriveHQ admin. Once your direct debit is set up, Lou will send through everything you need to get started.</p>
-
-    <div class="pay-main">
+    <div class="pay-card">
       <div>
-        <div class="payment-badge">&#9733; Recommended</div>
-        <div class="payment-label">Upfront — 26 weeks</div>
-        <div class="payment-price">$1,053 <span>inc GST</span></div>
-        <div class="payment-saving">&#10003; Save $117 &middot; 10% discount applied</div>
+        <div class="pay-badge">&#9733; Recommended</div>
+        <div class="pay-label">Upfront — 26 weeks</div>
+        <div class="pay-price">$1,053 <span>inc GST</span></div>
+        <div class="pay-saving">&#10003; Save $117 &middot; 10% discount</div>
+        <div class="pay-meta">One payment for the full term</div>
       </div>
-      <a href="https://pay.gocardless.com/BRT01KSH505TEGM3ZVHY01KDQWBYT" target="_blank" rel="noopener" class="pay-main-btn">
+      <a href="https://pay.gocardless.com/BRT01KSH505TEGM3ZVHY01KDQWBYT" target="_blank" rel="noopener" class="pay-btn">
         &#128179; Set up upfront payment
       </a>
     </div>
 
-    <div class="pay-or">
-      <div class="pay-or-line"></div>
-      <div class="pay-or-text">or pay weekly</div>
-      <div class="pay-or-line"></div>
-    </div>
-
-    <div class="pay-alt">
-      <div class="pay-alt-info">
-        <div class="pay-alt-price">$45 <span style="font-size:12px;font-weight:500;color:#94a3b8;">/ week &middot; 26 weeks</span></div>
-        <div class="pay-alt-detail">$1,170 total &middot; billed weekly</div>
+    <div class="pay-card">
+      <div>
+        <div class="pay-label">Weekly — 26 weeks</div>
+        <div class="pay-price">$45 <span>per week, inc GST</span></div>
+        <div class="pay-meta">$1,170 total &middot; billed weekly</div>
       </div>
-      <a href="https://pay.gocardless.com/BRT0004W7VG6QKE" target="_blank" rel="noopener" class="pay-alt-btn">
-        Set up &#8599;
+      <a href="https://pay.gocardless.com/BRT0004W7VG6QKE" target="_blank" rel="noopener" class="pay-btn">
+        &#128179; Set up weekly payments
       </a>
     </div>
 
@@ -148,7 +133,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f4f8;color:#1e293b;m
   <div class="section">
     <div class="section-label">After you're set up</div>
     <h2>What happens next</h2>
-    <p>Once your direct debit is approved, Lou will send through your session schedule, group details, and everything you need to get started. Welcome to ThriveHQ.</p>
+    <p>Once your direct debit is approved, Lou — who looks after the ThriveHQ admin — will send through your session schedule, group details, and everything you need to get started. Welcome to ThriveHQ.</p>
   </div>
 
   <div class="contact-line">
