@@ -23,6 +23,7 @@ Single-page CRM app hosted on GitHub Pages with a Supabase backend. All CRM func
 | `policies/cancellation/index.html` | Public cancellation & rescheduling policy page |
 | `thrivehq-intro/index.html` | Client-facing ThriveHQ enquiry page — sent via WhatsApp when someone expresses interest. Shows confirmed interest, what ThriveHQ is, what's included, pricing (weekly $45 / upfront $1,053), and a WhatsApp CTA to confirm. Linked from ThriveHQ Hub Client Links. |
 | `thrivehq-welcome/index.html` | Client-facing ThriveHQ onboarding page — sent via WhatsApp when a new member says yes. Shows confirmed stage, two GoCardless payment options (upfront $1,053 / weekly $45), 26-week commitment note, The Cath Guarantee, and what happens next. Linked from ThriveHQ Hub Client Links. |
+| `ndis-process/index.html` | Client-facing NDIS process & pricing page — sent via WhatsApp after the initial conversation when the participant/carer has agreed to proceed. Shows confirmed steps, intake form link, pricing ($242.49 ongoing / $339.49 initial), NDIS billing note, Teams info, and WhatsApp CTA. |
 
 ### Client-facing process pages
 
@@ -53,6 +54,14 @@ All process pages share a consistent template: `[Service] — Process` h1, stage
 | `couples-ongoing/index.html` | Ongoing sessions reference | After 2-hour intake session complete |
 
 `couples-ongoing` notes: session begins when both partners join; closes if either leaves (full scheduled time still billed); the client is the couple — sessions cannot proceed with one person absent.
+
+**NDIS journey** (sent via WhatsApp at each stage):
+
+| File | Stage | Sent when |
+|------|-------|-----------|
+| `ndis-process/index.html` | Process & pricing overview | After initial conversation — agreed to move forward |
+
+`ndis-process` notes: pricing is $242.49/session (75 min = 45 min coaching + 30 min notes) and $339.49 for the initial session (105 min). Rate reference: $193.99/hr (NDIS CB Supports). NDIS billable — invoice issued after each session for self-managed or plan-managed participants.
 
 **Gallup Strengths journey** (sent via WhatsApp at each stage):
 
@@ -397,8 +406,8 @@ NDIS-Related Services (when applicable)
 
 ### Versioning
 
-- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.65.11**, line ~256)
-- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v655**)
+- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.65.12**, line ~256)
+- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v656**)
 - **Both must be bumped on every release**
 
 ### Code patterns
