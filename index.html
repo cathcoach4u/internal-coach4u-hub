@@ -257,7 +257,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.0</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.1</span>
     </div>
   </div>
   <div class="area-tabs-wrap" id="areaTabsWrap">
@@ -1382,8 +1382,11 @@ if('serviceWorker' in navigator){
       <select id="clPractitioner"><option>Cath Baker</option></select>
     </div>
     <div class="form-group"><label>Link Members from Master List</label>
-      <select id="clMemberSelect"><option value="">-- Select contact --</option></select>
-      <button class="btn btn-gray" style="margin-top:6px;" onclick="addMemberToClient()">+ Link</button>
+      <div style="display:flex;gap:6px;margin-bottom:6px;">
+        <select id="clMemberSelect" style="flex:1;"><option value="">-- Select contact --</option></select>
+        <select id="clMemberRole" style="width:120px;"><option value="Client">Client</option><option value="Carer">Carer</option><option value="Partner">Partner</option></select>
+        <button class="btn btn-gray" onclick="addMemberToClient()">+ Link</button>
+      </div>
       <div class="member-list" id="clMembers"></div>
     </div>
     <div class="form-group"><label>Referred By</label>
@@ -1996,12 +1999,18 @@ async function loadContacts(){
 async function loadClients(){
   const [{data,error},{data:allMembers}] = await Promise.all([
     supabase.from('clients').select('*').order('relationship_name'),
-    supabase.from('client_members').select('client_id,contact_id')
+    supabase.from('client_members').select('client_id,contact_id,role')
   ]);
   if(data){
     const memberMap={};
-    (allMembers||[]).forEach(m=>{if(!memberMap[m.client_id])memberMap[m.client_id]=[];memberMap[m.client_id].push(m.contact_id);});
-    data.forEach(c=>{c.members=memberMap[c.id]||[];});
+    const roleMap={};
+    (allMembers||[]).forEach(m=>{
+      if(!memberMap[m.client_id])memberMap[m.client_id]=[];
+      memberMap[m.client_id].push(m.contact_id);
+      if(!roleMap[m.client_id])roleMap[m.client_id]={};
+      roleMap[m.client_id][m.contact_id]=m.role||'Client';
+    });
+    data.forEach(c=>{c.members=memberMap[c.id]||[];c.memberRoles=roleMap[c.id]||{};});
     clients=data;
   }
   if(error) console.error('Load clients error:', error);
@@ -6126,7 +6135,7 @@ window.openClientModal=function(id){
   document.getElementById('clXeroLink').value=c?c.xero_link||'':'';
   document.getElementById('clFileNotes').value=c?c.file_notes_link||'':'';
   document.getElementById('clNotes').value=c?c.notes:'';
-  tempMembers=c?[...(c.members||[])]:[];
+  tempMembers=c?(c.members||[]).map(mid=>({contact_id:mid,role:(c.memberRoles||{})[mid]||'Client'})):[];
   // Populate Referred By dropdown
   const refSel=document.getElementById('clReferredBy');
   refSel.innerHTML='<option value="">-- None --</option>'+referrals.map(r=>'<option value="'+r.id+'"'+(c&&c.referred_by===r.id?' selected':'')+'>'+r.name+'</option>').join('');
@@ -6168,22 +6177,26 @@ function renderMemberSelect(){
 }
 
 function renderTempMembers(){
-  document.getElementById('clMembers').innerHTML=tempMembers.map(mid=>
-    `<span class="member-tag">${getContactName(mid)} <span class="remove" onclick="removeTempMember('${mid}')">&times;</span></span>`
-  ).join('');
+  const roleColors={Carer:'#f59e0b',Partner:'#8b5cf6',Client:'#0891b2'};
+  document.getElementById('clMembers').innerHTML=tempMembers.map(m=>{
+    const col=roleColors[m.role]||'#64748b';
+    return `<span class="member-tag">${getContactName(m.contact_id)} <span style="font-size:10px;font-weight:700;background:${col}22;color:${col};border-radius:99px;padding:1px 6px;margin:0 4px;">${m.role||'Client'}</span><span class="remove" onclick="removeTempMember('${m.contact_id}')">&times;</span></span>`;
+  }).join('');
 }
 
 window.addMemberToClient=function(){
   const sel=document.getElementById('clMemberSelect');
+  const roleSel=document.getElementById('clMemberRole');
   const val=sel.value;
-  if(!val||tempMembers.includes(val))return;
-  tempMembers.push(val);
+  const role=roleSel?.value||'Client';
+  if(!val||tempMembers.some(m=>m.contact_id===val))return;
+  tempMembers.push({contact_id:val,role});
   sel.value='';
   renderTempMembers();
 };
 
 window.removeTempMember=function(mid){
-  tempMembers=tempMembers.filter(m=>m!==mid);
+  tempMembers=tempMembers.filter(m=>m.contact_id!==mid);
   renderTempMembers();
 };
 
@@ -6214,7 +6227,7 @@ window.saveClient=async function(){
   // Sync members
   await supabase.from('client_members').delete().eq('client_id',clientId);
   if(tempMembers.length){
-    await supabase.from('client_members').insert(tempMembers.map(cid=>({client_id:clientId,contact_id:cid})));
+    await supabase.from('client_members').insert(tempMembers.map(m=>({client_id:clientId,contact_id:m.contact_id,role:m.role||'Client'})));
   }
   closeModal('clientModal');
   await loadClients();
@@ -6250,7 +6263,7 @@ window._cpRefreshFn=null;
   }
 
   // Member card — contact info + strength pills only (no upload buttons here)
-  function memberCard(contact){
+  function memberCard(contact,roleBadge=''){
     const strengths=[];for(let i=1;i<=10;i++){if(contact['strength_'+i])strengths.push({rank:i,name:contact['strength_'+i]});}
     const displayName=(contact.preferred_name&&contact.preferred_name!==contact.first_name)
       ?`${contact.preferred_name} (${contact.first_name}) ${contact.last_name}`:`${contact.first_name} ${contact.last_name}`;
@@ -6413,11 +6426,32 @@ window._cpRefreshFn=null;
       html+=`</div>`;
     }
 
+    // Carer banner — shown prominently if a carer is linked
+    const carerIds=Object.entries(c.memberRoles||{}).filter(([,r])=>r==='Carer').map(([id])=>id);
+    const carerContacts=carerIds.map(id=>contacts.find(x=>x.id===id)).filter(Boolean);
+    if(carerContacts.length){
+      html+=`<div style="background:#fefce8;border:1px solid #fde68a;border-radius:12px;padding:14px 18px;margin-bottom:16px;display:flex;gap:12px;align-items:flex-start;">
+        <span style="font-size:20px;flex-shrink:0;">&#128101;</span>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:12px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Carer / Communications contact</div>
+          ${carerContacts.map(cc=>`<div style="font-size:14px;font-weight:700;color:#1e293b;margin-bottom:2px;">${cc.first_name||''} ${cc.last_name||''}</div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;">
+            ${cc.phone?`<a href="sms:${cc.phone}" style="font-size:13px;color:#1e3a5f;text-decoration:none;font-weight:500;">&#128244; ${cc.phone}</a>`:''}
+            ${cc.email?`<span style="font-size:13px;color:#64748b;">&#9993; ${cc.email}</span>`:''}
+          </div>`).join('')}
+        </div>
+      </div>`;
+    }
+
     // Members
     if(memberContacts.length){
       html+=sectionHead('Members');
       html+=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;">`;
-      memberContacts.forEach(mc=>{html+=memberCard(mc);});
+      memberContacts.forEach(mc=>{
+        const role=(c.memberRoles||{})[mc.id];
+        const roleBadge=role&&role!=='Client'?`<span style="font-size:10px;font-weight:700;background:#f59e0b22;color:#f59e0b;border-radius:99px;padding:2px 8px;margin-left:6px;">${role}</span>`:'';
+        html+=memberCard(mc,roleBadge);
+      });
       html+=`</div>`;
     } else {
       html+=`<div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:12px;padding:24px;text-align:center;margin-top:20px;">
@@ -6450,7 +6484,7 @@ window._cpRefreshFn=null;
     }
 
     // Comms section — show threads for each member contact
-    const commsMembers=tempMembers.map(m=>contacts.find(c=>c.id===m.contact_id)).filter(Boolean);
+    const commsMembers=(c.members||[]).map(mid=>contacts.find(x=>x.id===mid)).filter(Boolean);
     if(commsMembers.length){
       html+=sectionHead('&#128244; Messages');
       commsMembers.forEach(mc=>{
