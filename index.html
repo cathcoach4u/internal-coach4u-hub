@@ -257,7 +257,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.8</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.9</span>
     </div>
   </div>
   <div class="area-tabs-wrap" id="areaTabsWrap">
@@ -6395,7 +6395,7 @@ window._cpRefreshFn=null;
   }
 
   // Member card — contact info + strength pills only (no upload buttons here)
-  function memberCard(contact,roleBadge=''){
+  function memberCard(contact,roleLabel='',roleColor=''){
     const strengths=[];for(let i=1;i<=10;i++){if(contact['strength_'+i])strengths.push({rank:i,name:contact['strength_'+i]});}
     const displayName=(contact.preferred_name&&contact.preferred_name!==contact.first_name)
       ?`${contact.preferred_name} (${contact.first_name}) ${contact.last_name}`:`${contact.first_name} ${contact.last_name}`;
@@ -6411,7 +6411,10 @@ window._cpRefreshFn=null;
         ${mandate.confirmed_at?`<div style="font-size:11px;color:#94a3b8;">Received: ${new Date(mandate.confirmed_at).toLocaleDateString('en-AU')}</div>`:''}
       </div>`;
     }
-    return `<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.05);">
+    const borderColor=roleColor||'#e2e8f0';
+    return `<div style="background:#fff;border:1px solid ${roleColor?roleColor+'50':'#e2e8f0'};border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05);">
+      ${roleLabel?`<div style="background:${roleColor}18;border-bottom:1px solid ${roleColor}30;padding:8px 16px;font-size:11px;font-weight:700;color:${roleColor};text-transform:uppercase;letter-spacing:1.2px;">${roleLabel}</div>`:''}
+      <div style="padding:20px;">
       <div style="display:flex;gap:14px;align-items:center;margin-bottom:${strengths.length||mandate?'16':'0'}px;">
         ${avatar(contact.first_name,contact.last_name,60)}
         <div style="flex:1;min-width:0;">
@@ -6436,7 +6439,7 @@ window._cpRefreshFn=null;
           </div>
         </div>`
       :'<div style="border-top:1px solid #f1f5f9;padding-top:12px;font-size:13px;color:#94a3b8;">No strengths recorded yet.</div>'}
-    </div>`;
+    </div></div>`;
   }
 
   // PDF Reports section — one row per member, clean upload/view grid
@@ -6587,9 +6590,9 @@ window._cpRefreshFn=null;
       memberContacts.forEach(mc=>{
         const role=(c.memberRoles||{})[mc.id];
         const displayRole=isNdis&&(!role||role==='Client')?'Participant':role;
-        const badgeColor=roleColorMap[displayRole]||'#64748b';
-        const roleBadge=displayRole&&displayRole!=='Client'?`<span style="font-size:10px;font-weight:700;background:${badgeColor}22;color:${badgeColor};border-radius:99px;padding:2px 8px;margin-left:6px;">${displayRole}</span>`:'';
-        html+=memberCard(mc,roleBadge);
+        const roleColor=roleColorMap[displayRole]||'';
+        const showLabel=displayRole&&displayRole!=='Client';
+        html+=memberCard(mc,showLabel?displayRole:'',showLabel?roleColor:'');
       });
       html+=`</div>`;
     } else {

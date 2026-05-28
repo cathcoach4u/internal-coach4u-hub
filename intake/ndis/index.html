@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NDIS Coaching — Getting Started | Coach4U</title>
+<link rel="icon" href="../../icon-192.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Quicksand:wght@600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',system-ui,sans-serif;background:#f0f6ff;color:#1e293b;min-height:100vh;}
+.header{background:linear-gradient(135deg,#1e3a5f 0%,#234b78 100%);padding:28px 20px;text-align:center;}
+.header img{width:48px;height:48px;border-radius:12px;background:#fff;padding:2px;margin-bottom:8px;}
+.header h1{font-family:'Quicksand',sans-serif;font-size:22px;font-weight:700;color:#fff;margin-bottom:4px;}
+.header p{font-size:13px;color:rgba(255,255,255,.7);max-width:400px;margin:0 auto;line-height:1.5;}
+.progress{display:flex;padding:12px 20px;background:#fff;border-bottom:1px solid #e2e8f0;overflow-x:auto;}
+.progress-step{flex:1;text-align:center;font-size:11px;font-weight:600;color:#94a3b8;padding:8px 4px;border-bottom:3px solid #e2e8f0;cursor:pointer;transition:all .2s;white-space:nowrap;min-width:80px;}
+.progress-step.active{color:#1e3a5f;border-bottom-color:#2563eb;}
+.progress-step.done{color:#16a34a;border-bottom-color:#16a34a;}
+.container{max-width:560px;margin:0 auto;padding:20px;}
+.section{display:none;animation:fadeIn .3s ease;}
+.section.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.section-title{font-family:'Quicksand',sans-serif;font-size:18px;font-weight:700;color:#1e3a5f;margin-bottom:4px;}
+.section-sub{font-size:13px;color:#64748b;margin-bottom:18px;line-height:1.5;}
+.form-group{margin-bottom:14px;}
+.form-group label{display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px;}
+.form-group label .req{color:#ef4444;}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:11px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:14px;font-family:inherit;background:#fff;transition:all .2s;-webkit-appearance:none;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.1);}
+.form-group textarea{height:80px;resize:vertical;}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media(max-width:500px){.row{grid-template-columns:1fr;}}
+.row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+@media(max-width:500px){.row-3{grid-template-columns:1fr;}}
+.chip-group{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;}
+.chip{padding:7px 14px;border:1px solid #e2e8f0;border-radius:99px;font-size:12px;font-weight:500;color:#475569;background:#fff;cursor:pointer;transition:all .15s;user-select:none;}
+.chip:hover{border-color:#2563eb;color:#2563eb;}
+.chip.selected{background:#2563eb;color:#fff;border-color:#2563eb;}
+.role-choice{display:flex;flex-direction:column;gap:10px;margin-bottom:8px;}
+.role-option{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border:2px solid #e2e8f0;border-radius:12px;cursor:pointer;transition:all .15s;}
+.role-option:hover{border-color:#2563eb;background:#f0f6ff;}
+.role-option.selected{border-color:#2563eb;background:#eff6ff;}
+.role-option input[type="radio"]{width:18px;height:18px;margin-top:1px;flex-shrink:0;accent-color:#2563eb;}
+.role-option-body{flex:1;}
+.role-option-title{font-weight:700;font-size:14px;color:#1e293b;margin-bottom:2px;}
+.role-option-sub{font-size:12px;color:#64748b;line-height:1.5;}
+.carer-section{background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:18px;margin-top:8px;}
+.carer-section-title{font-size:13px;font-weight:700;color:#92400e;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.panel{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px 16px;margin-bottom:14px;}
+.panel-title{font-size:12px;font-weight:700;color:#1e3a5f;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;}
+.consent-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:8px;}
+.consent-item input[type="checkbox"]{width:18px;height:18px;margin-top:2px;flex-shrink:0;accent-color:#2563eb;}
+.consent-item label{font-size:13px;color:#1e293b;line-height:1.4;cursor:pointer;}
+.nav-buttons{display:flex;gap:12px;margin-top:24px;margin-bottom:40px;}
+.btn{padding:14px 24px;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;flex:1;text-align:center;}
+.btn-back{background:#f1f5f9;color:#1e293b;border:1px solid #e2e8f0;}.btn-back:hover{background:#e2e8f0;}
+.btn-next{background:#2563eb;color:#fff;box-shadow:0 2px 8px rgba(37,99,235,.25);}.btn-next:hover{background:#1d4ed8;}
+.btn-submit{background:#16a34a;color:#fff;box-shadow:0 2px 8px rgba(22,163,74,.25);}.btn-submit:hover{background:#15803d;}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+.success-screen{display:none;text-align:center;padding:60px 20px;}
+.success-screen .icon{font-size:64px;margin-bottom:16px;}
+.success-screen h2{font-family:'Quicksand',sans-serif;font-size:24px;color:#1e3a5f;margin-bottom:8px;}
+.success-screen p{font-size:14px;color:#64748b;line-height:1.6;max-width:400px;margin:0 auto;}
+.error-msg{background:#fef2f2;color:#dc2626;padding:10px 14px;border-radius:8px;font-size:13px;font-weight:500;margin-bottom:12px;display:none;}
+.hp{position:absolute;left:-9999px;opacity:0;height:0;width:0;pointer-events:none;}
+.hint{font-size:11px;color:#94a3b8;margin-top:3px;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <img src="../../C4U.png" alt="Coach4U">
+  <h1>NDIS Coaching &amp; Counselling</h1>
+  <p>Getting started — this form can be completed by the participant or their carer/guardian.</p>
+</div>
+
+<div class="progress" id="progressBar">
+  <div class="progress-step active" onclick="goStep(0)">About You</div>
+  <div class="progress-step" onclick="goStep(1)">Participant</div>
+  <div class="progress-step" onclick="goStep(2)">NDIS &amp; Goals</div>
+  <div class="progress-step" onclick="goStep(3)">Consent</div>
+</div>
+
+<div class="container" id="formContainer">
+
+  <!-- STEP 1: Who is completing -->
+  <div class="section active" id="step0">
+    <h2 class="section-title">Who is completing this form?</h2>
+    <p class="section-sub">This form can be filled in by the participant themselves, or by a carer or guardian on their behalf.</p>
+
+    <div class="role-choice" id="completingChoices">
+      <label class="role-option" id="choiceParticipant">
+        <input type="radio" name="completedBy" value="Participant" onchange="onCompletingChange()">
+        <div class="role-option-body">
+          <div class="role-option-title">I am the participant</div>
+          <div class="role-option-sub">I am completing this form for myself</div>
+        </div>
+      </label>
+      <label class="role-option" id="choiceCarer">
+        <input type="radio" name="completedBy" value="Carer" onchange="onCompletingChange()">
+        <div class="role-option-body">
+          <div class="role-option-title">I am completing this for someone else</div>
+          <div class="role-option-sub">I am a parent, carer, guardian, or support worker completing this on behalf of the participant</div>
+        </div>
+      </label>
+    </div>
+
+    <div class="error-msg" id="errorMsg0"></div>
+    <div class="nav-buttons"><button type="button" class="btn btn-next" onclick="nextStep()">Next &rarr;</button></div>
+  </div>
+
+  <!-- STEP 2: Participant + Carer details -->
+  <div class="section" id="step1">
+    <h2 class="section-title">Participant Details</h2>
+    <p class="section-sub" id="step1Sub">Tell us about the person receiving coaching.</p>
+
+    <div class="row">
+      <div class="form-group"><label>First Name <span class="req">*</span></label><input id="fFirstName"></div>
+      <div class="form-group"><label>Last Name <span class="req">*</span></label><input id="fLastName"></div>
+    </div>
+    <div class="form-group"><label>Preferred Name</label><input id="fPreferred" placeholder="What should we call them?"><div class="hint">Leave blank if the same as first name</div></div>
+    <div class="row">
+      <div class="form-group"><label>Date of Birth <span style="color:#94a3b8;font-weight:400;">(optional)</span></label><input id="fDOB" type="date"></div>
+      <div class="form-group"><label>NDIS Number <span style="color:#94a3b8;font-weight:400;">(optional)</span></label><input id="fNDISNumber" placeholder="e.g. 43012345678" inputmode="numeric"><div class="hint">9-digit NDIS participant number</div></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Participant Contact</div>
+      <div class="row">
+        <div class="form-group"><label>Phone</label><input id="fPhone" type="tel"></div>
+        <div class="form-group"><label>Email</label><input id="fEmail" type="email"></div>
+      </div>
+      <div class="hint" style="margin-top:-8px;margin-bottom:4px;" id="contactHint">If the carer is the primary contact, you can leave these blank and fill in carer details below.</div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Address</div>
+      <div class="form-group"><label>Street Address</label><input id="fAddress1" placeholder="e.g. 12 Smith Street"></div>
+      <div class="form-group"><label>Address Line 2 <span style="color:#94a3b8;font-weight:400;">(optional)</span></label><input id="fAddress2" placeholder="Unit, apartment, PO Box"></div>
+      <div class="row-3">
+        <div class="form-group"><label>Suburb</label><input id="fSuburb"></div>
+        <div class="form-group"><label>Postcode</label><input id="fPostcode" inputmode="numeric" maxlength="5"></div>
+        <div class="form-group"><label>State</label><select id="fState">
+          <option value="">Select...</option>
+          <optgroup label="Australia">
+            <option value="ACT">ACT</option><option value="NSW">NSW</option><option value="NT">NT</option>
+            <option value="QLD">QLD</option><option value="SA">SA</option><option value="TAS">TAS</option>
+            <option value="VIC">VIC</option><option value="WA">WA</option>
+          </optgroup>
+          <optgroup label="New Zealand">
+            <option value="NZ-AUK">Auckland</option><option value="NZ-WGN">Wellington</option>
+            <option value="NZ-CAN">Canterbury</option><option value="NZ-WKO">Waikato</option>
+          </optgroup>
+        </select></div>
+      </div>
+    </div>
+
+    <!-- Carer / Guardian section — shown when completing on behalf of someone -->
+    <div id="carerSection" style="display:none;">
+      <div class="carer-section">
+        <div class="carer-section-title">&#128101; Carer / Guardian Details</div>
+
+        <div class="row">
+          <div class="form-group"><label>Carer First Name <span class="req">*</span></label><input id="fCarerFirst"></div>
+          <div class="form-group"><label>Carer Last Name <span class="req">*</span></label><input id="fCarerLast"></div>
+        </div>
+        <div class="row">
+          <div class="form-group">
+            <label>Relationship to Participant <span class="req">*</span></label>
+            <select id="fCarerRelationship">
+              <option value="">Select...</option>
+              <option>Parent</option>
+              <option>Guardian</option>
+              <option>Carer</option>
+              <option>Support Worker</option>
+              <option>Spouse / Partner</option>
+              <option>Sibling</option>
+              <option>Other Family Member</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Carer Phone <span class="req">*</span></label><input id="fCarerPhone" type="tel"></div>
+        </div>
+        <div class="form-group"><label>Carer Email <span class="req">*</span></label><input id="fCarerEmail" type="email"></div>
+        <div class="form-group">
+          <label>Send communications to</label>
+          <select id="fCommsPreference">
+            <option value="Carer">Carer / Guardian (primary)</option>
+            <option value="Participant">Participant (primary)</option>
+            <option value="Both">Both participant and carer</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:14px;">
+      <div class="panel-title">Emergency Contact</div>
+      <div class="row">
+        <div class="form-group"><label>Name <span class="req">*</span></label><input id="fEmName"></div>
+        <div class="form-group"><label>Phone <span class="req">*</span></label><input id="fEmPhone" type="tel"></div>
+      </div>
+    </div>
+
+    <div class="hp"><label>Leave blank</label><input id="fWebsite" tabindex="-1" autocomplete="off"></div>
+    <div class="error-msg" id="errorMsg1"></div>
+    <div class="nav-buttons">
+      <button type="button" class="btn btn-back" onclick="prevStep()">&larr; Back</button>
+      <button type="button" class="btn btn-next" onclick="nextStep()">Next &rarr;</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: NDIS Plan + Goals -->
+  <div class="section" id="step2">
+    <h2 class="section-title">NDIS Plan &amp; Coaching Goals</h2>
+    <p class="section-sub">Help us understand the participant's support needs and what they'd like to work on.</p>
+
+    <div class="panel">
+      <div class="panel-title">NDIS Plan Information</div>
+      <div class="form-group">
+        <label>Plan Management Type</label>
+        <select id="fPlanManager">
+          <option value="">Select if known...</option>
+          <option>Self-managed</option>
+          <option>Plan-managed</option>
+          <option>NDIA-managed (Agency-managed)</option>
+          <option>Not sure yet</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Support Coordinator <span style="color:#94a3b8;font-weight:400;">(if applicable)</span></label>
+        <input id="fSupportCoordinator" placeholder="Name or organisation">
+      </div>
+      <div class="form-group">
+        <label>Plan Manager Name / Organisation <span style="color:#94a3b8;font-weight:400;">(if plan-managed)</span></label>
+        <input id="fPlanManagerName" placeholder="Name or organisation">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>What type of coaching support are you looking for?</label>
+      <div class="chip-group" id="supportChips">
+        <div class="chip" onclick="toggleChip(this)">ADHD Coaching</div>
+        <div class="chip" onclick="toggleChip(this)">Executive Functioning</div>
+        <div class="chip" onclick="toggleChip(this)">Life Skills</div>
+        <div class="chip" onclick="toggleChip(this)">Social &amp; Communication</div>
+        <div class="chip" onclick="toggleChip(this)">Work &amp; Employment</div>
+        <div class="chip" onclick="toggleChip(this)">Confidence &amp; Self-Esteem</div>
+        <div class="chip" onclick="toggleChip(this)">Emotional Regulation</div>
+        <div class="chip" onclick="toggleChip(this)">Goal Setting</div>
+        <div class="chip" onclick="toggleChip(this)">Wellbeing &amp; Resilience</div>
+        <div class="chip" onclick="toggleChip(this)">Independence</div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>What are the main challenges or areas of concern right now?</label>
+      <textarea id="fChallenges" placeholder="Tell us what's going on and what you'd like support with..."></textarea>
+    </div>
+
+    <div class="form-group">
+      <label>What does success look like for this coaching?</label>
+      <textarea id="fGoals" placeholder="What would you like to achieve through coaching..."></textarea>
+    </div>
+
+    <div class="form-group">
+      <label>How did you hear about Coach4U?</label>
+      <select id="fHowHeard" onchange="toggleHowHeardOther()">
+        <option value="">Select...</option>
+        <option>Word of Mouth</option>
+        <option>Social Media</option>
+        <option>Google</option>
+        <option>Referral from Support Coordinator</option>
+        <option>Referral from Health Professional</option>
+        <option>Ask Allied Health</option>
+        <option>Other</option>
+      </select>
+    </div>
+    <div class="form-group" id="fHowHeardOtherWrap" style="display:none;">
+      <label>Please tell us where you heard about us</label>
+      <input id="fHowHeardOther">
+    </div>
+
+    <div class="error-msg" id="errorMsg2"></div>
+    <div class="nav-buttons">
+      <button type="button" class="btn btn-back" onclick="prevStep()">&larr; Back</button>
+      <button type="button" class="btn btn-next" onclick="nextStep()">Next &rarr;</button>
+    </div>
+  </div>
+
+  <!-- STEP 4: Consent -->
+  <div class="section" id="step3">
+    <h2 class="section-title">Consent</h2>
+    <p class="section-sub">Please read and agree to the following before we get started.</p>
+
+    <div class="consent-item">
+      <input type="checkbox" id="cConsentInfo">
+      <label for="cConsentInfo">I consent to Coach4U collecting and storing the information provided (contact details, intake responses, session notes) for the purpose of delivering coaching/counselling sessions. Records are stored securely and retained as required by law. <span class="req">*</span></label>
+    </div>
+    <div class="consent-item">
+      <input type="checkbox" id="cConsentRecording">
+      <label for="cConsentRecording">I understand that sessions are recorded. Recordings are stored securely and used only by the practitioner to review sessions, support file notes, and ensure quality of care. <span class="req">*</span></label>
+    </div>
+    <div class="consent-item">
+      <input type="checkbox" id="cConsentAI">
+      <label for="cConsentAI">I consent to the use of AI tools to help the practitioner summarise and organise session notes. Recordings and notes remain confidential and are not used to train AI models. <span class="req">*</span></label>
+    </div>
+    <div class="consent-item">
+      <input type="checkbox" id="cConsentConfidentiality">
+      <label for="cConsentConfidentiality">I understand sessions are confidential, except where the practitioner is legally required to disclose information (risk of serious harm, child safety concerns, or a court subpoena). <span class="req">*</span></label>
+    </div>
+    <div class="consent-item">
+      <input type="checkbox" id="cConsentPolicy">
+      <label for="cConsentPolicy">I have read and agree to the <a href="../../policies/cancellation/" target="_blank" rel="noopener" style="color:#2563eb;font-weight:600;">Cancellation &amp; Rescheduling Policy</a>. <span class="req">*</span></label>
+    </div>
+
+    <div class="form-group" style="margin-top:16px;">
+      <label>Signature (full name) <span class="req">*</span></label>
+      <input id="fSignature" placeholder="Type your full name to confirm">
+    </div>
+
+    <div class="error-msg" id="errorMsg3"></div>
+    <div class="nav-buttons">
+      <button type="button" class="btn btn-back" onclick="prevStep()">&larr; Back</button>
+      <button type="button" class="btn btn-submit" id="submitBtn" onclick="submitForm()">Submit</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="success-screen" id="successScreen">
+  <div class="icon">&#127758;</div>
+  <h2>All Done!</h2>
+  <p>We've received the details. The Coach4U team will be in touch soon to get things started.</p>
+  <p style="margin-top:16px;font-size:13px;color:#94a3b8;">You can close this page now.</p>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SB_URL='https://uoixetfvboevjxlkfyqy.supabase.co';
+const SB_KEY='sb_publishable_m3qgSGvWF0n2TePf6vhqMw_9obUvJEJ';
+let sb=null;
+function getSB(){if(!sb&&window.supabase)sb=window.supabase.createClient(SB_URL,SB_KEY);return sb;}
+
+let currentStep=0;
+let isCarer=false;
+
+function getCompletedBy(){
+  const radios=document.querySelectorAll('input[name="completedBy"]');
+  for(const r of radios){if(r.checked)return r.value;}
+  return null;
+}
+
+function onCompletingChange(){
+  const val=getCompletedBy();
+  isCarer=(val==='Carer');
+  // Highlight selected
+  document.getElementById('choiceParticipant').classList.toggle('selected',val==='Participant');
+  document.getElementById('choiceCarer').classList.toggle('selected',val==='Carer');
+  // Show/hide carer section
+  document.getElementById('carerSection').style.display=isCarer?'block':'none';
+  // Update subtitle
+  document.getElementById('step1Sub').textContent=isCarer
+    ?'Tell us about the participant — the person who will be receiving coaching.'
+    :'Tell us about yourself.';
+  // Update preferred name placeholder
+  document.getElementById('fPreferred').placeholder=isCarer?'What should we call them?':'What should we call you?';
+  document.getElementById('contactHint').style.display=isCarer?'block':'none';
+}
+
+function goStep(n){if(n<=currentStep)showStep(n);}
+function showStep(n){
+  currentStep=n;
+  document.querySelectorAll('.section').forEach((s,i)=>s.classList.toggle('active',i===n));
+  document.querySelectorAll('.progress-step').forEach((s,i)=>{
+    s.classList.remove('active','done');
+    if(i===n)s.classList.add('active');else if(i<n)s.classList.add('done');
+  });
+  hideError();window.scrollTo({top:0,behavior:'smooth'});
+}
+function nextStep(){if(validateStep(currentStep))showStep(currentStep+1);}
+function prevStep(){if(currentStep>0)showStep(currentStep-1);}
+function g(id){const el=document.getElementById(id);return el?el.value.trim():'';}
+function toggleChip(el){el.classList.toggle('selected');}
+function toggleHowHeardOther(){document.getElementById('fHowHeardOtherWrap').style.display=document.getElementById('fHowHeard').value==='Other'?'block':'none';}
+function getChips(id){return Array.from(document.querySelectorAll('#'+id+' .chip.selected')).map(c=>c.textContent).join(', ');}
+function showError(msg){const el=document.getElementById('errorMsg'+currentStep);if(el){el.textContent=msg;el.style.display='block';el.scrollIntoView({behavior:'smooth',block:'center'});}}
+function hideError(){document.querySelectorAll('.error-msg').forEach(el=>el.style.display='none');}
+
+function validateStep(n){
+  hideError();
+  if(n===0){
+    if(!getCompletedBy()){showError('Please select who is completing this form.');return false;}
+  }
+  if(n===1){
+    if(!g('fFirstName')||!g('fLastName')){showError('Participant first and last name are required.');return false;}
+    if(isCarer){
+      if(!g('fCarerFirst')||!g('fCarerLast')){showError('Carer first and last name are required.');return false;}
+      if(!g('fCarerRelationship')){showError('Please select the carer\'s relationship to the participant.');return false;}
+      if(!g('fCarerPhone')){showError('Carer phone number is required.');return false;}
+      if(!g('fCarerEmail')||!g('fCarerEmail').includes('@')){showError('A valid carer email is required.');return false;}
+    } else {
+      if(!g('fEmail')||!g('fEmail').includes('@')){showError('A valid email address is required.');return false;}
+    }
+    if(!g('fEmName')||!g('fEmPhone')){showError('Emergency contact name and phone are required.');return false;}
+  }
+  if(n===2){
+    // Goals step — no required fields but warn if completely empty
+  }
+  return true;
+}
+
+async function submitForm(){
+  hideError();
+  const c1=document.getElementById('cConsentInfo').checked;
+  const c2=document.getElementById('cConsentRecording').checked;
+  const c3=document.getElementById('cConsentAI').checked;
+  const c4=document.getElementById('cConsentConfidentiality').checked;
+  const c5=document.getElementById('cConsentPolicy').checked;
+  if(!c1||!c2||!c3||!c4||!c5){showError('Please agree to all five consent items to continue.');return;}
+  if(!g('fSignature')){showError('Please enter your full name as a signature.');return;}
+  if(g('fWebsite'))return;
+
+  const btn=document.getElementById('submitBtn');
+  btn.disabled=true;btn.textContent='Submitting...';
+
+  const supabase=getSB();
+  if(!supabase){showError('Still loading — please try again in a moment.');btn.disabled=false;btn.textContent='Submit';return;}
+
+  const howHeard=g('fHowHeard')==='Other'&&g('fHowHeardOther')?'Other: '+g('fHowHeardOther'):(g('fHowHeard')||null);
+  const completedBy=getCompletedBy()||'Participant';
+
+  // Build NDIS notes block
+  const ndisNotes=[
+    g('fNDISNumber')?'NDIS#: '+g('fNDISNumber'):'',
+    g('fPlanManager')?'Plan management: '+g('fPlanManager'):'',
+    g('fPlanManagerName')?'Plan manager: '+g('fPlanManagerName'):'',
+    g('fSupportCoordinator')?'Support coordinator: '+g('fSupportCoordinator'):'',
+    isCarer?'Communications preference: '+g('fCommsPreference'):'',
+    g('fDOB')?'DOB: '+g('fDOB'):''
+  ].filter(Boolean).join('\n');
+
+  const row={
+    form_type:'ndis',
+    completed_by:completedBy,
+    first_name:g('fFirstName'),
+    last_name:g('fLastName'),
+    preferred_name:g('fPreferred')||null,
+    email:isCarer?(g('fEmail')||null):g('fEmail'),
+    phone:isCarer?(g('fPhone')||null):g('fPhone'),
+    address_line_1:g('fAddress1')||null,
+    address_line_2:g('fAddress2')||null,
+    suburb:g('fSuburb')||null,
+    state:g('fState')||null,
+    postcode:g('fPostcode')||null,
+    emergency_contact_name:g('fEmName'),
+    emergency_contact_phone:g('fEmPhone'),
+    how_heard:howHeard,
+    service_focus:getChips('supportChips')||null,
+    current_challenges:g('fChallenges')||null,
+    wellbeing_goals:g('fGoals')||null,
+    notes:ndisNotes||null,
+    consent_accepted:true,
+    consent_version:'ndis-v1',
+    signature_name:g('fSignature')
+  };
+
+  // Carer details go into secondary_ fields
+  if(isCarer){
+    row.secondary_first_name=g('fCarerFirst');
+    row.secondary_last_name=g('fCarerLast');
+    row.secondary_preferred_name=g('fCarerRelationship');
+    row.secondary_phone=g('fCarerPhone');
+    row.secondary_email=g('fCarerEmail');
+  }
+
+  const {error}=await supabase.from('intake_submissions').insert(row);
+  if(error){btn.disabled=false;btn.textContent='Submit';showError('Something went wrong: '+error.message);return;}
+
+  document.getElementById('formContainer').style.display='none';
+  document.getElementById('progressBar').style.display='none';
+  document.getElementById('successScreen').style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// Show/hide carer section on page load if radio somehow pre-selected
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('contactHint').style.display='none';
+});
+</script>
+</body>
+</html>
