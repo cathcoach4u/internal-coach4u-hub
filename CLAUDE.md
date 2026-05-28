@@ -25,11 +25,56 @@ Single-page CRM app hosted on GitHub Pages with a Supabase backend. All CRM func
 | `thrivehq-welcome/index.html` | Client-facing ThriveHQ onboarding page — sent via WhatsApp when a new member says yes. Shows confirmed stage, two GoCardless payment options (upfront $1,053 / weekly $45), 26-week commitment note, The Cath Guarantee, and what happens next. Linked from ThriveHQ Hub Client Links. |
 | `ndis-process/index.html` | Client-facing NDIS process & pricing page — sent via WhatsApp after the initial conversation when the participant/carer has agreed to proceed. Shows confirmed steps, intake form link, pricing ($242.49 ongoing / $339.49 initial), NDIS billing note, Teams info, and WhatsApp CTA. |
 
-### Client-facing process pages
+### Journey Cards
 
-All process pages share a consistent template: `[Service] — Process` h1, stage-specific subtitle. CSS design system: Inter/Quicksand, navy gradient header, `.section` / `.section-label` / `.step` / `.confirm-check` / `.confirm-row` / `.row` / `.tip-block`. Footer: `SARUBA PTY LTD t/a Coach4U · ABN 50 678 462 178`.
+Journey Cards are the client-facing WhatsApp links sent at each stage of a service journey. They live as static pages in this repo, follow a strict formula, and are surfaced in the relevant hub's **Client Links** section in the CRM (not in Company Resources).
 
-#### Page formula — always follow this structure in order:
+#### Master list — all Journey Cards in hub order
+
+**Couples Hub** (`renderCouplesClientLinks` → `couplesclientlinks`):
+
+| Step | File | Sent when |
+|------|------|-----------|
+| 1 | `intake/couples/index.html` | Before first session — collect details |
+| 2 | `couples-process/index.html` | After connection call — agreed to proceed |
+| 3 | `couples-thankyou/index.html` | After intake form & direct debit set up |
+| 4 | `couples-ongoing/index.html` | After 2-hour intake session complete |
+
+`couples-ongoing` notes: session begins when both partners join; closes if either leaves (full scheduled time still billed); the client is the couple — sessions cannot proceed with one person absent.
+
+**ThriveHQ Hub** (inline `thqClientLinksSection` in `renderThqDash`):
+
+| Step | File | Sent when |
+|------|------|-----------|
+| 1 | `intake/thrivehq/index.html` | Before first session — send to new members |
+| 2 | `thrivehq-intro/index.html` | When someone expresses interest — what's involved & pricing |
+| 3 | `thrivehq-welcome/index.html` | When ready to join — payment & onboarding |
+| 4+ | `yourthrivehqcoach/links.html` | Links Page (external repo) |
+| 4+ | `yourthrivehqcoach/weekly-coaching-flow.html` | Weekly Coaching Flow (external repo) |
+| 4+ | `yourthrivehqcoach/session-rhythm.html` | Session Rhythm (external repo) |
+| 4+ | `yourthrivehqcoach/body-doubling.html` | FocusHQ (external repo) |
+
+**NDIS Hub** (inline `ndisClientLinks` in `renderNdisDash`):
+
+| Step | File | Sent when |
+|------|------|-----------|
+| 1 | `ndis-process/index.html` | After initial conversation — agreed to move forward |
+| 2 | `intake/ndis/index.html` | Before first session — participant or carer completes |
+
+`ndis-process` notes: pricing is $242.49/session (75 min = 45 min session + 30 min notes) and $339.49 for the initial session (105 min). Rate reference: $193.99/hr (NDIS CB Supports). NDIS billable, GST-free — invoice issued after each session for self-managed or plan-managed participants.
+
+**Strengths Hub** (`renderStrClientLinks` → `strclientlinks`):
+
+| Step | File | Sent when |
+|------|------|-----------|
+| 1 | `gallup-intro/index.html` | Cath has spoken to client about the assessment |
+| 2 | `gallup-next/index.html` | Client confirmed they want to go ahead |
+| 3 | `gallup-guide/index.html` | Payment received, code purchased and sent |
+| 4 | `gallup-complete/index.html` | Client has completed the assessment |
+
+`gallup-intro` pricing: $135 per assessment, GST free, invoice issued, payment via existing direct debit mandate. Timing: aim for by 2nd session, 3rd at latest.
+
+#### Journey Card page formula — always follow this structure in order:
 
 1. **Header** — navy gradient, Coach4U logo (`../C4U.png`), `h1` title (`[Service] — Process` or `[Service] — Getting Started`), subtitle describing the stage
 2. **Confirmed section** — _always first_, always present. Green checkmarks (`.confirm-check`) showing the stage(s) the client has already completed — anchors them with what's done before asking them to act. Never remove this section.
@@ -37,42 +82,16 @@ All process pages share a consistent template: `[Service] — Process` h1, stage
 4. **What happens next** — brief, 1–3 rows or a short paragraph. Not a full recap — just enough to reassure.
 5. **Questions / contact** — simple line or small section. WhatsApp link as the primary channel.
 
-**Language rule:** All client-facing pages use team language ("the team", "we", "us") throughout — except the **Cath Guarantee**, which uses "I" intentionally as a personal commitment.
+CSS design system: Inter/Quicksand, navy gradient header, `.section` / `.section-label` / `.step` / `.confirm-check` / `.confirm-row` / `.row` / `.tip-block`. Footer: `SARUBA PTY LTD t/a Coach4U · ABN 50 678 462 178`.
 
-**New page checklist:**
+**Language rule:** All Journey Cards use team language ("the team", "we", "us") throughout — except the **Cath Guarantee**, which uses "I" intentionally as a personal commitment. NDIS pages may use "Cath" by name in confirmed section (personal touch for individual service).
+
+**New Journey Card checklist:**
 - Confirmed section at top ✓
-- Team language (no "Cath" except in the guarantee) ✓
-- Link added to ThriveHQ Hub Client Links section or Company Resources as appropriate ✓
-- Page listed in the Key files table above ✓
-
-**Couples journey** (sent via WhatsApp at each stage):
-
-| File | Stage | Sent when |
-|------|-------|-----------|
-| `couples-process/index.html` | Process & pricing overview | After connection call — agreed to proceed |
-| `couples-thankyou/index.html` | Intake booked | After intake form & direct debit set up |
-| `couples-ongoing/index.html` | Ongoing sessions reference | After 2-hour intake session complete |
-
-`couples-ongoing` notes: session begins when both partners join; closes if either leaves (full scheduled time still billed); the client is the couple — sessions cannot proceed with one person absent.
-
-**NDIS journey** (sent via WhatsApp at each stage):
-
-| File | Stage | Sent when |
-|------|-------|-----------|
-| `ndis-process/index.html` | Process & pricing overview | After initial conversation — agreed to move forward |
-
-`ndis-process` notes: pricing is $242.49/session (75 min = 45 min coaching + 30 min notes) and $339.49 for the initial session (105 min). Rate reference: $193.99/hr (NDIS CB Supports). NDIS billable — invoice issued after each session for self-managed or plan-managed participants.
-
-**Gallup Strengths journey** (sent via WhatsApp at each stage):
-
-| File | Stage | Sent when |
-|------|-------|-----------|
-| `gallup-intro/index.html` | Introduction & what's involved | Cath has spoken to client about the assessment |
-| `gallup-next/index.html` | Payment + register details | Client has confirmed they want to go ahead |
-| `gallup-guide/index.html` | How to complete the assessment | Payment received, code purchased and sent |
-| `gallup-complete/index.html` | Report being prepared | Client has completed the assessment |
-
-`gallup-intro` pricing: $135 per assessment, GST free, invoice issued, payment via existing direct debit mandate. Timing: aim for by 2nd session, 3rd at latest.
+- Team language (no "Cath" except in the guarantee, or where intentional) ✓
+- Added to the relevant hub's Client Links section in the CRM in the correct step order ✓
+- Listed in the master table above ✓
+- Listed in the Key files table at the top of this file ✓
 
 ### Supabase backend
 
@@ -162,8 +181,9 @@ The Home dashboard (front screen of the CRM) has a navy/blue gradient launchpad 
 
 1. **Essential Client Links card** — featured card at the top linking to `/client-links/` (the all-in-one public page). Has Copy and Open buttons.
 2. **Process & Pricing** (pink left border) — `couples-process/` page link
-3. **Intake Forms** (blue left border) — ThriveHQ, Couples, Individual intake form URLs
-4. **Policies & Useful Links** (amber left border) — Cancellation & Rescheduling policy, GoCardless Payment Mandate (external), Cath's Teams meeting room (external), WhatsApp (external)
+3. **Policies & Useful Links** (amber left border) — Cancellation & Rescheduling policy, GoCardless Payment Mandate (external), Cath's Teams meeting room (external), WhatsApp (external)
+
+> **Note**: Intake form links are no longer in Company Resources. They have been moved to each hub's own Client Links section (ThriveHQ Hub, Couples Hub, NDIS Hub) so they appear in the correct journey context.
 5. **ThriveHQ Client Links** (green left border) — four external links, **all in the `cathcoach4u/yourthrivehqcoach` repo** (not this one):
    - **Links Page** → `yourthrivehqcoach/links.html`
    - **Weekly Coaching Flow** → `yourthrivehqcoach/weekly-coaching-flow.html`
@@ -406,8 +426,8 @@ NDIS-Related Services (when applicable)
 
 ### Versioning
 
-- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.65.21**, line ~256)
-- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v665**)
+- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.65.22**, line ~256)
+- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v666**)
 - **Both must be bumped on every release**
 
 ### Code patterns
@@ -540,6 +560,19 @@ print(r.status_code, r.text[:200])
 
 - **Address fields**: `intake_submissions` has `address_line_1`, `address_line_2`, `suburb`, `state`, `postcode` columns. The intake forms collect all of these. The CRM viewer (`renderIntakeDetail` ~line 5985) shows them as a formatted address block below Personal Details — only rendered if at least one field is present.
 - **Template literal caution**: the Personal Details section uses a nested template literal for the address conditional. Ensure the outer `html+=\`...\`` is closed with a backtick+semicolon after the final `</div>` of the section card.
+
+## CRM Intake Forms page (CRM > Intake Forms)
+
+- **Screen**: `screen-thqintake`, render fn `renderIntakeSubmissions(opts?)`
+- **Form type dropdown** (`#intakeFormType`): All Programs / ThriveHQ / Couples / Individual / NDIS — filters by `intake_submissions.form_type`
+- **Copy link buttons** in toolbar: one per form type (ThriveHQ, Couples, Individual, NDIS) — calls `copyIntakeLink(formType)` which builds the URL from `window.location` + the form path
+- **Grouped display** (`catOrder`): ThriveHQ → Couples → Individual → NDIS → Archived. Each group is collapsible; colour-coded left border (NDIS = `#0f766e` teal).
+- **Per-hub intake pages**: each hub also has its own intake forms screen filtered to that form type:
+  - ThriveHQ Hub → `screen-thqforms` (`renderThqIntakeForms`, formType `thrivehq`)
+  - Couples Hub → `screen-couplesforms` (`renderCouplesIntakeForms`, formType `couples`)
+  - NDIS Hub → `screen-ndisforms` (`renderNdisIntakeForms`, formType `ndis`)
+- **`copyIntakeLink(formType)`** paths: `thrivehq` → `intake/thrivehq/`, `couples` → `intake/couples/`, `individual` → `intake/individual/`, `ndis` → `intake/ndis/`
+- **`form_type` values in DB**: `thrivehq`, `couples`, `individual`, `ndis` — records without a `form_type` default to `thrivehq` in filters
 
 ## Comms (SMS / WhatsApp / Email)
 
