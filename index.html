@@ -257,7 +257,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.12</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.13</span>
     </div>
   </div>
   <div class="area-tabs-wrap" id="areaTabsWrap">
@@ -8070,9 +8070,9 @@ window.openIntakeDetail=function(id){
   if(!s) return;
   const st=s.status||'New';
   const ft=s.form_type||'thrivehq';
-  const formTypeLabels={thrivehq:'ThriveHQ',couples:'Couples',individual:'Individual'};
-  const formTypeColors={thrivehq:'#1e3a5f',couples:'#1e3a5f',individual:'#1e3a5f'};
-  const formTypeBg={thrivehq:'#dbeafe',couples:'#dbeafe',individual:'#dbeafe'};
+  const formTypeLabels={thrivehq:'ThriveHQ',couples:'Couples',individual:'Individual',ndis:'NDIS'};
+  const formTypeColors={thrivehq:'#1e3a5f',couples:'#1e3a5f',individual:'#1e3a5f',ndis:'#0f766e'};
+  const formTypeBg={thrivehq:'#dbeafe',couples:'#dbeafe',individual:'#dbeafe',ndis:'#ccfbf1'};
   const date=s.submitted_at?new Date(s.submitted_at).toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric'}):'';
 
   function field(label,val){return val?`<div style="margin-bottom:10px;"><div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.3px;margin-bottom:2px;">${label}</div><div style="font-size:13px;color:#1e293b;">${val}</div></div>`:'';}
