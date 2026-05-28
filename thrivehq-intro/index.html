@@ -11,13 +11,13 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Inter',system-ui,sans-serif;background:#f0f4f8;color:#1e293b;min-height:100vh}
-.header{background:linear-gradient(135deg,#1e3a5f 0%,#234b78 100%);color:#fff;padding:28px 24px;text-align:center}
+.header{background:linear-gradient(135deg,#1e3a5f 0%,#234b78 100%);color:#fff;padding:28px 24px 24px;text-align:center}
 .header img.logo{width:48px;height:48px;border-radius:12px;background:#fff;padding:2px;margin-bottom:8px;display:block;margin-left:auto;margin-right:auto}
 .header h1{font-family:'Quicksand',sans-serif;font-size:22px;font-weight:700;line-height:1.3;margin-bottom:6px}
-.header p{font-size:13px;color:rgba(255,255,255,.75);line-height:1.5;max-width:480px;margin:0 auto}
-.container{max-width:580px;margin:0 auto;padding:24px 16px 60px}
+.header p{font-size:13px;color:rgba(255,255,255,.75);line-height:1.5;max-width:480px;margin:0 auto 16px}
+.header-cta{display:inline-flex;align-items:center;gap:8px;background:#25d366;color:#fff;border-radius:9px;padding:11px 22px;text-decoration:none;font-size:14px;font-weight:700}
+.container{max-width:580px;margin:0 auto;padding:24px 16px 100px}
 .section{background:#fff;border-radius:12px;padding:22px 24px;margin-bottom:16px;border:1px solid #e2e8f0}
-.section-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:12px}
 .section h2{font-size:17px;font-weight:700;color:#1e3a5f;margin-bottom:16px;line-height:1.3}
 .section p{font-size:14px;color:#475569;line-height:1.7;margin-bottom:10px}
 .section p:last-child{margin-bottom:0}
@@ -26,7 +26,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f4f8;color:#1e293b;m
 .confirm-row:last-child{border-bottom:none;padding-bottom:0}
 .confirm-row:first-child{padding-top:0}
 .confirm-title{font-size:14px;font-weight:700;color:#1e3a5f;margin-bottom:2px}
-.confirm-sub{font-size:13px;color:#64748b}
+.confirm-sub{font-size:13px;color:#64748b;line-height:1.5}
 .row{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid #f1f5f9}
 .row:last-child{border-bottom:none;padding-bottom:0}
 .row:first-child{padding-top:0}
@@ -34,15 +34,38 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f4f8;color:#1e293b;m
 .row-text{flex:1;min-width:0}
 .row-title{font-size:13px;font-weight:700;color:#1e3a5f;margin-bottom:3px}
 .row-sub{font-size:12px;color:#64748b;line-height:1.6}
+.check-list{list-style:none;padding:0;margin:0}
+.check-list li{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid #f1f5f9}
+.check-list li:last-child{border-bottom:none;padding-bottom:0}
+.check-list li:first-child{padding-top:0}
+.check-tick{color:#15803d;font-weight:800;font-size:15px;flex-shrink:0;margin-top:1px}
+.check-body{flex:1;min-width:0}
+.check-title{font-size:13px;font-weight:700;color:#1e3a5f;margin-bottom:2px}
+.check-sub{font-size:12px;color:#64748b;line-height:1.55}
+.mid-cta{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.mid-cta-text{font-size:13px;font-weight:600;color:#15803d;flex:1}
+.mid-cta-btn{display:inline-flex;align-items:center;gap:6px;background:#25d366;color:#fff;border-radius:8px;padding:9px 16px;text-decoration:none;font-size:13px;font-weight:700;white-space:nowrap;flex-shrink:0}
 .session-card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px 16px;margin-bottom:8px}
 .session-card:last-child{margin-bottom:0}
 .session-day{font-size:13px;font-weight:700;color:#1e3a5f;margin-bottom:2px}
 .session-time{font-size:12px;color:#64748b;margin-bottom:4px}
 .session-desc{font-size:12px;color:#475569;line-height:1.6}
+.timeline-block{margin-bottom:16px}
+.timeline-block:last-child{margin-bottom:0}
+.timeline-label{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#94a3b8;margin-bottom:8px}
+.timeline-item{display:flex;gap:10px;align-items:flex-start;margin-bottom:7px}
+.timeline-item:last-child{margin-bottom:0}
+.timeline-dot{width:7px;height:7px;border-radius:50%;background:#1e3a5f;flex-shrink:0;margin-top:5px}
+.timeline-text{font-size:13px;color:#475569;line-height:1.5}
 .testimonial{background:#f8fafc;border-left:3px solid #1e3a5f;border-radius:0 8px 8px 0;padding:14px 16px;margin-bottom:8px}
 .testimonial:last-child{margin-bottom:0}
 .testimonial-quote{font-size:13px;color:#475569;line-height:1.7;font-style:italic;margin-bottom:8px}
 .testimonial-name{font-size:12px;font-weight:700;color:#1e3a5f}
+.not-list{list-style:none;padding:0;margin:0}
+.not-list li{display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#64748b}
+.not-list li:last-child{border-bottom:none;padding-bottom:0}
+.not-list li:first-child{padding-top:0}
+.not-x{color:#94a3b8;font-weight:700;font-size:13px;flex-shrink:0}
 .price-row{display:flex;gap:12px;padding:14px 0;border-bottom:1px solid #f1f5f9}
 .price-row:last-child{border-bottom:none;padding-bottom:0}
 .price-row:first-child{padding-top:0}
@@ -54,6 +77,10 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f4f8;color:#1e293b;m
 .commitment-note{background:#fefce8;border:1px solid #fde68a;border-radius:8px;padding:11px 14px;font-size:13px;color:#92400e;font-weight:600;display:flex;align-items:flex-start;gap:8px;margin-top:16px}
 .wa-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:#25d366;color:#fff;border-radius:9px;padding:13px 20px;text-decoration:none;font-size:14px;font-weight:700;transition:background .15s;width:100%;margin-top:12px}
 .wa-btn:hover{background:#1daa53}
+.ask-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:#f1f5f9;color:#475569;border-radius:9px;padding:11px 20px;text-decoration:none;font-size:13px;font-weight:600;transition:background .15s;width:100%;margin-top:8px}
+.ask-btn:hover{background:#e2e8f0}
+.sticky-cta{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e2e8f0;padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom));z-index:100;box-shadow:0 -4px 16px rgba(0,0,0,.1)}
+.sticky-cta a{display:flex;align-items:center;justify-content:center;gap:8px;background:#25d366;color:#fff;border-radius:9px;padding:13px 20px;text-decoration:none;font-size:15px;font-weight:700;max-width:548px;margin:0 auto}
 .footer{text-align:center;font-size:11px;color:#94a3b8;padding:0 16px 32px;line-height:1.8}
 </style>
 </head>
@@ -61,8 +88,11 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f4f8;color:#1e293b;m
 
 <div class="header">
   <img src="../C4U.png" alt="Coach4U" class="logo">
-  <h1>ThriveHQ — What's Involved</h1>
-  <p>You've named it. Here's what we do about it.</p>
+  <h1>ThriveHQ — Structured Support for ADHD Brains</h1>
+  <p>Build consistency, reduce overwhelm, and follow through — week by week.</p>
+  <a href="https://wa.me/61485695168" target="_blank" rel="noopener" class="header-cta">
+    &#128172; Get details and join
+  </a>
 </div>
 
 <div class="container">
@@ -71,8 +101,8 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f4f8;color:#1e293b;m
     <div class="confirm-row">
       <div class="confirm-check">&#10003;</div>
       <div>
-        <div class="confirm-title">You've expressed interest in ThriveHQ</div>
-        <div class="confirm-sub">ThriveHQ is a group coaching membership for adults with ADHD. The team has put together this overview so you can see exactly what's involved before you decide.</div>
+        <div class="confirm-title">You've already taken the first step</div>
+        <div class="confirm-sub">You're looking for something that actually works with your brain, not against it. This page shows how ThriveHQ works — so you can decide simply and clearly.</div>
       </div>
     </div>
   </div>
@@ -80,7 +110,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f4f8;color:#1e293b;m
   <div class="section">
     <div style="margin-bottom:16px;overflow:hidden;">
       <img src="../Assets/Cath%20Baker%20Image.jpg" alt="Cath Baker" style="float:right;width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #e2e8f0;margin:2px 0 12px 16px;">
-      <p>Hi, I'm Cath.<br><br>If you're reading this, you already know the feeling — scattered, overwhelmed, running hard just to stay afloat. The last thing you need is more information piled on top.<br><br>So I've kept this simple. Have a read, see what resonates, and reach out if you'd like to talk anything through. I'd love to have you in ThriveHQ — but only if it feels right for you.</p>
+      <p>Hi, I'm Cath.<br><br>If you're here, things likely feel reactive, full, and hard to stay on top of.<br><br>ThriveHQ isn't about adding more information. It's about giving you structure, support, and follow-through — week by week.<br><br>I'd love to have you in ThriveHQ — but only if it feels right for you.</p>
     </div>
     <div style="padding-top:12px;border-top:1px solid #f1f5f9;clear:both;">
       <span style="font-family:'Dancing Script',cursive;font-size:34px;font-weight:700;color:#1e3a5f;line-height:1;">Cath</span>
@@ -89,59 +119,61 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f4f8;color:#1e293b;m
 
   <div class="section">
     <h2>ThriveHQ is for adults with ADHD</h2>
-    <p style="margin-bottom:16px;">You've named it — and now you want to do something about it. If any of this sounds familiar, you're in the right place.</p>
+    <p style="font-size:13px;color:#64748b;margin-bottom:14px;">If this is you, you're in the right place:</p>
+    <ul class="check-list">
+      <li>
+        <span class="check-tick">&#10003;</span>
+        <div class="check-body">
+          <div class="check-title">Your days feel reactive, not planned</div>
+          <div class="check-sub">You're managing a lot, but the day runs you more than you run the day.</div>
+        </div>
+      </li>
+      <li>
+        <span class="check-tick">&#10003;</span>
+        <div class="check-body">
+          <div class="check-title">Systems work briefly, then fall apart</div>
+          <div class="check-sub">Not because you're lazy — because they weren't built for an ADHD brain.</div>
+        </div>
+      </li>
+      <li>
+        <span class="check-tick">&#10003;</span>
+        <div class="check-body">
+          <div class="check-title">You want support, not just tips</div>
+          <div class="check-sub">You're ready for a community and a coach who genuinely get how ADHD works.</div>
+        </div>
+      </li>
+      <li>
+        <span class="check-tick">&#10003;</span>
+        <div class="check-body">
+          <div class="check-title">You're ready to stop doing this alone</div>
+          <div class="check-sub">ThriveHQ is a place where your ADHD brain is understood, not judged.</div>
+        </div>
+      </li>
+    </ul>
+  </div>
 
-    <div class="row">
-      <div class="row-icon">&#128200;</div>
-      <div class="row-text">
-        <div class="row-title">Things feel scattered and reactive</div>
-        <div class="row-sub">You're managing a lot, but it never feels like enough — and the day runs you more than you run the day. That's the ADHD brain under pressure.</div>
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="row-icon">&#128260;</div>
-      <div class="row-text">
-        <div class="row-title">You've tried systems that don't stick</div>
-        <div class="row-sub">Apps, planners, productivity methods — they work for a week, then fall apart. Not because you're lazy, but because they weren't built for an ADHD brain.</div>
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="row-icon">&#129309;</div>
-      <div class="row-text">
-        <div class="row-title">You want support, not just strategies</div>
-        <div class="row-sub">You're ready for something more than tips and tricks — you want a community and a coach who genuinely get how ADHD works.</div>
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="row-icon">&#128736;</div>
-      <div class="row-text">
-        <div class="row-title">You're tired of hiding it</div>
-        <div class="row-sub">ThriveHQ is a place where your ADHD brain is understood, not judged — and where showing up imperfectly is still showing up.</div>
-      </div>
-    </div>
-
+  <div class="mid-cta">
+    <div class="mid-cta-text">Sounds like a fit? Get in touch.</div>
+    <a href="https://wa.me/61485695168" target="_blank" rel="noopener" class="mid-cta-btn">&#128172; Message us</a>
   </div>
 
   <div class="section">
     <h2>When we meet</h2>
 
     <div class="session-card">
-      <div class="session-day">&#128197; Tuesdays — Coaching Session</div>
+      <div class="session-day">&#128197; Tuesdays — Coaching session</div>
       <div class="session-time">6:00 PM AEST &middot; 1.5 hours</div>
-      <div class="session-desc">Group coaching focused on planning, reflection, and working through what's getting in your way. The heart of ThriveHQ.</div>
+      <div class="session-desc"><strong>The anchor session.</strong> Plan, reflect, and work through what's getting in your way — with a coach and a group who get it.</div>
     </div>
 
     <div class="session-card">
       <div class="session-day">&#9201; Thursdays — FocusHQ</div>
       <div class="session-time">12:00 PM AEST &middot; 1 hour</div>
-      <div class="session-desc">Body-doubling session — show up, set your intention, work alongside others. No pressure, just presence and accountability.</div>
+      <div class="session-desc"><strong>Body-doubling.</strong> Show up, set your intention, work alongside others. No pressure — just presence and follow-through.</div>
     </div>
 
     <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:11px 14px;font-size:12px;color:#1e3a5f;margin-top:10px;line-height:1.65;">
-      &#128338; ThriveHQ runs in 10-week blocks aligned with NSW school terms. No attendance pressure — joining late or missing a session is fine.
+      &#128338; ThriveHQ runs in 6-month blocks aligned with school terms. No attendance pressure — joining late or missing a session is fine.
     </div>
   </div>
 
@@ -151,8 +183,8 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f4f8;color:#1e293b;m
     <div class="row">
       <div class="row-icon">&#127926;</div>
       <div class="row-text">
-        <div class="row-title">Up to 20 live sessions over 26 weeks</div>
-        <div class="row-sub">Weekly coaching sessions plus FocusHQ body-doubling — all live, all included.</div>
+        <div class="row-title">Up to 20 live sessions</div>
+        <div class="row-sub">Consistent structure so you actually follow through — not just a good week here and there.</div>
       </div>
     </div>
 
@@ -160,7 +192,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f4f8;color:#1e293b;m
       <div class="row-icon">&#128172;</div>
       <div class="row-text">
         <div class="row-title">Private WhatsApp community</div>
-        <div class="row-sub">A members-only group where you can connect, share wins, and get support between sessions.</div>
+        <div class="row-sub">Support between sessions so you're not doing this alone.</div>
       </div>
     </div>
 
@@ -168,15 +200,15 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f4f8;color:#1e293b;m
       <div class="row-icon">&#128218;</div>
       <div class="row-text">
         <div class="row-title">24/7 resource hub</div>
-        <div class="row-sub">Tools, guides, and references designed specifically for ADHD brains — available any time.</div>
+        <div class="row-sub">Simple tools you can use immediately — not more information to get through.</div>
       </div>
     </div>
 
     <div class="row">
       <div class="row-icon">&#127775;</div>
       <div class="row-text">
-        <div class="row-title">Strengths-based coaching approach</div>
-        <div class="row-sub">Sessions are built around what you're already wired to do well — not just managing what isn't working.</div>
+        <div class="row-title">Strengths-based coaching</div>
+        <div class="row-sub">Built around what you're already wired to do well — not just fixing what isn't working.</div>
       </div>
     </div>
 
@@ -184,14 +216,30 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f4f8;color:#1e293b;m
       <div class="row-icon">&#128176;</div>
       <div class="row-text">
         <div class="row-title">20% discount on 1:1 sessions</div>
-        <div class="row-sub">As a ThriveHQ member, you receive a 20% discount on any individual coaching sessions with Cath.</div>
+        <div class="row-sub">As a ThriveHQ member, you receive 20% off any individual sessions with Cath.</div>
       </div>
     </div>
 
   </div>
 
   <div class="section">
-    <h2>What people say</h2>
+    <h2>What changes over time</h2>
+
+    <div class="timeline-block">
+      <div class="timeline-label">After a few weeks</div>
+      <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-text">You start showing up more consistently</div></div>
+      <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-text">You stop restarting from scratch every week</div></div>
+    </div>
+
+    <div class="timeline-block">
+      <div class="timeline-label">After a few months</div>
+      <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-text">You have rhythms that actually stick</div></div>
+      <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-text">You feel less overwhelmed and more in control</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>What members notice</h2>
 
     <div class="testimonial">
       <div class="testimonial-quote">"Finally have a place where my ADHD brain is understood, not judged."</div>
@@ -206,39 +254,63 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f4f8;color:#1e293b;m
   </div>
 
   <div class="section">
+    <h2>This is not&hellip;</h2>
+    <ul class="not-list">
+      <li><span class="not-x">&#10005;</span> Therapy or clinical treatment</li>
+      <li><span class="not-x">&#10005;</span> Pressure to attend or perform</li>
+      <li><span class="not-x">&#10005;</span> Another system to maintain</li>
+      <li><span class="not-x">&#10005;</span> A place where you'll be put on the spot</li>
+    </ul>
+    <div style="margin-top:12px;padding:11px 14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:13px;color:#15803d;font-weight:600;">
+      You don't need to get this perfect. You can join, try it, and see how it feels.
+    </div>
+  </div>
+
+  <div class="section">
     <h2>Pricing</h2>
 
     <div class="price-row">
       <div style="flex:1;min-width:0;">
-        <div class="price-label">Weekly payments</div>
-        <div class="price-amount">$45 <span>per week, inc GST</span></div>
-        <div class="price-detail">$1,170 total &middot; billed weekly</div>
+        <div class="price-label">Weekly membership</div>
+        <div class="price-amount">$74.80 <span>per week, inc GST</span></div>
+        <div class="price-detail">Billed weekly &middot; 6-month commitment</div>
       </div>
     </div>
 
     <div class="price-row">
       <div style="flex:1;min-width:0;">
-        <div class="price-label">Upfront — full term</div>
-        <div class="price-amount">$1,053 <span>inc GST</span></div>
-        <div class="price-saving">&#10003; Save $117 &middot; 10% discount</div>
-        <div class="price-detail">One payment for the full 26 weeks</div>
+        <div class="price-label">Full term — upfront</div>
+        <div class="price-amount">$1,650 <span>inc GST</span></div>
+        <div class="price-saving">&#10003; Save when you pay upfront</div>
+        <div class="price-detail">One payment for the full 6 months</div>
       </div>
     </div>
 
-    <div class="commitment-note">&#128197; Both options are a 26-week membership commitment. Payment is by direct debit.</div>
+    <div class="price-row">
+      <div style="flex:1;min-width:0;">
+        <div class="price-label">One-off onboarding</div>
+        <div class="price-amount">$110 <span>inc GST</span></div>
+        <div class="price-detail">One-time setup fee, paid when you join</div>
+      </div>
+    </div>
+
+    <div class="commitment-note">&#128197; Membership runs in 6-month blocks aligned to school terms. Payment is by direct debit.</div>
   </div>
 
   <div class="section">
     <h2>Ready to join?</h2>
-    <p>If you'd like to go ahead, reply to our message on WhatsApp. The team will send you the Getting Started page with your payment setup link and everything you need to lock in your spot.</p>
+    <p>If it feels like a fit, send a quick message on WhatsApp. The team will send your enrolment link and everything you need to get started.</p>
     <a href="https://wa.me/61485695168" target="_blank" rel="noopener" class="wa-btn">
-      &#128172; Reply on WhatsApp
+      &#128172; Message on WhatsApp
+    </a>
+    <a href="https://wa.me/61485695168" target="_blank" rel="noopener" class="ask-btn">
+      Not sure yet? Ask a question
     </a>
   </div>
 
   <div class="section">
     <h2>Want to talk it through?</h2>
-    <p>If you'd like to ask anything before committing, reach out via WhatsApp or text — the team is happy to help.</p>
+    <p>Reach out via WhatsApp or text — the team is happy to help.</p>
     <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
       <a href="https://wa.me/61485695168" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:7px;padding:10px 16px;border-radius:9px;font-size:13px;font-weight:700;text-decoration:none;background:#25d366;color:#fff;flex:1;justify-content:center;min-width:130px;">
         &#128172; WhatsApp
@@ -253,6 +325,12 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f4f8;color:#1e293b;m
 
 <div class="footer">
   SARUBA PTY LTD t/a Coach4U &middot; ABN 50 678 462 178
+</div>
+
+<div class="sticky-cta">
+  <a href="https://wa.me/61485695168" target="_blank" rel="noopener">
+    &#128172; Message on WhatsApp
+  </a>
 </div>
 
 </body>
