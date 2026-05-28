@@ -257,7 +257,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.64.8</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.64.9</span>
     </div>
   </div>
   <div class="area-tabs-wrap" id="areaTabsWrap">
@@ -4626,6 +4626,7 @@ window.linkProspectToIntake=async function(intakeId){
     const existing=contacts.find(c=>c.first_name&&first&&c.first_name.toLowerCase()===first.toLowerCase()&&(c.last_name||'').toLowerCase()===last.toLowerCase());
     if(existing){
       contactId=existing.id;
+      if(p.phone&&!existing.phone) await supabase.from('contacts').update({phone:p.phone}).eq('id',contactId);
     } else {
       const {data:inserted,error:cErr}=await supabase.from('contacts').insert({
         first_name:first,last_name:last,email:p.email,phone:p.phone,contact_type:'Prospect'
@@ -4803,6 +4804,8 @@ window.convertProspectToClient=async function(){
   // Link contact as member if prospect had a contact_id
   if(p.contact_id&&inserted&&inserted[0]){
     await supabase.from('client_members').insert({client_id:inserted[0].id,contact_id:p.contact_id});
+    const existingContact=contacts.find(c=>c.id===p.contact_id);
+    if(p.phone&&existingContact&&!existingContact.phone) await supabase.from('contacts').update({phone:p.phone}).eq('id',p.contact_id);
   }
   // Update prospect status to Converted
   await supabase.from('prospects').update({status:'Converted'}).eq('id',id);
