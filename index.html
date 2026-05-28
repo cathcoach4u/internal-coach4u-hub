@@ -257,7 +257,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.64.6</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.64.7</span>
     </div>
   </div>
   <div class="area-tabs-wrap" id="areaTabsWrap">
@@ -3170,7 +3170,8 @@ function renderThqDash(){
     </div>
   </div>`;
   const thqLinks=[
-    {label:'Getting Started',url:'https://cathcoach4u.github.io/internal-coach4u-hub/thrivehq-welcome/',icon:'&#127381;',desc:'Payment & welcome page — send to new members'},
+    {label:'Initial Enquiry',url:'https://cathcoach4u.github.io/internal-coach4u-hub/thrivehq-intro/',icon:'&#128204;',desc:'What\'s involved & pricing — send when someone expresses interest'},
+    {label:'Getting Started',url:'https://cathcoach4u.github.io/internal-coach4u-hub/thrivehq-welcome/',icon:'&#127381;',desc:'Payment & welcome page — send when they\'re ready to join'},
     {label:'Links Page',url:'https://cathcoach4u.github.io/yourthrivehqcoach/links.html',icon:'&#128279;',desc:'ThriveHQ client resource hub'},
     {label:'Weekly Coaching Flow',url:'https://cathcoach4u.github.io/yourthrivehqcoach/weekly-coaching-flow.html',icon:'&#128197;',desc:'Week-by-week coaching flow guide'},
     {label:'Session Rhythm',url:'https://cathcoach4u.github.io/yourthrivehqcoach/session-rhythm.html',icon:'&#9971;',desc:'Session structure and rhythm reference'},

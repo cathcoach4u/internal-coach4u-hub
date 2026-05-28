@@ -21,6 +21,7 @@ Single-page CRM app hosted on GitHub Pages with a Supabase backend. All CRM func
 | `schema.sql` | Original DB schema reference |
 | `client-links/index.html` | Public all-in-one client links page — WhatsApp, intake forms, GoCardless, cancellation policy, Teams room. Each row has Copy and Open buttons. Matches intake form style (Inter/Quicksand, gradient header, C4U.png logo). |
 | `policies/cancellation/index.html` | Public cancellation & rescheduling policy page |
+| `thrivehq-intro/index.html` | Client-facing ThriveHQ enquiry page — sent via WhatsApp when someone expresses interest. Shows confirmed interest, what ThriveHQ is, what's included, pricing (weekly $45 / upfront $1,053), and a WhatsApp CTA to confirm. Linked from ThriveHQ Hub Client Links. |
 | `thrivehq-welcome/index.html` | Client-facing ThriveHQ onboarding page — sent via WhatsApp when a new member says yes. Shows confirmed stage, two GoCardless payment options (upfront $1,053 / weekly $45), 26-week commitment note, The Cath Guarantee, and what happens next. Linked from ThriveHQ Hub Client Links. |
 
 ### Client-facing process pages
