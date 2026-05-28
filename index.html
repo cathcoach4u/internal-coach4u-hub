@@ -257,7 +257,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.24</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.25</span>
     </div>
   </div>
   <div class="area-tabs-wrap" id="areaTabsWrap">
@@ -4913,13 +4913,13 @@ window.saveProspect=async function(){
     }
   }
 
-  // When editing an existing prospect, sync phone/email to linked contact if blank
-  if(id&&obj.contact_id){
+  // Always sync phone/email from prospect → linked contact
+  if(obj.contact_id){
     const linked=contacts.find(c=>c.id===obj.contact_id);
     if(linked){
       const patch={};
-      if(obj.phone&&!linked.phone) patch.phone=obj.phone;
-      if(obj.email&&!linked.email) patch.email=obj.email;
+      if(obj.phone) patch.phone=obj.phone;
+      if(obj.email) patch.email=obj.email;
       if(Object.keys(patch).length) await supabase.from('contacts').update(patch).eq('id',linked.id);
     }
   }
@@ -4932,7 +4932,7 @@ window.saveProspect=async function(){
     if(error){toast('Error: '+error.message,'error');return;}
   }
   closeModal('prospModal');
-  await loadProspects();
+  await Promise.all([loadProspects(),loadContacts()]);
   renderProspects();
   toast('Prospect saved','success');
 };
