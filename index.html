@@ -257,7 +257,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.4</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.5</span>
     </div>
   </div>
   <div class="area-tabs-wrap" id="areaTabsWrap">
@@ -5248,21 +5248,25 @@ function renderClients(){
   </div>`;
 
   const renderGroup=(g,items,label)=>{
-    if(!items||!items.length)return;
+    const isEmpty=!items||!items.length;
+    if(isEmpty&&g!=='NDIS Individual')return;
     const collapsed=clientGroupState[g]||false;
     const arrow=collapsed?'&#9654;':'&#9660;';
+    const bodyHtml=isEmpty
+      ?`<div style="padding:12px 16px;font-size:13px;color:#94a3b8;">No NDIS clients yet — set a client's role to <strong>NDIS Individual</strong> to see them here.</div>`
+      :`<div style="display:flex;flex-direction:column;gap:8px;padding:12px 12px;">${items.map(c=>renderClientCard(c)).join('')}</div>`;
     html+=`<div style="margin-bottom:12px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;overflow:hidden;">
-      <div onclick="toggleClientGroup('${g}')" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;user-select:none;background:#f8fafc;border-bottom:${collapsed?'none':'1px solid #e2e8f0'};">
+      <div onclick="toggleClientGroup('${g}')" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;user-select:none;background:#f8fafc;border-bottom:${collapsed&&!isEmpty?'none':'1px solid #e2e8f0'};">
         <div style="display:flex;align-items:center;gap:10px;">
           <span style="font-size:12px;color:#94a3b8;transition:transform .2s;">${arrow}</span>
           <span style="font-weight:700;font-size:14px;color:#1e293b;">${label||groupLabels[g]||g}</span>
-          <span style="background:#f1f5f9;color:#64748b;font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;">${items.length}</span>
+          <span style="background:#f1f5f9;color:#64748b;font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;">${isEmpty?0:items.length}</span>
         </div>
       </div>
-      ${collapsed?'':`<div style="display:flex;flex-direction:column;gap:8px;padding:12px 12px;">${items.map(c=>renderClientCard(c)).join('')}</div>`}
+      ${collapsed&&!isEmpty?'':bodyHtml}
     </div>`;
   };
-  groupOrder.forEach(g=>{if(grouped[g])renderGroup(g,grouped[g]);delete grouped[g];});
+  groupOrder.forEach(g=>{renderGroup(g,grouped[g]||[]);delete grouped[g];});
   Object.keys(grouped).forEach(g=>renderGroup(g,grouped[g]));
   if(archived.length) renderGroup('Archived',archived,'Archived');
   document.getElementById('clCards').innerHTML=html||'<div style="padding:20px;text-align:center;color:#94a3b8;">No clients found.</div>';
