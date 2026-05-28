@@ -257,7 +257,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.21</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.22</span>
     </div>
   </div>
   <div class="area-tabs-wrap" id="areaTabsWrap">
@@ -556,7 +556,7 @@ if('serviceWorker' in navigator){
       <div class="toolbar">
         <input class="search-input" id="intakeSearch" placeholder="Search submissions..." oninput="renderIntakeSubmissions()">
         <select id="intakeFormType" onchange="renderIntakeSubmissions()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
-          <option value="">All Programs</option><option value="thrivehq">ThriveHQ</option><option value="couples">Couples</option><option value="individual">Individual</option>
+          <option value="">All Programs</option><option value="thrivehq">ThriveHQ</option><option value="couples">Couples</option><option value="individual">Individual</option><option value="ndis">NDIS</option>
         </select>
         <select id="intakeFilter" onchange="renderIntakeSubmissions()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
           <option value="">All Status</option><option value="New">New</option><option value="Reviewed">Reviewed</option><option value="Converted">Converted</option>
@@ -564,6 +564,7 @@ if('serviceWorker' in navigator){
         <button onclick="copyIntakeLink('thrivehq')" style="padding:6px 12px;border:1px solid #bfdbfe;border-radius:99px;font-size:11px;font-weight:600;color:#1e3a5f;background:#dbeafe;cursor:pointer;font-family:inherit;white-space:nowrap;" onmouseover="this.style.background='#bfdbfe'" onmouseout="this.style.background='#dbeafe'">&#128279; ThriveHQ</button>
         <button onclick="copyIntakeLink('couples')" style="padding:6px 12px;border:1px solid #bfdbfe;border-radius:99px;font-size:11px;font-weight:600;color:#1e3a5f;background:#dbeafe;cursor:pointer;font-family:inherit;white-space:nowrap;" onmouseover="this.style.background='#bfdbfe'" onmouseout="this.style.background='#dbeafe'">&#128279; Couples</button>
         <button onclick="copyIntakeLink('individual')" style="padding:6px 12px;border:1px solid #bfdbfe;border-radius:99px;font-size:11px;font-weight:600;color:#1e3a5f;background:#dbeafe;cursor:pointer;font-family:inherit;white-space:nowrap;" onmouseover="this.style.background='#bfdbfe'" onmouseout="this.style.background='#dbeafe'">&#128279; Individual</button>
+        <button onclick="copyIntakeLink('ndis')" style="padding:6px 12px;border:1px solid #99f6e4;border-radius:99px;font-size:11px;font-weight:600;color:#0f766e;background:#ccfbf1;cursor:pointer;font-family:inherit;white-space:nowrap;" onmouseover="this.style.background='#99f6e4'" onmouseout="this.style.background='#ccfbf1'">&#128279; NDIS</button>
       </div>
       <div id="intakeContent"></div>
     </div>
@@ -602,7 +603,7 @@ if('serviceWorker' in navigator){
         <select id="ndisFormsFilter" onchange="renderNdisIntakeForms()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
           <option value="">All Status</option><option value="New">New</option><option value="Reviewed">Reviewed</option><option value="Converted">Converted</option>
         </select>
-        <button onclick="copyIntakeLink('individual')" style="padding:6px 12px;border:1px solid #bfdbfe;border-radius:99px;font-size:11px;font-weight:600;color:#1e3a5f;background:#dbeafe;cursor:pointer;font-family:inherit;white-space:nowrap;" onmouseover="this.style.background='#bfdbfe'" onmouseout="this.style.background='#dbeafe'">&#128279; Copy Link</button>
+        <button onclick="copyIntakeLink('ndis')" style="padding:6px 12px;border:1px solid #99f6e4;border-radius:99px;font-size:11px;font-weight:600;color:#0f766e;background:#ccfbf1;cursor:pointer;font-family:inherit;white-space:nowrap;" onmouseover="this.style.background='#99f6e4'" onmouseout="this.style.background='#ccfbf1'">&#128279; Copy Link</button>
       </div>
       <div id="ndisFormsContent"></div>
     </div>
@@ -7948,8 +7949,8 @@ async function loadIntakeSubmissions(){
 }
 
 window.copyIntakeLink=function(formType){
-  const formPaths={thrivehq:'intake/thrivehq/',couples:'intake/couples/',individual:'intake/individual/'};
-  const labels={thrivehq:'ThriveHQ intake link',couples:'Couples intake link',individual:'Individual intake link'};
+  const formPaths={thrivehq:'intake/thrivehq/',couples:'intake/couples/',individual:'intake/individual/',ndis:'intake/ndis/'};
+  const labels={thrivehq:'ThriveHQ intake link',couples:'Couples intake link',individual:'Individual intake link',ndis:'NDIS intake link'};
   const path=formPaths[formType]||'intake/thrivehq/';
   const url=window.location.origin+window.location.pathname.replace('index.html','')+path;
   copyText(url,labels[formType]||'Intake link');
@@ -7977,9 +7978,9 @@ function renderIntakeSubmissions(opts){
 
   const statusColors={New:'#3b82f6',Reviewed:'#d97706',Converted:'#16a34a',Archived:'#94a3b8'};
   const statusBg={New:'#dbeafe',Reviewed:'#fef3c7',Converted:'#dcfce7',Archived:'#f1f5f9'};
-  const formTypeLabels={thrivehq:'ThriveHQ',couples:'Couples',individual:'Individual'};
-  const formTypeColors={thrivehq:'#1e3a5f',couples:'#1e3a5f',individual:'#1e3a5f'};
-  const formTypeBg={thrivehq:'#dbeafe',couples:'#dbeafe',individual:'#dbeafe'};
+  const formTypeLabels={thrivehq:'ThriveHQ',couples:'Couples',individual:'Individual',ndis:'NDIS'};
+  const formTypeColors={thrivehq:'#1e3a5f',couples:'#1e3a5f',individual:'#1e3a5f',ndis:'#0f766e'};
+  const formTypeBg={thrivehq:'#dbeafe',couples:'#dbeafe',individual:'#dbeafe',ndis:'#ccfbf1'};
 
   let html=`<div class="dash-cards" style="margin-bottom:16px;">
     <div class="dash-card" style="cursor:pointer;${newCount?'box-shadow:0 0 0 2px #3b82f6;':''}" onclick="setIntakeStatusFilter('New')">
@@ -8010,7 +8011,7 @@ function renderIntakeSubmissions(opts){
   const showFormType=!formTypeFilter;
 
   // Group by category: active submissions by form_type, plus Archived pooled at the bottom
-  const groups={thrivehq:[],couples:[],individual:[],archived:[]};
+  const groups={thrivehq:[],couples:[],individual:[],ndis:[],archived:[]};
   filtered.forEach(s=>{
     if((s.status||'')==='Archived'){groups.archived.push(s);return;}
     const ft=s.form_type||'thrivehq';
@@ -8056,6 +8057,7 @@ function renderIntakeSubmissions(opts){
     {key:'thrivehq',label:'ThriveHQ',color:'#1e3a5f',openDefault:true},
     {key:'couples',label:'Couples',color:'#b87a90',openDefault:true},
     {key:'individual',label:'Individual',color:'#0891b2',openDefault:true},
+    {key:'ndis',label:'NDIS',color:'#0f766e',openDefault:true},
     {key:'archived',label:'Archived',color:'#94a3b8',openDefault:false}
   ];
   catOrder.forEach(cat=>{
@@ -13782,7 +13784,7 @@ function renderAbout(){
     listItem('Finance','Dashboard, Payment Platforms (GoCardless + Stripe login info loaded from Supabase), Income, Where Money Goes, Bills, Insurance, Transactions (Xero CSV import). Bills: Paid &amp; Renew creates next year\'s entry with blank amount and notes — only name, category, frequency and due date carry over.')+
     listItem('Development Business','Running costs (Supabase, Claude API) and possible pricing reference for development apps — 7 app tiers from Relationship to Developer Coach4U')+
     listItem('Prospects','Sales pipeline: status tracking, dated activity logs, follow-up dates, overdue highlighting, intake form linking')+
-    listItem('Intake Forms','Public forms (ThriveHQ, Couples, Individual) — full AU/NZ address (street, suburb, state, postcode), partner preferred name. Address is displayed in the CRM intake review view.')+
+    listItem('Intake Forms','Public forms (ThriveHQ, Couples, Individual, NDIS) — full AU/NZ address (street, suburb, state, postcode), partner preferred name (Couples), carer details and plan management type (NDIS). Filter chips in CRM: All Programs / ThriveHQ / Couples / Individual / NDIS. Each hub also has its own Intake Forms page filtered to that form type.')+
     listItem('Cancellation Policy','Public branded policy page at /policies/cancellation/')+
     listItem('Cath Voice Reference','docs/cath-voice-tone-v1.md + inline CATH_VOICE_REFERENCE constant — single source of truth for all AI-generated tone')+
     listItem('Client Profile','Full-screen modal with teal header, scrollable body — Members, Reports &amp; Documents, Pulse Check-ins, Couple Dynamics AI, Notes. Pulse and Couple Dynamics sections are role-gated (Couple/Individual only). Flex column layout ensures correct scrolling on mobile including iPhone notch/home indicator.')+
@@ -13830,13 +13832,52 @@ function renderAbout(){
     tableItem('payment_platforms','Payment platform login info (GoCardless, Stripe) — name, subtitle, description, URL, login note, sub-services JSONB, sort order')+
   '</ul>');
 
+  // ── JOURNEY CARDS ──
+  function jCard(hub,color,steps){
+    return `<div style="margin-bottom:16px;">
+      <div style="font-size:11px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;padding-left:2px;">${hub}</div>
+      ${steps.map((s,i)=>`<div style="display:flex;gap:10px;padding:8px 10px;background:#f8fafc;border:1px solid #f1f5f9;border-left:3px solid ${color};border-radius:6px;margin-bottom:4px;align-items:flex-start;">
+        <span style="background:${color};color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;flex-shrink:0;margin-top:1px;">Step ${i+1}</span>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:600;font-size:13px;color:#1e293b;">${s.label}</div>
+          <div style="font-size:11px;color:#94a3b8;word-break:break-all;">${s.path}</div>
+          <div style="font-size:11px;color:#64748b;margin-top:1px;">${s.when}</div>
+        </div>
+      </div>`).join('')}
+    </div>`;
+  }
+  const baseUrl=window.location.origin+window.location.pathname.replace(/\/index\.html$/,'').replace(/\/$/,'');
+  html+=card('&#128279; Journey Cards',
+    '<div style="font-size:12px;color:#64748b;margin-bottom:16px;">Client-facing WhatsApp links sent at each stage of a service journey. Displayed in order in each hub\'s Client Links section.</div>'+
+    jCard('Couples Hub','#b87a90',[
+      {label:'Couples Intake Form',path:baseUrl+'/intake/couples/',when:'Before first session — collect details'},
+      {label:'Couples — Process & Pricing',path:baseUrl+'/couples-process/',when:'After connection call — agreed to proceed'},
+      {label:'Couples — You\'re All Set',path:baseUrl+'/couples-thankyou/',when:'After intake form & direct debit set up'},
+      {label:'Couples — Ongoing Sessions',path:baseUrl+'/couples-ongoing/',when:'After 2-hour intake session complete'}
+    ])+
+    jCard('ThriveHQ Hub','#16a34a',[
+      {label:'ThriveHQ Intake Form',path:baseUrl+'/intake/thrivehq/',when:'Before first session — send to new members'},
+      {label:'Initial Enquiry — What\'s Involved',path:baseUrl+'/thrivehq-intro/',when:'When someone expresses interest'},
+      {label:'Getting Started — Payment & Welcome',path:baseUrl+'/thrivehq-welcome/',when:'When ready to join'}
+    ])+
+    jCard('NDIS Hub','#2563eb',[
+      {label:'NDIS Counselling — Process & Pricing',path:baseUrl+'/ndis-process/',when:'After initial conversation — agreed to move forward'},
+      {label:'NDIS Intake Form',path:baseUrl+'/intake/ndis/',when:'Before first session — participant or carer completes'}
+    ])+
+    jCard('Strengths Hub','#d97706',[
+      {label:'CliftonStrengths — What It Is & How It Works',path:baseUrl+'/gallup-intro/',when:'Cath has spoken to client about the assessment'},
+      {label:'Getting Your Assessment Set Up',path:baseUrl+'/gallup-next/',when:'Client confirmed they want to go ahead'},
+      {label:'CliftonStrengths Assessment Guide',path:baseUrl+'/gallup-guide/',when:'Payment received, code purchased and sent'},
+      {label:'Your Strengths Report is Being Prepared',path:baseUrl+'/gallup-complete/',when:'Client has completed the assessment'}
+    ])
+  );
+
   html+=card('Pages','<ul style="list-style:disc;padding-left:20px;margin:0;">'+
     '<li style="margin:6px 0;font-size:14px;color:#334155;"><strong style="color:#1e3a5f;">index.html</strong> — Main CRM app (single-page)</li>'+
     '<li style="margin:6px 0;font-size:14px;color:#334155;"><strong style="color:#1e3a5f;">gallup-request/</strong> — Public Gallup CliftonStrengths code request form for corporate orgs (per-org URL <code>?org=&lt;client.id&gt;</code>)</li>'+
-    '<li style="margin:6px 0;font-size:14px;color:#334155;"><strong style="color:#1e3a5f;">intake/thrivehq/</strong>, <strong style="color:#1e3a5f;">intake/couples/</strong>, <strong style="color:#1e3a5f;">intake/individual/</strong> — Public intake forms</li>'+
+    '<li style="margin:6px 0;font-size:14px;color:#334155;"><strong style="color:#1e3a5f;">intake/thrivehq/</strong>, <strong style="color:#1e3a5f;">intake/couples/</strong>, <strong style="color:#1e3a5f;">intake/individual/</strong>, <strong style="color:#1e3a5f;">intake/ndis/</strong> — Public intake forms</li>'+
     '<li style="margin:6px 0;font-size:14px;color:#334155;"><strong style="color:#1e3a5f;">policies/cancellation/</strong> — Public Cancellation &amp; Rescheduling Policy</li>'+
-    '<li style="margin:6px 0;font-size:14px;color:#334155;"><strong style="color:#1e3a5f;">couples-process/</strong>, <strong style="color:#1e3a5f;">couples-thankyou/</strong>, <strong style="color:#1e3a5f;">couples-ongoing/</strong> — Couples journey process pages (sent via WhatsApp at each stage). Shared template: "[Service] — Process" h1, "Confirmed" first section, consistent CSS.</li>'+
-    '<li style="margin:6px 0;font-size:14px;color:#334155;"><strong style="color:#1e3a5f;">gallup-intro/</strong>, <strong style="color:#1e3a5f;">gallup-next/</strong>, <strong style="color:#1e3a5f;">gallup-guide/</strong>, <strong style="color:#1e3a5f;">gallup-complete/</strong> — Gallup Strengths journey process pages (sent via WhatsApp at each stage). gallup-intro: $135/assessment, GST free, direct debit, aim for by 2nd session.</li>'+
+    '<li style="margin:6px 0;font-size:14px;color:#334155;"><strong style="color:#1e3a5f;">Journey Cards</strong> — Client-facing WhatsApp links sent at each stage (see Journey Cards section above). Couples: couples-process/, couples-thankyou/, couples-ongoing/. NDIS: ndis-process/. Strengths: gallup-intro/, gallup-next/, gallup-guide/, gallup-complete/. ThriveHQ: thrivehq-intro/, thrivehq-welcome/.</li>'+
     '<li style="margin:6px 0;font-size:14px;color:#334155;"><strong style="color:#1e3a5f;">portal/</strong> — Client-facing SAFE Pulse portal (check-in &amp; printable report)</li>'+
     '<li style="margin:6px 0;font-size:14px;color:#334155;"><strong style="color:#1e3a5f;">brain-pulse/</strong> — Client-facing Brain Pulse portal</li>'+
     '<li style="margin:6px 0;font-size:14px;color:#334155;"><strong style="color:#1e3a5f;">writing-partner/</strong> — Writing Partner helper</li>'+
