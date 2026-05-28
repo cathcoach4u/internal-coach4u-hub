@@ -257,7 +257,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.7</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.8</span>
     </div>
   </div>
   <div class="area-tabs-wrap" id="areaTabsWrap">
@@ -2048,9 +2048,12 @@ async function loadClients(){
     const roleMap={};
     (allMembers||[]).forEach(m=>{
       if(!memberMap[m.client_id])memberMap[m.client_id]=[];
-      memberMap[m.client_id].push(m.contact_id);
+      if(!memberMap[m.client_id].includes(m.contact_id))
+        memberMap[m.client_id].push(m.contact_id);
       if(!roleMap[m.client_id])roleMap[m.client_id]={};
-      roleMap[m.client_id][m.contact_id]=m.role||'Client';
+      // Keep most specific role (Carer/Partner wins over Client)
+      const existing=roleMap[m.client_id][m.contact_id];
+      if(!existing||existing==='Client') roleMap[m.client_id][m.contact_id]=m.role||'Client';
     });
     data.forEach(c=>{c.members=memberMap[c.id]||[];c.memberRoles=roleMap[c.id]||{};});
     clients=data;
@@ -6523,7 +6526,8 @@ window._cpRefreshFn=null;
     const c=id?clients.find(x=>x.id===id):null;
     if(!c) return;
     window._cpRefreshFn=()=>window.openClientProfile(id);
-    const memberContacts=(c.members||[]).map(mid=>contacts.find(x=>x.id===mid)).filter(Boolean);
+    const _seenMC=new Set();
+    const memberContacts=(c.members||[]).map(mid=>contacts.find(x=>x.id===mid)).filter(Boolean).filter(mc=>{if(_seenMC.has(mc.id))return false;_seenMC.add(mc.id);return true;});
     const ref=c.referred_by?referrals.find(r=>r.id===c.referred_by):null;
 
     let html=`<div style="background:linear-gradient(135deg,${TEAL} 0%,${TEAL_DARK} 100%);padding:24px 28px 20px;color:#fff;">
