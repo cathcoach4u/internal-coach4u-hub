@@ -257,7 +257,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.23</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.24</span>
     </div>
   </div>
   <div class="area-tabs-wrap" id="areaTabsWrap">
@@ -935,12 +935,13 @@ if('serviceWorker' in navigator){
     <div class="form-group"><label>Email</label><input id="prospEmail" type="email"></div>
     <div class="form-group"><label>Phone</label><input id="prospPhone"></div>
     <div class="form-group"><label>Client Type</label>
-      <select id="prospRole"><option>Individual</option><option>NDIS Individual</option><option>Couple</option><option>Business</option><option>Organisation</option></select>
+      <select id="prospRole"><option value="Individual">Individual</option><option value="NDIS Individual">NDIS Individual</option><option value="Community">ThriveHQ</option><option value="Couple">Couple</option><option value="Business">Business</option><option value="Organisation">Organisation</option></select>
     </div>
     <div class="form-group"><label>Status</label>
       <select id="prospStatus"><option>New</option><option>Hot</option><option>Warm</option><option>Cold</option><option>Converted</option><option>Lost</option></select>
     </div>
-    <div class="form-group"><label>Source / Referrer</label><input id="prospSource"></div>
+    <div class="form-group"><label>Referrer</label><select id="prospReferrerId" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;background:#fff;"><option value="">— No referrer —</option></select></div>
+    <div class="form-group"><label>Source</label><input id="prospSource" placeholder="e.g. Google, Instagram, Facebook, word of mouth..."></div>
     <div class="form-group"><label>Follow-Up Date</label><input id="prospFollowUp" type="date"></div>
     <div class="form-group"><label>Notes</label><textarea id="prospNotes" style="height:60px;"></textarea></div>
     <div id="prospLogSection" style="display:none;">
@@ -4569,7 +4570,7 @@ function renderProspects(){
   let filtered=prospects;
   if(statusFilter==='active') filtered=filtered.filter(p=>p.status!=='Lost'&&p.status!=='Converted');
   else if(statusFilter) filtered=filtered.filter(p=>p.status===statusFilter);
-  if(q) filtered=filtered.filter(p=>(p.name+' '+(p.email||'')+' '+(p.phone||'')+' '+(p.notes||'')+' '+(p.status||'')).toLowerCase().includes(q));
+  if(q) filtered=filtered.filter(p=>{const ref=p.referrer_id?referrals.find(r=>r.id===p.referrer_id):null;return (p.name+' '+(p.email||'')+' '+(p.phone||'')+' '+(p.notes||'')+' '+(p.status||'')+' '+(p.source||'')+' '+(ref?ref.name:'')).toLowerCase().includes(q);});
 
   const now=new Date();
   let html='';
@@ -4588,6 +4589,7 @@ function renderProspects(){
       const noteCount=prospectNotes.filter(n=>n.prospect_id===p.id).length;
       const followUp=p.follow_up_date;
       const isOverdue=followUp&&new Date(followUp)<now&&!isClosedProspect;
+      const refName=p.referrer_id?(referrals.find(r=>r.id===p.referrer_id)||{}).name||'':'';
 
       html+=`<div onclick="openProspectModal('${p.id}')" style="background:#fff;border:1px solid #e2e8f0;border-left:3px solid ${statusCol};border-radius:8px;padding:14px 16px;cursor:pointer;${cardOpacity}${isOverdue?'box-shadow:0 0 0 2px #fbbf24;':''}" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap;">
@@ -4597,6 +4599,7 @@ function renderProspects(){
               <span style="background:${statusBg};color:${statusCol};padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;">${p.status||'New'}</span>
             </div>
             <div style="font-size:12px;color:#94a3b8;">${p.email||''}${p.email&&p.phone?' · ':''}${p.phone?'<a href="sms:'+p.phone+'" onclick="event.stopPropagation();" style="color:#2563eb;text-decoration:none;font-weight:500;" title="Text '+p.phone+'">&#128172; '+p.phone+'</a>':(!p.email?'No contact info':'')}</div>
+            ${refName||p.source?`<div style="font-size:11px;color:#64748b;margin-top:3px;">${refName?'<span style="background:#f0fdf4;color:#15803d;padding:1px 7px;border-radius:99px;font-weight:600;margin-right:4px;">&#128101; '+refName+'</span>':''}${p.source?'<span style="color:#94a3b8;">'+p.source+'</span>':''}</div>`:''}
             ${lastNote?'<div style="font-size:12px;color:#64748b;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><span style="color:#94a3b8;font-weight:500;">'+lastNote.note_type+':</span> '+lastNote.note+'</div>':''}
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0;">
@@ -4638,6 +4641,8 @@ window.openProspectModal=function(id){
   document.getElementById('prospRole').value=p?p.role||'Individual':'Individual';
   document.getElementById('prospStatus').value=p?p.status||'New':'New';
   document.getElementById('prospSource').value=p?p.source||'':'';
+  const refSel=document.getElementById('prospReferrerId');
+  refSel.innerHTML='<option value="">— No referrer —</option>'+referrals.map(r=>`<option value="${r.id}"${p&&p.referrer_id===r.id?' selected':''}>${r.name}</option>`).join('');
   document.getElementById('prospNotes').value=p?p.notes||'':'';
   document.getElementById('prospDelBtn').style.display=p?'inline-block':'none';
   document.getElementById('prospLostBtn').style.display=(p&&p.status!=='Converted'&&p.status!=='Lost')?'inline-block':'none';
@@ -4877,6 +4882,7 @@ window.saveProspect=async function(){
     role:document.getElementById('prospRole').value,
     status:document.getElementById('prospStatus').value,
     source:document.getElementById('prospSource').value.trim()||null,
+    referrer_id:document.getElementById('prospReferrerId').value||null,
     follow_up_date:document.getElementById('prospFollowUp').value||null,
     notes:document.getElementById('prospNotes').value.trim()||null,
     contact_id:document.getElementById('prospContact').value||null
@@ -8401,7 +8407,41 @@ window.convertIntakeToClient=async function(id){
     return;
   }
 
-  // ── INDIVIDUAL: single contact (unchanged) ──
+  // ── NDIS: participant contact + NDIS Individual client ──
+  if(ft==='ndis'){
+    const existing=contacts.find(c=>c.email&&s.email&&c.email.toLowerCase()===s.email.toLowerCase());
+    let contactId;
+    if(existing){
+      contactId=existing.id;
+      await supabase.from('contacts').update({contact_type:'Client'}).eq('id',contactId);
+    } else {
+      const {data:inserted,error:cErr}=await supabase.from('contacts').insert({
+        first_name:s.first_name,last_name:s.last_name,
+        preferred_name:s.preferred_name||null,
+        email:s.email||null,phone:s.phone||null,
+        contact_type:'Client'
+      }).select();
+      if(cErr){toast('Error creating contact: '+cErr.message,'error');return;}
+      contactId=inserted[0].id;
+    }
+    const clientName=((s.preferred_name||s.first_name)+' '+s.last_name).trim();
+    const {data:clIns,error:clErr}=await supabase.from('clients').insert({
+      relationship_name:clientName,
+      role:'NDIS Individual',
+      status:'Active',
+      practitioner:'Cath Baker'
+    }).select();
+    if(clErr){toast('Error creating client: '+clErr.message,'error');return;}
+    await supabase.from('client_members').insert({client_id:clIns[0].id,contact_id:contactId});
+    await supabase.from('intake_submissions').update({status:'Converted',contact_id:contactId}).eq('id',id);
+    await Promise.all([loadContacts(),loadClients(),loadIntakeSubmissions()]);
+    renderIntakeSubmissions();
+    toast(`NDIS client "${clientName}" created`,'success');
+    closeModal('intakeDetailModal');
+    return;
+  }
+
+  // ── INDIVIDUAL: single contact ──
   const existing=contacts.find(c=>c.email&&s.email&&c.email.toLowerCase()===s.email.toLowerCase());
   let contactId;
   if(existing){
@@ -14012,7 +14052,7 @@ const aiTools=[
   {name:'search_clients',description:'Search clients/relationships by name. Use for specific lookups.',input_schema:{type:'object',properties:{query:{type:'string',description:'Search term'}},required:['query']}},
   {name:'search_prospects',description:'Search prospects by name, status, or notes. Use for specific lookups.',input_schema:{type:'object',properties:{query:{type:'string',description:'Search term'}},required:['query']}},
   {name:'add_contact',description:'Add a new contact to the master list. ALWAYS use this tool to add contacts, not any generic method.',input_schema:{type:'object',properties:{first_name:{type:'string'},last_name:{type:'string'},email:{type:'string'},phone:{type:'string'},contact_type:{type:'string',enum:['Individual','ThriveHQ Member','Prospect']},notes:{type:'string'}},required:['first_name','last_name']}},
-  {name:'add_prospect',description:'Add a new prospect. ALWAYS use this tool to add prospects. Optionally link to existing contact by contact_id.',input_schema:{type:'object',properties:{name:{type:'string',description:'Full name'},email:{type:'string'},phone:{type:'string'},role:{type:'string',enum:['Individual','NDIS Individual','Couple','Business','Organisation']},status:{type:'string',enum:['New','Hot','Warm','Cold']},source:{type:'string'},notes:{type:'string'},contact_id:{type:'string',description:'UUID of linked contact from master list (optional)'}},required:['name']}},
+  {name:'add_prospect',description:'Add a new prospect. ALWAYS use this tool to add prospects. Optionally link to existing contact by contact_id.',input_schema:{type:'object',properties:{name:{type:'string',description:'Full name'},email:{type:'string'},phone:{type:'string'},role:{type:'string',enum:['Individual','NDIS Individual','Community','Couple','Business','Organisation']},status:{type:'string',enum:['New','Hot','Warm','Cold']},source:{type:'string'},notes:{type:'string'},contact_id:{type:'string',description:'UUID of linked contact from master list (optional)'}},required:['name']}},
   {name:'add_task',description:'Add a new task. ALWAYS use this tool to create tasks.',input_schema:{type:'object',properties:{title:{type:'string'},description:{type:'string'},work_category:{type:'string',enum:['Task','Action Plan','BAU'],description:'Task=regular task, Action Plan=strategic goal, BAU=recurring daily monitoring'},owner:{type:'string',enum:['Cath Baker','CoachVA (Lou)'],description:'Who owns/does this task'},requester:{type:'string',enum:['Cath Baker','CoachVA (Lou)','System','Client'],description:'Who requested this task'},task_type:{type:'string',enum:['Admin','Finance','Client','Tech','Personal','System']},priority:{type:'string',enum:['Urgent','Normal','Low']},status:{type:'string',enum:['Not Started','In Progress','Waiting on Cath','Waiting on CoachVA','Blocked','Complete']},source:{type:'string',enum:['Chat','Email','Call','System','Self'],description:'Where did this task come from'},decision_required:{type:'string',enum:['No','Yes'],description:'Does this need Cath decision?'},due_date:{type:'string',description:'YYYY-MM-DD format'},blocked_reason:{type:'string',description:'Why is this blocked (only if status=Blocked)'},focus_today:{type:'boolean',description:'Set true to add to today\'s priorities'}},required:['title']}},
   {name:'update_contact',description:'Update an existing contact. First use search_contacts to find the contact ID, then use this tool.',input_schema:{type:'object',properties:{id:{type:'string',description:'Contact UUID'},email:{type:'string'},phone:{type:'string'},contact_type:{type:'string'},notes:{type:'string'},first_name:{type:'string'},last_name:{type:'string'}},required:['id']}},
   {name:'update_prospect',description:'Update an existing prospect. First use search_prospects to find the prospect ID.',input_schema:{type:'object',properties:{id:{type:'string',description:'Prospect UUID'},name:{type:'string'},status:{type:'string'},role:{type:'string'},notes:{type:'string'},email:{type:'string'},phone:{type:'string'}},required:['id']}},
