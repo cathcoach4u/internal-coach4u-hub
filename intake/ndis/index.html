@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NDIS Coaching — Getting Started | Coach4U</title>
+<title>NDIS Counselling — Getting Started | Coach4U</title>
 <link rel="icon" href="../../icon-192.png" type="image/png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -72,7 +72,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0fdfb;color:#1e293b;m
 
 <div class="header">
   <img src="../../C4U.png" alt="Coach4U">
-  <h1>NDIS Coaching &amp; Counselling</h1>
+  <h1>NDIS Counselling</h1>
   <p>Getting started — this form can be completed by the participant or their carer/guardian.</p>
 </div>
 
@@ -111,7 +111,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0fdfb;color:#1e293b;m
   <!-- STEP 1: Participant details (always shown — title/subtitle adjusts for role) -->
   <div class="section" id="step1">
     <h2 class="section-title" id="step1Title">Participant Details</h2>
-    <p class="section-sub" id="step1Sub">Tell us about the person who will be receiving coaching.</p>
+    <p class="section-sub" id="step1Sub">Tell us about the person who will be receiving counselling.</p>
 
     <div class="panel">
       <div class="panel-title">Name &amp; Identity</div>
@@ -273,7 +273,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0fdfb;color:#1e293b;m
     <div class="form-group">
       <label>What type of support are you looking for? <span style="color:#94a3b8;font-weight:400;">(select all that apply)</span></label>
       <div class="chip-group" id="supportChips">
-        <div class="chip" onclick="toggleChip(this)">ADHD Coaching</div>
+        <div class="chip" onclick="toggleChip(this)">ADHD Counselling</div>
         <div class="chip" onclick="toggleChip(this)">Executive Functioning</div>
         <div class="chip" onclick="toggleChip(this)">Life Skills</div>
         <div class="chip" onclick="toggleChip(this)">Social &amp; Communication</div>
@@ -292,7 +292,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0fdfb;color:#1e293b;m
     </div>
 
     <div class="form-group">
-      <label>What would a good outcome from coaching look like?</label>
+      <label>What would a good outcome from counselling look like?</label>
       <textarea id="fGoals" placeholder="What would the participant like to achieve or work towards..."></textarea>
     </div>
 
@@ -328,7 +328,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0fdfb;color:#1e293b;m
 
     <div class="consent-item">
       <input type="checkbox" id="cConsentInfo">
-      <label for="cConsentInfo">I consent to Coach4U collecting and storing the information provided (contact details, intake responses, session notes) for the purpose of delivering coaching/counselling sessions. Records are stored securely and retained as required by law. <span class="req">*</span></label>
+      <label for="cConsentInfo">I consent to Coach4U collecting and storing the information provided (contact details, intake responses, session notes) for the purpose of delivering counselling sessions. Records are stored securely and retained as required by law. <span class="req">*</span></label>
     </div>
     <div class="consent-item">
       <input type="checkbox" id="cConsentRecording">
@@ -422,7 +422,7 @@ function updateStepContent(stepNum){
   if(stepNum===1){
     if(isCarer){
       document.getElementById('step1Title').textContent='About the Participant';
-      document.getElementById('step1Sub').textContent='Tell us about the person who will be receiving coaching.';
+      document.getElementById('step1Sub').textContent='Tell us about the person who will be receiving counselling.';
       document.getElementById('participantContactTitle').textContent='Participant Contact Details';
       document.getElementById('pPhoneLbl').textContent='Participant Phone';
       document.getElementById('pEmailLbl').textContent='Participant Email';
