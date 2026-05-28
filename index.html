@@ -257,7 +257,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.18</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.19</span>
     </div>
   </div>
   <div class="area-tabs-wrap" id="areaTabsWrap">
@@ -2708,6 +2708,7 @@ function renderCouplesClientLinks(){
   if(!el) return;
   const baseUrl=window.location.origin+window.location.pathname.replace(/\/index\.html$/,'').replace(/\/$/,'');
   const links=[
+    {stage:'Before first session',label:'Couples Intake Form',path:'/intake/couples/',desc:'Send to collect details before the first session'},
     {stage:'After connection call — agreed to proceed',label:'Couples Process &amp; Pricing',path:'/couples-process/',desc:'Process, what to expect, fees and next steps'},
     {stage:'After intake form &amp; direct debit',label:'Couples — You\'re All Set',path:'/couples-thankyou/',desc:'Confirms everything is in place before the intake session'},
     {stage:'After 2-hour intake session',label:'Couples — Ongoing Sessions',path:'/couples-ongoing/',desc:'Teams link, billing policy and cancellation policy'}
@@ -3110,11 +3111,6 @@ function renderResourcesDash(){
   const el=document.getElementById('resourcesDashContent');
   if(!el) return;
   const baseUrl=window.location.origin+window.location.pathname.replace(/\/index\.html$/,'').replace(/\/$/,'');
-  const intakeLinks=[
-    {label:'ThriveHQ Intake Form',path:'/intake/thrivehq/',icon:'&#128170;',desc:'Members / coaching intake'},
-    {label:'Couples Intake Form',path:'/intake/couples/',icon:'&#128147;',desc:'Couples counselling intake'},
-    {label:'Individual Intake Form',path:'/intake/individual/',icon:'&#128100;',desc:'Individual coaching/counselling intake'}
-  ];
   const policyLinks=[
     {label:'Cancellation & Rescheduling Policy',path:'/policies/cancellation/',icon:'&#128197;',desc:'Client-facing policy page',
      shareText:url=>`Hi,\n\nHere’s the Coach4U Cancellation & Rescheduling Policy for your reference:\n${url}\n\nThe key points: please cancel or reschedule by 9:00am on the business day before your appointment. Late cancellations and no-shows incur the full session fee. If something sudden comes up — illness or an accident — please reach out as early as you can and we’ll handle it with care.\n\nThanks\nCath`}
@@ -3158,13 +3154,6 @@ function renderResourcesDash(){
         <button type="button" onclick="window.open('${clientLinksUrl}','_blank')" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);padding:6px 14px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">Open &#8599;</button>
       </div>
     </div>
-  </div>`;
-
-
-  html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #2563eb;border-radius:12px;padding:18px 20px;margin-bottom:14px;">
-    <div style="font-weight:700;color:#1e3a5f;font-size:15px;margin-bottom:4px;">&#128221; Intake Forms</div>
-    <div style="font-size:12px;color:#64748b;margin-bottom:12px;">Send initially to prospective clients.</div>
-    ${intakeLinks.map(renderLinkRow).join('')}
   </div>`;
 
 
@@ -3244,6 +3233,7 @@ function renderThqDash(){
     </div>
   </div>`;
   const thqLinks=[
+    {label:'Intake Form',url:'https://cathcoach4u.github.io/internal-coach4u-hub/intake/thrivehq/',icon:'&#128203;',desc:'ThriveHQ intake — send before the first session'},
     {label:'Initial Enquiry',url:'https://cathcoach4u.github.io/internal-coach4u-hub/thrivehq-intro/',icon:'&#128204;',desc:'What\'s involved & pricing — send when someone expresses interest'},
     {label:'Getting Started',url:'https://cathcoach4u.github.io/internal-coach4u-hub/thrivehq-welcome/',icon:'&#127381;',desc:'Payment & welcome page — send when they\'re ready to join'},
     {label:'Links Page',url:'https://cathcoach4u.github.io/yourthrivehqcoach/links.html',icon:'&#128279;',desc:'ThriveHQ client resource hub'},
@@ -3341,7 +3331,30 @@ function renderNdisDash(){
     <div style="font-weight:700;font-size:14px;color:#1e3a5f;margin-bottom:4px;">Plan Tracker <span style="font-size:10px;background:#f1f5f9;color:#64748b;padding:2px 7px;border-radius:99px;font-weight:600;">Coming soon</span></div>
     <div style="font-size:11px;color:#64748b;">NDIS plan numbers, managers, coordinators</div>
   </div>`;
-  html+=`</div></div>`;
+  html+=`</div>`;
+  const ndisBaseUrl=window.location.origin+window.location.pathname.replace(/\/index\.html$/,'').replace(/\/$/,'');
+  const ndisClientLinks=[
+    {stage:'After initial conversation — agreed to proceed',label:'NDIS Process &amp; Pricing',path:'/ndis-process/',desc:'Next steps, intake form link, session pricing, billing info'},
+    {stage:'Before first session',label:'NDIS Intake Form',path:'/intake/ndis/',desc:'NDIS counselling intake — participant or carer can complete'},
+    {stage:'Before first session',label:'Individual Intake Form',path:'/intake/individual/',desc:'Individual counselling intake — for non-NDIS individual clients'}
+  ];
+  function ndisRow(l,i,arr){
+    const full=ndisBaseUrl+l.path;
+    return `<div style="padding:14px 0;${i<arr.length-1?'border-bottom:1px solid #f1f5f9;':''}">
+      <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">${l.stage}</div>
+      <div style="font-weight:700;font-size:14px;color:#1e3a5f;margin-bottom:2px;">${l.label}</div>
+      <div style="font-size:12px;color:#64748b;margin-bottom:6px;">${l.desc}</div>
+      <div style="font-size:11px;color:#94a3b8;word-break:break-all;margin-bottom:8px;">${full}</div>
+      <div style="display:flex;gap:8px;">
+        <button type="button" data-url="${full}" data-label="${l.label} link" onclick="copyPublicLink(this)" style="background:#2563eb;color:#fff;border:none;padding:7px 18px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">Copy</button>
+        <button type="button" onclick="window.open('${full}','_blank')" style="background:#f0f4f8;color:#2563eb;border:1px solid #e2e8f0;padding:7px 18px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">Open &#8599;</button>
+      </div>
+    </div>`;
+  }
+  html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #2563eb;border-radius:12px;padding:18px 20px;margin-top:16px;">
+    <div style="font-weight:700;color:#1e3a5f;font-size:15px;margin-bottom:14px;">&#128279; Client Links</div>
+    ${ndisClientLinks.map(ndisRow).join('')}
+  </div></div>`;
   el.innerHTML=html;
 }
 
