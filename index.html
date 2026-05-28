@@ -257,7 +257,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.5</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.6</span>
     </div>
   </div>
   <div class="area-tabs-wrap" id="areaTabsWrap">
@@ -566,6 +566,45 @@ if('serviceWorker' in navigator){
         <button onclick="copyIntakeLink('individual')" style="padding:6px 12px;border:1px solid #bfdbfe;border-radius:99px;font-size:11px;font-weight:600;color:#1e3a5f;background:#dbeafe;cursor:pointer;font-family:inherit;white-space:nowrap;" onmouseover="this.style.background='#bfdbfe'" onmouseout="this.style.background='#dbeafe'">&#128279; Individual</button>
       </div>
       <div id="intakeContent"></div>
+    </div>
+
+    <!-- COUPLES INTAKE FORMS -->
+    <div class="screen" id="screen-couplesforms">
+      <div class="toolbar">
+        <button onclick="navTo('couplesdash')" style="padding:6px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;font-weight:600;color:#b87a90;background:#fff1f2;cursor:pointer;font-family:inherit;white-space:nowrap;">&#8592; Couples Hub</button>
+        <input class="search-input" id="couplesFormsSearch" placeholder="Search submissions..." oninput="renderCouplesIntakeForms()">
+        <select id="couplesFormsFilter" onchange="renderCouplesIntakeForms()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
+          <option value="">All Status</option><option value="New">New</option><option value="Reviewed">Reviewed</option><option value="Converted">Converted</option>
+        </select>
+        <button onclick="copyIntakeLink('couples')" style="padding:6px 12px;border:1px solid #bfdbfe;border-radius:99px;font-size:11px;font-weight:600;color:#1e3a5f;background:#dbeafe;cursor:pointer;font-family:inherit;white-space:nowrap;" onmouseover="this.style.background='#bfdbfe'" onmouseout="this.style.background='#dbeafe'">&#128279; Copy Link</button>
+      </div>
+      <div id="couplesFormsContent"></div>
+    </div>
+
+    <!-- THRIVEHQ INTAKE FORMS HUB PAGE -->
+    <div class="screen" id="screen-thqforms">
+      <div class="toolbar">
+        <button onclick="navTo('thqdash')" style="padding:6px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;font-weight:600;color:#16a34a;background:#f0fdf4;cursor:pointer;font-family:inherit;white-space:nowrap;">&#8592; ThriveHQ Hub</button>
+        <input class="search-input" id="thqFormsSearch" placeholder="Search submissions..." oninput="renderThqIntakeForms()">
+        <select id="thqFormsFilter" onchange="renderThqIntakeForms()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
+          <option value="">All Status</option><option value="New">New</option><option value="Reviewed">Reviewed</option><option value="Converted">Converted</option>
+        </select>
+        <button onclick="copyIntakeLink('thrivehq')" style="padding:6px 12px;border:1px solid #bfdbfe;border-radius:99px;font-size:11px;font-weight:600;color:#1e3a5f;background:#dbeafe;cursor:pointer;font-family:inherit;white-space:nowrap;" onmouseover="this.style.background='#bfdbfe'" onmouseout="this.style.background='#dbeafe'">&#128279; Copy Link</button>
+      </div>
+      <div id="thqFormsContent"></div>
+    </div>
+
+    <!-- NDIS / INDIVIDUAL INTAKE FORMS HUB PAGE -->
+    <div class="screen" id="screen-ndisforms">
+      <div class="toolbar">
+        <button onclick="navTo('ndisdash')" style="padding:6px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;font-weight:600;color:#2563eb;background:#eff6ff;cursor:pointer;font-family:inherit;white-space:nowrap;">&#8592; NDIS Hub</button>
+        <input class="search-input" id="ndisFormsSearch" placeholder="Search submissions..." oninput="renderNdisIntakeForms()">
+        <select id="ndisFormsFilter" onchange="renderNdisIntakeForms()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
+          <option value="">All Status</option><option value="New">New</option><option value="Reviewed">Reviewed</option><option value="Converted">Converted</option>
+        </select>
+        <button onclick="copyIntakeLink('individual')" style="padding:6px 12px;border:1px solid #bfdbfe;border-radius:99px;font-size:11px;font-weight:600;color:#1e3a5f;background:#dbeafe;cursor:pointer;font-family:inherit;white-space:nowrap;" onmouseover="this.style.background='#bfdbfe'" onmouseout="this.style.background='#dbeafe'">&#128279; Copy Link</button>
+      </div>
+      <div id="ndisFormsContent"></div>
     </div>
 
     <!-- THRIVEHQ TRIALS -->
@@ -2087,7 +2126,7 @@ window.navTo = function(tab,btn){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+tab).classList.add('active');
   window.scrollTo(0,0);
-  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ Hub',thqintake:'Intake Forms',strdash:'Strengths Hub',opsdash:'Admin',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',sms:'Comms',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Profiles',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Active Tasks',playbook:'Work Log',procedures:'Daily Procedures',quicklinks:'Quick Links',itprojects:'IT Projects',agents:'Agents',writingpartner:'Writing Partner',findash:'Finance',finpayments:'Payment Platforms',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fininsurance:'Insurance',fintxns:'Transactions',finstripe:'Stripe Payments',findev:'Development Business',thqbrainpulse:'Brain Pulse',thqactivities:'Activities',clibrainpulse:'Brain Pulse',cliconnection:'Connection Pulse',thqpulse:'SAFE Pulse',clipulse:'SAFE Pulse',pulsesdash:'Pulses',couplesintake:'Couples Intake',couplesdash:'Couples Hub',couplesclientlinks:'Client Links',ndisdash:'NDIS Hub',ndisclients:'NDIS Clients',couplestimelines:'Therapy Timelines',couplesbetrayal:'Betrayal First Aid',itdash:'IT',resourcesdash:'Resources',agentsai:'AI Strategy',prompts:'Prompts',strreports:'Strengths Reports',strdomains:'Domain Balance',strupload:'Upload Report',strcodes:'Gallup Code Tracker',strsop:'Gallup Workflow SOP',strclientlinks:'Client Links'};
+  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ Hub',thqintake:'Intake Forms',strdash:'Strengths Hub',opsdash:'Admin',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',sms:'Comms',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Profiles',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Active Tasks',playbook:'Work Log',procedures:'Daily Procedures',quicklinks:'Quick Links',itprojects:'IT Projects',agents:'Agents',writingpartner:'Writing Partner',findash:'Finance',finpayments:'Payment Platforms',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fininsurance:'Insurance',fintxns:'Transactions',finstripe:'Stripe Payments',findev:'Development Business',thqbrainpulse:'Brain Pulse',thqactivities:'Activities',clibrainpulse:'Brain Pulse',cliconnection:'Connection Pulse',thqpulse:'SAFE Pulse',clipulse:'SAFE Pulse',pulsesdash:'Pulses',couplesintake:'Couples Intake',couplesdash:'Couples Hub',couplesclientlinks:'Client Links',ndisdash:'NDIS Hub',ndisclients:'NDIS Clients',couplesforms:'Intake Forms',thqforms:'Intake Forms',ndisforms:'Intake Forms',couplestimelines:'Therapy Timelines',couplesbetrayal:'Betrayal First Aid',itdash:'IT',resourcesdash:'Resources',agentsai:'AI Strategy',prompts:'Prompts',strreports:'Strengths Reports',strdomains:'Domain Balance',strupload:'Upload Report',strcodes:'Gallup Code Tracker',strsop:'Gallup Workflow SOP',strclientlinks:'Client Links'};
   document.getElementById('pageTitle').textContent=titles[tab]||'Coach4U';
   // Sync area tab
   const area=pageToArea[tab]||'home';
@@ -2112,6 +2151,9 @@ window.navTo = function(tab,btn){
   if(tab==='couplesbetrayal') renderCouplesBetrayal();
   if(tab==='ndisdash') renderNdisDash();
   if(tab==='ndisclients') renderNdisClients();
+  if(tab==='couplesforms') renderCouplesIntakeForms();
+  if(tab==='thqforms') renderThqIntakeForms();
+  if(tab==='ndisforms') renderNdisIntakeForms();
   if(tab==='itdash') renderItDash();
   if(tab==='resourcesdash') renderResourcesDash();
   if(tab==='modulesdash') renderModulesDash();
@@ -2194,7 +2236,7 @@ window.goToClient=function(clientId){
 // ── AREA TABS & SIDEBAR ──
 const areaConfig={
   home:{label:'Home',pages:[{id:'dashboard',icon:'&#9776;',label:'Dashboard'}]},
-  crm:{label:'CRM',pages:[{id:'crmdash',icon:'&#128200;',label:'Dashboard'},{id:'masterlist',icon:'&#128209;',label:'Master List'},{id:'prospects',icon:'&#128203;',label:'Prospect List'},{id:'clidash',icon:'&#129309;',label:'Clients Dashboard'},{id:'clients',icon:'&#128101;',label:'Client List'},{id:'thqintake',icon:'&#128221;',label:'Intake Forms'},{id:'clinvoices',icon:'&#128206;',label:'Invoices'},{id:'sms',icon:'&#128172;',label:'Comms'}]},
+  crm:{label:'CRM',pages:[{id:'crmdash',icon:'&#128200;',label:'Dashboard'},{id:'masterlist',icon:'&#128209;',label:'Master List'},{id:'prospects',icon:'&#128203;',label:'Prospect List'},{id:'clidash',icon:'&#129309;',label:'Clients Dashboard'},{id:'clients',icon:'&#128101;',label:'Client List'},{id:'clinvoices',icon:'&#128206;',label:'Invoices'},{id:'sms',icon:'&#128172;',label:'Comms'}]},
   referrers:{label:'Referrers',pages:[{id:'referrals',icon:'&#128200;',label:'Dashboard'},{id:'refpayments',icon:'&#128176;',label:'Payments'}]},
   pulses:{label:'Pulses',pages:[{id:'pulsesdash',icon:'&#128200;',label:'Dashboard'},{id:'clipulse',icon:'&#128147;',label:'SAFE Pulse'},{id:'clibrainpulse',icon:'&#129504;',label:'Brain Pulse'},{id:'cliconnection',icon:'&#128151;',label:'Connection Pulse'}]},
   hubs:{label:'Hubs',pages:[{id:'modulesdash',icon:'&#128200;',label:'Dashboard'},{id:'couplesdash',icon:'&#128149;',label:'Couples Hub'},{id:'thqdash',icon:'&#128170;',label:'ThriveHQ Hub'},{id:'ndisdash',icon:'&#127758;',label:'NDIS Hub'},{id:'strdash',icon:'&#127919;',label:'Strengths Hub'}]},
@@ -2648,6 +2690,11 @@ function renderCouplesDash(){
       <div style="font-size:24px;margin-bottom:8px;">&#128737;</div>
       <div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">Betrayal First Aid</div>
       <div style="font-size:11px;color:#64748b;">PORT recovery framework</div>
+    </div>
+    <div onclick="navTo('couplesforms')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #b87a90;border-radius:12px;padding:18px 20px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
+      <div style="font-size:24px;margin-bottom:8px;">&#128203;</div>
+      <div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">Intake Forms</div>
+      <div style="font-size:11px;color:#64748b;">Couples intake submissions</div>
     </div>
   </div>`;
   el.innerHTML=html;
@@ -3187,6 +3234,11 @@ function renderThqDash(){
       <div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">Activities</div>
       <div style="font-size:11px;color:#64748b;">Coaching activities and tools</div>
     </div>
+    <div onclick="navTo('thqforms')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #16a34a;border-radius:12px;padding:18px 20px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
+      <div style="font-size:24px;margin-bottom:8px;">&#128203;</div>
+      <div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">Intake Forms</div>
+      <div style="font-size:11px;color:#64748b;">ThriveHQ intake submissions</div>
+    </div>
   </div>`;
   const thqLinks=[
     {label:'Initial Enquiry',url:'https://cathcoach4u.github.io/internal-coach4u-hub/thrivehq-intro/',icon:'&#128204;',desc:'What\'s involved & pricing — send when someone expresses interest'},
@@ -3275,6 +3327,11 @@ function renderNdisDash(){
     <div style="font-size:24px;margin-bottom:8px;">&#128100;</div>
     <div style="font-weight:700;font-size:14px;color:#1e3a5f;margin-bottom:4px;">Participants</div>
     <div style="font-size:11px;color:#64748b;">View and manage all NDIS clients</div>
+  </div>`;
+  html+=`<div onclick="navTo('ndisforms')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #2563eb;border-radius:12px;padding:18px 20px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
+    <div style="font-size:24px;margin-bottom:8px;">&#128221;</div>
+    <div style="font-weight:700;font-size:14px;color:#1e3a5f;margin-bottom:4px;">Intake Forms</div>
+    <div style="font-size:11px;color:#64748b;">Individual intake submissions</div>
   </div>`;
   html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #94a3b8;border-radius:12px;padding:18px 20px;opacity:.6;">
     <div style="font-size:24px;margin-bottom:8px;">&#128203;</div>
@@ -7848,6 +7905,13 @@ window.renderStrengthsReports=renderStrengthsReports;
 // ── THRIVEHQ INTAKE SUBMISSIONS ──
 let intakeSubmissions=[];
 let intakeCategoryOpen={};
+let activeIntakeOpts={};
+window.setIntakeStatusFilter=function(val){
+  const id=(activeIntakeOpts||{}).statusId||'intakeFilter';
+  const el=document.getElementById(id);
+  if(el) el.value=val;
+  renderIntakeSubmissions();
+};
 window.toggleIntakeCategory=function(key){
   intakeCategoryOpen[key]=!(intakeCategoryOpen[key]??(key!=='archived'));
   renderIntakeSubmissions();
@@ -7866,10 +7930,16 @@ window.copyIntakeLink=function(formType){
   copyText(url,labels[formType]||'Intake link');
 };
 
-function renderIntakeSubmissions(){
-  const q=(document.getElementById('intakeSearch')?.value||'').toLowerCase();
-  const statusFilter=document.getElementById('intakeFilter')?.value||'';
-  const formTypeFilter=document.getElementById('intakeFormType')?.value||'';
+function renderIntakeSubmissions(opts){
+  if(opts) activeIntakeOpts=opts;
+  else opts=activeIntakeOpts||{};
+  const containerId=opts.containerId||'intakeContent';
+  const searchId=opts.searchId||'intakeSearch';
+  const statusId=opts.statusId||'intakeFilter';
+  const lockedType=opts.formType||null;
+  const q=(document.getElementById(searchId)?.value||'').toLowerCase();
+  const statusFilter=document.getElementById(statusId)?.value||'';
+  const formTypeFilter=lockedType||(document.getElementById('intakeFormType')?.value||'');
   let filtered=intakeSubmissions;
   if(formTypeFilter) filtered=filtered.filter(s=>(s.form_type||'thrivehq')===formTypeFilter);
   if(statusFilter) filtered=filtered.filter(s=>s.status===statusFilter);
@@ -7887,19 +7957,19 @@ function renderIntakeSubmissions(){
   const formTypeBg={thrivehq:'#dbeafe',couples:'#dbeafe',individual:'#dbeafe'};
 
   let html=`<div class="dash-cards" style="margin-bottom:16px;">
-    <div class="dash-card" style="cursor:pointer;${newCount?'box-shadow:0 0 0 2px #3b82f6;':''}" onclick="document.getElementById('intakeFilter').value='New';renderIntakeSubmissions();">
+    <div class="dash-card" style="cursor:pointer;${newCount?'box-shadow:0 0 0 2px #3b82f6;':''}" onclick="setIntakeStatusFilter('New')">
       <div class="dc-icon" style="background:#dbeafe;color:#2563eb;">&#128221;</div>
       <div class="dc-info"><h4>${newCount}</h4><p>New Submissions</p></div>
     </div>
-    <div class="dash-card" style="cursor:pointer;" onclick="document.getElementById('intakeFilter').value='Reviewed';renderIntakeSubmissions();">
+    <div class="dash-card" style="cursor:pointer;" onclick="setIntakeStatusFilter('Reviewed')">
       <div class="dc-icon" style="background:#fef3c7;color:#d97706;">&#128270;</div>
       <div class="dc-info"><h4>${reviewedCount}</h4><p>Reviewed</p></div>
     </div>
-    <div class="dash-card" style="cursor:pointer;" onclick="document.getElementById('intakeFilter').value='Converted';renderIntakeSubmissions();">
+    <div class="dash-card" style="cursor:pointer;" onclick="setIntakeStatusFilter('Converted')">
       <div class="dc-icon green">&#10004;</div>
       <div class="dc-info"><h4>${convertedCount}</h4><p>Converted</p></div>
     </div>
-    <div class="dash-card" style="cursor:pointer;" onclick="document.getElementById('intakeFilter').value='';renderIntakeSubmissions();">
+    <div class="dash-card" style="cursor:pointer;" onclick="setIntakeStatusFilter('')">
       <div class="dc-icon" style="background:#f1f5f9;color:#64748b;">&#128101;</div>
       <div class="dc-info"><h4>${base.length}</h4><p>Total</p></div>
     </div>
@@ -7979,7 +8049,7 @@ function renderIntakeSubmissions(){
     </div>`;
   });
 
-  document.getElementById('intakeContent').innerHTML=html;
+  document.getElementById(containerId).innerHTML=html;
 }
 
 window.openIntakeDetail=function(id){
@@ -8331,6 +8401,17 @@ window.convertIntakeToClient=async function(id){
   toast('Converted to client!','success');
   closeModal('intakeDetailModal');
 };
+
+// ── HUB INTAKE FORM PAGES ──
+function renderCouplesIntakeForms(){
+  renderIntakeSubmissions({containerId:'couplesFormsContent',searchId:'couplesFormsSearch',statusId:'couplesFormsFilter',formType:'couples'});
+}
+function renderThqIntakeForms(){
+  renderIntakeSubmissions({containerId:'thqFormsContent',searchId:'thqFormsSearch',statusId:'thqFormsFilter',formType:'thrivehq'});
+}
+function renderNdisIntakeForms(){
+  renderIntakeSubmissions({containerId:'ndisFormsContent',searchId:'ndisFormsSearch',statusId:'ndisFormsFilter',formType:'individual'});
+}
 
 // ── COUPLES INTAKE (Port Institute Assessment & Formulation Worksheet) ──
 const couplesIntakeConfig=[
