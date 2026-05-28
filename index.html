@@ -257,7 +257,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.64.9</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.0</span>
     </div>
   </div>
   <div class="area-tabs-wrap" id="areaTabsWrap">
@@ -4741,6 +4741,10 @@ window.saveProspect=async function(){
     const existing=contacts.find(c=>c.first_name.toLowerCase()===firstName.toLowerCase()&&c.last_name.toLowerCase()===lastName.toLowerCase());
     if(existing){
       obj.contact_id=existing.id;
+      const patch={};
+      if(obj.phone&&!existing.phone) patch.phone=obj.phone;
+      if(obj.email&&!existing.email) patch.email=obj.email;
+      if(Object.keys(patch).length) await supabase.from('contacts').update(patch).eq('id',existing.id);
     } else {
       const {data:inserted,error:cErr}=await supabase.from('contacts').insert({
         first_name:firstName,last_name:lastName,
@@ -4750,6 +4754,17 @@ window.saveProspect=async function(){
       if(cErr){toast('Error creating contact: '+cErr.message,'error');return;}
       obj.contact_id=inserted[0].id;
       await loadContacts();
+    }
+  }
+
+  // When editing an existing prospect, sync phone/email to linked contact if blank
+  if(id&&obj.contact_id){
+    const linked=contacts.find(c=>c.id===obj.contact_id);
+    if(linked){
+      const patch={};
+      if(obj.phone&&!linked.phone) patch.phone=obj.phone;
+      if(obj.email&&!linked.email) patch.email=obj.email;
+      if(Object.keys(patch).length) await supabase.from('contacts').update(patch).eq('id',linked.id);
     }
   }
 
