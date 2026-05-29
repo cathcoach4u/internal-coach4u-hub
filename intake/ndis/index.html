@@ -256,6 +256,10 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0fdfb;color:#1e293b;m
           <input id="fPlanManagerEmail" type="email" placeholder="Email address invoices should be sent to">
           <div class="hint">This is the email address the team will send your tax invoice to after each session.</div>
         </div>
+        <div class="form-group">
+          <label>Plan Manager Phone <span style="color:#94a3b8;font-weight:400;">(optional)</span></label>
+          <input id="fPlanManagerPhone" type="tel" placeholder="e.g. 02 9000 0000" inputmode="tel">
+        </div>
       </div>
       <div id="selfManagedFields" style="display:none;">
         <div class="form-group">
@@ -525,6 +529,7 @@ async function submitForm(){
     g('fPlanManager')?'Plan management: '+g('fPlanManager'):'',
     g('fPlanManagerName')?'Plan manager: '+g('fPlanManagerName'):'',
     g('fPlanManagerEmail')?'Invoice email: '+g('fPlanManagerEmail'):'',
+    g('fPlanManagerPhone')?'Plan manager phone: '+g('fPlanManagerPhone'):'',
     g('fSelfManagedEmail')?'Invoice email: '+g('fSelfManagedEmail'):'',
     g('fSupportCoordinator')?'Support coordinator: '+g('fSupportCoordinator'):'',
     isCarer?'Comms preference: '+g('fCommsPreference'):''
