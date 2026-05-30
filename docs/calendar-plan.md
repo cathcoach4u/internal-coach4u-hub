@@ -21,14 +21,15 @@ with appointments linked to existing clients/contacts in Supabase.
 |---|---|---|---|
 | `cath@coach4u.com.au` | coach4u.com.au (M365) | **Work** — sessions, tasks | Two-way sync, full detail |
 | `Coach4U@…onmicrosoft.com` | coach4u.com.au (M365) | **Bookings — client-facing front door.** VA books here; clients see "Coach4U", giving a team feel | Two-way sync; **keep as the client-facing entry**. App/AI-created sessions must surface as **Coach4U**, never Cath's personal identity |
-| `cath@coachingwithcath.com.au` | coachingwithcath.com.au | **Personal** — affects availability | **Busy/free only.** Used so bookings don't clash with personal time; private event details are **not** shown in the work CRM |
+| `cath@coachingwithcath.com.au` | coachingwithcath.com.au | **Personal** — affects availability | **Viewable & bookable** (full detail, flagged "personal"). Counts toward availability so client sessions don't clash. **Never shown to clients.** |
 
 **Brand rule:** the Bookings page is deliberate — it makes clients feel there's a team around
-Cath. Do not replace it or expose Cath's personal address to clients. The VA's booking
-workflow stays intact.
+Cath. The **AI VA (Claude) now does the booking** into it, in place of the human VA. Client
+sessions are created **in the Bookings mailbox**, so the client always sees "Coach4U", never
+Cath's personal identity. Do not replace the Bookings page or expose Cath's personal address.
 
-**Privacy rule:** the personal calendar is availability-only. The work CRM reads busy/free
-blocks from it but never displays its event content.
+**Privacy rule:** the personal calendar is fully viewable and bookable by Cath/the AI VA, but
+its events are **never surfaced to clients** — they only contribute to Cath's availability.
 
 ## Phase 0 finding — access is already proven
 
@@ -85,16 +86,16 @@ read across the personal account works. Observations:
 ## Availability layer
 
 A free/busy union across **all three** calendars drives "when is Cath free?" and prevents
-double-booking. Work + bookings contribute full events; personal contributes busy blocks only.
-`find_meeting_availability` (Graph) can compute candidate slots; the app overlays these in the
-week view and the AI booking flow proposes only genuinely-free times.
+double-booking. All three contribute busy blocks; client sessions are only proposed in slots
+free across work, bookings, and personal. `find_meeting_availability` (Graph) computes
+candidate slots; the app overlays these in the week view and the AI booking flow proposes only
+genuinely-free times.
 
 ## Open items to confirm
 
 - ~~Confirm the two mailboxes~~ → **Resolved:** work `cath@coach4u.com.au`, bookings
   `Coach4U@…onmicrosoft.com`, personal `cath@coachingwithcath.com.au`.
-- Should app/AI-created **client** sessions be created in the **Bookings** mailbox (to preserve
-  the Coach4U sender), or in the work calendar with Coach4U set as organiser? (Both keep Cath's
-  personal identity hidden from clients — confirm preferred mechanism.)
-- Personal calendar: busy/free only confirmed — confirm whether Cath ever wants personal events
-  *titled* in her own week view (private to her, never client-facing).
+- ~~Where to create client sessions~~ → **Resolved:** the **AI VA (Claude) is now the VA** and
+  books client sessions **into the Bookings mailbox**, so clients always see "Coach4U".
+- ~~Personal calendar treatment~~ → **Resolved:** fully viewable and bookable, flagged
+  "personal", never client-facing.
