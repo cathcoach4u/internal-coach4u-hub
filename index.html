@@ -87,6 +87,28 @@ tr:hover td{background:#f8fafc;}
 td .actions{display:flex;gap:6px;}
 td .actions button{padding:8px 14px;font-size:12px;}
 
+/* ── CALENDAR (Phase 1 week view) ── */
+.cal-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+.cal-nav-btn{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;color:#1e3a5f;cursor:pointer;font-family:inherit;}
+.cal-nav-btn:hover{background:#f8fafc;}
+.cal-week-range{font-weight:700;color:#1e3a5f;font-size:15px;}
+.cal-legend{display:flex;gap:12px;align-items:center;margin-left:auto;flex-wrap:wrap;}
+.cal-legend span{display:flex;align-items:center;gap:5px;font-size:11px;color:#64748b;font-weight:600;}
+.cal-dot{width:10px;height:10px;border-radius:3px;display:inline-block;flex-shrink:0;}
+.cal-week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;}
+.cal-day{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:8px;min-height:96px;display:flex;flex-direction:column;}
+.cal-day.today{border-color:#0d9488;box-shadow:0 0 0 2px rgba(13,148,136,.15);}
+.cal-day-head{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:baseline;}
+.cal-day-head .dnum{font-size:15px;color:#1e3a5f;}
+.cal-day.today .dnum{color:#0d9488;}
+.cal-ev{border-left:3px solid #64748b;background:#f8fafc;border-radius:6px;padding:5px 7px;margin-bottom:5px;}
+.cal-ev .evt{font-size:12px;font-weight:600;color:#1e3a5f;line-height:1.25;word-break:break-word;}
+.cal-ev .evm{font-size:10px;color:#64748b;margin-top:1px;}
+.cal-ev .evpill{display:inline-block;font-size:9px;font-weight:700;padding:1px 6px;border-radius:99px;background:#dbeafe;color:#2563eb;margin-top:3px;}
+.cal-empty{color:#cbd5e1;font-size:12px;text-align:center;margin-top:8px;}
+.cal-banner{background:#fef3c7;border:1px solid #fcd34d;color:#92400e;border-radius:10px;padding:12px 14px;font-size:13px;line-height:1.5;margin-bottom:14px;}
+@media(max-width:768px){.cal-week-grid{grid-template-columns:1fr;}.cal-legend{margin-left:0;width:100%;}.cal-day{min-height:auto;}}
+
 /* ── BADGES ── */
 .badge{font-size:11px;padding:3px 10px;border-radius:99px;font-weight:600;display:inline-block;}
 .badge-green{background:#dcfce7;color:#15803d;}
@@ -257,12 +279,13 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.40</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.41</span>
     </div>
   </div>
   <div class="area-tabs-wrap" id="areaTabsWrap">
     <div class="area-tabs" id="areaTabs">
       <button class="area-tab active" onclick="switchArea('home')"><span class="tab-icon">&#9776;</span>Home</button>
+      <button class="area-tab" onclick="switchArea('calendar')"><span class="tab-icon">&#128197;</span>Calendar</button>
       <button class="area-tab" onclick="switchArea('crm')"><span class="tab-icon">&#128202;</span>CRM</button>
       <button class="area-tab" onclick="switchArea('referrers')"><span class="tab-icon">&#128200;</span>Referrers</button>
       <button class="area-tab" onclick="switchArea('pulses')"><span class="tab-icon">&#128147;</span>Pulses</button>
@@ -421,6 +444,9 @@ if('serviceWorker' in navigator){
     </div>
     <div class="screen" id="screen-resourcesdash">
       <div id="resourcesDashContent"></div>
+    </div>
+    <div class="screen" id="screen-calweek">
+      <div id="calWeekContent"></div>
     </div>
 
     <!-- MASTER LIST -->
@@ -2108,7 +2134,7 @@ async function loadAgents(){
 }
 async function loadAll(){
   try{
-    await Promise.all([loadContacts(), loadClients(), loadTasks(), loadProspects(), loadProspectNotes(), loadReferrers(), loadRefPayments(), loadRenewals(), loadContactReports(), loadStrengthsInsights(), loadGallupRequests(), loadTrials(), loadTaskLogs(), loadFinanceTransactions(), loadStripePayments(), loadBills(), loadIntakeSubmissions(), loadPulseResults(), loadBrainPulseSubmissions(), loadConnectionPulseSubmissions(), loadAgents(), loadSmsMessages(), loadCommsLists(), loadPaymentMandates(), loadPrompts(), loadAppSettings(), loadPlaybookLog(), loadGroupTemplates(), loadPaymentPlatforms()]);
+    await Promise.all([loadContacts(), loadClients(), loadTasks(), loadProspects(), loadProspectNotes(), loadReferrers(), loadRefPayments(), loadRenewals(), loadContactReports(), loadStrengthsInsights(), loadGallupRequests(), loadTrials(), loadTaskLogs(), loadFinanceTransactions(), loadStripePayments(), loadBills(), loadIntakeSubmissions(), loadPulseResults(), loadBrainPulseSubmissions(), loadConnectionPulseSubmissions(), loadAgents(), loadSmsMessages(), loadCommsLists(), loadPaymentMandates(), loadPrompts(), loadAppSettings(), loadPlaybookLog(), loadGroupTemplates(), loadPaymentPlatforms(), loadCalendarEvents()]);
     await processStopReplies();
     await bootstrapInAppAgents();
   }catch(e){
@@ -2131,7 +2157,7 @@ window.navTo = function(tab,btn){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+tab).classList.add('active');
   window.scrollTo(0,0);
-  const titles={dashboard:'Dashboard',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ Hub',thqintake:'Intake Forms',strdash:'Strengths Hub',opsdash:'Admin',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',sms:'Comms',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Profiles',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Active Tasks',playbook:'Work Log',procedures:'Daily Procedures',quicklinks:'Quick Links',itprojects:'IT Projects',agents:'Agents',writingpartner:'Writing Partner',findash:'Finance',finpayments:'Payment Platforms',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fininsurance:'Insurance',fintxns:'Transactions',finstripe:'Stripe Payments',findev:'Development Business',thqbrainpulse:'Brain Pulse',thqactivities:'Activities',clibrainpulse:'Brain Pulse',cliconnection:'Connection Pulse',thqpulse:'SAFE Pulse',clipulse:'SAFE Pulse',pulsesdash:'Pulses',couplesintake:'Couples Intake',couplesdash:'Couples Hub',couplesclientlinks:'Client Links',ndisdash:'NDIS Hub',ndisclients:'NDIS Clients',couplesforms:'Intake Forms',thqforms:'Intake Forms',ndisforms:'Intake Forms',couplestimelines:'Therapy Timelines',couplesbetrayal:'Betrayal First Aid',itdash:'IT',resourcesdash:'Resources',agentsai:'AI Strategy',prompts:'Prompts',strreports:'Strengths Reports',strdomains:'Domain Balance',strupload:'Upload Report',strcodes:'Gallup Code Tracker',strsop:'Gallup Workflow SOP',strclientlinks:'Client Links'};
+  const titles={dashboard:'Dashboard',calweek:'Calendar',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ Hub',thqintake:'Intake Forms',strdash:'Strengths Hub',opsdash:'Admin',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',sms:'Comms',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Profiles',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Active Tasks',playbook:'Work Log',procedures:'Daily Procedures',quicklinks:'Quick Links',itprojects:'IT Projects',agents:'Agents',writingpartner:'Writing Partner',findash:'Finance',finpayments:'Payment Platforms',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fininsurance:'Insurance',fintxns:'Transactions',finstripe:'Stripe Payments',findev:'Development Business',thqbrainpulse:'Brain Pulse',thqactivities:'Activities',clibrainpulse:'Brain Pulse',cliconnection:'Connection Pulse',thqpulse:'SAFE Pulse',clipulse:'SAFE Pulse',pulsesdash:'Pulses',couplesintake:'Couples Intake',couplesdash:'Couples Hub',couplesclientlinks:'Client Links',ndisdash:'NDIS Hub',ndisclients:'NDIS Clients',couplesforms:'Intake Forms',thqforms:'Intake Forms',ndisforms:'Intake Forms',couplestimelines:'Therapy Timelines',couplesbetrayal:'Betrayal First Aid',itdash:'IT',resourcesdash:'Resources',agentsai:'AI Strategy',prompts:'Prompts',strreports:'Strengths Reports',strdomains:'Domain Balance',strupload:'Upload Report',strcodes:'Gallup Code Tracker',strsop:'Gallup Workflow SOP',strclientlinks:'Client Links'};
   document.getElementById('pageTitle').textContent=titles[tab]||'Coach4U';
   // Sync area tab
   const area=pageToArea[tab]||'home';
@@ -2149,6 +2175,7 @@ window.navTo = function(tab,btn){
   if(btn) btn.classList.add('active');
   else document.querySelectorAll('.nav-item').forEach(n=>{if(n.dataset.page===tab) n.classList.add('active');});
   if(tab==='dashboard') renderDashboard();
+  if(tab==='calweek') renderCalWeek();
   if(tab==='pulsesdash') renderPulsesDash();
   if(tab==='couplesdash') renderCouplesDash();
   if(tab==='couplesclientlinks') renderCouplesClientLinks();
@@ -2241,6 +2268,7 @@ window.goToClient=function(clientId){
 // ── AREA TABS & SIDEBAR ──
 const areaConfig={
   home:{label:'Home',pages:[{id:'dashboard',icon:'&#9776;',label:'Dashboard'}]},
+  calendar:{label:'Calendar',pages:[{id:'calweek',icon:'&#128197;',label:'Week View'}]},
   crm:{label:'CRM',pages:[{id:'crmdash',icon:'&#128200;',label:'Dashboard'},{id:'masterlist',icon:'&#128209;',label:'Master List'},{id:'prospects',icon:'&#128203;',label:'Prospect List'},{id:'clidash',icon:'&#129309;',label:'Clients Dashboard'},{id:'clients',icon:'&#128101;',label:'Client List'},{id:'clinvoices',icon:'&#128206;',label:'Invoices'},{id:'sms',icon:'&#128172;',label:'Comms'}]},
   referrers:{label:'Referrers',pages:[{id:'referrals',icon:'&#128200;',label:'Dashboard'},{id:'refpayments',icon:'&#128176;',label:'Payments'}]},
   pulses:{label:'Pulses',pages:[{id:'pulsesdash',icon:'&#128200;',label:'Dashboard'},{id:'clipulse',icon:'&#128147;',label:'SAFE Pulse'},{id:'clibrainpulse',icon:'&#129504;',label:'Brain Pulse'},{id:'cliconnection',icon:'&#128151;',label:'Connection Pulse'}]},
@@ -10509,6 +10537,135 @@ function toggleTkGroup(g){tkGroupState[g]=!tkGroupState[g];renderTasks();}
 window.toggleTkGroup=toggleTkGroup;
 
 // ── PHILIPPINES NIGHTLY ROLLOVER ─────────────────────────────────────────────
+// ── CALENDAR (Phase 1 week view) ──
+let calendarEvents=[];
+let calTableMissing=false;
+let calWeekOffset=0;
+const CAL_SELF_EMAILS=['cath@coach4u.com.au','cath@coachingwithcath.com.au','coach4u@netorgft4053847.onmicrosoft.com'];
+const CAL_SOURCE_META={
+  work:{color:'#0d9488',label:'Work'},
+  bookings:{color:'#2563eb',label:'Bookings'},
+  personal:{color:'#64748b',label:'Personal'}
+};
+async function loadCalendarEvents(){
+  calTableMissing=false;
+  try{
+    const {data,error}=await supabase.from('calendar_events').select('*').order('start_ts');
+    if(error){
+      if(error.code==='42P01'){ calTableMissing=true; }
+      else { console.warn('Load calendar_events error:',error); }
+      calendarEvents=[];
+      return;
+    }
+    calendarEvents=data||[];
+  }catch(e){ console.warn('loadCalendarEvents failed:',e); calendarEvents=[]; }
+}
+function calSydneyDateKey(iso){
+  try{ return new Intl.DateTimeFormat('en-CA',{timeZone:'Australia/Sydney'}).format(new Date(iso)); }
+  catch(e){ return ''; }
+}
+function calFmtTime(iso){
+  try{ return new Intl.DateTimeFormat('en-AU',{timeZone:'Australia/Sydney',hour:'numeric',minute:'2-digit',hour12:true}).format(new Date(iso)).replace(' ',''); }
+  catch(e){ return ''; }
+}
+function calContactName(c){
+  return ((c.first_name||'')+' '+(c.last_name||'')).trim()||c.email||'Contact';
+}
+function calMatchContact(ev){
+  if(ev.contact_id){ const c=contacts.find(x=>x.id===ev.contact_id); if(c) return c; }
+  let a=ev.attendees, emails=[];
+  if(typeof a==='string'){ try{ a=JSON.parse(a); }catch(e){ a=[a]; } }
+  if(Array.isArray(a)){
+    a.forEach(x=>{
+      if(typeof x==='string') emails.push(x);
+      else if(x&&x.email) emails.push(x.email);
+      else if(x&&x.emailAddress&&x.emailAddress.address) emails.push(x.emailAddress.address);
+    });
+  }
+  emails=emails.map(e=>(''+e).toLowerCase().trim()).filter(e=>e&&!CAL_SELF_EMAILS.includes(e));
+  if(!emails.length) return null;
+  return contacts.find(c=>c.email&&emails.includes(c.email.toLowerCase().trim()))||null;
+}
+function calMonday(offsetWeeks){
+  const todayStr=getAUDateStr();
+  const d=new Date(todayStr+'T12:00:00');
+  const dow=(d.getDay()+6)%7;
+  d.setDate(d.getDate()-dow+(offsetWeeks||0)*7);
+  return d;
+}
+window.calNav=function(delta){ calWeekOffset+=delta; renderCalWeek(); };
+window.calToday=function(){ calWeekOffset=0; renderCalWeek(); };
+function renderCalWeek(){
+  const el=document.getElementById('calWeekContent');
+  if(!el) return;
+  const monday=calMonday(calWeekOffset);
+  const days=[];
+  for(let i=0;i<7;i++){ const dd=new Date(monday); dd.setDate(monday.getDate()+i); days.push(dd); }
+  const todayKey=getAUDateStr();
+  const fmtRange=(d)=>new Intl.DateTimeFormat('en-AU',{day:'numeric',month:'short'}).format(d);
+  const yr=days[6].getFullYear();
+  const rangeLabel=fmtRange(days[0])+' – '+fmtRange(days[6])+' '+yr+(calWeekOffset===0?' · This week':'');
+  const byDay={};
+  days.forEach(d=>{ byDay[calSydneyDateKey(d.toISOString())]=[]; });
+  calendarEvents.forEach(ev=>{
+    const k=calSydneyDateKey(ev.start_ts);
+    if(byDay[k]) byDay[k].push(ev);
+  });
+  Object.keys(byDay).forEach(k=>{
+    byDay[k].sort((a,b)=>{
+      if(a.is_all_day&&!b.is_all_day) return -1;
+      if(!a.is_all_day&&b.is_all_day) return 1;
+      return (a.start_ts||'').localeCompare(b.start_ts||'');
+    });
+  });
+  const dayNames=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  let html='';
+  html+='<div style="font-size:13px;color:#64748b;margin-bottom:12px;line-height:1.5;">Your work, bookings and personal calendars in one place. Personal events are visible to you only and never shared with clients.</div>';
+  html+='<div class="cal-toolbar">'
+    +'<button class="cal-nav-btn" onclick="calNav(-1)">&#8249; Prev</button>'
+    +'<button class="cal-nav-btn" onclick="calToday()">Today</button>'
+    +'<button class="cal-nav-btn" onclick="calNav(1)">Next &#8250;</button>'
+    +'<span class="cal-week-range">'+rangeLabel+'</span>'
+    +'<span class="cal-legend">'
+      +'<span><span class="cal-dot" style="background:'+CAL_SOURCE_META.work.color+'"></span>Work</span>'
+      +'<span><span class="cal-dot" style="background:'+CAL_SOURCE_META.bookings.color+'"></span>Bookings</span>'
+      +'<span><span class="cal-dot" style="background:'+CAL_SOURCE_META.personal.color+'"></span>Personal</span>'
+    +'</span>'
+  +'</div>';
+  if(calTableMissing){
+    html+='<div class="cal-banner"><strong>Calendar sync not set up yet.</strong><br>The <code>calendar_events</code> table doesn\'t exist in Supabase yet. Once it\'s created and your Outlook calendars are synced, your week will appear here automatically.</div>';
+  } else if(calendarEvents.length===0){
+    html+='<div class="cal-banner"><strong>No events synced yet.</strong><br>Your week view is ready. As soon as your Outlook calendars are synced into Supabase, appointments will appear here.</div>';
+  }
+  html+='<div class="cal-week-grid">';
+  days.forEach((d,i)=>{
+    const k=calSydneyDateKey(d.toISOString());
+    const isToday=k===todayKey;
+    const evs=byDay[k]||[];
+    html+='<div class="cal-day'+(isToday?' today':'')+'">';
+    html+='<div class="cal-day-head"><span>'+dayNames[i]+'</span><span class="dnum">'+d.getDate()+'</span></div>';
+    if(!evs.length){
+      html+='<div class="cal-empty">&mdash;</div>';
+    } else {
+      evs.forEach(ev=>{
+        const meta=CAL_SOURCE_META[ev.source]||CAL_SOURCE_META.work;
+        const c=calMatchContact(ev);
+        const timeStr=ev.is_all_day?'All day':calFmtTime(ev.start_ts)+(ev.end_ts?('–'+calFmtTime(ev.end_ts)):'');
+        const subj=(ev.subject||'(no title)').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        html+='<div class="cal-ev" style="border-left-color:'+meta.color+'">';
+        html+='<div class="evt">'+subj+'</div>';
+        html+='<div class="evm">'+timeStr+'</div>';
+        if(ev.location){ html+='<div class="evm">'+(''+ev.location).replace(/</g,'&lt;').slice(0,60)+'</div>'; }
+        if(c){ html+='<div class="evpill">'+calContactName(c).replace(/</g,'&lt;')+'</div>'; }
+        html+='</div>';
+      });
+    }
+    html+='</div>';
+  });
+  html+='</div>';
+  el.innerHTML=html;
+}
+
 function getPHTDateStr(offsetDays){return getAUDateStr(offsetDays);}
 function getAUDateStr(offsetDays){
   // Always use Australia/Sydney — handles AEST (UTC+10) and AEDT (UTC+11) automatically
