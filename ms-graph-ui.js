@@ -130,6 +130,19 @@ function calBookApplySelection(){
   const box=document.getElementById('calBookRecipients');
   if(box) box.innerHTML=emails.length?'&#9993; Confirmation will be sent to: '+emails.map(e=>'<strong>'+emEsc(e)+'</strong>').join(', '):'';
 }
+window.calDeleteEvent=async function(source, graphId){
+  if(!graphId){ toast('Cannot delete: missing event id','error'); return; }
+  if(!confirm('Delete this event? It will be removed from your Outlook calendar. This cannot be undone.')) return;
+  try{
+    const {data:{session}}=await supabase.auth.getSession();
+    if(!session) throw new Error('Not signed in');
+    const res=await fetch(`${SUPABASE_EDGE_URL}/ms-graph-calendar`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},body:JSON.stringify({action:'cancel',source:source,graph_event_id:graphId})});
+    const out=await res.json();
+    if(!res.ok) throw new Error(out.error||('HTTP '+res.status));
+    toast('Event deleted','success');
+    await loadCalendarEvents(); renderCalWeek();
+  }catch(e){ toast('Delete failed: '+e.message,'error'); }
+};
 window.submitCalBook=async function(){
   const subject=document.getElementById('calBookSubject').value.trim();
   const source=document.getElementById('calBookSource').value;
