@@ -87,6 +87,7 @@ window.openCalBook=function(){
   document.getElementById('calBookLocation').value='';
   document.getElementById('calBookNotes').value='';
   document.getElementById('calBookMeetingLink').value='';
+  document.getElementById('calBookHost').value='Cath Baker';
   document.getElementById('calBookSendConfirm').checked=true;
   const rb=document.getElementById('calBookRecipients'); if(rb) rb.innerHTML='';
   document.getElementById('calBookModal').classList.add('open');
@@ -141,6 +142,7 @@ window.submitCalBook=async function(){
   }
   if(notes) bodyHtml+=(bodyHtml?'<br>':'')+emEsc(notes).replace(/\n/g,'<br>');
   const sendConfirm=document.getElementById('calBookSendConfirm').checked && attendees.length>0;
+  const host=(document.getElementById('calBookHost').value||'').trim()||'Cath Baker';
   const whenText=fmtWhen(date,time,dur);
   const btn=document.getElementById('calBookSubmitBtn'); btn.disabled=true; btn.textContent='Creating…';
   try{
@@ -150,7 +152,7 @@ window.submitCalBook=async function(){
       action:'book', source, subject, start, end, timeZone:'Australia/Sydney',
       location: loc||undefined, body:bodyHtml||undefined,
       attendees, contact_id: contactId||undefined, client_id: clientId||undefined,
-      send_confirmation:sendConfirm, when_text:whenText, meeting_url: ml?ml.url:undefined
+      send_confirmation:sendConfirm, when_text:whenText, host:host, meeting_url: ml?ml.url:undefined
     })});
     const out=await res.json();
     if(!res.ok) throw new Error(out.error||('HTTP '+res.status));

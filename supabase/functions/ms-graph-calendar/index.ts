@@ -251,7 +251,7 @@ function confirmationHtml(p: any) {
     </td></tr>
     <tr><td style="background:#ffffff;padding:26px 28px;color:#1e293b;font-size:14px;line-height:1.65;">
       <p style="margin:0 0 14px;">Hi there,</p>
-      <p style="margin:0 0 18px;">Your session with Coach4U is confirmed. Here are the details:</p>
+      <p style="margin:0 0 18px;">Your session with ${esc(p.host || 'Cath Baker')} is confirmed. Here are the details:</p>
       <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;background:#f8fafc;border-left:4px solid #0d9488;border-radius:8px;margin:0 0 18px;">
         <tr><td style="padding:14px 18px;">
           <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;">
@@ -290,7 +290,7 @@ function confirmationText(p: any) {
     '',
     'Hi there,',
     '',
-    'Your session with Coach4U is confirmed. Here are the details:',
+    'Your session with ' + (p.host || 'Cath Baker') + ' is confirmed. Here are the details:',
     '',
     'What: ' + (p.subject || ''),
   ]
