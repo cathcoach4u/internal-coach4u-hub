@@ -392,6 +392,29 @@ async function doReschedule(token: string, db: any, p: any) {
   return { event: row }
 }
 
+async function doUpdate(token: string, db: any, p: any) {
+  const mailbox = SOURCE_MAILBOX[p.source]
+  if (!mailbox) throw new Error(`Unknown source '${p.source}'`)
+  if (!p.graph_event_id) throw new Error('update requires source, graph_event_id')
+  const patch: any = {}
+  if (p.subject !== undefined) patch.subject = p.subject
+  if (p.start && p.end) {
+    patch.start = { dateTime: p.start, timeZone: p.timeZone || SYDNEY_TZ }
+    patch.end =   { dateTime: p.end,   timeZone: p.timeZone || SYDNEY_TZ }
+  }
+  if (p.location !== undefined) patch.location = { displayName: p.location || '' }
+  if (p.body !== undefined) patch.body = { contentType: 'HTML', content: p.body || '' }
+  const event = await graph(token, 'PATCH', `/users/${encodeURIComponent(mailbox)}/events/${p.graph_event_id}`, patch, { Prefer: 'outlook.timezone="UTC"' })
+  const row: any = mapEvent(p.source, event)
+  // preserve the existing contact/client link (upsert replaces the whole row)
+  const { data: existing } = await db.from('calendar_events')
+    .select('contact_id,client_id').eq('source', p.source).eq('graph_event_id', p.graph_event_id).maybeSingle()
+  row.contact_id = (p.contact_id !== undefined ? p.contact_id : (existing ? existing.contact_id : null)) || null
+  row.client_id  = (p.client_id  !== undefined ? p.client_id  : (existing ? existing.client_id  : null)) || null
+  await db.from('calendar_events').upsert([row], { onConflict: 'source,graph_event_id' })
+  return { event: row }
+}
+
 async function doCancel(token: string, db: any, p: any) {
   const mailbox = SOURCE_MAILBOX[p.source]
   if (!mailbox) throw new Error(`Unknown source '${p.source}'`)
@@ -435,6 +458,7 @@ serve(async (req) => {
       case 'sync':       return json(await doSync(token, db, body))
       case 'book':       return json(await doBook(token, db, body))
       case 'reschedule': return json(await doReschedule(token, db, body))
+      case 'update':     return json(await doUpdate(token, db, body))
       case 'cancel':     return json(await doCancel(token, db, body))
       case 'freebusy':   return json(await doFreeBusy(token, body))
       default:           return json({ error: `Unknown action '${action}'` }, 400)

@@ -130,6 +130,57 @@ function calBookApplySelection(){
   const box=document.getElementById('calBookRecipients');
   if(box) box.innerHTML=emails.length?'&#9993; Confirmation will be sent to: '+emails.map(e=>'<strong>'+emEsc(e)+'</strong>').join(', '):'';
 }
+function getCalEvents(){ return (CB.getCalendarEvents?CB.getCalendarEvents():[])||[]; }
+let calEditOrigNotes='';
+window.openCalEdit=function(source, graphId){
+  const ev=getCalEvents().find(e=>e.source===source && e.graph_event_id===graphId);
+  if(!ev){ toast('Could not find that event','error'); return; }
+  document.getElementById('calEditSource').value=source;
+  document.getElementById('calEditId').value=graphId;
+  document.getElementById('calEditSubject').value=ev.subject||'';
+  const d=new Date(ev.start_ts);
+  document.getElementById('calEditDate').value=new Intl.DateTimeFormat('en-CA',{timeZone:'Australia/Sydney'}).format(d);
+  document.getElementById('calEditTime').value=new Intl.DateTimeFormat('en-GB',{timeZone:'Australia/Sydney',hour:'2-digit',minute:'2-digit',hour12:false}).format(d);
+  let dur=90;
+  if(ev.start_ts&&ev.end_ts){ dur=Math.max(15,Math.round((new Date(ev.end_ts)-new Date(ev.start_ts))/60000)); }
+  const durSel=document.getElementById('calEditDuration');
+  if(!Array.prototype.some.call(durSel.options,o=>o.value===(''+dur))){ const o=document.createElement('option'); o.value=dur; o.textContent=dur+' min'; durSel.appendChild(o); }
+  durSel.value=''+dur;
+  document.getElementById('calEditLocation').value=ev.location||'';
+  calEditOrigNotes=ev.body_preview||'';
+  document.getElementById('calEditNotes').value=calEditOrigNotes;
+  document.getElementById('calEditModal').classList.add('open');
+};
+window.submitCalEdit=async function(){
+  const source=document.getElementById('calEditSource').value;
+  const graphId=document.getElementById('calEditId').value;
+  const subject=document.getElementById('calEditSubject').value.trim();
+  const date=document.getElementById('calEditDate').value;
+  const time=document.getElementById('calEditTime').value;
+  const dur=parseInt(document.getElementById('calEditDuration').value,10);
+  const location=document.getElementById('calEditLocation').value.trim();
+  const notes=document.getElementById('calEditNotes').value;
+  if(!subject){ toast('Add a title','error'); return; }
+  if(!date||!time){ toast('Pick a date and start time','error'); return; }
+  const start=date+'T'+time+':00';
+  const endD=new Date(date+'T'+time+':00Z'); endD.setUTCMinutes(endD.getUTCMinutes()+dur);
+  const end=endD.toISOString().slice(0,19);
+  const payload={action:'update',source:source,graph_event_id:graphId,subject:subject,start:start,end:end,timeZone:'Australia/Sydney',location:location};
+  // only send body if the notes actually changed — avoids clobbering the full body with the truncated preview
+  if(notes!==calEditOrigNotes){ payload.body=notes?emEsc(notes).replace(/\n/g,'<br>'):''; }
+  const btn=document.getElementById('calEditSubmitBtn'); btn.disabled=true; btn.textContent='Saving…';
+  try{
+    const {data:{session}}=await supabase.auth.getSession();
+    if(!session) throw new Error('Not signed in');
+    const res=await fetch(`${SUPABASE_EDGE_URL}/ms-graph-calendar`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},body:JSON.stringify(payload)});
+    const out=await res.json();
+    if(!res.ok) throw new Error(out.error||('HTTP '+res.status));
+    closeModal('calEditModal');
+    await loadCalendarEvents(); renderCalWeek();
+    toast('Event updated','success');
+  }catch(e){ toast('Update failed: '+e.message,'error'); }
+  finally{ btn.disabled=false; btn.textContent='Save changes'; }
+};
 window.calDeleteEvent=async function(source, graphId){
   if(!graphId){ toast('Cannot delete: missing event id','error'); return; }
   if(!confirm('Delete this event? It will be removed from your Outlook calendar. This cannot be undone.')) return;
