@@ -135,6 +135,7 @@ let calEditOrigNotes='';
 window.openCalEdit=function(source, graphId){
   const ev=getCalEvents().find(e=>e.source===source && e.graph_event_id===graphId);
   if(!ev){ toast('Could not find that event','error'); return; }
+  document.getElementById('calEditOrigSource').value=source;
   document.getElementById('calEditSource').value=source;
   document.getElementById('calEditId').value=graphId;
   document.getElementById('calEditSubject').value=ev.subject||'';
@@ -153,6 +154,7 @@ window.openCalEdit=function(source, graphId){
 };
 window.submitCalEdit=async function(){
   const source=document.getElementById('calEditSource').value;
+  const origSource=document.getElementById('calEditOrigSource').value;
   const graphId=document.getElementById('calEditId').value;
   const subject=document.getElementById('calEditSubject').value.trim();
   const date=document.getElementById('calEditDate').value;
@@ -165,7 +167,7 @@ window.submitCalEdit=async function(){
   const start=date+'T'+time+':00';
   const endD=new Date(date+'T'+time+':00Z'); endD.setUTCMinutes(endD.getUTCMinutes()+dur);
   const end=endD.toISOString().slice(0,19);
-  const payload={action:'update',source:source,graph_event_id:graphId,subject:subject,start:start,end:end,timeZone:'Australia/Sydney',location:location};
+  const payload={action:'update',source:source,orig_source:origSource,graph_event_id:graphId,subject:subject,start:start,end:end,timeZone:'Australia/Sydney',location:location};
   // only send body if the notes actually changed — avoids clobbering the full body with the truncated preview
   if(notes!==calEditOrigNotes){ payload.body=notes?emEsc(notes).replace(/\n/g,'<br>'):''; }
   const btn=document.getElementById('calEditSubmitBtn'); btn.disabled=true; btn.textContent='Saving…';
@@ -177,7 +179,7 @@ window.submitCalEdit=async function(){
     if(!res.ok) throw new Error(out.error||('HTTP '+res.status));
     closeModal('calEditModal');
     await loadCalendarEvents(); renderCalWeek();
-    toast('Event updated','success');
+    toast(out.moved?'Event moved & updated':'Event updated','success');
   }catch(e){ toast('Update failed: '+e.message,'error'); }
   finally{ btn.disabled=false; btn.textContent='Save changes'; }
 };

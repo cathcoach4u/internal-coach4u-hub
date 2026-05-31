@@ -393,26 +393,56 @@ async function doReschedule(token: string, db: any, p: any) {
 }
 
 async function doUpdate(token: string, db: any, p: any) {
-  const mailbox = SOURCE_MAILBOX[p.source]
-  if (!mailbox) throw new Error(`Unknown source '${p.source}'`)
+  const newSource = p.source
+  const oldSource = p.orig_source || p.source
+  const newMailbox = SOURCE_MAILBOX[newSource]
+  const oldMailbox = SOURCE_MAILBOX[oldSource]
+  if (!newMailbox || !oldMailbox) throw new Error(`Unknown calendar source`)
   if (!p.graph_event_id) throw new Error('update requires source, graph_event_id')
-  const patch: any = {}
-  if (p.subject !== undefined) patch.subject = p.subject
-  if (p.start && p.end) {
-    patch.start = { dateTime: p.start, timeZone: p.timeZone || SYDNEY_TZ }
-    patch.end =   { dateTime: p.end,   timeZone: p.timeZone || SYDNEY_TZ }
-  }
-  if (p.location !== undefined) patch.location = { displayName: p.location || '' }
-  if (p.body !== undefined) patch.body = { contentType: 'HTML', content: p.body || '' }
-  const event = await graph(token, 'PATCH', `/users/${encodeURIComponent(mailbox)}/events/${p.graph_event_id}`, patch, { Prefer: 'outlook.timezone="UTC"' })
-  const row: any = mapEvent(p.source, event)
+
   // preserve the existing contact/client link (upsert replaces the whole row)
   const { data: existing } = await db.from('calendar_events')
-    .select('contact_id,client_id').eq('source', p.source).eq('graph_event_id', p.graph_event_id).maybeSingle()
-  row.contact_id = (p.contact_id !== undefined ? p.contact_id : (existing ? existing.contact_id : null)) || null
-  row.client_id  = (p.client_id  !== undefined ? p.client_id  : (existing ? existing.client_id  : null)) || null
+    .select('contact_id,client_id').eq('source', oldSource).eq('graph_event_id', p.graph_event_id).maybeSingle()
+  const keepContact = (p.contact_id !== undefined ? p.contact_id : (existing ? existing.contact_id : null)) || null
+  const keepClient  = (p.client_id  !== undefined ? p.client_id  : (existing ? existing.client_id  : null)) || null
+
+  // Same calendar → edit in place
+  if (newSource === oldSource) {
+    const patch: any = {}
+    if (p.subject !== undefined) patch.subject = p.subject
+    if (p.start && p.end) {
+      patch.start = { dateTime: p.start, timeZone: p.timeZone || SYDNEY_TZ }
+      patch.end =   { dateTime: p.end,   timeZone: p.timeZone || SYDNEY_TZ }
+    }
+    if (p.location !== undefined) patch.location = { displayName: p.location || '' }
+    if (p.body !== undefined) patch.body = { contentType: 'HTML', content: p.body || '' }
+    const event = await graph(token, 'PATCH', `/users/${encodeURIComponent(oldMailbox)}/events/${p.graph_event_id}`, patch, { Prefer: 'outlook.timezone="UTC"' })
+    const row: any = mapEvent(oldSource, event)
+    row.contact_id = keepContact; row.client_id = keepClient
+    await db.from('calendar_events').upsert([row], { onConflict: 'source,graph_event_id' })
+    return { event: row }
+  }
+
+  // Different calendar → move: recreate on the new calendar, delete from the old one
+  let bodyContent = p.body
+  if (bodyContent === undefined) {
+    const orig = await graph(token, 'GET', `/users/${encodeURIComponent(oldMailbox)}/events/${p.graph_event_id}?$select=body`)
+    bodyContent = orig && orig.body ? orig.body.content : ''
+  }
+  const created = await graph(token, 'POST', `/users/${encodeURIComponent(newMailbox)}/events`, {
+    subject: p.subject,
+    body: { contentType: 'HTML', content: bodyContent || '' },
+    start: { dateTime: p.start, timeZone: p.timeZone || SYDNEY_TZ },
+    end:   { dateTime: p.end,   timeZone: p.timeZone || SYDNEY_TZ },
+    location: p.location ? { displayName: p.location } : undefined,
+    allowNewTimeProposals: false,
+  }, { Prefer: 'outlook.timezone="UTC"' })
+  try { await graph(token, 'DELETE', `/users/${encodeURIComponent(oldMailbox)}/events/${p.graph_event_id}`) } catch (_e) { /* original may be Bookings-owned */ }
+  await db.from('calendar_events').delete().eq('source', oldSource).eq('graph_event_id', p.graph_event_id)
+  const row: any = mapEvent(newSource, created)
+  row.contact_id = keepContact; row.client_id = keepClient
   await db.from('calendar_events').upsert([row], { onConflict: 'source,graph_event_id' })
-  return { event: row }
+  return { event: row, moved: true }
 }
 
 async function doCancel(token: string, db: any, p: any) {
