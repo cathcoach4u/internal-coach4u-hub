@@ -324,7 +324,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.58</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.59</span>
     </div>
   </div>
   <div class="area-tabs-wrap" id="areaTabsWrap">
@@ -1153,7 +1153,15 @@ if('serviceWorker' in navigator){
   <div class="modal" style="max-width:520px;">
     <h3 style="font-family:'Quicksand',sans-serif;color:#1e3a5f;margin-bottom:4px;">Edit calendar entry</h3>
     <div style="font-size:12px;color:#64748b;margin-bottom:14px;">Changes save straight to your Outlook calendar.</div>
-    <input type="hidden" id="calEditSource"><input type="hidden" id="calEditId">
+    <input type="hidden" id="calEditOrigSource"><input type="hidden" id="calEditId">
+    <div class="form-group">
+      <label>Calendar <span style="color:#94a3b8;font-weight:400;">(change to move it to another calendar)</span></label>
+      <select id="calEditSource" style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;font-weight:600;background:#f8fafc;">
+        <option value="bookings">Bookings — client-facing (Coach4U)</option>
+        <option value="work">Work — cath@coach4u.com.au</option>
+        <option value="personal">Personal — coachingwithcath.com.au</option>
+      </select>
+    </div>
     <div class="form-group">
       <label>Title</label>
       <input id="calEditSubject" type="text" style="width:100%;padding:9px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;">
