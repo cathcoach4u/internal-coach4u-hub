@@ -352,6 +352,28 @@ Parent agents represent the master system prompts for Copilot Studio. Child agen
 - **Theme reference**: `CS_THEME_DESC` (34 themes inline) and `CS_DOMAINS` for colour mapping. Helpers `csColor`, `csPill`, `getDomain`, `domainColors`.
 - **Voice doc**: `docs/cath-voice-tone-v1.md` is the canonical version-controlled source. `CATH_VOICE_REFERENCE` constant in `index.html` is its inline summary embedded into every AI system prompt.
 
+## Molly — Ops PA
+
+The AI replacement for the former human Lou VA role. Lives as a Copilot Studio agent published to Teams; Cath DMs her like any colleague.
+
+- **System prompt**: `docs/molly-system-prompt.md` — paste into Copilot Studio
+- **Teams stages**: `docs/molly-stages.md` — six message templates (Morning Briefing, Action Confirmation, Status Update, Blocked, Midday Check-In, EOD Summary)
+- **Agent record**: stored as a child agent in `agents` table under **Ops > Agents > Molly** (Cath creates this manually via the CRM UI — Claude Code can't write to Supabase)
+- **Owner / requester / posted_by enum**: `Molly` replaces the previous `CoachVA (Lou)` everywhere in `index.html` (task form selects, AI assistant tool definitions, status pills)
+- **Status enum**: `Waiting on Molly` replaces `Waiting on CoachVA`
+- **Daily Procedures page** (`screen-procedures`): rewritten as Molly's shared playbook — both Cath and Molly read it
+
+### Migration SQL when releasing
+
+Existing tasks with the old owner/requester/status strings need one-time updates:
+
+```sql
+UPDATE tasks SET owner='Molly' WHERE owner='CoachVA (Lou)';
+UPDATE tasks SET requester='Molly' WHERE requester='CoachVA (Lou)';
+UPDATE tasks SET status='Waiting on Molly' WHERE status='Waiting on CoachVA';
+UPDATE task_logs SET posted_by='Molly' WHERE posted_by='CoachVA (Lou)';
+```
+
 ## Cath Voice Tone Reference v1
 
 The single source of truth for tone in any Coach4U communication, human or AI-generated.
