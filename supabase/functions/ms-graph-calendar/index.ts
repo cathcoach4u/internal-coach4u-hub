@@ -222,19 +222,55 @@ async function doBook(token: string, db: any, p: any) {
 }
 
 function esc(s: string) { return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }
+// Branded, email-safe HTML (table layout + inline styles) following the Coach4U
+// Journey Card formula: logo + navy header, teal-accented details, amber
+// "need to change?" box with WhatsApp + contact@, ABN footer.
 function confirmationHtml(p: any) {
-  const join = p.meeting_url
-    ? `<p style="margin:0 0 12px"><strong>Join here:</strong> <a href="${p.meeting_url}">${esc(p.meeting_url)}</a></p>` : ''
-  const when = p.when_text ? `<p style="margin:0 0 6px"><strong>When:</strong> ${esc(p.when_text)}</p>` : ''
-  return `<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#1e293b;line-height:1.6">
-  <p>Hi there,</p>
-  <p>Your session with Coach4U is confirmed.</p>
-  <p style="margin:0 0 6px"><strong>What:</strong> ${esc(p.subject)}</p>
-  ${when}${join}
-  <p>I've attached a calendar file so you can add this to your own calendar.</p>
-  <p>If you need to change the time, just reply to this email and we'll sort it out.</p>
-  <p>Looking forward to it.</p>
-  <p style="margin-top:16px">Thanks<br>Cath<br><span style="color:#64748b">Coach4U</span></p>
+  const logo = 'https://cathcoach4u.github.io/internal-coach4u-hub/C4U.png'
+  const when = p.when_text ? esc(p.when_text) : ''
+  const meet = p.meeting_url || ''
+  const joinBtn = meet
+    ? `<tr><td style="padding:10px 0 0;"><a href="${meet}" style="display:inline-block;background:#0d9488;color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;padding:11px 22px;border-radius:8px;">Join on Microsoft Teams</a></td></tr>`
+    : ''
+  const detailRow = (label: string, val: string) => val
+    ? `<tr><td style="padding:5px 0;"><span style="display:inline-block;min-width:62px;color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:.6px;font-weight:700;">${label}</span> <span style="color:#1e293b;font-size:14px;font-weight:600;">${val}</span></td></tr>`
+    : ''
+  return `<div style="background:#f1f5f9;padding:24px 12px;font-family:Arial,Helvetica,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin:0 auto;border-collapse:collapse;">
+    <tr><td style="background-color:#1e3a5f;background-image:linear-gradient(135deg,#1e3a5f 0%,#234b78 100%);padding:26px 28px;border-radius:12px 12px 0 0;text-align:center;">
+      <img src="${logo}" alt="Coach4U" width="60" height="60" style="display:block;margin:0 auto 10px;border:0;outline:none;">
+      <div style="color:#ffffff;font-size:19px;font-weight:700;letter-spacing:.4px;">Your session is confirmed</div>
+    </td></tr>
+    <tr><td style="background:#ffffff;padding:26px 28px;color:#1e293b;font-size:14px;line-height:1.65;">
+      <p style="margin:0 0 14px;">Hi there,</p>
+      <p style="margin:0 0 18px;">Your session with Coach4U is confirmed. Here are the details:</p>
+      <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;background:#f8fafc;border-left:4px solid #0d9488;border-radius:8px;margin:0 0 18px;">
+        <tr><td style="padding:14px 18px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;">
+            ${detailRow('What', esc(p.subject))}
+            ${detailRow('When', when)}
+            ${joinBtn}
+          </table>
+        </td></tr>
+      </table>
+      <p style="margin:0 0 18px;color:#475569;">A calendar file is attached to this email so you can add the session to your own calendar.</p>
+      <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;margin:0 0 20px;">
+        <tr><td style="padding:14px 18px;">
+          <div style="font-size:13px;font-weight:700;color:#9a3412;margin-bottom:8px;">Need to change or reschedule?</div>
+          <div style="font-size:13px;color:#7c2d12;line-height:1.8;">
+            WhatsApp us: <a href="https://wa.me/61485695168" style="color:#0d9488;font-weight:700;text-decoration:none;">+61 485 695 168</a><br>
+            Email us: <a href="mailto:contact@coach4u.com.au" style="color:#0d9488;font-weight:700;text-decoration:none;">contact@coach4u.com.au</a><br>
+            Or simply reply to this email and we'll sort it out.
+          </div>
+        </td></tr>
+      </table>
+      <p style="margin:0 0 4px;">Looking forward to it.</p>
+      <p style="margin:16px 0 0;">Thanks<br><strong>Cath</strong><br><span style="color:#64748b;">Coach4U</span></p>
+    </td></tr>
+    <tr><td style="background:#f8fafc;padding:16px 28px;border-radius:0 0 12px 12px;border-top:1px solid #e2e8f0;text-align:center;color:#94a3b8;font-size:11px;line-height:1.6;">
+      SARUBA PTY LTD t/a Coach4U &middot; ABN 50 678 462 178
+    </td></tr>
+  </table>
   </div>`
 }
 
