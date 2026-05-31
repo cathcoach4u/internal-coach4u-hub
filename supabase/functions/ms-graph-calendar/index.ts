@@ -171,14 +171,25 @@ async function doBook(token: string, db: any, p: any) {
   // Client emails are kept ONLY as recipients of our branded confirmation —
   // deliberately NOT added as Outlook attendees, so Microsoft does not also
   // fire its own (cold) calendar invite. One branded email, no duplicate.
+  const clientList: string[] = (p.attendees || []).map((a: any) => {
+    const e = typeof a === 'string' ? a : a?.email
+    const n = (typeof a === 'object' && a?.name) || ''
+    return e ? (n ? `${n} (${e})` : e) : ''
+  }).filter(Boolean)
   const recipients: string[] = (p.attendees || [])
     .map((a: any) => (typeof a === 'string' ? a : a?.email))
     .filter((e: string) => e && /.+@.+\..+/.test(e))
 
+  // Client name(s)+email written into the event notes so the booking shows who
+  // it's with when opened (they're not formal attendees, to avoid the invite).
+  const clientHeader = clientList.length
+    ? `<p style="margin:0 0 8px"><strong>Client:</strong> ${esc(clientList.join(', '))}</p>` : ''
+  const eventBody = clientHeader + (p.body || '')
+
   // Prefer UTC in the response so the saved row (and the .ics) carry correct UTC.
   const event = await graph(token, 'POST', `/users/${encodeURIComponent(mailbox)}/events`, {
     subject: p.subject,
-    body: { contentType: 'HTML', content: p.body || '' },
+    body: { contentType: 'HTML', content: eventBody },
     start: { dateTime: p.start, timeZone: p.timeZone || SYDNEY_TZ },
     end:   { dateTime: p.end,   timeZone: p.timeZone || SYDNEY_TZ },
     location: p.location ? { displayName: p.location } : undefined,
@@ -311,6 +322,7 @@ function buildMime(from: string, to: string[], subject: string, html: string, te
   const bAlt = 'c4u_alt_' + Math.random().toString(36).slice(2)
   return [
     `From: Coach4U <${from}>`,
+    `Reply-To: Coach4U <contact@coach4u.com.au>`,
     `To: ${to.join(', ')}`,
     `Subject: ${encHeader(subject)}`,
     'MIME-Version: 1.0',
