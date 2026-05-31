@@ -324,7 +324,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.57</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.58</span>
     </div>
   </div>
   <div class="area-tabs-wrap" id="areaTabsWrap">
@@ -1073,7 +1073,15 @@ if('serviceWorker' in navigator){
 <div class="modal-overlay" id="calBookModal">
   <div class="modal" style="max-width:560px;">
     <h3 style="font-family:'Quicksand',sans-serif;color:#1e3a5f;margin-bottom:4px;">Book appointment</h3>
-    <div style="font-size:12px;color:#64748b;margin-bottom:14px;" id="calBookHint">Client sessions are created in the <strong>Coach4U</strong> Bookings calendar, so clients always see the team — never a personal address.</div>
+    <div style="font-size:12px;color:#64748b;margin-bottom:14px;" id="calBookHint">Pick which calendar this goes on, then who it's with. Client confirmations always come from Coach4U.</div>
+    <div class="form-group">
+      <label>Calendar <span style="color:#94a3b8;font-weight:400;">(which calendar to add this to)</span></label>
+      <select id="calBookSource" style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;font-weight:600;background:#f8fafc;">
+        <option value="bookings">Bookings — client-facing (Coach4U)</option>
+        <option value="work">Work — cath@coach4u.com.au</option>
+        <option value="personal">Personal — coachingwithcath.com.au</option>
+      </select>
+    </div>
     <div class="form-group">
       <label>Client <span style="color:#94a3b8;font-weight:400;">(type to search — invites everyone linked)</span></label>
       <input id="calBookClientSearch" type="text" autocomplete="off" oninput="calBookSearch('client')" onfocus="calBookSearch('client')" placeholder="Type a client name…" style="width:100%;padding:9px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;">
@@ -1093,14 +1101,14 @@ if('serviceWorker' in navigator){
       <label>Session with <span style="color:#94a3b8;font-weight:400;">(shown in the client's email — add others if more than you)</span></label>
       <input id="calBookHost" type="text" value="Cath Baker" placeholder="Cath Baker" style="width:100%;padding:9px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;">
     </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;">
       <div class="form-group">
-        <label>Calendar</label>
-        <select id="calBookSource" style="width:100%;padding:9px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
-          <option value="bookings">Bookings (client-facing — Coach4U)</option>
-          <option value="work">Work (cath@coach4u)</option>
-          <option value="personal">Personal (coachingwithcath)</option>
-        </select>
+        <label>Date</label>
+        <input id="calBookDate" type="date" style="width:100%;padding:9px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;">
+      </div>
+      <div class="form-group">
+        <label>Start time</label>
+        <input id="calBookTime" type="time" step="900" style="width:100%;padding:9px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;">
       </div>
       <div class="form-group">
         <label>Duration</label>
@@ -1111,16 +1119,6 @@ if('serviceWorker' in navigator){
           <option value="90" selected>90 min</option>
           <option value="120">2 hours</option>
         </select>
-      </div>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;">
-      <div class="form-group">
-        <label>Date</label>
-        <input id="calBookDate" type="date" style="width:100%;padding:9px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;">
-      </div>
-      <div class="form-group">
-        <label>Start time</label>
-        <input id="calBookTime" type="time" step="900" style="width:100%;padding:9px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;">
       </div>
     </div>
     <div class="form-group">
