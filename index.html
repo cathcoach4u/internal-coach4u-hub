@@ -324,7 +324,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.51</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.52</span>
     </div>
   </div>
   <div class="area-tabs-wrap" id="areaTabsWrap">
@@ -1075,10 +1075,16 @@ if('serviceWorker' in navigator){
     <h3 style="font-family:'Quicksand',sans-serif;color:#1e3a5f;margin-bottom:4px;">Book appointment</h3>
     <div style="font-size:12px;color:#64748b;margin-bottom:14px;" id="calBookHint">Client sessions are created in the <strong>Coach4U</strong> Bookings calendar, so clients always see the team — never a personal address.</div>
     <div class="form-group">
-      <label>Client / contact <span style="color:#94a3b8;font-weight:400;">(optional — adds them as an attendee)</span></label>
-      <select id="calBookContact" onchange="calBookContactChanged()" style="width:100%;padding:9px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;"></select>
-      <div id="calBookRecipients" style="font-size:11px;color:#64748b;margin-top:6px;line-height:1.5;"></div>
+      <label>Client <span style="color:#94a3b8;font-weight:400;">(type to search — invites everyone linked)</span></label>
+      <input id="calBookClientSearch" type="text" autocomplete="off" oninput="calBookSearch('client')" onfocus="calBookSearch('client')" placeholder="Type a client name…" style="width:100%;padding:9px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;">
+      <div id="calBookClientResults" style="display:none;margin-top:4px;border:1px solid #e2e8f0;border-radius:8px;max-height:180px;overflow-y:auto;background:#fff;"></div>
     </div>
+    <div class="form-group">
+      <label>Or individual contact <span style="color:#94a3b8;font-weight:400;">(type to search)</span></label>
+      <input id="calBookContactSearch" type="text" autocomplete="off" oninput="calBookSearch('contact')" onfocus="calBookSearch('contact')" placeholder="Type a contact name or email…" style="width:100%;padding:9px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;">
+      <div id="calBookContactResults" style="display:none;margin-top:4px;border:1px solid #e2e8f0;border-radius:8px;max-height:180px;overflow-y:auto;background:#fff;"></div>
+    </div>
+    <div id="calBookRecipients" style="font-size:11px;color:#64748b;margin-top:2px;line-height:1.5;"></div>
     <div class="form-group">
       <label>Title</label>
       <input id="calBookSubject" type="text" placeholder="e.g. 90 minute session with Cath" style="width:100%;padding:9px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;">
