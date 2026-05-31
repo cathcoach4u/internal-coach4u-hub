@@ -197,21 +197,17 @@ async function doBook(token: string, db: any, p: any) {
   let confirmation_sent = false
   if (p.send_confirmation && recipients.length) {
     try {
-      const ics = buildIcs(row, p)
-      await graph(token, 'POST', `/users/${encodeURIComponent(mailbox)}/sendMail`, {
-        message: {
-          subject: 'Your session is confirmed — ' + p.subject,
-          body: { contentType: 'HTML', content: confirmationHtml(p) },
-          toRecipients: recipients.map((e: string) => ({ emailAddress: { address: e } })),
-          attachments: [{
-            '@odata.type': '#microsoft.graph.fileAttachment',
-            name: 'session.ics',
-            contentType: 'text/calendar; method=PUBLISH',
-            contentBytes: b64(ics),
-          }],
-        },
-        saveToSentItems: true,
+      // Send as raw MIME multipart so both a real plain-text part AND the branded
+      // HTML part go out (plus the .ics) — plain-text clients get a clean, complete
+      // version with the actual links, not a stripped-HTML mess.
+      const subject = 'Your session is confirmed — ' + p.subject
+      const mime = buildMime(mailbox, recipients, subject, confirmationHtml(p), confirmationText(p), buildIcs(row, p))
+      const sres = await fetch(`https://graph.microsoft.com/v1.0/users/${encodeURIComponent(mailbox)}/sendMail`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'text/plain' },
+        body: b64(mime),
       })
+      if (!sres.ok) { const t = await sres.text(); throw new Error(`sendMail ${sres.status}: ${t.slice(0, 200)}`) }
       confirmation_sent = true
     } catch (e) {
       // event is already created; surface the email problem without failing the booking
@@ -230,7 +226,8 @@ function confirmationHtml(p: any) {
   const when = p.when_text ? esc(p.when_text) : ''
   const meet = p.meeting_url || ''
   const joinBtn = meet
-    ? `<tr><td style="padding:10px 0 0;"><a href="${meet}" style="display:inline-block;background:#0d9488;color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;padding:11px 22px;border-radius:8px;">Join on Microsoft Teams</a></td></tr>`
+    ? `<tr><td style="padding:10px 0 0;"><a href="${meet}" style="display:inline-block;background:#0d9488;color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;padding:11px 22px;border-radius:8px;">Join on Microsoft Teams</a></td></tr>
+      <tr><td style="padding:8px 0 0;font-size:12px;color:#94a3b8;word-break:break-all;">Or paste this link: <a href="${meet}" style="color:#0d9488;">${esc(meet)}</a></td></tr>`
     : ''
   const detailRow = (label: string, val: string) => val
     ? `<tr><td style="padding:5px 0;"><span style="display:inline-block;min-width:62px;color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:.6px;font-weight:700;">${label}</span> <span style="color:#1e293b;font-size:14px;font-weight:600;">${val}</span></td></tr>`
@@ -272,6 +269,80 @@ function confirmationHtml(p: any) {
     </td></tr>
   </table>
   </div>`
+}
+
+// Plain-text alternative — clean, complete, with the real links (for clients
+// that display text instead of HTML). Mirrors the HTML content.
+function confirmationText(p: any) {
+  const L: string[] = [
+    'YOUR SESSION IS CONFIRMED',
+    '',
+    'Hi there,',
+    '',
+    'Your session with Coach4U is confirmed. Here are the details:',
+    '',
+    'What: ' + (p.subject || ''),
+  ]
+  if (p.when_text) L.push('When: ' + p.when_text)
+  if (p.meeting_url) { L.push(''); L.push('Join on Microsoft Teams:'); L.push(p.meeting_url) }
+  L.push('')
+  L.push('A calendar file (session.ics) is attached so you can add the session to your own calendar.')
+  L.push('')
+  L.push('NEED TO CHANGE OR RESCHEDULE?')
+  L.push('  WhatsApp us: +61 485 695 168  (https://wa.me/61485695168)')
+  L.push('  Email us: contact@coach4u.com.au')
+  L.push("  Or simply reply to this email and we'll sort it out.")
+  L.push('')
+  L.push('Looking forward to it.')
+  L.push('')
+  L.push('Thanks')
+  L.push('Cath')
+  L.push('Coach4U')
+  L.push('')
+  L.push('SARUBA PTY LTD t/a Coach4U · ABN 50 678 462 178')
+  return L.join('\r\n')
+}
+
+// ── Raw MIME multipart builder (text + html alternative, plus .ics attachment) ─
+function encHeader(s: string) { return /[^\x00-\x7F]/.test(s) ? '=?UTF-8?B?' + b64(s) + '?=' : s }
+function b64wrap(s: string) { return b64(s).replace(/(.{76})/g, '$1\r\n') }
+function buildMime(from: string, to: string[], subject: string, html: string, text: string, ics: string) {
+  const bMix = 'c4u_mix_' + Math.random().toString(36).slice(2)
+  const bAlt = 'c4u_alt_' + Math.random().toString(36).slice(2)
+  return [
+    `From: Coach4U <${from}>`,
+    `To: ${to.join(', ')}`,
+    `Subject: ${encHeader(subject)}`,
+    'MIME-Version: 1.0',
+    `Content-Type: multipart/mixed; boundary="${bMix}"`,
+    '',
+    `--${bMix}`,
+    `Content-Type: multipart/alternative; boundary="${bAlt}"`,
+    '',
+    `--${bAlt}`,
+    'Content-Type: text/plain; charset="utf-8"',
+    'Content-Transfer-Encoding: base64',
+    '',
+    b64wrap(text),
+    '',
+    `--${bAlt}`,
+    'Content-Type: text/html; charset="utf-8"',
+    'Content-Transfer-Encoding: base64',
+    '',
+    b64wrap(html),
+    '',
+    `--${bAlt}--`,
+    '',
+    `--${bMix}`,
+    'Content-Type: text/calendar; method=PUBLISH; charset="utf-8"; name="session.ics"',
+    'Content-Transfer-Encoding: base64',
+    'Content-Disposition: attachment; filename="session.ics"',
+    '',
+    b64wrap(ics),
+    '',
+    `--${bMix}--`,
+    '',
+  ].join('\r\n')
 }
 
 // ── Calendar (.ics) attachment ──────────────────────────────────────────────
