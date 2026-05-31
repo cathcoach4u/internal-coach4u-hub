@@ -110,8 +110,7 @@ Areas and their pages (defined at line ~2039):
 - **Referrers**: Dashboard (Referral Hub), Payments
 - **Pulses**: Dashboard, SAFE Pulse, Brain Pulse (client selector for per-client mini-portal view)
 - **Hubs**: Dashboard, Couples Hub (Intake, Timelines, Betrayal First Aid), ThriveHQ Hub (Trials, Members, Renewals, Coaching Calls), Strengths Hub (Workflow SOP, Code Tracker, Reports, Profiles, Domain Balance, Upload Report)
-- **IT**: Dashboard, IT Projects, Agents, AI Strategy (cross-agent audit + chat), Writing Partner, Prompts
-- **Admin**: Dashboard, Task Management, Playbook (Lou's operational work), Company Resources
+- **Ops**: Dashboard, Active Tasks, Work Log, Daily Procedures, Quick Links, Agents, AI Strategy (cross-agent audit + chat), Writing Partner, Prompts, IT Projects, Company Resources (merged former Admin + IT — operational work and the AI/tech replacing Lou's role live together; `areaConfig` key is still `operations`)
 - **Finance**: Dashboard, Payment Platforms, Income, Where Money Goes, Bills, Insurance, Transactions, Stripe Payments
 - **About**: About
 
@@ -426,8 +425,8 @@ NDIS-Related Services (when applicable)
 
 ### Versioning
 
-- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.65.42**, line ~256)
-- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v686**)
+- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.65.43**, line ~256)
+- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v687**)
 - **Both must be bumped on every release**
 
 ### Code patterns
