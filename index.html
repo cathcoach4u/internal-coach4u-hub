@@ -324,7 +324,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.55</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.56</span>
     </div>
   </div>
   <div class="area-tabs-wrap" id="areaTabsWrap">
@@ -10703,7 +10703,7 @@ const CAL_SELF_EMAILS=['cath@coach4u.com.au','cath@coachingwithcath.com.au','coa
 const CAL_SOURCE_META={
   work:{color:'#0d9488',label:'Work'},
   bookings:{color:'#2563eb',label:'Bookings'},
-  personal:{color:'#64748b',label:'Personal'}
+  personal:{color:'#7c3aed',label:'Personal'}
 };
 async function loadCalendarEvents(){
   calTableMissing=false;
@@ -10792,7 +10792,7 @@ function calEventHTML_grid(ev){
   const meta=CAL_SOURCE_META[ev.source]||CAL_SOURCE_META.work;
   const c=calMatchContact(ev);
   const subj=(ev.subject||'(no title)').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  let h='<div class="cal-ev" style="border-left-color:'+meta.color+';position:relative;">';
+  let h='<div class="cal-ev" style="border-left-color:'+meta.color+';background:'+meta.color+'16;position:relative;">';
   if(ev.graph_event_id){ h+='<button onclick="calDeleteEvent(\''+ev.source+'\',\''+ev.graph_event_id+'\')" title="Delete this event" style="position:absolute;top:2px;right:2px;background:rgba(255,255,255,.9);border:1px solid #fecaca;color:#dc2626;border-radius:4px;font-size:12px;line-height:1;padding:1px 5px;cursor:pointer;">&times;</button>'; }
   h+='<div class="evtime">'+calFmtDuration(ev)+'</div>';
   h+='<div class="evt">'+subj+'</div>';
@@ -10805,7 +10805,7 @@ function calEventHTML_agenda(ev){
   const meta=CAL_SOURCE_META[ev.source]||CAL_SOURCE_META.work;
   const c=calMatchContact(ev);
   const subj=(ev.subject||'(no title)').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  let h='<div class="cal-ag-ev" style="border-left-color:'+meta.color+'">';
+  let h='<div class="cal-ag-ev" style="border-left-color:'+meta.color+';background:'+meta.color+'12">';
   h+='<div class="agtime">'+calFmtDuration(ev)+'</div>';
   h+='<div class="agmain"><div class="agtitle">'+subj
     +'<span class="agtag" style="background:'+meta.color+'22;color:'+meta.color+'">'+meta.label+'</span>'
