@@ -21,6 +21,11 @@ function clientDisplayName(cl){
   const names=(cl.members||[]).map(mid=>{const c=cs.find(x=>x.id===mid);return c?calContactName(c):null;}).filter(Boolean);
   return names.join(' & ')||'Client';
 }
+// Cath's two standard meeting links (the only ones used)
+var MEETING_LINKS={
+  cath:{label:"Cath's Room",url:'https://teams.microsoft.com/meet/4855206211068?p=fsRVVo4eEOHQVfIGm5'},
+  thrivehq:{label:'ThriveHQ',url:'https://teams.microsoft.com/meet/46980694079511?p=gKZWzjMnOZ0by7IZxu'}
+};
 // members of a client that have an email, as attendee objects
 function clientAttendees(cl){
   const cs=getContacts();
@@ -71,7 +76,7 @@ window.openCalBook=function(){
   document.getElementById('calBookTime').value='10:00';
   document.getElementById('calBookLocation').value='';
   document.getElementById('calBookNotes').value='';
-  document.getElementById('calBookOnline').checked=false;
+  document.getElementById('calBookMeetingLink').value='';
   const rb=document.getElementById('calBookRecipients'); if(rb) rb.innerHTML='';
   document.getElementById('calBookModal').classList.add('open');
 };
@@ -97,7 +102,7 @@ window.submitCalBook=async function(){
   const time=document.getElementById('calBookTime').value;
   const dur=parseInt(document.getElementById('calBookDuration').value,10);
   const location=document.getElementById('calBookLocation').value.trim();
-  const online=document.getElementById('calBookOnline').checked;
+  const mlKey=document.getElementById('calBookMeetingLink').value;
   const notes=document.getElementById('calBookNotes').value.trim();
   const pick=document.getElementById('calBookContact').value;
   if(!subject){ toast('Add a title','error'); return; }
@@ -115,13 +120,22 @@ window.submitCalBook=async function(){
     const c=getContacts().find(x=>x.id===pick.slice(8));
     if(c&&c.email){ attendees=[{email:c.email,name:calContactName(c)}]; contactId=c.id; }
   }
+  // meeting link → clickable join link in the body + sensible location label
+  const ml=MEETING_LINKS[mlKey];
+  let loc=location;
+  let bodyHtml='';
+  if(ml){
+    bodyHtml='<p>Join the session here: <a href="'+ml.url+'">'+ml.url+'</a></p>';
+    if(!loc) loc='Microsoft Teams ('+ml.label+')';
+  }
+  if(notes) bodyHtml+=(bodyHtml?'<br>':'')+emEsc(notes).replace(/\n/g,'<br>');
   const btn=document.getElementById('calBookSubmitBtn'); btn.disabled=true; btn.textContent='Creating…';
   try{
     const {data:{session}}=await supabase.auth.getSession();
     if(!session) throw new Error('Not signed in');
     const res=await fetch(`${SUPABASE_EDGE_URL}/ms-graph-calendar`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},body:JSON.stringify({
       action:'book', source, subject, start, end, timeZone:'Australia/Sydney',
-      location: location||undefined, online_meeting:online, body:notes||undefined,
+      location: loc||undefined, body:bodyHtml||undefined,
       attendees, contact_id: contactId||undefined, client_id: clientId||undefined
     })});
     const out=await res.json();
