@@ -104,16 +104,23 @@ default** — they could touch every mailbox's calendar AND email. This step fen
 them to only the mailboxes below, so even if the secret leaked it could not reach
 anyone else.
 
-**Intended scope (coach4u.com.au tenant):**
+**Intended scope (all in the one tenant — confirmed via Entra → Custom domain names):**
 
 | Address | Type | Real mailbox to scope |
 |---|---|---|
 | `cath@coach4u.com.au` | Mailbox | itself |
+| `cath@coachingwithcath.com.au` | Mailbox (same tenant) | itself |
 | `Coach4U@…onmicrosoft.com` | Bookings mailbox | itself |
 | `contact@coach4u.com.au` | Mailbox (confirm) | itself |
 | `Bakers@coach4u.com.au` | **Alias** | the underlying mailbox it delivers to |
 | `admin@coach4u.com.au` | **Alias** | the underlying mailbox it delivers to |
 
+> ✅ **All domains are verified in the SAME tenant** (COACH4U / NETORGFT4053847) —
+> `coach4u.com.au` and `coachingwithcath.com.au` both appear under Entra → Custom
+> domain names. So one app registration, one secret, and one Access Policy cover
+> everything. (Earlier drafts wrongly assumed coachingwithcath was a separate
+> tenant — it is not. There is no separate "Part F".)
+>
 > 🔎 **Aliases have no inbox or calendar of their own.** `Bakers@` and `admin@` are
 > aliases, so they can't be scoped directly — we scope the **real mailbox behind
 > them**. Resolve it first (Part E.0). The policy allows a mail-enabled security
@@ -153,6 +160,7 @@ New-DistributionGroup -Name "Coach4U Calendar Sync Scope" `
 #    mailbox found in Part E.0, NOT the alias address.
 $members = @(
   "cath@coach4u.com.au",
+  "cath@coachingwithcath.com.au",     # same tenant — personal calendar
   "contact@coach4u.com.au"            # confirm it's a real mailbox
   # "<real mailbox behind Bakers@>",  # from Part E.0
   # "<real mailbox behind admin@>",   # from Part E.0
@@ -179,16 +187,11 @@ restricts BOTH calendar and mail access to this group.
 
 ---
 
-## Part F — Personal calendar (separate tenant)
+## Personal calendar — no separate setup needed
 
-`cath@coachingwithcath.com.au` is in a **different Microsoft tenant**, so the
-coach4u.com.au app/policy above cannot reach it. To read/write it with the
-background service, repeat **Parts A–E** signed into that tenant (a second small
-registration + its own secret, stored as `MS_GRAPH_PERSONAL_CLIENT_SECRET`).
-
-This is optional and doesn't block the main flow — read access to the personal
-calendar already works via the in-session connector. Add this when you want
-unattended sync/booking on the personal calendar too.
+`cath@coachingwithcath.com.au` lives in the **same tenant** (confirmed in Entra →
+Custom domain names), so it's just another mailbox in the scope group above. One
+registration / secret / policy covers it. **There is no separate Part F.**
 
 ---
 
@@ -213,8 +216,7 @@ With those, Claude builds the Supabase Edge Function that:
   far more reliable with app-level access — no login sessions to keep alive, and the
   Bookings mailbox (a shared/resource mailbox) is handled cleanly. We can scope it to
   *only your mailboxes* with an Application Access Policy for safety.
-- **The personal calendar** (`cath@coachingwithcath.com.au`) is a **separate tenant**.
-  Read access already works via the in-session connector. To *write* to it we repeat
-  Parts A–D in that tenant (a second small registration). We can do work + bookings
-  first and add personal-write after — it doesn't block the main flow.
-- **Cost:** none. App registration + Graph calendar access are included in M365.
+- **The personal calendar** (`cath@coachingwithcath.com.au`) is in the **same tenant**
+  (confirmed via Entra → Custom domain names), so it's covered by this one
+  registration — just add its mailbox to the scope group. No separate setup.
+- **Cost:** none. App registration + Graph calendar/mail access are included in M365.
