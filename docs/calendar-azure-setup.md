@@ -51,18 +51,28 @@ your mailboxes), so this is a detour, not a dead end.
 1. In the app, left menu: **API permissions**.
 2. Click **+ Add a permission → Microsoft Graph**.
 3. Choose **Application permissions** (not Delegated).
-4. Add each of these (search, tick, **Add permissions**):
-   - **Calendars.ReadWrite** — read/write calendars
-   - **Mail.Read** — read email in the scoped mailboxes *(added per Cath's request)*
-   - **User.Read.All** — resolve names/mailboxes (optional but useful)
+4. Add each of these (search, tick, **Add permissions**) — match on the **description**, the names are very similar:
+   - **Calendars.ReadWrite** — "Read and write calendars in all mailboxes"
+   - **Mail.ReadWrite** — "Read and write mail in all mailboxes" (read enquiries, create drafts, delete)
+   - **Mail.Send** — "Send mail as any user" (send approved drafts)
+   - **User.Read.All** — "Read all users' full profiles" (resolve names/mailboxes)
 
-✅ **Checkpoint:** both `Calendars.ReadWrite` and `Mail.Read` appear with status
-"Not granted" (we fix that in Part D).
+   ⚠️ Do NOT add the look-alikes `User-Mail.ReadWrite` (secondary addresses) or
+   `UserAuthMethod-Enroll` (auth methods) — they get matched by search but are wrong.
 
-> ⚠️ **Sensitivity note:** `Mail.Read` means the one client secret now unlocks the
-> **contents of email** in the scoped mailboxes, not just calendar times. The
-> Application Access Policy in Part E fences BOTH to your mailbox list, so this is
-> contained — but treat that secret as high-value accordingly.
+✅ **Checkpoint:** `Calendars.ReadWrite`, `Mail.ReadWrite`, `Mail.Send`, and
+`User.Read.All` appear as **Application** with status "Not granted" (we fix that in
+Part D). The default Delegated `User.Read` can stay.
+
+> ⚠️ **Sensitivity note:** `Mail.ReadWrite` + `Mail.Send` mean the one client secret
+> can read, draft, delete, and **send** email in the scoped mailboxes — not just
+> calendar times. Two safeguards contain this:
+> 1. The Application Access Policy (Part E) fences ALL of these to your mailbox list.
+> 2. **Approval is enforced in the hub, not at Graph level.** The agent creates
+>    drafts silently, but every **send** and **delete** sits behind an explicit
+>    confirm step in the booking UI — nothing leaves or is deleted automatically.
+>
+> Treat that secret as high-value accordingly.
 
 ---
 
@@ -99,8 +109,9 @@ tenant. Either sign in as the admin account, or tell Claude — we adjust the ap
 
 ## Part E — Scope the app to ONLY these mailboxes  (the safeguard)
 
-`Calendars.ReadWrite` + `Mail.Read` as Application permissions are **tenant-wide by
-default** — they could touch every mailbox's calendar AND email. This step fences
+`Calendars.ReadWrite` + `Mail.ReadWrite` + `Mail.Send` as Application permissions are
+**tenant-wide by default** — they could touch, send from, and delete in every
+mailbox's calendar AND email. This step fences
 them to only the mailboxes below, so even if the secret leaked it could not reach
 anyone else.
 
@@ -169,7 +180,7 @@ $members = @(
 foreach ($m in $members) { Add-DistributionGroupMember -Identity calsync-scope -Member $m }
 
 # 4. Create the Application Access Policy tying the APP to the group.
-#    This single policy covers BOTH Calendars.ReadWrite and Mail.Read.
+#    This single policy covers Calendars.ReadWrite, Mail.ReadWrite AND Mail.Send.
 #    Replace <APP_CLIENT_ID> with the Application (client) ID from Part A.
 New-ApplicationAccessPolicy -AppId "<APP_CLIENT_ID>" `
   -PolicyScopeGroupId calsync-scope@coach4u.com.au `
