@@ -189,7 +189,43 @@ async function doBook(token: string, db: any, p: any) {
   row.client_id = p.client_id || null
   const { error } = await db.from('calendar_events').upsert([row], { onConflict: 'source,graph_event_id' })
   if (error) throw new Error(`Save booking: ${error.message}`)
-  return { event: row }
+
+  // Coach4U confirmation email — sent from the booking mailbox so the client sees the team.
+  let confirmation_sent = false
+  if (p.send_confirmation && attendees.length) {
+    try {
+      const html = confirmationHtml(p)
+      await graph(token, 'POST', `/users/${encodeURIComponent(mailbox)}/sendMail`, {
+        message: {
+          subject: 'Your session is confirmed — ' + p.subject,
+          body: { contentType: 'HTML', content: html },
+          toRecipients: attendees.map((a: any) => ({ emailAddress: a.emailAddress })),
+        },
+        saveToSentItems: true,
+      })
+      confirmation_sent = true
+    } catch (e) {
+      // event is already created; surface the email problem without failing the booking
+      return { event: row, confirmation_sent: false, confirmation_error: (e as Error).message }
+    }
+  }
+  return { event: row, confirmation_sent }
+}
+
+function esc(s: string) { return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }
+function confirmationHtml(p: any) {
+  const join = p.meeting_url
+    ? `<p style="margin:0 0 12px"><strong>Join here:</strong> <a href="${p.meeting_url}">${esc(p.meeting_url)}</a></p>` : ''
+  const when = p.when_text ? `<p style="margin:0 0 6px"><strong>When:</strong> ${esc(p.when_text)}</p>` : ''
+  return `<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#1e293b;line-height:1.6">
+  <p>Hi there,</p>
+  <p>Your session with Coach4U is confirmed.</p>
+  <p style="margin:0 0 6px"><strong>What:</strong> ${esc(p.subject)}</p>
+  ${when}${join}
+  <p>If you need to change the time, just reply to this email and we'll sort it out.</p>
+  <p>Looking forward to it.</p>
+  <p style="margin-top:16px">Thanks<br>Cath<br><span style="color:#64748b">Coach4U</span></p>
+  </div>`
 }
 
 async function doReschedule(token: string, db: any, p: any) {

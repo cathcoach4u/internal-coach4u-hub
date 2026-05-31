@@ -26,6 +26,16 @@ var MEETING_LINKS={
   cath:{label:"Cath's Room",url:'https://teams.microsoft.com/meet/4855206211068?p=fsRVVo4eEOHQVfIGm5'},
   thrivehq:{label:'ThriveHQ',url:'https://teams.microsoft.com/meet/46980694079511?p=gKZWzjMnOZ0by7IZxu'}
 };
+function fmt12(h,m){ const ap=h<12?'am':'pm'; let hh=h%12; if(hh===0) hh=12; return hh+(m?':'+(''+m).padStart(2,'0'):'')+ap; }
+function fmtWhen(date,time,dur){
+  const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const wd=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const p1=date.split('-').map(Number), p2=time.split(':').map(Number);
+  const y=p1[0],mo=p1[1],d=p1[2],hh=p2[0],mm=p2[1];
+  const dow=wd[new Date(Date.UTC(y,mo-1,d)).getUTCDay()];
+  const em=hh*60+mm+dur, eh=Math.floor(em/60)%24, emin=em%60;
+  return dow+', '+d+' '+months[mo-1]+' '+y+', '+fmt12(hh,mm)+'–'+fmt12(eh,emin);
+}
 // members of a client that have an email, as attendee objects
 function clientAttendees(cl){
   const cs=getContacts();
@@ -77,6 +87,7 @@ window.openCalBook=function(){
   document.getElementById('calBookLocation').value='';
   document.getElementById('calBookNotes').value='';
   document.getElementById('calBookMeetingLink').value='';
+  document.getElementById('calBookSendConfirm').checked=true;
   const rb=document.getElementById('calBookRecipients'); if(rb) rb.innerHTML='';
   document.getElementById('calBookModal').classList.add('open');
 };
@@ -129,6 +140,8 @@ window.submitCalBook=async function(){
     if(!loc) loc='Microsoft Teams ('+ml.label+')';
   }
   if(notes) bodyHtml+=(bodyHtml?'<br>':'')+emEsc(notes).replace(/\n/g,'<br>');
+  const sendConfirm=document.getElementById('calBookSendConfirm').checked && attendees.length>0;
+  const whenText=fmtWhen(date,time,dur);
   const btn=document.getElementById('calBookSubmitBtn'); btn.disabled=true; btn.textContent='Creating…';
   try{
     const {data:{session}}=await supabase.auth.getSession();
@@ -136,13 +149,15 @@ window.submitCalBook=async function(){
     const res=await fetch(`${SUPABASE_EDGE_URL}/ms-graph-calendar`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},body:JSON.stringify({
       action:'book', source, subject, start, end, timeZone:'Australia/Sydney',
       location: loc||undefined, body:bodyHtml||undefined,
-      attendees, contact_id: contactId||undefined, client_id: clientId||undefined
+      attendees, contact_id: contactId||undefined, client_id: clientId||undefined,
+      send_confirmation:sendConfirm, when_text:whenText, meeting_url: ml?ml.url:undefined
     })});
     const out=await res.json();
     if(!res.ok) throw new Error(out.error||('HTTP '+res.status));
     closeModal('calBookModal');
     await loadCalendarEvents(); renderCalWeek();
-    toast('Appointment booked','success');
+    if(out.confirmation_error) toast('Booked, but confirmation email failed: '+out.confirmation_error,'error');
+    else toast(out.confirmation_sent?'Appointment booked & client emailed':'Appointment booked','success');
   }catch(e){
     console.warn('submitCalBook',e);
     toast('Booking failed: '+e.message,'error');
