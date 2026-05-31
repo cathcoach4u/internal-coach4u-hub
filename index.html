@@ -324,7 +324,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.42</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.43</span>
     </div>
   </div>
   <div class="area-tabs-wrap" id="areaTabsWrap">
@@ -335,8 +335,7 @@ if('serviceWorker' in navigator){
       <button class="area-tab" onclick="switchArea('referrers')"><span class="tab-icon">&#128200;</span>Referrers</button>
       <button class="area-tab" onclick="switchArea('pulses')"><span class="tab-icon">&#128147;</span>Pulses</button>
       <button class="area-tab" onclick="switchArea('hubs')"><span class="tab-icon">&#128152;</span>Hubs</button>
-      <button class="area-tab" onclick="switchArea('it')"><span class="tab-icon">&#128187;</span>IT</button>
-      <button class="area-tab" onclick="switchArea('operations')"><span class="tab-icon">&#128736;</span>Admin</button>
+      <button class="area-tab" onclick="switchArea('operations')"><span class="tab-icon">&#128736;</span>Ops</button>
       <button class="area-tab" onclick="switchArea('finance')"><span class="tab-icon">&#128176;</span>Finance</button>
       <button class="area-tab" onclick="switchArea('devbusiness')"><span class="tab-icon">&#128640;</span>Dev Biz</button>
     </div>
@@ -430,15 +429,10 @@ if('serviceWorker' in navigator){
           <div style="font-weight:700;color:#1e3a5f;font-size:13px;">Hubs</div>
           <div style="font-size:11px;color:#64748b;margin-top:2px;">Couples, ThriveHQ, Strengths</div>
         </button>
-        <button onclick="switchArea('it')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #475569;border-radius:10px;padding:14px 12px;font-family:inherit;text-align:left;cursor:pointer;transition:box-shadow .15s;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
-          <div style="font-size:22px;margin-bottom:4px;">&#128187;</div>
-          <div style="font-weight:700;color:#1e3a5f;font-size:13px;">IT</div>
-          <div style="font-size:11px;color:#64748b;margin-top:2px;">Projects, agents, AI strategy</div>
-        </button>
         <button onclick="switchArea('operations')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #d97706;border-radius:10px;padding:14px 12px;font-family:inherit;text-align:left;cursor:pointer;transition:box-shadow .15s;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
           <div style="font-size:22px;margin-bottom:4px;">&#128736;</div>
-          <div style="font-weight:700;color:#1e3a5f;font-size:13px;">Admin</div>
-          <div style="font-size:11px;color:#64748b;margin-top:2px;">Tasks, playbook, company resources</div>
+          <div style="font-weight:700;color:#1e3a5f;font-size:13px;">Ops</div>
+          <div style="font-size:11px;color:#64748b;margin-top:2px;">Tasks, AI agents, company resources</div>
         </button>
         <button onclick="switchArea('finance')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #15803d;border-radius:10px;padding:14px 12px;font-family:inherit;text-align:left;cursor:pointer;transition:box-shadow .15s;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
           <div style="font-size:22px;margin-bottom:4px;">&#128176;</div>
@@ -2202,7 +2196,7 @@ window.navTo = function(tab,btn){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+tab).classList.add('active');
   window.scrollTo(0,0);
-  const titles={dashboard:'Dashboard',calweek:'Calendar',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ Hub',thqintake:'Intake Forms',strdash:'Strengths Hub',opsdash:'Admin',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',sms:'Comms',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Profiles',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Active Tasks',playbook:'Work Log',procedures:'Daily Procedures',quicklinks:'Quick Links',itprojects:'IT Projects',agents:'Agents',writingpartner:'Writing Partner',findash:'Finance',finpayments:'Payment Platforms',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fininsurance:'Insurance',fintxns:'Transactions',finstripe:'Stripe Payments',findev:'Development Business',thqbrainpulse:'Brain Pulse',thqactivities:'Activities',clibrainpulse:'Brain Pulse',cliconnection:'Connection Pulse',thqpulse:'SAFE Pulse',clipulse:'SAFE Pulse',pulsesdash:'Pulses',couplesintake:'Couples Intake',couplesdash:'Couples Hub',couplesclientlinks:'Client Links',ndisdash:'NDIS Hub',ndisclients:'NDIS Clients',couplesforms:'Intake Forms',thqforms:'Intake Forms',ndisforms:'Intake Forms',couplestimelines:'Therapy Timelines',couplesbetrayal:'Betrayal First Aid',itdash:'IT',resourcesdash:'Resources',agentsai:'AI Strategy',prompts:'Prompts',strreports:'Strengths Reports',strdomains:'Domain Balance',strupload:'Upload Report',strcodes:'Gallup Code Tracker',strsop:'Gallup Workflow SOP',strclientlinks:'Client Links'};
+  const titles={dashboard:'Dashboard',calweek:'Calendar',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ Hub',thqintake:'Intake Forms',strdash:'Strengths Hub',opsdash:'Ops',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',sms:'Comms',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Profiles',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Active Tasks',playbook:'Work Log',procedures:'Daily Procedures',quicklinks:'Quick Links',itprojects:'IT Projects',agents:'Agents',writingpartner:'Writing Partner',findash:'Finance',finpayments:'Payment Platforms',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fininsurance:'Insurance',fintxns:'Transactions',finstripe:'Stripe Payments',findev:'Development Business',thqbrainpulse:'Brain Pulse',thqactivities:'Activities',clibrainpulse:'Brain Pulse',cliconnection:'Connection Pulse',thqpulse:'SAFE Pulse',clipulse:'SAFE Pulse',pulsesdash:'Pulses',couplesintake:'Couples Intake',couplesdash:'Couples Hub',couplesclientlinks:'Client Links',ndisdash:'NDIS Hub',ndisclients:'NDIS Clients',couplesforms:'Intake Forms',thqforms:'Intake Forms',ndisforms:'Intake Forms',couplestimelines:'Therapy Timelines',couplesbetrayal:'Betrayal First Aid',itdash:'IT',resourcesdash:'Resources',agentsai:'AI Strategy',prompts:'Prompts',strreports:'Strengths Reports',strdomains:'Domain Balance',strupload:'Upload Report',strcodes:'Gallup Code Tracker',strsop:'Gallup Workflow SOP',strclientlinks:'Client Links'};
   document.getElementById('pageTitle').textContent=titles[tab]||'Coach4U';
   // Sync area tab
   const area=pageToArea[tab]||'home';
@@ -2318,8 +2312,7 @@ const areaConfig={
   referrers:{label:'Referrers',pages:[{id:'referrals',icon:'&#128200;',label:'Dashboard'},{id:'refpayments',icon:'&#128176;',label:'Payments'}]},
   pulses:{label:'Pulses',pages:[{id:'pulsesdash',icon:'&#128200;',label:'Dashboard'},{id:'clipulse',icon:'&#128147;',label:'SAFE Pulse'},{id:'clibrainpulse',icon:'&#129504;',label:'Brain Pulse'},{id:'cliconnection',icon:'&#128151;',label:'Connection Pulse'}]},
   hubs:{label:'Hubs',pages:[{id:'modulesdash',icon:'&#128200;',label:'Dashboard'},{id:'couplesdash',icon:'&#128149;',label:'Couples Hub'},{id:'thqdash',icon:'&#128170;',label:'ThriveHQ Hub'},{id:'ndisdash',icon:'&#127758;',label:'NDIS Hub'},{id:'strdash',icon:'&#127919;',label:'Strengths Hub'}]},
-  it:{label:'IT',pages:[{id:'itdash',icon:'&#128200;',label:'Dashboard'},{id:'itprojects',icon:'&#9881;',label:'IT Projects'},{id:'agents',icon:'&#129302;',label:'Agents'},{id:'agentsai',icon:'&#10024;',label:'AI Strategy'},{id:'writingpartner',icon:'&#9997;',label:'Writing Partner'},{id:'prompts',icon:'&#128196;',label:'Prompts'}]},
-  operations:{label:'Admin',pages:[{id:'opsdash',icon:'&#128736;',label:'Dashboard'},{id:'tasks',icon:'&#9989;',label:'Active Tasks'},{id:'playbook',icon:'&#128214;',label:'Work Log'},{id:'procedures',icon:'&#128221;',label:'Daily Procedures'},{id:'quicklinks',icon:'&#128279;',label:'Quick Links'},{id:'resourcesdash',icon:'&#128279;',label:'Company Resources'}]},
+  operations:{label:'Ops',pages:[{id:'opsdash',icon:'&#128736;',label:'Dashboard'},{id:'tasks',icon:'&#9989;',label:'Active Tasks'},{id:'playbook',icon:'&#128214;',label:'Work Log'},{id:'procedures',icon:'&#128221;',label:'Daily Procedures'},{id:'quicklinks',icon:'&#128279;',label:'Quick Links'},{id:'agents',icon:'&#129302;',label:'Agents'},{id:'agentsai',icon:'&#10024;',label:'AI Strategy'},{id:'writingpartner',icon:'&#9997;',label:'Writing Partner'},{id:'prompts',icon:'&#128196;',label:'Prompts'},{id:'itprojects',icon:'&#9881;',label:'IT Projects'},{id:'resourcesdash',icon:'&#128279;',label:'Company Resources'}]},
   finance:{label:'Finance',pages:[{id:'findash',icon:'&#128176;',label:'Dashboard'},{id:'finpayments',icon:'&#128179;',label:'Payment Platforms'},{id:'finincome',icon:'&#128181;',label:'Income'},{id:'finspend',icon:'&#128200;',label:'Where Money Goes'},{id:'finbills',icon:'&#128196;',label:'Bills'},{id:'fininsurance',icon:'&#128737;',label:'Insurance'},{id:'fintxns',icon:'&#128203;',label:'Transactions'},{id:'finstripe',icon:'&#128179;',label:'Stripe Payments'}]},
   devbusiness:{label:'Development Business',pages:[{id:'findev',icon:'&#128640;',label:'Overview'}]},
   about:{label:'About',pages:[{id:'about',icon:'&#8505;',label:'About'}]}
@@ -4194,6 +4187,31 @@ function renderOpsDash(){
       <div style="font-size:24px;margin-bottom:8px;">&#128279;</div>
       <div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">Quick Links</div>
       <div style="font-size:11px;color:#64748b;">Bookmarks and tools</div>
+    </div>
+    <div onclick="navTo('agents')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #2563eb;border-radius:12px;padding:18px 20px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
+      <div style="font-size:24px;margin-bottom:8px;">&#129302;</div>
+      <div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">Agents</div>
+      <div style="font-size:11px;color:#64748b;">AI agents and prompts</div>
+    </div>
+    <div onclick="navTo('agentsai')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #8b5cf6;border-radius:12px;padding:18px 20px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
+      <div style="font-size:24px;margin-bottom:8px;">&#10024;</div>
+      <div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">AI Strategy</div>
+      <div style="font-size:11px;color:#64748b;">Cross-agent audit and chat</div>
+    </div>
+    <div onclick="navTo('writingpartner')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #ec4899;border-radius:12px;padding:18px 20px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
+      <div style="font-size:24px;margin-bottom:8px;">&#9997;</div>
+      <div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">Writing Partner</div>
+      <div style="font-size:11px;color:#64748b;">Drafting helper</div>
+    </div>
+    <div onclick="navTo('prompts')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #0d9488;border-radius:12px;padding:18px 20px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
+      <div style="font-size:24px;margin-bottom:8px;">&#128196;</div>
+      <div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">Prompts</div>
+      <div style="font-size:11px;color:#64748b;">Saved prompt library</div>
+    </div>
+    <div onclick="navTo('itprojects')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #475569;border-radius:12px;padding:18px 20px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
+      <div style="font-size:24px;margin-bottom:8px;">&#9881;</div>
+      <div style="font-weight:700;color:#1e3a5f;font-size:14px;margin-bottom:4px;">IT Projects</div>
+      <div style="font-size:11px;color:#64748b;">Tech projects and integrations</div>
     </div>
     <div onclick="navTo('resourcesdash')" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid #475569;border-radius:12px;padding:18px 20px;cursor:pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
       <div style="font-size:24px;margin-bottom:8px;">&#128101;</div>
