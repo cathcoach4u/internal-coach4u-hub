@@ -255,7 +255,6 @@ function confirmationHtml(p: any) {
       <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;background:#f8fafc;border-left:4px solid #0d9488;border-radius:8px;margin:0 0 18px;">
         <tr><td style="padding:14px 18px;">
           <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;">
-            ${detailRow('What', esc(p.subject))}
             ${detailRow('When', when)}
             ${joinBtn}
           </table>
@@ -292,7 +291,6 @@ function confirmationText(p: any) {
     '',
     'Your session with ' + (p.host || 'Cath Baker') + ' is confirmed. Here are the details:',
     '',
-    'What: ' + (p.subject || ''),
   ]
   if (p.when_text) L.push('When: ' + p.when_text)
   if (p.meeting_url) { L.push(''); L.push('Join on Microsoft Teams:'); L.push(p.meeting_url) }
