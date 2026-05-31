@@ -1069,68 +1069,6 @@ if('serviceWorker' in navigator){
   </div>
 </div>
 
-<!-- CALENDAR BOOKING MODAL -->
-<div class="modal-overlay" id="calBookModal">
-  <div class="modal" style="max-width:560px;">
-    <h3 style="font-family:'Quicksand',sans-serif;color:#1e3a5f;margin-bottom:4px;">Book appointment</h3>
-    <div style="font-size:12px;color:#64748b;margin-bottom:14px;" id="calBookHint">Client sessions are created in the <strong>Coach4U</strong> Bookings calendar, so clients always see the team — never a personal address.</div>
-    <div class="form-group">
-      <label>Client / contact <span style="color:#94a3b8;font-weight:400;">(optional — adds them as an attendee)</span></label>
-      <select id="calBookContact" onchange="calBookContactChanged()" style="width:100%;padding:9px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;"></select>
-    </div>
-    <div class="form-group">
-      <label>Title</label>
-      <input id="calBookSubject" type="text" placeholder="e.g. 90 minute session with Cath" style="width:100%;padding:9px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;">
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;">
-      <div class="form-group">
-        <label>Calendar</label>
-        <select id="calBookSource" style="width:100%;padding:9px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
-          <option value="bookings">Bookings (client-facing — Coach4U)</option>
-          <option value="work">Work (cath@coach4u)</option>
-          <option value="personal">Personal (coachingwithcath)</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Duration</label>
-        <select id="calBookDuration" style="width:100%;padding:9px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
-          <option value="30">30 min</option>
-          <option value="45">45 min</option>
-          <option value="60">60 min</option>
-          <option value="90" selected>90 min</option>
-          <option value="120">2 hours</option>
-        </select>
-      </div>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;">
-      <div class="form-group">
-        <label>Date</label>
-        <input id="calBookDate" type="date" style="width:100%;padding:9px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;">
-      </div>
-      <div class="form-group">
-        <label>Start time</label>
-        <input id="calBookTime" type="time" step="900" style="width:100%;padding:9px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;">
-      </div>
-    </div>
-    <div class="form-group">
-      <label>Location</label>
-      <input id="calBookLocation" type="text" placeholder="e.g. Teams" style="width:100%;padding:9px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;">
-    </div>
-    <div class="form-group" style="display:flex;align-items:center;gap:8px;">
-      <input id="calBookOnline" type="checkbox" style="width:16px;height:16px;">
-      <label for="calBookOnline" style="margin:0;">Add a Teams online meeting link</label>
-    </div>
-    <div class="form-group">
-      <label>Notes <span style="color:#94a3b8;font-weight:400;">(added to the event body)</span></label>
-      <textarea id="calBookNotes" rows="2" style="width:100%;font-family:inherit;font-size:13px;padding:10px;border:1px solid #e2e8f0;border-radius:8px;resize:vertical;"></textarea>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-gray" onclick="closeModal('calBookModal')">Cancel</button>
-      <button class="btn btn-blue" id="calBookSubmitBtn" onclick="submitCalBook()">Create appointment</button>
-    </div>
-  </div>
-</div>
-
 <!-- GALLUP CODE REQUEST MODAL -->
 <div class="modal-overlay" id="gallupReqModal">
   <div class="modal" style="max-width:640px;">
@@ -1202,10 +1140,10 @@ if('serviceWorker' in navigator){
     <div class="form-group"><label>Title</label><input id="tkTitle" placeholder="One clear outcome..."></div>
     <div class="mob-grid-2">
       <div class="form-group"><label>Owner</label>
-        <select id="tkOwner"><option>Cath Baker</option><option>CoachVA (Lou)</option></select>
+        <select id="tkOwner"><option>Cath Baker</option><option>Molly</option></select>
       </div>
       <div class="form-group"><label>Requester</label>
-        <select id="tkRequester"><option>Cath Baker</option><option>CoachVA (Lou)</option><option>System</option><option>Client</option></select>
+        <select id="tkRequester"><option>Cath Baker</option><option>Molly</option><option>System</option><option>Client</option></select>
       </div>
     </div>
     <div class="mob-grid-2">
@@ -1218,7 +1156,7 @@ if('serviceWorker' in navigator){
     </div>
     <div class="mob-grid-2">
       <div class="form-group"><label>Status</label>
-        <select id="tkStatus"><option>Not Started</option><option>In Progress</option><option>Waiting on Cath</option><option>Waiting on CoachVA</option><option>Blocked</option><option>Complete</option></select>
+        <select id="tkStatus"><option>Not Started</option><option>In Progress</option><option>Waiting on Cath</option><option>Waiting on Molly</option><option>Blocked</option><option>Complete</option></select>
       </div>
       <div class="form-group"><label>Source</label>
         <select id="tkSource"><option>Chat</option><option>Email</option><option>Call</option><option>System</option><option>Self</option></select>
@@ -1392,7 +1330,7 @@ if('serviceWorker' in navigator){
     <div class="form-group"><label>Description (one line)</label><input id="agentFormDesc" placeholder="What this agent does in plain English"></div>
     <div class="form-group"><label>Purpose (detail)</label><textarea id="agentFormPurpose" rows="2" placeholder="Why it exists, what problem it solves"></textarea></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-      <div class="form-group"><label>Used by</label><input id="agentFormUsedBy" placeholder="Cath, Lou"></div>
+      <div class="form-group"><label>Used by</label><input id="agentFormUsedBy" placeholder="Cath, Molly"></div>
       <div class="form-group"><label>Used for</label><input id="agentFormUsedFor" placeholder="SMS, WhatsApp, Email, Teams"></div>
     </div>
     <div class="form-group"><label>Not used for</label><input id="agentFormNotUsedFor" placeholder="Manuals, reports, long-form content"></div>
@@ -1470,7 +1408,7 @@ if('serviceWorker' in navigator){
     <div class="form-group"><label>Purpose</label><textarea id="stageFormPurpose" rows="2" placeholder="What this stage is for"></textarea></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
       <div class="form-group"><label>Default Sender</label>
-        <select id="stageFormSender"><option value="">(not set)</option><option value="Cath">Cath</option><option value="Lou">Lou</option><option value="Either">Either</option></select>
+        <select id="stageFormSender"><option value="">(not set)</option><option value="Cath">Cath</option><option value="Molly">Molly</option><option value="Either">Either</option></select>
       </div>
       <div class="form-group"><label>Order</label><input id="stageFormOrder" type="number" value="0"></div>
     </div>
@@ -1491,7 +1429,7 @@ if('serviceWorker' in navigator){
     <input type="hidden" id="templateFormStageId">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
       <div class="form-group"><label>Persona *</label>
-        <select id="templateFormPersona"><option value="Cath">Cath</option><option value="Lou">Lou</option></select>
+        <select id="templateFormPersona"><option value="Cath">Cath</option><option value="Molly">Molly</option></select>
       </div>
       <div class="form-group"><label>Platform *</label>
         <select id="templateFormPlatform"><option value="text">Text / SMS</option><option value="whatsapp">WhatsApp</option><option value="email">Email</option><option value="teams">Teams</option></select>
@@ -2000,7 +1938,7 @@ RULES:
     route:{action:'toggleAiChat()',label:'Open Bot'},
     defaultPrompt:`You are Coach4U CRM assistant. Today is {{TODAY}} (Australian Eastern Time).
 
-You help Cath and Lou manage their coaching business CRM. You can search, add, and update contacts, prospects, clients, and tasks.
+You help Cath and Molly manage their coaching business CRM. You can search, add, and update contacts, prospects, clients, and tasks.
 
 AVAILABLE TOOLS:
 **Search & List:**
@@ -2014,7 +1952,7 @@ AVAILABLE TOOLS:
 **Create:**
 - add_contact: Add to master list (needs first_name + last_name)
 - add_prospect: Add prospect (needs name, optionally link contact_id)
-- add_task: Add task (needs title). Fields: owner (Cath Baker/CoachVA Lou), requester, task_type (Admin/Finance/Client/Tech/Personal/System), priority (Urgent/Normal/Low), status (Not Started/In Progress/Waiting on Cath/Waiting on CoachVA/Blocked/Complete), source (Chat/Email/Call/System/Self), decision_required (Yes/No), due_date, blocked_reason, work_category (Task/Action Plan/BAU), focus_today (true to schedule for today on the planner calendar)
+- add_task: Add task (needs title). Fields: owner (Cath Baker/Molly), requester, task_type (Admin/Finance/Client/Tech/Personal/System), priority (Urgent/Normal/Low), status (Not Started/In Progress/Waiting on Cath/Waiting on Molly/Blocked/Complete), source (Chat/Email/Call/System/Self), decision_required (Yes/No), due_date, blocked_reason, work_category (Task/Action Plan/BAU), focus_today (true to schedule for today on the planner calendar)
 - add_task_log: Add a communication log to a task (needs task_id + message). Types: STATUS UPDATE, ACTION REQUIRED, CONFIRMATION REQUEST, BLOCKED, NOTE
 - add_renewal: Add ThriveHQ membership renewal (needs contact_id, period_start, period_end)
 - add_referrer_payment: Add referrer payment (needs referrer_id, amount)
@@ -2049,13 +1987,13 @@ RULES:
 7. Valid prospect statuses: New, Hot, Warm, Cold, Converted, Lost
 8. Valid roles: Individual, NDIS Individual, Couple, Business, Organisation
 9. Valid task priorities: Urgent, Normal, Low
-10. Valid task statuses: Not Started, In Progress, Waiting on Cath, Waiting on CoachVA, Blocked, Complete
+10. Valid task statuses: Not Started, In Progress, Waiting on Cath, Waiting on Molly, Blocked, Complete
 11. Valid client statuses: Active, Inactive, Onboarding, Past
-12. Task owners are "Cath Baker" or "CoachVA (Lou)"
+12. Task owners are "Cath Baker" or "Molly"
 13. When creating tasks, set decision_required to "Yes" if Cath needs to make a decision on it
 14. Task categories: "Task" (regular one-off tasks), "Action Plan" (strategic goals for 2026), "BAU" (Business As Usual — recurring daily monitoring like emails, social media)
 15. Use focus_today=true to schedule a task on today's planner calendar. Incomplete scheduled tasks roll forward to the next workday automatically.
-16. Lou's Day view shows 4 sections: Priorities (today's focus), Pending (backlog tasks), Action Plan (strategic goals), BAU (daily recurring)`
+16. Molly's Day view shows 4 sections: Priorities (today's focus), Pending (backlog tasks), Action Plan (strategic goals), BAU (daily recurring)`
   },
   {
     slug:'ai-strategy-audit',
@@ -4170,7 +4108,7 @@ function renderStrSop(){
       'Approves pricing changes',
       'Owns this workflow document',
       'Uses results in coaching'
-    ])}<br><strong>Lou, Operations</strong>${list([
+    ])}<br><strong>Molly, Operations</strong>${list([
       'Executes the workflow end to end',
       'Tracks each request',
       'Purchases and distributes codes',
@@ -4209,7 +4147,7 @@ function renderOpsDash(){
   const todayStr=getPHTDateStr();
   const active=tasks.filter(t=>t.status!=='Complete');
   const blocked=active.filter(t=>t.status==='Blocked');
-  const waitingVA=active.filter(t=>t.status==='Waiting on CoachVA');
+  const waitingVA=active.filter(t=>t.status==='Waiting on Molly');
   const completedToday=tasks.filter(t=>t.status==='Complete'&&t.updated_at&&new Date(t.updated_at).toLocaleDateString('en-CA',{timeZone:'Australia/Sydney'})===todayStr);
 
   let html=`<div class="dash-cards">
@@ -4296,7 +4234,7 @@ window.copyDailySummary=function(){
     summary+=s.label.toUpperCase()+':\n';
     s.items.forEach(t=>{
       const st=t.status||'Not Started';
-      const tag=(st==='In Progress'||st==='Waiting on Cath'||st==='Waiting on CoachVA'||st==='Blocked')?' ['+st+']':'';
+      const tag=(st==='In Progress'||st==='Waiting on Cath'||st==='Waiting on Molly'||st==='Blocked')?' ['+st+']':'';
       summary+=(s.key==='completed'?'\u2705 ':'\u2022 ')+t.title+tag+'\n';
     });
     summary+='\n';
@@ -4340,7 +4278,7 @@ window.copyPlaybookSection=function(key){
   let text=s.label.toUpperCase()+':\n';
   s.items.forEach(t=>{
     const st=t.status||'Not Started';
-    const tag=(st==='In Progress'||st==='Waiting on Cath'||st==='Waiting on CoachVA'||st==='Blocked')?' ['+st+']':'';
+    const tag=(st==='In Progress'||st==='Waiting on Cath'||st==='Waiting on Molly'||st==='Blocked')?' ['+st+']':'';
     text+=(s.key==='completed'?'\u2705 ':'\u2022 ')+t.title+tag+'\n';
   });
   copyText(text,s.label);
@@ -4438,25 +4376,28 @@ let playbookLinks=[
 ];
 
 const dailyProcedures=[
-  {time:'Morning',tasks:[
-    'Check Teams for messages from Cath',
-    'Review today\'s priorities in CRM Task Management',
-    'Check email inbox — flag anything urgent',
-    'Check Xero — any overdue invoices or payments received?',
-    'Review calendar — any sessions or calls today?'
+  {time:'Morning (≈ 8:30 am)',tasks:[
+    'Molly posts the morning briefing in Teams — active count, blockers, top 3–5 for today',
+    'You reply with what to park, escalate, or knock over first',
+    'Open Active Tasks to skim — same list Molly is reading',
+    'Open Calendar — any sessions, calls, or buffer needed today'
   ]},
-  {time:'Midday',tasks:[
-    'Post progress update to Cath via Teams',
-    'Follow up on any pending client responses',
-    'Process any new referrals or enquiries',
-    'Update task statuses in CRM'
+  {time:'Working loop',tasks:[
+    'Molly actions routine tasks and posts STATUS UPDATE per task',
+    'For anything client-facing or money-related, Molly drafts and asks first',
+    'You reply yes / tweak / no — Molly proceeds and logs it',
+    'Blocked items come back as a specific question, not a vague flag'
   ]},
-  {time:'End of Day',tasks:[
-    'Send daily summary update to Cath (use Copy Daily Summary in Ops Dashboard)',
-    'Mark completed tasks as done in CRM',
-    'Star tomorrow\'s priority tasks',
-    'Check GoCardless for any failed payments',
-    'Log off Xero and close out any open tabs'
+  {time:'Midday (≈ 1 pm)',tasks:[
+    'Molly sends the half-day update only if there is something to flag',
+    'Two lines: done so far, waiting on you',
+    'Quiet days stay quiet'
+  ]},
+  {time:'End of Day (≈ 5 pm)',tasks:[
+    'Molly posts the day\'s wrap in Teams: done, waiting on you, rolled to tomorrow',
+    'Completed tasks are marked Complete in CRM — Work Log updates from there',
+    'Anything not done auto-rolls to next workday via the nightly rollover',
+    'Check GoCardless for failed payments before logging off'
   ]}
 ];
 
@@ -4509,7 +4450,7 @@ function renderPlaybook(){
   const todayStr=getPHTDateStr();
   const dateStr=now.toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   const sections=buildPlaybookSections(todayStr);
-  const statusColors={'Not Started':'#94a3b8','In Progress':'#2563eb','Waiting on Cath':'#d97706','Waiting on CoachVA':'#7c3aed','Blocked':'#dc2626','Complete':'#16a34a'};
+  const statusColors={'Not Started':'#94a3b8','In Progress':'#2563eb','Waiting on Cath':'#d97706','Waiting on Molly':'#7c3aed','Blocked':'#dc2626','Complete':'#16a34a'};
   const logEntries=getPlaybookLog(todayStr);
 
   let html='';
@@ -4613,11 +4554,20 @@ function renderProcedures(){
       </div>
     `).join('')}
   </div>
+  <div style="background:#eef2ff;border:1px solid #c7d2fe;border-radius:10px;padding:16px 20px;margin-bottom:16px;">
+    <div style="font-weight:700;font-size:14px;color:#3730a3;margin-bottom:8px;">&#128106; Working with Molly</div>
+    <div style="font-size:13px;color:#475569;line-height:1.7;">
+      <p style="margin-bottom:6px;">Molly is your Ops PA — she runs the daily rhythm above and DMs you in Teams.</p>
+      <p style="margin-bottom:6px;">She drafts, you steer. She never closes a task or sends a client message without your OK.</p>
+      <p style="margin-bottom:6px;">Every back-and-forth lands in the task log so the Work Log tells the day's story by itself.</p>
+      <p style="margin-bottom:0;">Tune her voice or routine in <strong>Ops &gt; Agents &gt; Molly</strong>.</p>
+    </div>
+  </div>
   <div style="background:#f0f6ff;border:1px solid #bfdbfe;border-radius:10px;padding:16px 20px;margin-bottom:24px;">
     <div style="font-weight:700;font-size:14px;color:#1e3a5f;margin-bottom:8px;">&#128161; If Someone Else is Covering</div>
     <div style="font-size:13px;color:#475569;line-height:1.7;">
       <p style="margin-bottom:8px;">1. <strong>Check the Work Log</strong> — it shows what's been completed today and what's still pending</p>
-      <p style="margin-bottom:8px;">2. <strong>Follow the Daily Procedures</strong> above (Morning / Midday / End of Day)</p>
+      <p style="margin-bottom:8px;">2. <strong>Follow the rhythm above</strong> (Morning / Working loop / Midday / End of Day)</p>
       <p style="margin-bottom:8px;">3. <strong>Use the Quick Links</strong> to access all tools (Xero, Teams, NDIS portal, etc.)</p>
       <p style="margin-bottom:8px;">4. <strong>Post updates to Cath via Teams</strong> — use the Copy List button in Active Tasks</p>
       <p>5. <strong>If stuck</strong>, message Cath via Teams or WhatsApp</p>
@@ -10738,87 +10688,6 @@ window.calSetView=function(v){ calView=v; try{localStorage.setItem('cal_view',v)
 window.calToggleSource=function(s){ calSourceOn[s]=!calSourceOn[s]; try{localStorage.setItem('cal_sources',JSON.stringify(calSourceOn));}catch(e){} renderCalWeek(); };
 window.calRefresh=async function(){ toast('Refreshing calendar…','info'); await loadCalendarEvents(); renderCalWeek(); toast('Calendar refreshed','success'); };
 
-// Pull the latest from Outlook via the ms-graph-calendar Edge Function, then re-render.
-window.calSyncNow=async function(){
-  const btn=document.getElementById('calSyncBtn');
-  if(btn){ btn.disabled=true; btn.textContent='Syncing…'; }
-  try{
-    const {data:{session}}=await supabase.auth.getSession();
-    if(!session) throw new Error('Not signed in');
-    const res=await fetch(`${SUPABASE_EDGE_URL}/ms-graph-calendar`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},body:JSON.stringify({action:'sync'})});
-    const out=await res.json();
-    if(!res.ok) throw new Error(out.error||('HTTP '+res.status));
-    await loadCalendarEvents(); renderCalWeek();
-    const s=out.synced||{}; const total=Object.values(s).reduce((a,b)=>a+(b||0),0);
-    toast('Synced '+total+' events from Outlook','success');
-  }catch(e){
-    console.warn('calSyncNow',e);
-    toast('Sync failed: '+e.message,'error');
-    const b=document.getElementById('calSyncBtn'); if(b){ b.disabled=false; b.innerHTML='&#8635; Sync now'; }
-  }
-};
-
-// Booking modal
-window.openCalBook=function(){
-  const sel=document.getElementById('calBookContact');
-  const withEmail=contacts.filter(c=>c.email).sort((a,b)=>calContactName(a).localeCompare(calContactName(b)));
-  sel.innerHTML='<option value="">— none —</option>'+withEmail.map(c=>'<option value="'+c.id+'">'+calContactName(c).replace(/</g,'&lt;')+' ('+(''+c.email).replace(/</g,'&lt;')+')</option>').join('');
-  document.getElementById('calBookSubject').value='';
-  document.getElementById('calBookSource').value='bookings';
-  document.getElementById('calBookDuration').value='90';
-  document.getElementById('calBookDate').value=getAUDateStr();
-  document.getElementById('calBookTime').value='10:00';
-  document.getElementById('calBookLocation').value='';
-  document.getElementById('calBookNotes').value='';
-  document.getElementById('calBookOnline').checked=false;
-  document.getElementById('calBookModal').classList.add('open');
-};
-window.calBookContactChanged=function(){
-  const sel=document.getElementById('calBookContact');
-  const subj=document.getElementById('calBookSubject');
-  if(sel.value && !subj.value.trim()){
-    const c=contacts.find(x=>x.id===sel.value);
-    if(c) subj.value='Session with '+calContactName(c);
-  }
-};
-window.submitCalBook=async function(){
-  const subject=document.getElementById('calBookSubject').value.trim();
-  const source=document.getElementById('calBookSource').value;
-  const date=document.getElementById('calBookDate').value;
-  const time=document.getElementById('calBookTime').value;
-  const dur=parseInt(document.getElementById('calBookDuration').value,10);
-  const location=document.getElementById('calBookLocation').value.trim();
-  const online=document.getElementById('calBookOnline').checked;
-  const notes=document.getElementById('calBookNotes').value.trim();
-  const contactId=document.getElementById('calBookContact').value;
-  if(!subject){ toast('Add a title','error'); return; }
-  if(!date||!time){ toast('Pick a date and start time','error'); return; }
-  // naive Sydney wall-clock; the function passes timeZone Australia/Sydney to Graph
-  const start=date+'T'+time+':00';
-  const endD=new Date(date+'T'+time+':00Z'); endD.setUTCMinutes(endD.getUTCMinutes()+dur);
-  const end=endD.toISOString().slice(0,19);
-  let attendees=[];
-  if(contactId){ const c=contacts.find(x=>x.id===contactId); if(c&&c.email) attendees=[{email:c.email,name:calContactName(c)}]; }
-  const btn=document.getElementById('calBookSubmitBtn'); btn.disabled=true; btn.textContent='Creating…';
-  try{
-    const {data:{session}}=await supabase.auth.getSession();
-    if(!session) throw new Error('Not signed in');
-    const res=await fetch(`${SUPABASE_EDGE_URL}/ms-graph-calendar`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},body:JSON.stringify({
-      action:'book', source, subject, start, end, timeZone:'Australia/Sydney',
-      location: location||undefined, online_meeting:online, body:notes||undefined,
-      attendees, contact_id: contactId||undefined
-    })});
-    const out=await res.json();
-    if(!res.ok) throw new Error(out.error||('HTTP '+res.status));
-    closeModal('calBookModal');
-    await loadCalendarEvents(); renderCalWeek();
-    toast('Appointment booked','success');
-  }catch(e){
-    console.warn('submitCalBook',e);
-    toast('Booking failed: '+e.message,'error');
-  }finally{ btn.disabled=false; btn.textContent='Create appointment'; }
-};
-
 function calRelLastSynced(){
   if(!calLastSynced) return '';
   const diff=Date.now()-new Date(calLastSynced).getTime();
@@ -10893,8 +10762,6 @@ function renderCalWeek(){
     +'<button class="cal-nav-btn" onclick="calNav(-1)">&#8249;</button>'
     +'<button class="cal-nav-btn cal-today-btn" onclick="calToday()">Today</button>'
     +'<button class="cal-nav-btn" onclick="calNav(1)">&#8250;</button>'
-    +'<button class="cal-nav-btn" id="calSyncBtn" onclick="calSyncNow()" title="Pull the latest from Outlook">&#8635; Sync now</button>'
-    +'<button class="cal-nav-btn" onclick="openCalBook()" style="background:#2563eb;color:#fff;border-color:#2563eb;">+ Book</button>'
     +'<span class="cal-week-range">'+rangeLabel+(calWeekOffset===0?' · This week':'')+'</span>'
     +'<span class="cal-viewtoggle">'
       +'<button class="'+(calView==='agenda'?'active':'')+'" onclick="calSetView(\'agenda\')">Agenda</button>'
@@ -11222,7 +11089,7 @@ function renderScheduler(scheduledTasks){
     if(schedulerSelectedDate){
       const selTasks=scheduledTasks.filter(t=>t.focus_date===schedulerSelectedDate);
       const dayLabel=schedulerSelectedDate;
-      const stColors={'Not Started':'#94a3b8','In Progress':'#2563eb','Waiting on Cath':'#d97706','Waiting on CoachVA':'#7c3aed','Blocked':'#dc2626','Complete':'#16a34a'};
+      const stColors={'Not Started':'#94a3b8','In Progress':'#2563eb','Waiting on Cath':'#d97706','Waiting on Molly':'#7c3aed','Blocked':'#dc2626','Complete':'#16a34a'};
       html+=`<div style="border-top:1px solid #e2e8f0;padding:12px 16px;">`;
       if(!selTasks.length){
         html+=`<div style="font-size:12px;color:#94a3b8;padding:4px 0;">No tasks filed for ${dayLabel}.</div>`;
@@ -11255,7 +11122,7 @@ async function loadTaskLogs(){
 function renderTaskCard(t,showStar){
   const isDone=t.status==='Complete';
   const todayStr=getPHTDateStr();
-  const statusColors={'Not Started':'#94a3b8','In Progress':'#2563eb','Waiting on Cath':'#d97706','Waiting on CoachVA':'#7c3aed','Blocked':'#dc2626','Complete':'#16a34a'};
+  const statusColors={'Not Started':'#94a3b8','In Progress':'#2563eb','Waiting on Cath':'#d97706','Waiting on Molly':'#7c3aed','Blocked':'#dc2626','Complete':'#16a34a'};
   const st=t.status||'Not Started';
   const stColor=statusColors[st]||'#64748b';
 
@@ -11381,8 +11248,8 @@ function buildTaskListText(scope){
   const sections=[
     {label:'Today\'s Priorities',items:active.filter(t=>t.focus_date===todayStr).sort(taskSorter)},
     {label:'In Progress',items:active.filter(t=>t.status==='In Progress'&&t.focus_date!==todayStr).sort(taskSorter)},
-    {label:'Blocked / Waiting',items:active.filter(t=>['Blocked','Waiting on Cath','Waiting on CoachVA'].includes(t.status)).sort(taskSorter)},
-    {label:'Tasks',items:active.filter(t=>(t.work_category||'Task')==='Task'&&t.focus_date!==todayStr&&!['In Progress','Blocked','Waiting on Cath','Waiting on CoachVA'].includes(t.status)).sort(taskSorter)},
+    {label:'Blocked / Waiting',items:active.filter(t=>['Blocked','Waiting on Cath','Waiting on Molly'].includes(t.status)).sort(taskSorter)},
+    {label:'Tasks',items:active.filter(t=>(t.work_category||'Task')==='Task'&&t.focus_date!==todayStr&&!['In Progress','Blocked','Waiting on Cath','Waiting on Molly'].includes(t.status)).sort(taskSorter)},
     {label:'2026 Action Plan',items:active.filter(t=>t.work_category==='Action Plan').sort(taskSorter)},
     {label:'Business as Usual',items:active.filter(t=>t.work_category==='BAU').sort(taskSorter)},
   ];
@@ -11426,7 +11293,7 @@ window.openTaskModal=function(id){
   document.getElementById('taskId').value=t?t.id:'';
   document.getElementById('tkTitle').value=t?t.title:'';
   document.getElementById('tkDesc').value=t?t.description||'':'';
-  document.getElementById('tkOwner').value=t?t.owner:'CoachVA (Lou)';
+  document.getElementById('tkOwner').value=t?t.owner:'Molly';
   document.getElementById('tkRequester').value=t?t.requester||'Cath Baker':'Cath Baker';
   document.getElementById('tkCategory').value=t?t.work_category||'Task':'Task';
   document.getElementById('tkType').value=t?t.task_type||'Admin':'Admin';
@@ -14329,7 +14196,7 @@ function renderAbout(){
     listItem('Strengths AI','Personal Insights, What You Bring &amp; Need, Couple Dynamics, Adaptation Tips — all written in Cath\'s voice via direct Anthropic API. Couple Dynamics and Pulse sections shown only for Couple/Individual clients.')+
     listItem('Gallup Code Tracker','Full workflow tracker for CliftonStrengths assessment requests: one record per contact, stamp stages (New → Awaiting Payment → Purchased → Code Sent → Notified → Filed), quick-log form on page, edit modal for corrections')+
     listItem('IT','Dashboard, IT Projects, Agents (parent/child with versioning + SharePoint export), AI Strategy (cross-agent audit + chat), Writing Partner')+
-    listItem('Admin','Dashboard, Task Management, Playbook — Lou\'s operational work, Company Resources. Task Management: two-row cards (title + status/actions), star-focus toggle, nightly rollover at 11 pm AU (Fri → Mon), catch-up rollover on load. Copy List menu: Today / Next 7 Days / Entire List, each with Copy and Send to Teams.')+
+    listItem('Ops','Dashboard, Active Tasks, Work Log — Molly\'s operational work, Daily Procedures, Quick Links, Agents, AI Strategy, Writing Partner, Prompts, IT Projects, Company Resources. Active Tasks: two-row cards (title + status/actions), star-focus toggle, nightly rollover at 11 pm AU (Fri → Mon), catch-up rollover on load. Copy List menu: Today / Next 7 Days / Entire List, each with Copy and Send to Teams.')+
     listItem('Finance','Dashboard, Payment Platforms (GoCardless + Stripe login info loaded from Supabase), Income, Where Money Goes, Bills, Insurance, Transactions (Xero CSV import). Bills: Paid &amp; Renew creates next year\'s entry with blank amount and notes — only name, category, frequency and due date carry over.')+
     listItem('Development Business','Running costs (Supabase, Claude API) and possible pricing reference for development apps — 7 app tiers from Relationship to Developer Coach4U')+
     listItem('Prospects','Sales pipeline: status tracking, dated activity logs, follow-up dates, overdue highlighting, intake form linking')+
@@ -14491,7 +14358,7 @@ async function postToTeams(taskTitle,taskStatus,taskPriority,logType,message,pos
   } else if(isLegacy){
     // Legacy Incoming Webhook — MessageCard format
     const urgentBanner=notifyCath?'🔔 **ATTENTION NEEDED — Cath**\n\n':'';
-    const statusColor={'Not Started':'94a3b8','In Progress':'2563eb','Waiting on Cath':'d97706','Waiting on CoachVA':'8b5cf6','Blocked':'ef4444','Complete':'16a34a'};
+    const statusColor={'Not Started':'94a3b8','In Progress':'2563eb','Waiting on Cath':'d97706','Waiting on Molly':'8b5cf6','Blocked':'ef4444','Complete':'16a34a'};
     payload={
       "@type":"MessageCard",
       "@context":"http://schema.org/extensions",
@@ -14511,7 +14378,7 @@ async function postToTeams(taskTitle,taskStatus,taskPriority,logType,message,pos
     };
   } else {
     // Generic Workflows Webhook — Adaptive Card format
-    const statusColor={'Not Started':'Default','In Progress':'Accent','Waiting on Cath':'Warning','Waiting on CoachVA':'Accent','Blocked':'Attention','Complete':'Good'};
+    const statusColor={'Not Started':'Default','In Progress':'Accent','Waiting on Cath':'Warning','Waiting on Molly':'Accent','Blocked':'Attention','Complete':'Good'};
     const bodyItems=[];
     if(notifyCath){
       bodyItems.push({type:'Container',style:'attention',bleed:true,items:[{type:'TextBlock',text:'🔔 ATTENTION NEEDED — Cath',weight:'Bolder',size:'Medium',color:'Attention'}]});
@@ -14562,14 +14429,14 @@ const aiTools=[
   {name:'search_prospects',description:'Search prospects by name, status, or notes. Use for specific lookups.',input_schema:{type:'object',properties:{query:{type:'string',description:'Search term'}},required:['query']}},
   {name:'add_contact',description:'Add a new contact to the master list. ALWAYS use this tool to add contacts, not any generic method.',input_schema:{type:'object',properties:{first_name:{type:'string'},last_name:{type:'string'},email:{type:'string'},phone:{type:'string'},contact_type:{type:'string',enum:['Individual','ThriveHQ Member','Prospect']},notes:{type:'string'}},required:['first_name','last_name']}},
   {name:'add_prospect',description:'Add a new prospect. ALWAYS use this tool to add prospects. Optionally link to existing contact by contact_id.',input_schema:{type:'object',properties:{name:{type:'string',description:'Full name'},email:{type:'string'},phone:{type:'string'},role:{type:'string',enum:['Individual','NDIS Individual','Community','Couple','Business','Organisation']},status:{type:'string',enum:['New','Hot','Warm','Cold']},source:{type:'string'},notes:{type:'string'},contact_id:{type:'string',description:'UUID of linked contact from master list (optional)'}},required:['name']}},
-  {name:'add_task',description:'Add a new task. ALWAYS use this tool to create tasks.',input_schema:{type:'object',properties:{title:{type:'string'},description:{type:'string'},work_category:{type:'string',enum:['Task','Action Plan','BAU'],description:'Task=regular task, Action Plan=strategic goal, BAU=recurring daily monitoring'},owner:{type:'string',enum:['Cath Baker','CoachVA (Lou)'],description:'Who owns/does this task'},requester:{type:'string',enum:['Cath Baker','CoachVA (Lou)','System','Client'],description:'Who requested this task'},task_type:{type:'string',enum:['Admin','Finance','Client','Tech','Personal','System']},priority:{type:'string',enum:['Urgent','Normal','Low']},status:{type:'string',enum:['Not Started','In Progress','Waiting on Cath','Waiting on CoachVA','Blocked','Complete']},source:{type:'string',enum:['Chat','Email','Call','System','Self'],description:'Where did this task come from'},decision_required:{type:'string',enum:['No','Yes'],description:'Does this need Cath decision?'},due_date:{type:'string',description:'YYYY-MM-DD format'},blocked_reason:{type:'string',description:'Why is this blocked (only if status=Blocked)'},focus_today:{type:'boolean',description:'Set true to add to today\'s priorities'}},required:['title']}},
+  {name:'add_task',description:'Add a new task. ALWAYS use this tool to create tasks.',input_schema:{type:'object',properties:{title:{type:'string'},description:{type:'string'},work_category:{type:'string',enum:['Task','Action Plan','BAU'],description:'Task=regular task, Action Plan=strategic goal, BAU=recurring daily monitoring'},owner:{type:'string',enum:['Cath Baker','Molly'],description:'Who owns/does this task'},requester:{type:'string',enum:['Cath Baker','Molly','System','Client'],description:'Who requested this task'},task_type:{type:'string',enum:['Admin','Finance','Client','Tech','Personal','System']},priority:{type:'string',enum:['Urgent','Normal','Low']},status:{type:'string',enum:['Not Started','In Progress','Waiting on Cath','Waiting on Molly','Blocked','Complete']},source:{type:'string',enum:['Chat','Email','Call','System','Self'],description:'Where did this task come from'},decision_required:{type:'string',enum:['No','Yes'],description:'Does this need Cath decision?'},due_date:{type:'string',description:'YYYY-MM-DD format'},blocked_reason:{type:'string',description:'Why is this blocked (only if status=Blocked)'},focus_today:{type:'boolean',description:'Set true to add to today\'s priorities'}},required:['title']}},
   {name:'update_contact',description:'Update an existing contact. First use search_contacts to find the contact ID, then use this tool.',input_schema:{type:'object',properties:{id:{type:'string',description:'Contact UUID'},email:{type:'string'},phone:{type:'string'},contact_type:{type:'string'},notes:{type:'string'},first_name:{type:'string'},last_name:{type:'string'}},required:['id']}},
   {name:'update_prospect',description:'Update an existing prospect. First use search_prospects to find the prospect ID.',input_schema:{type:'object',properties:{id:{type:'string',description:'Prospect UUID'},name:{type:'string'},status:{type:'string'},role:{type:'string'},notes:{type:'string'},email:{type:'string'},phone:{type:'string'}},required:['id']}},
   {name:'get_stats',description:'Get current CRM statistics: contact count, client count, prospect count, task count.',input_schema:{type:'object',properties:{}}},
   {name:'update_client',description:'Update an existing client. First use search_clients to find the client ID.',input_schema:{type:'object',properties:{id:{type:'string',description:'Client UUID'},relationship_name:{type:'string'},role:{type:'string',enum:['Individual','NDIS Individual','Couple','Business','Organisation']},status:{type:'string',enum:['Active','Inactive','Onboarding','Past']},practitioner:{type:'string'},notes:{type:'string'},file_notes_link:{type:'string',description:'SharePoint URL for file notes'},xero_link:{type:'string',description:'Xero accounting link'}},required:['id']}},
-  {name:'update_task',description:'Update an existing task. First use list_records or search to find the task ID.',input_schema:{type:'object',properties:{id:{type:'string',description:'Task UUID'},title:{type:'string'},description:{type:'string'},work_category:{type:'string',enum:['Task','Action Plan','BAU']},owner:{type:'string',enum:['Cath Baker','CoachVA (Lou)']},requester:{type:'string',enum:['Cath Baker','CoachVA (Lou)','System','Client']},task_type:{type:'string',enum:['Admin','Finance','Client','Tech','Personal','System']},priority:{type:'string',enum:['Urgent','Normal','Low']},status:{type:'string',enum:['Not Started','In Progress','Waiting on Cath','Waiting on CoachVA','Blocked','Complete']},source:{type:'string',enum:['Chat','Email','Call','System','Self']},decision_required:{type:'string',enum:['No','Yes']},due_date:{type:'string',description:'YYYY-MM-DD format'},blocked_reason:{type:'string'},focus_today:{type:'boolean',description:'Set true to focus today, false to unfocus'}},required:['id']}},
+  {name:'update_task',description:'Update an existing task. First use list_records or search to find the task ID.',input_schema:{type:'object',properties:{id:{type:'string',description:'Task UUID'},title:{type:'string'},description:{type:'string'},work_category:{type:'string',enum:['Task','Action Plan','BAU']},owner:{type:'string',enum:['Cath Baker','Molly']},requester:{type:'string',enum:['Cath Baker','Molly','System','Client']},task_type:{type:'string',enum:['Admin','Finance','Client','Tech','Personal','System']},priority:{type:'string',enum:['Urgent','Normal','Low']},status:{type:'string',enum:['Not Started','In Progress','Waiting on Cath','Waiting on Molly','Blocked','Complete']},source:{type:'string',enum:['Chat','Email','Call','System','Self']},decision_required:{type:'string',enum:['No','Yes']},due_date:{type:'string',description:'YYYY-MM-DD format'},blocked_reason:{type:'string'},focus_today:{type:'boolean',description:'Set true to focus today, false to unfocus'}},required:['id']}},
   {name:'complete_task',description:'Mark a task as Complete. Shortcut for update_task with status=Complete.',input_schema:{type:'object',properties:{id:{type:'string',description:'Task UUID'}},required:['id']}},
-  {name:'add_task_log',description:'Add a communication log entry to a task. Use for status updates, action requests, confirmations, blocks, or notes.',input_schema:{type:'object',properties:{task_id:{type:'string',description:'Task UUID'},log_type:{type:'string',enum:['STATUS UPDATE','ACTION REQUIRED','CONFIRMATION REQUEST','BLOCKED','NOTE']},message:{type:'string',description:'Log message content'},posted_by:{type:'string',enum:['Cath Baker','CoachVA (Lou)','System']},response_required:{type:'boolean',description:'Does this need a response?'}},required:['task_id','message']}},
+  {name:'add_task_log',description:'Add a communication log entry to a task. Use for status updates, action requests, confirmations, blocks, or notes.',input_schema:{type:'object',properties:{task_id:{type:'string',description:'Task UUID'},log_type:{type:'string',enum:['STATUS UPDATE','ACTION REQUIRED','CONFIRMATION REQUEST','BLOCKED','NOTE']},message:{type:'string',description:'Log message content'},posted_by:{type:'string',enum:['Cath Baker','Molly','System']},response_required:{type:'boolean',description:'Does this need a response?'}},required:['task_id','message']}},
   {name:'delete_record',description:'Delete a record from any table. Use with caution. First search to confirm the correct record.',input_schema:{type:'object',properties:{table:{type:'string',enum:['contacts','clients','prospects','tasks'],description:'Which table to delete from'},id:{type:'string',description:'Record UUID to delete'}},required:['table','id']}},
   {name:'convert_prospect',description:'Convert a prospect to a client. Creates the client, links contact if available, marks prospect as Converted.',input_schema:{type:'object',properties:{id:{type:'string',description:'Prospect UUID'},role:{type:'string',enum:['Individual','NDIS Individual','Couple','Business','Organisation'],description:'Client role (defaults to prospect role)'}},required:['id']}},
   {name:'add_renewal',description:'Add a membership renewal record for a ThriveHQ member. Search contacts first to get the contact_id.',input_schema:{type:'object',properties:{contact_id:{type:'string',description:'Contact UUID of the member'},period_start:{type:'string',description:'YYYY-MM-DD start of renewal period'},period_end:{type:'string',description:'YYYY-MM-DD end of renewal period'},amount:{type:'number',description:'Payment amount'},renewed_date:{type:'string',description:'YYYY-MM-DD date payment was made'},notes:{type:'string'}},required:['contact_id','period_start','period_end']}},
