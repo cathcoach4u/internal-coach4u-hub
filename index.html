@@ -324,7 +324,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.53</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.54</span>
     </div>
   </div>
   <div class="area-tabs-wrap" id="areaTabsWrap">
@@ -10759,7 +10759,18 @@ function calMonday(offsetWeeks){
   return d;
 }
 function calVisibleEvents(){
-  return calendarEvents.filter(e=>calSourceOn[e.source]!==false);
+  const vis=calendarEvents.filter(e=>calSourceOn[e.source]!==false);
+  // De-duplicate the same appointment that exists in more than one calendar
+  // (e.g. a Bookings session that also lands on the Work calendar) — keep one,
+  // preferring Work so client sessions read as Work rather than being doubled.
+  const rank=function(s){ return s==='work'?0:(s==='personal'?1:2); };
+  const byUid={}, singles=[];
+  vis.forEach(e=>{
+    if(!e.ical_uid){ singles.push(e); return; }
+    const cur=byUid[e.ical_uid];
+    if(!cur||rank(e.source)<rank(cur.source)) byUid[e.ical_uid]=e;
+  });
+  return singles.concat(Object.keys(byUid).map(k=>byUid[k]));
 }
 window.calNav=function(delta){ calWeekOffset+=delta; renderCalWeek(); };
 window.calToday=function(){ calWeekOffset=0; renderCalWeek(); };
@@ -10841,20 +10852,24 @@ function renderCalWeek(){
   let html='';
 
   // toolbar
+  const calChip=function(s,primary){
+    const off=calSourceOn[s]===false?' off':'';
+    const dot=primary?'width:11px;height:11px;':'';
+    const txt=primary?'font-weight:700;font-size:12px;':'font-size:10px;opacity:.55;';
+    return '<span class="cal-chip'+off+'" onclick="calToggleSource(\''+s+'\')" style="'+txt+'"><span class="cal-dot" style="background:'+CAL_SOURCE_META[s].color+';'+dot+'"></span>'+CAL_SOURCE_META[s].label+'</span>';
+  };
   html+='<div class="cal-toolbar">'
     +'<button class="cal-nav-btn" onclick="calNav(-1)">&#8249;</button>'
     +'<button class="cal-nav-btn cal-today-btn" onclick="calToday()">Today</button>'
     +'<button class="cal-nav-btn" onclick="calNav(1)">&#8250;</button>'
-    +'<button class="cal-nav-btn" id="calSyncBtn" onclick="calSyncNow()" title="Pull the latest from Outlook">&#8635; Sync now</button>'
     +'<button class="cal-nav-btn" onclick="openCalBook()" style="background:#2563eb;color:#fff;border-color:#2563eb;">+ Book</button>'
     +'<span class="cal-week-range">'+rangeLabel+(calWeekOffset===0?' · This week':'')+'</span>'
-    +'<span class="cal-viewtoggle">'
+    +'<span class="cal-viewtoggle" style="margin-left:auto;">'
       +'<button class="'+(calView==='agenda'?'active':'')+'" onclick="calSetView(\'agenda\')">Agenda</button>'
       +'<button class="'+(calView==='grid'?'active':'')+'" onclick="calSetView(\'grid\')">Grid</button>'
     +'</span>'
-    +'<span class="cal-filters">'
-      +['work','bookings','personal'].map(s=>'<span class="cal-chip'+(calSourceOn[s]===false?' off':'')+'" onclick="calToggleSource(\''+s+'\')"><span class="cal-dot" style="background:'+CAL_SOURCE_META[s].color+'"></span>'+CAL_SOURCE_META[s].label+'</span>').join('')
-    +'</span>'
+    +'<span class="cal-filters">'+calChip('work',true)+calChip('personal',true)+calChip('bookings',false)+'</span>'
+    +'<button class="cal-nav-btn" id="calSyncBtn" onclick="calSyncNow()" title="Pull the latest from Outlook" style="font-size:11px;padding:4px 9px;color:#64748b;">&#8635; Sync</button>'
   +'</div>';
 
   // snapshot banner
