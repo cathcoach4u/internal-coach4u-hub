@@ -13,6 +13,19 @@ var supabase=CB.sb, SUPABASE_EDGE_URL=CB.EDGE, toast=CB.toast, getAUDateStr=CB.g
     renderCalWeek=CB.renderCalWeek, closeModal=CB.closeModal,
     getAnthropicKey=CB.getAnthropicKey, CATH_VOICE_REFERENCE=CB.voice;
 function getContacts(){ return (CB.getContacts?CB.getContacts():[])||[]; }
+function getClients(){ return (CB.getClients?CB.getClients():[])||[]; }
+function clientDisplayName(cl){
+  if(cl.relationship_name) return cl.relationship_name;
+  if(cl.client_name) return cl.client_name;
+  const cs=getContacts();
+  const names=(cl.members||[]).map(mid=>{const c=cs.find(x=>x.id===mid);return c?calContactName(c):null;}).filter(Boolean);
+  return names.join(' & ')||'Client';
+}
+// members of a client that have an email, as attendee objects
+function clientAttendees(cl){
+  const cs=getContacts();
+  return (cl.members||[]).map(mid=>cs.find(x=>x.id===mid)).filter(c=>c&&c.email).map(c=>({email:c.email,name:calContactName(c)}));
+}
 
 // Pull the latest from Outlook via the ms-graph-calendar Edge Function, then re-render.
 window.calSyncNow=async function(){
@@ -37,8 +50,20 @@ window.calSyncNow=async function(){
 // Booking modal
 window.openCalBook=function(){
   const sel=document.getElementById('calBookContact');
+  // Clients (invite all members with an email) + individual contacts
+  const clientsWithEmail=getClients()
+    .filter(cl=>clientAttendees(cl).length)
+    .sort((a,b)=>clientDisplayName(a).localeCompare(clientDisplayName(b)));
   const withEmail=getContacts().filter(c=>c.email).sort((a,b)=>calContactName(a).localeCompare(calContactName(b)));
-  sel.innerHTML='<option value="">— none —</option>'+withEmail.map(c=>'<option value="'+c.id+'">'+calContactName(c).replace(/</g,'&lt;')+' ('+(''+c.email).replace(/</g,'&lt;')+')</option>').join('');
+  let opts='<option value="">— none —</option>';
+  if(clientsWithEmail.length){
+    opts+='<optgroup label="Clients (invites everyone)">'+clientsWithEmail.map(cl=>{
+      const n=clientAttendees(cl).length;
+      return '<option value="client:'+cl.id+'">'+clientDisplayName(cl).replace(/</g,'&lt;')+(n>1?' ('+n+' people)':'')+'</option>';
+    }).join('')+'</optgroup>';
+  }
+  opts+='<optgroup label="Individual contacts">'+withEmail.map(c=>'<option value="contact:'+c.id+'">'+calContactName(c).replace(/</g,'&lt;')+' ('+(''+c.email).replace(/</g,'&lt;')+')</option>').join('')+'</optgroup>';
+  sel.innerHTML=opts;
   document.getElementById('calBookSubject').value='';
   document.getElementById('calBookSource').value='bookings';
   document.getElementById('calBookDuration').value='90';
@@ -52,9 +77,10 @@ window.openCalBook=function(){
 window.calBookContactChanged=function(){
   const sel=document.getElementById('calBookContact');
   const subj=document.getElementById('calBookSubject');
-  if(sel.value && !subj.value.trim()){
-    const c=getContacts().find(x=>x.id===sel.value);
-    if(c) subj.value='Session with '+calContactName(c);
+  const val=sel.value;
+  if(val && !subj.value.trim()){
+    if(val.indexOf('client:')===0){ const cl=getClients().find(x=>x.id===val.slice(7)); if(cl) subj.value='Session with '+clientDisplayName(cl); }
+    else if(val.indexOf('contact:')===0){ const c=getContacts().find(x=>x.id===val.slice(8)); if(c) subj.value='Session with '+calContactName(c); }
   }
 };
 window.submitCalBook=async function(){
@@ -66,15 +92,22 @@ window.submitCalBook=async function(){
   const location=document.getElementById('calBookLocation').value.trim();
   const online=document.getElementById('calBookOnline').checked;
   const notes=document.getElementById('calBookNotes').value.trim();
-  const contactId=document.getElementById('calBookContact').value;
+  const pick=document.getElementById('calBookContact').value;
   if(!subject){ toast('Add a title','error'); return; }
   if(!date||!time){ toast('Pick a date and start time','error'); return; }
   // naive Sydney wall-clock; the function passes timeZone Australia/Sydney to Graph
   const start=date+'T'+time+':00';
   const endD=new Date(date+'T'+time+':00Z'); endD.setUTCMinutes(endD.getUTCMinutes()+dur);
   const end=endD.toISOString().slice(0,19);
-  let attendees=[];
-  if(contactId){ const c=getContacts().find(x=>x.id===contactId); if(c&&c.email) attendees=[{email:c.email,name:calContactName(c)}]; }
+  // attendees: a client invites all its members; a contact invites just them
+  let attendees=[], contactId=undefined, clientId=undefined;
+  if(pick.indexOf('client:')===0){
+    const cl=getClients().find(x=>x.id===pick.slice(7));
+    if(cl){ clientId=cl.id; attendees=clientAttendees(cl); }
+  } else if(pick.indexOf('contact:')===0){
+    const c=getContacts().find(x=>x.id===pick.slice(8));
+    if(c&&c.email){ attendees=[{email:c.email,name:calContactName(c)}]; contactId=c.id; }
+  }
   const btn=document.getElementById('calBookSubmitBtn'); btn.disabled=true; btn.textContent='Creating…';
   try{
     const {data:{session}}=await supabase.auth.getSession();
@@ -82,7 +115,7 @@ window.submitCalBook=async function(){
     const res=await fetch(`${SUPABASE_EDGE_URL}/ms-graph-calendar`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},body:JSON.stringify({
       action:'book', source, subject, start, end, timeZone:'Australia/Sydney',
       location: location||undefined, online_meeting:online, body:notes||undefined,
-      attendees, contact_id: contactId||undefined
+      attendees, contact_id: contactId||undefined, client_id: clientId||undefined
     })});
     const out=await res.json();
     if(!res.ok) throw new Error(out.error||('HTTP '+res.status));
