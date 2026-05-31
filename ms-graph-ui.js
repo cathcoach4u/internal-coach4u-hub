@@ -72,15 +72,22 @@ window.openCalBook=function(){
   document.getElementById('calBookLocation').value='';
   document.getElementById('calBookNotes').value='';
   document.getElementById('calBookOnline').checked=false;
+  const rb=document.getElementById('calBookRecipients'); if(rb) rb.innerHTML='';
   document.getElementById('calBookModal').classList.add('open');
 };
 window.calBookContactChanged=function(){
   const sel=document.getElementById('calBookContact');
   const subj=document.getElementById('calBookSubject');
   const val=sel.value;
-  if(val && !subj.value.trim()){
-    if(val.indexOf('client:')===0){ const cl=getClients().find(x=>x.id===val.slice(7)); if(cl) subj.value='Session with '+clientDisplayName(cl); }
-    else if(val.indexOf('contact:')===0){ const c=getContacts().find(x=>x.id===val.slice(8)); if(c) subj.value='Session with '+calContactName(c); }
+  // figure out who gets invited, and show their actual email(s)
+  let emails=[];
+  if(val.indexOf('client:')===0){ const cl=getClients().find(x=>x.id===val.slice(7)); if(cl) emails=clientAttendees(cl).map(a=>a.email); if(cl && !subj.value.trim()) subj.value='Session with '+clientDisplayName(cl); }
+  else if(val.indexOf('contact:')===0){ const c=getContacts().find(x=>x.id===val.slice(8)); if(c&&c.email) emails=[c.email]; if(c && !subj.value.trim()) subj.value='Session with '+calContactName(c); }
+  const box=document.getElementById('calBookRecipients');
+  if(box){
+    if(emails.length) box.innerHTML='&#9993; Invite will be sent to: '+emails.map(e=>'<strong>'+emEsc(e)+'</strong>').join(', ');
+    else if(val) box.innerHTML='<span style="color:#dc2626;">No email on file for this selection &mdash; no invite will be sent. Add an email to their contact first.</span>';
+    else box.innerHTML='';
   }
 };
 window.submitCalBook=async function(){
