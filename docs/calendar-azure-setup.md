@@ -86,12 +86,78 @@ tenant. Either sign in as the admin account, or tell Claude — we adjust the ap
 
 ---
 
+## Part E — Scope the app to ONLY these mailboxes  (the safeguard)
+
+`Calendars.ReadWrite` as an Application permission is **tenant-wide by default** —
+it could touch every mailbox. This step fences it to only the mailboxes below, so
+even if the secret leaked it could not reach anyone else's calendar.
+
+**Mailboxes in scope (coach4u.com.au tenant):**
+
+| Mailbox | Role |
+|---|---|
+| `cath@coach4u.com.au` | Work |
+| `Coach4U@…onmicrosoft.com` | Bookings (client-facing) |
+| `contact@coach4u.com.au` | Added |
+| `Bakers@coach4u.com.au` | Added |
+| `admin@coach4u.com.au` | Added |
+
+> All five live in the **same tenant**, so one Application Access Policy covers them.
+> The policy works by allowing only members of a mail-enabled security **group** —
+> we create the group, add these five, and bind the policy to it.
+
+This runs in **Exchange Online PowerShell** (not the web portal). Claude will walk
+through it live; the commands are:
+
+```powershell
+# 1. Connect (opens a browser sign-in as an Exchange admin)
+Install-Module ExchangeOnlineManagement -Scope CurrentUser   # first time only
+Connect-ExchangeOnline -UserPrincipalName admin@coach4u.com.au
+
+# 2. Create a mail-enabled security group to hold the allowed mailboxes
+New-DistributionGroup -Name "Coach4U Calendar Sync Scope" `
+  -Alias calsync-scope -Type Security `
+  -PrimarySmtpAddress calsync-scope@coach4u.com.au
+
+# 3. Add each allowed mailbox to the group
+$members = @(
+  "cath@coach4u.com.au",
+  "contact@coach4u.com.au",
+  "Bakers@coach4u.com.au",
+  "admin@coach4u.com.au"
+  # add the Bookings mailbox primary SMTP here too once confirmed
+)
+foreach ($m in $members) { Add-DistributionGroupMember -Identity calsync-scope -Member $m }
+
+# 4. Create the Application Access Policy tying the APP to the group
+#    Replace <APP_CLIENT_ID> with the Application (client) ID from Part A.
+New-ApplicationAccessPolicy -AppId "<APP_CLIENT_ID>" `
+  -PolicyScopeGroupId calsync-scope@coach4u.com.au `
+  -AccessRight RestrictAccess `
+  -Description "Coach4U Calendar Sync limited to scoped mailboxes"
+
+# 5. Verify — should return Granted/Denied per mailbox
+Test-ApplicationAccessPolicy -Identity cath@coach4u.com.au -AppId "<APP_CLIENT_ID>"
+Test-ApplicationAccessPolicy -Identity someone-else@coach4u.com.au -AppId "<APP_CLIENT_ID>"  # should be DENIED
+```
+
+✅ **Checkpoint:** Test shows **Granted** for the five scoped mailboxes and
+**Denied** for any mailbox not in the group. Policy can take up to ~30 min to apply.
+
+⚠️ **Verify these are real mailboxes, not aliases.** A policy can only scope to
+actual mailboxes. If `contact@`, `Bakers@`, or `admin@` are aliases/forwarders,
+`Add-DistributionGroupMember` will error — tell Claude and we point at the
+underlying mailbox instead.
+
+---
+
 ## What to send back to Claude
 
 - ✅ Application (client) ID: `__________`
 - ✅ Directory (tenant) ID: `__________`
 - ✅ Confirmation that admin consent shows **Granted**
 - ✅ Confirmation the secret is saved in Supabase as `MS_GRAPH_CLIENT_SECRET`
+- ✅ Confirmation the Application Access Policy (Part E) is in place and `Test-ApplicationAccessPolicy` shows **Granted** for the 5 scoped mailboxes / **Denied** for others
 
 With those, Claude builds the Supabase Edge Function that:
 - pulls all calendars on a schedule (real auto-sync — replaces manual re-seeding)
