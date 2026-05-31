@@ -46,16 +46,23 @@ your mailboxes), so this is a detour, not a dead end.
 
 ---
 
-## Part B — Add the calendar permission
+## Part B — Add the permissions
 
 1. In the app, left menu: **API permissions**.
 2. Click **+ Add a permission → Microsoft Graph**.
 3. Choose **Application permissions** (not Delegated).
-4. Search **Calendars.ReadWrite**, tick it, click **Add permissions**.
-5. (Optional but useful) also add **Calendars.Read** and **User.Read.All** the same way.
+4. Add each of these (search, tick, **Add permissions**):
+   - **Calendars.ReadWrite** — read/write calendars
+   - **Mail.Read** — read email in the scoped mailboxes *(added per Cath's request)*
+   - **User.Read.All** — resolve names/mailboxes (optional but useful)
 
-✅ **Checkpoint:** `Calendars.ReadWrite` appears in the permissions list with
-status "Not granted" (we fix that in Part D).
+✅ **Checkpoint:** both `Calendars.ReadWrite` and `Mail.Read` appear with status
+"Not granted" (we fix that in Part D).
+
+> ⚠️ **Sensitivity note:** `Mail.Read` means the one client secret now unlocks the
+> **contents of email** in the scoped mailboxes, not just calendar times. The
+> Application Access Policy in Part E fences BOTH to your mailbox list, so this is
+> contained — but treat that secret as high-value accordingly.
 
 ---
 
@@ -70,8 +77,12 @@ status "Not granted" (we fix that in Part D).
 
 🔒 **Handling the secret:** don't paste it into chat. Put it into Supabase:
    - Supabase dashboard → project **uoixetfvboevjxlkfyqy** → **Project Settings → Edge Functions → Secrets** (or **Vault**)
-   - Add secret named `MS_GRAPH_CLIENT_SECRET`, paste the value, save.
-   - (Claude will tell you the exact two extra secret names to add alongside it.)
+   - Add these secrets:
+     - `MS_GRAPH_CLIENT_SECRET` — the secret value you just copied
+     - `MS_GRAPH_CLIENT_ID` — the Application (client) ID from Part A
+     - `MS_GRAPH_TENANT_ID` — the Directory (tenant) ID from Part A
+   - The client ID and tenant ID aren't secret, but keeping all three together lets the
+     Edge Function read them cleanly.
 
 ---
 
@@ -88,23 +99,41 @@ tenant. Either sign in as the admin account, or tell Claude — we adjust the ap
 
 ## Part E — Scope the app to ONLY these mailboxes  (the safeguard)
 
-`Calendars.ReadWrite` as an Application permission is **tenant-wide by default** —
-it could touch every mailbox. This step fences it to only the mailboxes below, so
-even if the secret leaked it could not reach anyone else's calendar.
+`Calendars.ReadWrite` + `Mail.Read` as Application permissions are **tenant-wide by
+default** — they could touch every mailbox's calendar AND email. This step fences
+them to only the mailboxes below, so even if the secret leaked it could not reach
+anyone else.
 
-**Mailboxes in scope (coach4u.com.au tenant):**
+**Intended scope (coach4u.com.au tenant):**
 
-| Mailbox | Role |
-|---|---|
-| `cath@coach4u.com.au` | Work |
-| `Coach4U@…onmicrosoft.com` | Bookings (client-facing) |
-| `contact@coach4u.com.au` | Added |
-| `Bakers@coach4u.com.au` | Added |
-| `admin@coach4u.com.au` | Added |
+| Address | Type | Real mailbox to scope |
+|---|---|---|
+| `cath@coach4u.com.au` | Mailbox | itself |
+| `Coach4U@…onmicrosoft.com` | Bookings mailbox | itself |
+| `contact@coach4u.com.au` | Mailbox (confirm) | itself |
+| `Bakers@coach4u.com.au` | **Alias** | the underlying mailbox it delivers to |
+| `admin@coach4u.com.au` | **Alias** | the underlying mailbox it delivers to |
 
-> All five live in the **same tenant**, so one Application Access Policy covers them.
-> The policy works by allowing only members of a mail-enabled security **group** —
-> we create the group, add these five, and bind the policy to it.
+> 🔎 **Aliases have no inbox or calendar of their own.** `Bakers@` and `admin@` are
+> aliases, so they can't be scoped directly — we scope the **real mailbox behind
+> them**. Resolve it first (Part E.0). The policy allows a mail-enabled security
+> **group**: we create the group, add the real mailboxes, and bind the app to it.
+
+### Part E.0 — Resolve what the aliases point to
+
+In Exchange Online PowerShell (connect as in step 1 below), run:
+
+```powershell
+# Show every address attached to each mailbox; find which mailbox owns the alias
+Get-Mailbox -ResultSize Unlimited |
+  Where-Object { $_.EmailAddresses -match "bakers@coach4u.com.au" -or $_.EmailAddresses -match "admin@coach4u.com.au" } |
+  Select-Object DisplayName, PrimarySmtpAddress, RecipientTypeDetails, @{n='Aliases';e={$_.EmailAddresses}}
+```
+
+- If a row comes back → its **PrimarySmtpAddress** is the real mailbox to scope (use
+  that, not the alias). `RecipientTypeDetails` tells you if it's a SharedMailbox/UserMailbox.
+- If **nothing** comes back → the address is attached to a Microsoft 365 Group or
+  Teams channel, which has a group mailbox (different handling). Send the output to Claude.
 
 This runs in **Exchange Online PowerShell** (not the web portal). Claude will walk
 through it live; the commands are:
@@ -119,17 +148,20 @@ New-DistributionGroup -Name "Coach4U Calendar Sync Scope" `
   -Alias calsync-scope -Type Security `
   -PrimarySmtpAddress calsync-scope@coach4u.com.au
 
-# 3. Add each allowed mailbox to the group
+# 3. Add each REAL mailbox to the group.
+#    Use the PrimarySmtpAddress values — for Bakers@/admin@ use the underlying
+#    mailbox found in Part E.0, NOT the alias address.
 $members = @(
   "cath@coach4u.com.au",
-  "contact@coach4u.com.au",
-  "Bakers@coach4u.com.au",
-  "admin@coach4u.com.au"
-  # add the Bookings mailbox primary SMTP here too once confirmed
+  "contact@coach4u.com.au"            # confirm it's a real mailbox
+  # "<real mailbox behind Bakers@>",  # from Part E.0
+  # "<real mailbox behind admin@>",   # from Part E.0
+  # "<Bookings mailbox primary SMTP>" # confirm exact address
 )
 foreach ($m in $members) { Add-DistributionGroupMember -Identity calsync-scope -Member $m }
 
-# 4. Create the Application Access Policy tying the APP to the group
+# 4. Create the Application Access Policy tying the APP to the group.
+#    This single policy covers BOTH Calendars.ReadWrite and Mail.Read.
 #    Replace <APP_CLIENT_ID> with the Application (client) ID from Part A.
 New-ApplicationAccessPolicy -AppId "<APP_CLIENT_ID>" `
   -PolicyScopeGroupId calsync-scope@coach4u.com.au `
@@ -141,13 +173,22 @@ Test-ApplicationAccessPolicy -Identity cath@coach4u.com.au -AppId "<APP_CLIENT_I
 Test-ApplicationAccessPolicy -Identity someone-else@coach4u.com.au -AppId "<APP_CLIENT_ID>"  # should be DENIED
 ```
 
-✅ **Checkpoint:** Test shows **Granted** for the five scoped mailboxes and
-**Denied** for any mailbox not in the group. Policy can take up to ~30 min to apply.
+✅ **Checkpoint:** Test shows **Granted** for every scoped mailbox and **Denied** for
+any mailbox not in the group. Policy can take up to ~30 min to apply. The policy
+restricts BOTH calendar and mail access to this group.
 
-⚠️ **Verify these are real mailboxes, not aliases.** A policy can only scope to
-actual mailboxes. If `contact@`, `Bakers@`, or `admin@` are aliases/forwarders,
-`Add-DistributionGroupMember` will error — tell Claude and we point at the
-underlying mailbox instead.
+---
+
+## Part F — Personal calendar (separate tenant)
+
+`cath@coachingwithcath.com.au` is in a **different Microsoft tenant**, so the
+coach4u.com.au app/policy above cannot reach it. To read/write it with the
+background service, repeat **Parts A–E** signed into that tenant (a second small
+registration + its own secret, stored as `MS_GRAPH_PERSONAL_CLIENT_SECRET`).
+
+This is optional and doesn't block the main flow — read access to the personal
+calendar already works via the in-session connector. Add this when you want
+unattended sync/booking on the personal calendar too.
 
 ---
 
