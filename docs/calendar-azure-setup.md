@@ -109,13 +109,40 @@ tenant. Either sign in as the admin account, or tell Claude — we adjust the ap
 
 ## Part E — Scope the app to ONLY these mailboxes  (the safeguard)
 
+> ✅ **STATUS: COMPLETE & VERIFIED.** Scope group `calsync-scope@coach4u.com.au`
+> (Universal, SecurityEnabled) created with the 5 Phase-1 mailboxes below.
+> Application Access Policy bound to the app (`RestrictAccess`, `IsValid: True`).
+> Verified: `cath@coach4u.com.au` → **Granted**, `andrew@coach4u.com.au` → **Denied**.
+>
+> **Phase-1 scoped mailboxes (live):**
+> - `cath@coach4u.com.au` (work)
+> - `cath@coachingwithcath.com.au` (personal)
+> - `Coach4U@…onmicrosoft.com` (Bookings shared mailbox)
+> - `contact@coach4u.com.au` (Coach4U VA enquiries)
+> - `CathPersonal@…onmicrosoft.com` (shared)
+>
+> **Phase-2 — Microsoft 365 Groups (NOT yet done — different access model):**
+> These have their own shared inbox + calendar but are reached via Graph
+> `/groups/{id}/…` and need **`Group.ReadWrite.All`** (Application) — the
+> per-mailbox Application Access Policy does NOT govern them. Tackle as a separate,
+> deliberate phase with its own scoping (security-group / RSC).
+>
+> | Group | Address |
+> |---|---|
+> | Coach4U | `admin@coach4u.com.au` (note: distinct from the Coach4U *shared mailbox*) |
+> | Bakers | `Bakers@coach4u.com.au` |
+> | Pulses & Co Pilot Solutions | `pulses@coach4u.com.au` |
+> | Clients | `Clients@…onmicrosoft.com` |
+> | Practioners | `Practioners@…onmicrosoft.com` |
+> | Password Reset | `passwordreset@…onmicrosoft.com` |
+
 `Calendars.ReadWrite` + `Mail.ReadWrite` + `Mail.Send` as Application permissions are
 **tenant-wide by default** — they could touch, send from, and delete in every
 mailbox's calendar AND email. This step fences
 them to only the mailboxes below, so even if the secret leaked it could not reach
 anyone else.
 
-**Intended scope (all in the one tenant — confirmed via Entra → Custom domain names):**
+**Final scope (all in the one tenant — `bakers@`/`admin@` turned out to be M365 Groups → Phase 2):**
 
 | Address | Type | Real mailbox to scope |
 |---|---|---|
@@ -172,10 +199,9 @@ New-DistributionGroup -Name "Coach4U Calendar Sync Scope" `
 $members = @(
   "cath@coach4u.com.au",
   "cath@coachingwithcath.com.au",     # same tenant — personal calendar
-  "contact@coach4u.com.au"            # confirm it's a real mailbox
-  # "<real mailbox behind Bakers@>",  # from Part E.0
-  # "<real mailbox behind admin@>",   # from Part E.0
-  # "<Bookings mailbox primary SMTP>" # confirm exact address
+  "Coach4U@NETORGFT4053847.onmicrosoft.com",      # Bookings shared mailbox
+  "contact@coach4u.com.au",           # Coach4U VA — enquiries
+  "CathPersonal@NETORGFT4053847.onmicrosoft.com"  # shared
 )
 foreach ($m in $members) { Add-DistributionGroupMember -Identity calsync-scope -Member $m }
 
