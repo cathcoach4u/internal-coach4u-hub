@@ -3,7 +3,7 @@
 // The main app runs inside an IIFE, so its internals aren't global. index.html
 // exposes the handful this file needs on window.CB (the "bridge"), set just
 // before the main IIFE closes. A syntax error in this file cannot break the
-// main app. Defines window.calSyncNow / openCalBook / calBookContactChanged /
+// main app. Defines window.calSyncNow / openCalBook / calBookSearch / calBookPick /
 // submitCalBook / loadClientEmails / emailAiDraft / emailSendReply / emailDelete.
 (function(){
 'use strict';
@@ -62,23 +62,12 @@ window.calSyncNow=async function(){
   }
 };
 
-// Booking modal
+// Booking modal — separate searchable Client and Contact pickers
+let calBookSel={type:null,id:null};
 window.openCalBook=function(){
-  const sel=document.getElementById('calBookContact');
-  // Clients (invite all members with an email) + individual contacts
-  const clientsWithEmail=getClients()
-    .filter(cl=>clientAttendees(cl).length)
-    .sort((a,b)=>clientDisplayName(a).localeCompare(clientDisplayName(b)));
-  const withEmail=getContacts().filter(c=>c.email).sort((a,b)=>calContactName(a).localeCompare(calContactName(b)));
-  let opts='<option value="">— none —</option>';
-  if(clientsWithEmail.length){
-    opts+='<optgroup label="Clients (invites everyone)">'+clientsWithEmail.map(cl=>{
-      const n=clientAttendees(cl).length;
-      return '<option value="client:'+cl.id+'">'+clientDisplayName(cl).replace(/</g,'&lt;')+(n>1?' ('+n+' people)':'')+'</option>';
-    }).join('')+'</optgroup>';
-  }
-  opts+='<optgroup label="Individual contacts">'+withEmail.map(c=>'<option value="contact:'+c.id+'">'+calContactName(c).replace(/</g,'&lt;')+' ('+(''+c.email).replace(/</g,'&lt;')+')</option>').join('')+'</optgroup>';
-  sel.innerHTML=opts;
+  calBookSel={type:null,id:null};
+  ['calBookClientSearch','calBookContactSearch'].forEach(id=>{const el=document.getElementById(id); if(el) el.value='';});
+  ['calBookClientResults','calBookContactResults'].forEach(id=>{const el=document.getElementById(id); if(el){el.style.display='none'; el.innerHTML='';}});
   document.getElementById('calBookSubject').value='';
   document.getElementById('calBookSource').value='bookings';
   document.getElementById('calBookDuration').value='90';
@@ -92,21 +81,55 @@ window.openCalBook=function(){
   const rb=document.getElementById('calBookRecipients'); if(rb) rb.innerHTML='';
   document.getElementById('calBookModal').classList.add('open');
 };
-window.calBookContactChanged=function(){
-  const sel=document.getElementById('calBookContact');
-  const subj=document.getElementById('calBookSubject');
-  const val=sel.value;
-  // figure out who gets invited, and show their actual email(s)
-  let emails=[];
-  if(val.indexOf('client:')===0){ const cl=getClients().find(x=>x.id===val.slice(7)); if(cl) emails=clientAttendees(cl).map(a=>a.email); if(cl && !subj.value.trim()) subj.value='Session with '+clientDisplayName(cl); }
-  else if(val.indexOf('contact:')===0){ const c=getContacts().find(x=>x.id===val.slice(8)); if(c&&c.email) emails=[c.email]; if(c && !subj.value.trim()) subj.value='Session with '+calContactName(c); }
-  const box=document.getElementById('calBookRecipients');
-  if(box){
-    if(emails.length) box.innerHTML='&#9993; Invite will be sent to: '+emails.map(e=>'<strong>'+emEsc(e)+'</strong>').join(', ');
-    else if(val) box.innerHTML='<span style="color:#dc2626;">No email on file for this selection &mdash; no invite will be sent. Add an email to their contact first.</span>';
-    else box.innerHTML='';
-  }
+function clientSearchList(){
+  return getClients().filter(cl=>clientAttendees(cl).length)
+    .map(cl=>({id:cl.id,name:clientDisplayName(cl),n:clientAttendees(cl).length}))
+    .sort((a,b)=>a.name.localeCompare(b.name));
+}
+function contactSearchList(){
+  return getContacts().filter(c=>c.email)
+    .map(c=>({id:c.id,name:calContactName(c),email:c.email}))
+    .sort((a,b)=>a.name.localeCompare(b.name));
+}
+window.calBookSearch=function(kind){
+  const isClient=kind==='client';
+  const q=(document.getElementById(isClient?'calBookClientSearch':'calBookContactSearch').value||'').toLowerCase().trim();
+  const box=document.getElementById(isClient?'calBookClientResults':'calBookContactResults');
+  // typing a new query clears any prior selection of this kind
+  if(calBookSel.type===kind){ calBookSel={type:null,id:null}; calBookApplySelection(); }
+  let list=isClient?clientSearchList():contactSearchList();
+  if(q) list=list.filter(x=>(x.name+' '+(x.email||'')).toLowerCase().includes(q));
+  list=list.slice(0,30);
+  if(!list.length){ box.style.display='none'; box.innerHTML=''; return; }
+  box.innerHTML=list.map(x=>{
+    const sub=isClient?(x.n>1?x.n+' people':'1 person'):emEsc(x.email||'');
+    return '<div onclick="calBookPick(\''+kind+'\',\''+x.id+'\')" style="padding:8px 10px;cursor:pointer;border-bottom:1px solid #f1f5f9;font-size:13px;" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'#fff\'"><strong>'+emEsc(x.name)+'</strong> <span style="color:#94a3b8;font-size:11px;">'+sub+'</span></div>';
+  }).join('');
+  box.style.display='block';
 };
+window.calBookPick=function(kind,id){
+  calBookSel={type:kind,id:id};
+  if(kind==='client'){
+    const cl=getClients().find(x=>x.id===id);
+    document.getElementById('calBookClientSearch').value=cl?clientDisplayName(cl):'';
+    document.getElementById('calBookContactSearch').value='';
+  } else {
+    const c=getContacts().find(x=>x.id===id);
+    document.getElementById('calBookContactSearch').value=c?calContactName(c):'';
+    document.getElementById('calBookClientSearch').value='';
+  }
+  document.getElementById('calBookClientResults').style.display='none';
+  document.getElementById('calBookContactResults').style.display='none';
+  calBookApplySelection();
+};
+function calBookApplySelection(){
+  const subj=document.getElementById('calBookSubject');
+  let emails=[];
+  if(calBookSel.type==='client'){ const cl=getClients().find(x=>x.id===calBookSel.id); if(cl){ emails=clientAttendees(cl).map(a=>a.email); if(!subj.value.trim()) subj.value='Session with '+clientDisplayName(cl); } }
+  else if(calBookSel.type==='contact'){ const c=getContacts().find(x=>x.id===calBookSel.id); if(c&&c.email){ emails=[c.email]; if(!subj.value.trim()) subj.value='Session with '+calContactName(c); } }
+  const box=document.getElementById('calBookRecipients');
+  if(box) box.innerHTML=emails.length?'&#9993; Confirmation will be sent to: '+emails.map(e=>'<strong>'+emEsc(e)+'</strong>').join(', '):'';
+}
 window.submitCalBook=async function(){
   const subject=document.getElementById('calBookSubject').value.trim();
   const source=document.getElementById('calBookSource').value;
@@ -116,20 +139,19 @@ window.submitCalBook=async function(){
   const location=document.getElementById('calBookLocation').value.trim();
   const mlKey=document.getElementById('calBookMeetingLink').value;
   const notes=document.getElementById('calBookNotes').value.trim();
-  const pick=document.getElementById('calBookContact').value;
   if(!subject){ toast('Add a title','error'); return; }
   if(!date||!time){ toast('Pick a date and start time','error'); return; }
   // naive Sydney wall-clock; the function passes timeZone Australia/Sydney to Graph
   const start=date+'T'+time+':00';
   const endD=new Date(date+'T'+time+':00Z'); endD.setUTCMinutes(endD.getUTCMinutes()+dur);
   const end=endD.toISOString().slice(0,19);
-  // attendees: a client invites all its members; a contact invites just them
+  // recipients: a client invites all its members; a contact invites just them
   let attendees=[], contactId=undefined, clientId=undefined;
-  if(pick.indexOf('client:')===0){
-    const cl=getClients().find(x=>x.id===pick.slice(7));
+  if(calBookSel.type==='client'){
+    const cl=getClients().find(x=>x.id===calBookSel.id);
     if(cl){ clientId=cl.id; attendees=clientAttendees(cl); }
-  } else if(pick.indexOf('contact:')===0){
-    const c=getContacts().find(x=>x.id===pick.slice(8));
+  } else if(calBookSel.type==='contact'){
+    const c=getContacts().find(x=>x.id===calBookSel.id);
     if(c&&c.email){ attendees=[{email:c.email,name:calContactName(c)}]; contactId=c.id; }
   }
   // meeting link → clickable join link in the body + sensible location label
@@ -138,7 +160,8 @@ window.submitCalBook=async function(){
   let bodyHtml='';
   if(ml){
     bodyHtml='<p>Join the session here: <a href="'+ml.url+'">'+ml.url+'</a></p>';
-    if(!loc) loc='Microsoft Teams ('+ml.label+')';
+    // a meeting link is found → Teams is the location (overrides any typed location)
+    loc='Microsoft Teams ('+ml.label+')';
   }
   if(notes) bodyHtml+=(bodyHtml?'<br>':'')+emEsc(notes).replace(/\n/g,'<br>');
   const sendConfirm=document.getElementById('calBookSendConfirm').checked && attendees.length>0;
