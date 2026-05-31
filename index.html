@@ -324,7 +324,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.43</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.44</span>
     </div>
   </div>
   <div class="area-tabs-wrap" id="areaTabsWrap">
@@ -1065,6 +1065,68 @@ if('serviceWorker' in navigator){
       <button class="btn btn-gray" onclick="closeModal('strEditModal')">Cancel</button>
       <button class="btn btn-red" onclick="strEditClear()" id="strEditClearBtn" style="display:none;">Clear All</button>
       <button class="btn btn-green" onclick="saveStrEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- CALENDAR BOOKING MODAL -->
+<div class="modal-overlay" id="calBookModal">
+  <div class="modal" style="max-width:560px;">
+    <h3 style="font-family:'Quicksand',sans-serif;color:#1e3a5f;margin-bottom:4px;">Book appointment</h3>
+    <div style="font-size:12px;color:#64748b;margin-bottom:14px;" id="calBookHint">Client sessions are created in the <strong>Coach4U</strong> Bookings calendar, so clients always see the team — never a personal address.</div>
+    <div class="form-group">
+      <label>Client / contact <span style="color:#94a3b8;font-weight:400;">(optional — adds them as an attendee)</span></label>
+      <select id="calBookContact" onchange="calBookContactChanged()" style="width:100%;padding:9px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;"></select>
+    </div>
+    <div class="form-group">
+      <label>Title</label>
+      <input id="calBookSubject" type="text" placeholder="e.g. 90 minute session with Cath" style="width:100%;padding:9px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;">
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;">
+      <div class="form-group">
+        <label>Calendar</label>
+        <select id="calBookSource" style="width:100%;padding:9px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
+          <option value="bookings">Bookings (client-facing — Coach4U)</option>
+          <option value="work">Work (cath@coach4u)</option>
+          <option value="personal">Personal (coachingwithcath)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Duration</label>
+        <select id="calBookDuration" style="width:100%;padding:9px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;">
+          <option value="30">30 min</option>
+          <option value="45">45 min</option>
+          <option value="60">60 min</option>
+          <option value="90" selected>90 min</option>
+          <option value="120">2 hours</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;">
+      <div class="form-group">
+        <label>Date</label>
+        <input id="calBookDate" type="date" style="width:100%;padding:9px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;">
+      </div>
+      <div class="form-group">
+        <label>Start time</label>
+        <input id="calBookTime" type="time" step="900" style="width:100%;padding:9px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Location</label>
+      <input id="calBookLocation" type="text" placeholder="e.g. Teams" style="width:100%;padding:9px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;">
+    </div>
+    <div class="form-group" style="display:flex;align-items:center;gap:8px;">
+      <input id="calBookOnline" type="checkbox" style="width:16px;height:16px;">
+      <label for="calBookOnline" style="margin:0;">Add a Teams online meeting link</label>
+    </div>
+    <div class="form-group">
+      <label>Notes <span style="color:#94a3b8;font-weight:400;">(added to the event body)</span></label>
+      <textarea id="calBookNotes" rows="2" style="width:100%;font-family:inherit;font-size:13px;padding:10px;border:1px solid #e2e8f0;border-radius:8px;resize:vertical;"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-gray" onclick="closeModal('calBookModal')">Cancel</button>
+      <button class="btn btn-blue" id="calBookSubmitBtn" onclick="submitCalBook()">Create appointment</button>
     </div>
   </div>
 </div>
@@ -10676,6 +10738,87 @@ window.calSetView=function(v){ calView=v; try{localStorage.setItem('cal_view',v)
 window.calToggleSource=function(s){ calSourceOn[s]=!calSourceOn[s]; try{localStorage.setItem('cal_sources',JSON.stringify(calSourceOn));}catch(e){} renderCalWeek(); };
 window.calRefresh=async function(){ toast('Refreshing calendar…','info'); await loadCalendarEvents(); renderCalWeek(); toast('Calendar refreshed','success'); };
 
+// Pull the latest from Outlook via the ms-graph-calendar Edge Function, then re-render.
+window.calSyncNow=async function(){
+  const btn=document.getElementById('calSyncBtn');
+  if(btn){ btn.disabled=true; btn.textContent='Syncing…'; }
+  try{
+    const {data:{session}}=await supabase.auth.getSession();
+    if(!session) throw new Error('Not signed in');
+    const res=await fetch(`${SUPABASE_EDGE_URL}/ms-graph-calendar`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},body:JSON.stringify({action:'sync'})});
+    const out=await res.json();
+    if(!res.ok) throw new Error(out.error||('HTTP '+res.status));
+    await loadCalendarEvents(); renderCalWeek();
+    const s=out.synced||{}; const total=Object.values(s).reduce((a,b)=>a+(b||0),0);
+    toast('Synced '+total+' events from Outlook','success');
+  }catch(e){
+    console.warn('calSyncNow',e);
+    toast('Sync failed: '+e.message,'error');
+    const b=document.getElementById('calSyncBtn'); if(b){ b.disabled=false; b.innerHTML='&#8635; Sync now'; }
+  }
+};
+
+// Booking modal
+window.openCalBook=function(){
+  const sel=document.getElementById('calBookContact');
+  const withEmail=contacts.filter(c=>c.email).sort((a,b)=>calContactName(a).localeCompare(calContactName(b)));
+  sel.innerHTML='<option value="">— none —</option>'+withEmail.map(c=>'<option value="'+c.id+'">'+calContactName(c).replace(/</g,'&lt;')+' ('+(''+c.email).replace(/</g,'&lt;')+')</option>').join('');
+  document.getElementById('calBookSubject').value='';
+  document.getElementById('calBookSource').value='bookings';
+  document.getElementById('calBookDuration').value='90';
+  document.getElementById('calBookDate').value=getAUDateStr();
+  document.getElementById('calBookTime').value='10:00';
+  document.getElementById('calBookLocation').value='';
+  document.getElementById('calBookNotes').value='';
+  document.getElementById('calBookOnline').checked=false;
+  document.getElementById('calBookModal').classList.add('open');
+};
+window.calBookContactChanged=function(){
+  const sel=document.getElementById('calBookContact');
+  const subj=document.getElementById('calBookSubject');
+  if(sel.value && !subj.value.trim()){
+    const c=contacts.find(x=>x.id===sel.value);
+    if(c) subj.value='Session with '+calContactName(c);
+  }
+};
+window.submitCalBook=async function(){
+  const subject=document.getElementById('calBookSubject').value.trim();
+  const source=document.getElementById('calBookSource').value;
+  const date=document.getElementById('calBookDate').value;
+  const time=document.getElementById('calBookTime').value;
+  const dur=parseInt(document.getElementById('calBookDuration').value,10);
+  const location=document.getElementById('calBookLocation').value.trim();
+  const online=document.getElementById('calBookOnline').checked;
+  const notes=document.getElementById('calBookNotes').value.trim();
+  const contactId=document.getElementById('calBookContact').value;
+  if(!subject){ toast('Add a title','error'); return; }
+  if(!date||!time){ toast('Pick a date and start time','error'); return; }
+  // naive Sydney wall-clock; the function passes timeZone Australia/Sydney to Graph
+  const start=date+'T'+time+':00';
+  const endD=new Date(date+'T'+time+':00Z'); endD.setUTCMinutes(endD.getUTCMinutes()+dur);
+  const end=endD.toISOString().slice(0,19);
+  let attendees=[];
+  if(contactId){ const c=contacts.find(x=>x.id===contactId); if(c&&c.email) attendees=[{email:c.email,name:calContactName(c)}]; }
+  const btn=document.getElementById('calBookSubmitBtn'); btn.disabled=true; btn.textContent='Creating…';
+  try{
+    const {data:{session}}=await supabase.auth.getSession();
+    if(!session) throw new Error('Not signed in');
+    const res=await fetch(`${SUPABASE_EDGE_URL}/ms-graph-calendar`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},body:JSON.stringify({
+      action:'book', source, subject, start, end, timeZone:'Australia/Sydney',
+      location: location||undefined, online_meeting:online, body:notes||undefined,
+      attendees, contact_id: contactId||undefined
+    })});
+    const out=await res.json();
+    if(!res.ok) throw new Error(out.error||('HTTP '+res.status));
+    closeModal('calBookModal');
+    await loadCalendarEvents(); renderCalWeek();
+    toast('Appointment booked','success');
+  }catch(e){
+    console.warn('submitCalBook',e);
+    toast('Booking failed: '+e.message,'error');
+  }finally{ btn.disabled=false; btn.textContent='Create appointment'; }
+};
+
 function calRelLastSynced(){
   if(!calLastSynced) return '';
   const diff=Date.now()-new Date(calLastSynced).getTime();
@@ -10750,6 +10893,8 @@ function renderCalWeek(){
     +'<button class="cal-nav-btn" onclick="calNav(-1)">&#8249;</button>'
     +'<button class="cal-nav-btn cal-today-btn" onclick="calToday()">Today</button>'
     +'<button class="cal-nav-btn" onclick="calNav(1)">&#8250;</button>'
+    +'<button class="cal-nav-btn" id="calSyncBtn" onclick="calSyncNow()" title="Pull the latest from Outlook">&#8635; Sync now</button>'
+    +'<button class="cal-nav-btn" onclick="openCalBook()" style="background:#2563eb;color:#fff;border-color:#2563eb;">+ Book</button>'
     +'<span class="cal-week-range">'+rangeLabel+(calWeekOffset===0?' · This week':'')+'</span>'
     +'<span class="cal-viewtoggle">'
       +'<button class="'+(calView==='agenda'?'active':'')+'" onclick="calSetView(\'agenda\')">Agenda</button>'
