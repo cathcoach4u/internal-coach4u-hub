@@ -8,7 +8,8 @@ Single-page CRM app hosted on GitHub Pages with a Supabase backend. All CRM func
 
 | File | Purpose |
 |------|---------|
-| `index.html` | Main CRM app (all screens, all JS) |
+| `index.html` | Main CRM app (all screens, most JS) |
+| `ms-graph-ui.js` | Calendar + client-email UI handlers (Sync/Book, client emails, AI draft reply). Split out of `index.html` to keep it under the 1 MiB push ceiling. Loaded as a classic script AFTER the inline IIFE. The inline app is IIFE-wrapped so its internals aren't global — `index.html` exposes what this file needs on **`window.CB`** (the bridge: `sb`, `EDGE`, `toast`, `getAUDateStr`, `calContactName`, `loadCalendarEvents`, `renderCalWeek`, `closeModal`, `getAnthropicKey`, `voice`, `getContacts()`), set just before `})();`. A syntax error here can't break the main app. |
 | `portal/index.html` | Client-facing SAFE Pulse portal (check-in, results) |
 | `brain-pulse/index.html` | Client-facing Brain Pulse portal |
 | `gallup-request/index.html` | Public Gallup CliftonStrengths code request form for corporate clients (per-org URL: `?org=<client.id>`). Validates the org, collects name/email/phone/notes, creates contact + member link + `gallup_code_requests` row with status `New`. |
@@ -352,28 +353,6 @@ Parent agents represent the master system prompts for Copilot Studio. Child agen
 - **Theme reference**: `CS_THEME_DESC` (34 themes inline) and `CS_DOMAINS` for colour mapping. Helpers `csColor`, `csPill`, `getDomain`, `domainColors`.
 - **Voice doc**: `docs/cath-voice-tone-v1.md` is the canonical version-controlled source. `CATH_VOICE_REFERENCE` constant in `index.html` is its inline summary embedded into every AI system prompt.
 
-## Lou — Ops PA
-
-The AI replacement for the former human Lou VA role. Lives as a Copilot Studio agent published to Teams; Cath DMs her like any colleague.
-
-- **System prompt**: `docs/lou-system-prompt.md` — paste into Copilot Studio
-- **Teams stages**: `docs/lou-stages.md` — six message templates (Morning Briefing, Action Confirmation, Status Update, Blocked, Midday Check-In, EOD Summary)
-- **Agent record**: stored as a child agent in `agents` table under **Ops > Agents > Lou** (Cath creates this manually via the CRM UI — Claude Code can't write to Supabase)
-- **Owner / requester / posted_by enum**: `Lou` replaces the previous `CoachVA (Lou)` everywhere in `index.html` (task form selects, AI assistant tool definitions, status pills)
-- **Status enum**: `Waiting on Lou` replaces `Waiting on CoachVA`
-- **Daily Procedures page** (`screen-procedures`): rewritten as Lou's shared playbook — both Cath and Lou read it
-
-### Migration SQL when releasing
-
-Existing tasks with the old owner/requester/status strings need one-time updates:
-
-```sql
-UPDATE tasks SET owner='Lou' WHERE owner='CoachVA (Lou)';
-UPDATE tasks SET requester='Lou' WHERE requester='CoachVA (Lou)';
-UPDATE tasks SET status='Waiting on Lou' WHERE status='Waiting on CoachVA';
-UPDATE task_logs SET posted_by='Lou' WHERE posted_by='CoachVA (Lou)';
-```
-
 ## Cath Voice Tone Reference v1
 
 The single source of truth for tone in any Coach4U communication, human or AI-generated.
@@ -542,8 +521,9 @@ r = requests.post(f'https://api.anthropic.com/v2/ccr-sessions/{session_id}/githu
 print(r.status_code, r.text[:200])
 ```
 
-- Use `push_files` (plain text content, ~925KB payload) — **not** `create_or_update_file` (base64, ~1.2MB, exceeds MCP server limit)
-- Add other files (e.g. `sw.js`, `CLAUDE.md`) to the `files` array in the same call
+- Use `push_files` (plain text content) — **not** `create_or_update_file` (base64, ~1.2MB, exceeds MCP server limit)
+- **Hard limit: the JSON request body must stay under 1 MiB (1,048,576 bytes).** `index.html` is ~1.0 MB and right at this ceiling — push it **alone** in its own call (bundling other files pushes the payload over and fails with `400 malformed payload: unexpected EOF`). If `index.html` itself exceeds the limit, move JS out into a separate `*.js` file loaded via `<script src>` (see `ms-graph-ui.js`) rather than trying to trim it.
+- **Push `index.html` by itself; push smaller files (`sw.js`, `CLAUDE.md`, `*.js`, Edge Functions) in a second call.** Only `git reset --hard origin/main` AFTER confirming each push returned `HTTP 200` — resetting after a failed push silently discards your edits.
 - **Never have two Claude Code sessions open on this repo at the same time** — concurrent sessions will overwrite each other's pushes
 
 ## Client List (`renderClients`)

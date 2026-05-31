@@ -2,6 +2,7 @@ const CACHE_NAME = 'coach4u-crm-v690';
 const ASSETS = [
   '/internal-coach4u-hub/',
   '/internal-coach4u-hub/index.html',
+  '/internal-coach4u-hub/ms-graph-ui.js',
   '/internal-coach4u-hub/manifest.json',
   '/internal-coach4u-hub/icon-192.png',
   '/internal-coach4u-hub/icon-512.png'

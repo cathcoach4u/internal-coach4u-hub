@@ -1,10 +1,18 @@
 // ms-graph-ui.js — Coach4U calendar + client-email UI handlers
 // Extracted from index.html to keep it under the 1 MiB GitHub push limit.
-// Classic script loaded AFTER the main inline script, so it shares the app's
-// globals (supabase, contacts, toast, SUPABASE_EDGE_URL, getAnthropicKey,
-// CATH_VOICE_REFERENCE, calContactName, getAUDateStr, loadCalendarEvents,
-// renderCalWeek, closeModal). A syntax error here cannot break the main app.
-
+// The main app runs inside an IIFE, so its internals aren't global. index.html
+// exposes the handful this file needs on window.CB (the "bridge"), set just
+// before the main IIFE closes. A syntax error in this file cannot break the
+// main app. Defines window.calSyncNow / openCalBook / calBookContactChanged /
+// submitCalBook / loadClientEmails / emailAiDraft / emailSendReply / emailDelete.
+(function(){
+'use strict';
+var CB=window.CB||{};
+var supabase=CB.sb, SUPABASE_EDGE_URL=CB.EDGE, toast=CB.toast, getAUDateStr=CB.getAUDateStr,
+    calContactName=CB.calContactName, loadCalendarEvents=CB.loadCalendarEvents,
+    renderCalWeek=CB.renderCalWeek, closeModal=CB.closeModal,
+    getAnthropicKey=CB.getAnthropicKey, CATH_VOICE_REFERENCE=CB.voice;
+function getContacts(){ return (CB.getContacts?CB.getContacts():[])||[]; }
 
 // Pull the latest from Outlook via the ms-graph-calendar Edge Function, then re-render.
 window.calSyncNow=async function(){
@@ -29,7 +37,7 @@ window.calSyncNow=async function(){
 // Booking modal
 window.openCalBook=function(){
   const sel=document.getElementById('calBookContact');
-  const withEmail=contacts.filter(c=>c.email).sort((a,b)=>calContactName(a).localeCompare(calContactName(b)));
+  const withEmail=getContacts().filter(c=>c.email).sort((a,b)=>calContactName(a).localeCompare(calContactName(b)));
   sel.innerHTML='<option value="">— none —</option>'+withEmail.map(c=>'<option value="'+c.id+'">'+calContactName(c).replace(/</g,'&lt;')+' ('+(''+c.email).replace(/</g,'&lt;')+')</option>').join('');
   document.getElementById('calBookSubject').value='';
   document.getElementById('calBookSource').value='bookings';
@@ -45,7 +53,7 @@ window.calBookContactChanged=function(){
   const sel=document.getElementById('calBookContact');
   const subj=document.getElementById('calBookSubject');
   if(sel.value && !subj.value.trim()){
-    const c=contacts.find(x=>x.id===sel.value);
+    const c=getContacts().find(x=>x.id===sel.value);
     if(c) subj.value='Session with '+calContactName(c);
   }
 };
@@ -66,7 +74,7 @@ window.submitCalBook=async function(){
   const endD=new Date(date+'T'+time+':00Z'); endD.setUTCMinutes(endD.getUTCMinutes()+dur);
   const end=endD.toISOString().slice(0,19);
   let attendees=[];
-  if(contactId){ const c=contacts.find(x=>x.id===contactId); if(c&&c.email) attendees=[{email:c.email,name:calContactName(c)}]; }
+  if(contactId){ const c=getContacts().find(x=>x.id===contactId); if(c&&c.email) attendees=[{email:c.email,name:calContactName(c)}]; }
   const btn=document.getElementById('calBookSubmitBtn'); btn.disabled=true; btn.textContent='Creating…';
   try{
     const {data:{session}}=await supabase.auth.getSession();
@@ -177,3 +185,5 @@ window.emailDelete=async function(i){
     toast('Moved to Deleted Items','success');
   }catch(e){ toast('Delete failed: '+e.message,'error'); }
 };
+
+})();
