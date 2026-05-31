@@ -168,21 +168,23 @@ async function doBook(token: string, db: any, p: any) {
   if (!mailbox) throw new Error(`Unknown source '${source}'`)
   if (!p.subject || !p.start || !p.end) throw new Error('book requires subject, start, end (ISO)')
 
-  const attendees = (p.attendees || []).map((a: any) => ({
-    emailAddress: { address: typeof a === 'string' ? a : a.email, name: (typeof a === 'object' && a.name) || '' },
-    type: 'required',
-  }))
+  // Client emails are kept ONLY as recipients of our branded confirmation —
+  // deliberately NOT added as Outlook attendees, so Microsoft does not also
+  // fire its own (cold) calendar invite. One branded email, no duplicate.
+  const recipients: string[] = (p.attendees || [])
+    .map((a: any) => (typeof a === 'string' ? a : a?.email))
+    .filter((e: string) => e && /.+@.+\..+/.test(e))
 
+  // Prefer UTC in the response so the saved row (and the .ics) carry correct UTC.
   const event = await graph(token, 'POST', `/users/${encodeURIComponent(mailbox)}/events`, {
     subject: p.subject,
     body: { contentType: 'HTML', content: p.body || '' },
     start: { dateTime: p.start, timeZone: p.timeZone || SYDNEY_TZ },
     end:   { dateTime: p.end,   timeZone: p.timeZone || SYDNEY_TZ },
     location: p.location ? { displayName: p.location } : undefined,
-    attendees,
     isOnlineMeeting: !!p.online_meeting,
     allowNewTimeProposals: false,
-  })
+  }, { Prefer: 'outlook.timezone="UTC"' })
 
   const row: any = mapEvent(source, event)
   row.contact_id = p.contact_id || null
@@ -190,16 +192,23 @@ async function doBook(token: string, db: any, p: any) {
   const { error } = await db.from('calendar_events').upsert([row], { onConflict: 'source,graph_event_id' })
   if (error) throw new Error(`Save booking: ${error.message}`)
 
-  // Coach4U confirmation email — sent from the booking mailbox so the client sees the team.
+  // Coach4U confirmation email — sent from the booking mailbox so the client sees
+  // the team, with a calendar (.ics) attachment so they can add it to their calendar.
   let confirmation_sent = false
-  if (p.send_confirmation && attendees.length) {
+  if (p.send_confirmation && recipients.length) {
     try {
-      const html = confirmationHtml(p)
+      const ics = buildIcs(row, p)
       await graph(token, 'POST', `/users/${encodeURIComponent(mailbox)}/sendMail`, {
         message: {
           subject: 'Your session is confirmed — ' + p.subject,
-          body: { contentType: 'HTML', content: html },
-          toRecipients: attendees.map((a: any) => ({ emailAddress: a.emailAddress })),
+          body: { contentType: 'HTML', content: confirmationHtml(p) },
+          toRecipients: recipients.map((e: string) => ({ emailAddress: { address: e } })),
+          attachments: [{
+            '@odata.type': '#microsoft.graph.fileAttachment',
+            name: 'session.ics',
+            contentType: 'text/calendar; method=PUBLISH',
+            contentBytes: b64(ics),
+          }],
         },
         saveToSentItems: true,
       })
@@ -222,10 +231,35 @@ function confirmationHtml(p: any) {
   <p>Your session with Coach4U is confirmed.</p>
   <p style="margin:0 0 6px"><strong>What:</strong> ${esc(p.subject)}</p>
   ${when}${join}
+  <p>I've attached a calendar file so you can add this to your own calendar.</p>
   <p>If you need to change the time, just reply to this email and we'll sort it out.</p>
   <p>Looking forward to it.</p>
   <p style="margin-top:16px">Thanks<br>Cath<br><span style="color:#64748b">Coach4U</span></p>
   </div>`
+}
+
+// ── Calendar (.ics) attachment ──────────────────────────────────────────────
+function b64(s: string) { return btoa(unescape(encodeURIComponent(s))) }
+function icsEsc(s: string) { return (s || '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n') }
+// row.start_ts/end_ts are UTC ISO ending in 'Z' → 20260531T000000Z
+function icsDt(iso: string) { return (iso || '').replace(/\.\d+/, '').replace(/[-:]/g, '') }
+function buildIcs(row: any, p: any) {
+  const uid = (row.ical_uid || row.graph_event_id || ('c4u-' + Date.now())) + ''
+  const loc = p.meeting_url || row.location || ''
+  const desc = p.meeting_url ? ('Join here: ' + p.meeting_url) : ''
+  const lines = [
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Coach4U//Booking//EN', 'METHOD:PUBLISH',
+    'BEGIN:VEVENT',
+    'UID:' + uid,
+    'DTSTAMP:' + icsDt(new Date().toISOString()),
+    'DTSTART:' + icsDt(row.start_ts),
+    'DTEND:' + icsDt(row.end_ts),
+    'SUMMARY:' + icsEsc(p.subject),
+    loc ? 'LOCATION:' + icsEsc(loc) : '',
+    desc ? 'DESCRIPTION:' + icsEsc(desc) : '',
+    'END:VEVENT', 'END:VCALENDAR',
+  ].filter(Boolean)
+  return lines.join('\r\n')
 }
 
 async function doReschedule(token: string, db: any, p: any) {
