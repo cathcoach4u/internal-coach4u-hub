@@ -105,10 +105,6 @@ td .actions button{padding:8px 14px;font-size:12px;}
 .cal-chip.off{opacity:.4;background:#f8fafc;}
 .cal-chip.off .cal-dot{background:#cbd5e1!important;}
 /* summary strip */
-.cal-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px;}
-.cal-sumcard{background:#fff;border:1px solid #e2e8f0;border-left:4px solid #64748b;border-radius:11px;padding:13px 15px;}
-.cal-sumcard .n{font-size:24px;font-weight:800;color:#1e3a5f;line-height:1;}
-.cal-sumcard .l{font-size:11px;color:#64748b;font-weight:600;margin-top:5px;text-transform:uppercase;letter-spacing:.4px;}
 /* week grid */
 .cal-week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;}
 .cal-day{background:#fff;border:1px solid #e2e8f0;border-radius:11px;padding:0;min-height:120px;display:flex;flex-direction:column;overflow:hidden;}
@@ -324,7 +320,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.60</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.61</span>
     </div>
   </div>
   <div class="area-tabs-wrap" id="areaTabsWrap">
@@ -10766,6 +10762,15 @@ const CAL_SOURCE_META={
   bookings:{color:'#2563eb',label:'Bookings'},
   personal:{color:'#7c3aed',label:'Personal'}
 };
+// Special session types get their own colour (by title) so they stand out,
+// regardless of which calendar they're on.
+const CAL_TYPE_COLORS={focus:'#ea580c',thrive:'#db2777'};
+function calEventColor(ev){
+  const s=(ev.subject||'').toLowerCase();
+  if(s.indexOf('focushq')>-1||s.indexOf('focus hq')>-1||s.indexOf('focus session')>-1) return CAL_TYPE_COLORS.focus;
+  if(s.indexOf('thrivehq')>-1||s.indexOf('thrive hq')>-1) return CAL_TYPE_COLORS.thrive;
+  return (CAL_SOURCE_META[ev.source]||CAL_SOURCE_META.work).color;
+}
 async function loadCalendarEvents(){
   calTableMissing=false;
   try{
@@ -10850,10 +10855,10 @@ function calRelLastSynced(){
 }
 
 function calEventHTML_grid(ev){
-  const meta=CAL_SOURCE_META[ev.source]||CAL_SOURCE_META.work;
+  const col=calEventColor(ev);
   const c=calMatchContact(ev);
   const subj=(ev.subject||'(no title)').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  let h='<div class="cal-ev" style="border-left-color:'+meta.color+';background:'+meta.color+'16;position:relative;">';
+  let h='<div class="cal-ev" style="border-left-color:'+col+';background:'+col+'16;position:relative;">';
   if(ev.graph_event_id){
     h+='<button onclick="openCalEdit(\''+ev.source+'\',\''+ev.graph_event_id+'\')" title="Edit this event" style="position:absolute;top:2px;right:22px;background:rgba(255,255,255,.9);border:1px solid #cbd5e1;color:#475569;border-radius:4px;font-size:11px;line-height:1;padding:1px 5px;cursor:pointer;">&#9998;</button>';
     h+='<button onclick="calDeleteEvent(\''+ev.source+'\',\''+ev.graph_event_id+'\')" title="Delete this event" style="position:absolute;top:2px;right:2px;background:rgba(255,255,255,.9);border:1px solid #fecaca;color:#dc2626;border-radius:4px;font-size:12px;line-height:1;padding:1px 5px;cursor:pointer;">&times;</button>';
@@ -10866,10 +10871,11 @@ function calEventHTML_grid(ev){
   return h;
 }
 function calEventHTML_agenda(ev){
+  const col=calEventColor(ev);
   const meta=CAL_SOURCE_META[ev.source]||CAL_SOURCE_META.work;
   const c=calMatchContact(ev);
   const subj=(ev.subject||'(no title)').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  let h='<div class="cal-ag-ev" style="border-left-color:'+meta.color+';background:'+meta.color+'12">';
+  let h='<div class="cal-ag-ev" style="border-left-color:'+col+';background:'+col+'12">';
   h+='<div class="agtime">'+calFmtDuration(ev)+'</div>';
   h+='<div class="agmain"><div class="agtitle">'+subj
     +'<span class="agtag" style="background:'+meta.color+'22;color:'+meta.color+'">'+meta.label+'</span>'
@@ -10935,7 +10941,10 @@ function renderCalWeek(){
       +'<button class="'+(calView==='agenda'?'active':'')+'" onclick="calSetView(\'agenda\')">Agenda</button>'
       +'<button class="'+(calView==='grid'?'active':'')+'" onclick="calSetView(\'grid\')">Grid</button>'
     +'</span>'
-    +'<span class="cal-filters">'+calChip('work',true)+calChip('personal',true)+calChip('bookings',false)+'</span>'
+    +'<span class="cal-filters">'+calChip('work',true)+calChip('personal',true)
+      +'<span class="cal-chip" style="cursor:default;font-size:10px;"><span class="cal-dot" style="background:'+CAL_TYPE_COLORS.focus+'"></span>FocusHQ</span>'
+      +'<span class="cal-chip" style="cursor:default;font-size:10px;"><span class="cal-dot" style="background:'+CAL_TYPE_COLORS.thrive+'"></span>ThriveHQ</span>'
+    +'</span>'
     +'<button class="cal-nav-btn" id="calSyncBtn" onclick="calSyncNow()" title="Pull the latest from Outlook" style="font-size:11px;padding:4px 9px;color:#64748b;">&#8635; Sync</button>'
   +'</div>';
 
@@ -10948,14 +10957,7 @@ function renderCalWeek(){
     html+='<div class="cal-banner"><span>&#128257;</span><span><strong>Snapshot view.</strong> Last synced '+(calRelLastSynced()||'recently')+'. This is a saved copy — new Outlook changes appear after a sync. Live auto-sync is coming in a later phase.</span></div>';
   }
 
-  // summary strip — week + today counts (per-source split removed; the chips cover that)
-  const todayCount=(byDay[todayKey]||[]).length;
-  if(total>0){
-    html+='<div class="cal-summary">'
-      +'<div class="cal-sumcard" style="border-left-color:#1e3a5f"><div class="n">'+total+'</div><div class="l">This week</div></div>'
-      +'<div class="cal-sumcard" style="border-left-color:#0d9488"><div class="n">'+todayCount+'</div><div class="l">Today</div></div>'
-    +'</div>';
-  }
+  // (summary count strip removed — not needed)
 
   if(calView==='agenda'){
     html+='<div class="cal-agenda">';
