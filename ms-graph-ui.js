@@ -88,6 +88,15 @@ window.calBookFocus=function(){
   document.getElementById('calBookMeetingLink').value='';
   const sc=document.getElementById('calBookSendConfirm'); if(sc) sc.checked=false;
 };
+// One-tap 1:1 client session: client-facing calendar + Cath's Room link + confirmation on.
+// Just set date/time and pick the client (title auto-fills "Session with …" on selection).
+window.calBookClient=function(presetDate){
+  openCalBook(presetDate);
+  document.getElementById('calBookSource').value='bookings';
+  document.getElementById('calBookDuration').value='60';
+  document.getElementById('calBookMeetingLink').value='cath';
+  const sc=document.getElementById('calBookSendConfirm'); if(sc) sc.checked=true;
+};
 function clientSearchList(){
   return getClients().filter(cl=>clientAttendees(cl).length)
     .map(cl=>({id:cl.id,name:clientDisplayName(cl),n:clientAttendees(cl).length}))
@@ -546,6 +555,62 @@ function calEventHTML_agenda(ev){
   return h;
 }
 
+// Upcoming client appointments — flat list across all future weeks, sorted by
+// soonest, showing the client name prominently. Lets Cath see who's coming up
+// without paging week-by-week. Collapsible; state remembered.
+let calUpcomingOpen=localStorage.getItem('cal_upcoming')!=='0';
+window.calToggleUpcoming=function(){ calUpcomingOpen=!calUpcomingOpen; try{localStorage.setItem('cal_upcoming',calUpcomingOpen?'1':'0');}catch(e){} renderCalWeek(); };
+function calUpcomingByClient(){
+  const todayKey=getAUDateStr();
+  // future, non-all-day, matched to a contact; de-dup by ical_uid (prefer Work)
+  const rank=function(s){ return s==='work'?0:(s==='personal'?1:2); };
+  const byUid={}, singles=[];
+  calendarEvents.forEach(ev=>{
+    if(ev.is_all_day) return;
+    if(!ev.start_ts) return;
+    if(calSydneyDateKey(ev.start_ts)<todayKey) return;          // today or later
+    if(!calMatchContact(ev)) return;                             // only client-linked
+    if(!ev.ical_uid){ singles.push(ev); return; }
+    const cur=byUid[ev.ical_uid];
+    if(!cur||rank(ev.source)<rank(cur.source)) byUid[ev.ical_uid]=ev;
+  });
+  return singles.concat(Object.keys(byUid).map(k=>byUid[k]))
+    .sort((a,b)=>(a.start_ts||'').localeCompare(b.start_ts||''));
+}
+function calDayLabel(iso){
+  try{ return new Intl.DateTimeFormat('en-AU',{timeZone:'Australia/Sydney',weekday:'short',day:'numeric',month:'short'}).format(new Date(iso)); }
+  catch(e){ return ''; }
+}
+function renderCalUpcoming(){
+  const list=calUpcomingByClient();
+  let h='<div class="cal-upcoming">';
+  h+='<div class="cal-up-head" onclick="calToggleUpcoming()">'
+    +'<span>&#128197; Upcoming client appointments'+(list.length?' <span class="cal-up-count">'+list.length+'</span>':'')+'</span>'
+    +'<span class="cal-up-chev">'+(calUpcomingOpen?'&#9652;':'&#9662;')+'</span></div>';
+  if(calUpcomingOpen){
+    if(!list.length){
+      h+='<div class="cal-up-empty">No upcoming client appointments. Use <strong>+ Client</strong> to book one.</div>';
+    } else {
+      h+='<div class="cal-up-body">';
+      h+=list.slice(0,30).map(ev=>{
+        const c=calMatchContact(ev);
+        const name=c?calContactName(c).replace(/</g,'&lt;'):'Client';
+        const col=calEventColor(ev);
+        const subj=(ev.subject||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        const editable=ev.graph_event_id?'onclick="openCalEdit(\''+ev.source+'\',\''+ev.graph_event_id+'\')" style="cursor:pointer;"':'';
+        return '<div class="cal-up-row" '+editable+'>'
+          +'<span class="cal-up-dot" style="background:'+col+'"></span>'
+          +'<div class="cal-up-when"><div class="cal-up-date">'+calDayLabel(ev.start_ts)+'</div><div class="cal-up-time">'+calFmtTime(ev.start_ts)+'</div></div>'
+          +'<div class="cal-up-main"><div class="cal-up-name">'+name+'</div>'
+          +(subj?'<div class="cal-up-subj">'+subj+'</div>':'')+'</div></div>';
+      }).join('');
+      h+='</div>';
+    }
+  }
+  h+='</div>';
+  return h;
+}
+
 function renderCalWeek(){
   const el=document.getElementById('calWeekContent');
   if(!el) return;
@@ -585,7 +650,8 @@ function renderCalWeek(){
     +'<button class="cal-nav-btn" onclick="calNav(-1)">&#8249;</button>'
     +'<button class="cal-nav-btn cal-today-btn" onclick="calToday()">Today</button>'
     +'<button class="cal-nav-btn" onclick="calNav(1)">&#8250;</button>'
-    +'<button class="cal-nav-btn" onclick="openCalBook()" style="background:#2563eb;color:#fff;border-color:#2563eb;">+ Book</button>'
+    +'<button class="cal-nav-btn" onclick="openCalBook()" title="Full booking form">+ Book</button>'
+    +'<button class="cal-nav-btn" onclick="calBookClient()" style="background:#2563eb;color:#fff;border-color:#2563eb;" title="Quick-book a 1:1 client session — Cath\'s Room link, just pick the client">+ Client</button>'
     +'<button class="cal-nav-btn" onclick="calBookFocus()" style="background:#ea580c;color:#fff;border-color:#ea580c;" title="Quick-book a 60 min Focus Session">+ Focus</button>'
     +'<span class="cal-week-range">'+rangeLabel+(calWeekOffset===0?' · This week':'')+'</span>'
     +'<span class="cal-viewtoggle" style="margin-left:auto;">'
@@ -596,6 +662,9 @@ function renderCalWeek(){
   +'</div>';
   html+='<div class="cal-filters" style="margin-bottom:12px;">'+allPill
     +catPill('appointment')+catPill('focus')+catPill('thrive')+catPill('work')+catPill('personal')+'</div>';
+
+  // upcoming client appointments (across all future weeks)
+  html+=renderCalUpcoming();
 
   // snapshot banner
   if(calTableMissing){

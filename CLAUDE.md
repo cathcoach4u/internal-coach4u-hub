@@ -426,8 +426,8 @@ NDIS-Related Services (when applicable)
 
 ### Versioning
 
-- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.65.66**, line ~256)
-- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v710**)
+- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.65.67**, line ~256)
+- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v711**)
 - **Both must be bumped on every release**
 
 ### Code patterns
@@ -670,9 +670,14 @@ All-day events get a muted dashed-border style (`.cal-ev.allday` / `.cal-ag-ev.a
 
 Each day is clickable to start a booking pre-filled with that date — no scrolling the date picker for a session months out. `openCalBook(presetDate)` accepts an optional `YYYY-MM-DD`; called with the day's Sydney date key from the **+ Add** button on each agenda date row / grid day header, and from the empty-day placeholders ("Nothing scheduled — tap to book" / "+ Add"). Called with no arg (toolbar **+ Book** / **+ Focus**) it defaults to today.
 
+### Upcoming client appointments panel
+
+`renderCalUpcoming()` — collapsible panel above the week grid (after the filter pills). Lists every **future** event matched to a contact (`calMatchContact`), across all weeks, sorted soonest-first, showing the **client name** prominently. Excludes all-day and past events; de-dupes by `ical_uid` (Work wins). Each row is click-to-edit. Toggle state in `calUpcomingOpen` (localStorage `cal_upcoming`); handler `window.calToggleUpcoming`. Helper `calUpcomingByClient()` returns the sorted list.
+
 ### Quick templates
 
-- **+ Book** (`openCalBook`) — full booking modal
+- **+ Book** (`openCalBook`) — full booking modal (neutral outline)
+- **+ Client** (`calBookClient`) — one-tap 1:1 client session: client-facing (bookings) calendar, 60 min, Cath's Room (`cath`) meeting link, confirmation on — just set date/time and pick the client (title auto-fills "Session with …" on selection)
 - **+ Focus** (`calBookFocus`) — one-tap: opens the modal pre-filled as a 60 min Focus Session on the Work calendar, no meeting link, confirmation off (internal block, no client attendee)
 
 ## Stripe Payments (Finance > Stripe Payments)
