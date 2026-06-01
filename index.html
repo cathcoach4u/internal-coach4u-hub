@@ -324,7 +324,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.59</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.60</span>
     </div>
   </div>
   <div class="area-tabs-wrap" id="areaTabsWrap">
@@ -1592,9 +1592,12 @@ if('serviceWorker' in navigator){
     <div class="form-group"><label>Type</label>
       <select id="cType"><option>Individual</option><option>Organisation</option><option>Referrer</option></select>
     </div>
-    <div class="form-group"><label>ThriveHQ Membership Start</label><input id="cMemberStart" type="date" onchange="autoRenewalDate()"></div>
-    <div class="form-group"><label>ThriveHQ Renewal Date</label><input id="cRenewal" type="date"></div>
-    <div class="form-group"><label>Referrer</label><input id="cReferrer" placeholder="Who referred this contact?"></div>
+    <div class="form-group"><label>Referrer</label>
+      <select id="cReferrerSelect" onchange="onContactReferrerChange()" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;background:#fff;">
+        <option value="">— No referrer —</option>
+      </select>
+      <input id="cReferrer" placeholder="Type referrer name" style="margin-top:6px;display:none;">
+    </div>
     <div class="form-group"><label>Notes</label><textarea id="cNotes"></textarea></div>
     <div class="modal-actions">
       <button class="btn btn-gray" onclick="closeModal('contactModal')">Cancel</button>
@@ -5339,9 +5342,13 @@ window.openContactModal=function(id){
   document.getElementById('cEmail').value=c?c.email:'';
   document.getElementById('cPhone').value=c?c.phone:'';
   document.getElementById('cType').value=c?c.contact_type:'Individual';
-  document.getElementById('cMemberStart').value=c?c.membership_start_date||'':'';
-  document.getElementById('cRenewal').value=c?c.renewal_date||'':'';
-  document.getElementById('cReferrer').value=c?c.referrer||'':'';
+  const refVal=c&&c.referrer?c.referrer:'';
+  const refSel=document.getElementById('cReferrerSelect');
+  const refMatch=refVal&&referrals.find(r=>r.name===refVal);
+  refSel.innerHTML='<option value="">— No referrer —</option>'+referrals.map(r=>`<option value="${r.name.replace(/"/g,'&quot;')}"${refMatch&&refMatch.name===r.name?' selected':''}>${r.name}</option>`).join('')+`<option value="__other__"${refVal&&!refMatch?' selected':''}>Other (custom)…</option>`;
+  const refInput=document.getElementById('cReferrer');
+  refInput.value=refVal&&!refMatch?refVal:'';
+  refInput.style.display=refVal&&!refMatch?'block':'none';
   document.getElementById('cNotes').value=c?c.notes:'';
   document.getElementById('contactModal').classList.add('open');
 };
@@ -5354,9 +5361,11 @@ window.saveContact=async function(){
     email:document.getElementById('cEmail').value.trim(),
     phone:document.getElementById('cPhone').value.trim(),
     contact_type:document.getElementById('cType').value,
-    membership_start_date:document.getElementById('cMemberStart').value||null,
-    renewal_date:document.getElementById('cRenewal').value||null,
-    referrer:document.getElementById('cReferrer').value.trim()||null,
+    referrer:(function(){
+      const sel=document.getElementById('cReferrerSelect').value;
+      if(sel==='__other__') return document.getElementById('cReferrer').value.trim()||null;
+      return sel||null;
+    })(),
     notes:document.getElementById('cNotes').value.trim()
   };
   if(!data.first_name||!data.last_name){toast('First and last name required','error');return;}
@@ -5375,13 +5384,11 @@ window.saveContact=async function(){
   renderDashboard();
 };
 
-window.autoRenewalDate=function(){
-  const start=document.getElementById('cMemberStart').value;
-  if(start){
-    const d=new Date(start);
-    d.setMonth(d.getMonth()+6);
-    document.getElementById('cRenewal').value=d.toISOString().split('T')[0];
-  }
+window.onContactReferrerChange=function(){
+  const sel=document.getElementById('cReferrerSelect').value;
+  const input=document.getElementById('cReferrer');
+  if(sel==='__other__'){input.style.display='block';input.focus();}
+  else{input.style.display='none';input.value='';}
 };
 
 // ── CONTACT REPORTS (PDF uploads) ──
