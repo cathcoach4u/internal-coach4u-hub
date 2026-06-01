@@ -353,13 +353,13 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.69</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.70</span>
     </div>
   </div>
   <div class="area-tabs-wrap" id="areaTabsWrap">
     <div class="area-tabs" id="areaTabs">
       <button class="area-tab active" onclick="switchArea('home')"><span class="tab-icon">&#9776;</span>Home</button>
-      <button class="area-tab" onclick="switchArea('calendar')"><span class="tab-icon">&#128197;</span>Calendar</button>
+      <button class="area-tab" onclick="switchArea('calendar')"><span class="tab-icon">&#128172;</span>Connect</button>
       <button class="area-tab" onclick="switchArea('quick')"><span class="tab-icon">&#9889;</span>Quick</button>
       <button class="area-tab" onclick="switchArea('crm')"><span class="tab-icon">&#128202;</span>CRM</button>
       <button class="area-tab" onclick="switchArea('referrers')"><span class="tab-icon">&#128200;</span>Referrers</button>
@@ -2485,9 +2485,9 @@ window.goToClient=function(clientId){
 // ── AREA TABS & SIDEBAR ──
 const areaConfig={
   home:{label:'Home',pages:[{id:'dashboard',icon:'&#9776;',label:'Dashboard'}]},
-  calendar:{label:'Calendar',pages:[{id:'calweek',icon:'&#128197;',label:'Week View'}]},
+  calendar:{label:'Connect',pages:[{id:'calweek',icon:'&#128197;',label:'Calendar'},{id:'sms',icon:'&#128172;',label:'Comms'}]},
   quick:{label:'Quick',pages:[{id:'quickhub',icon:'&#9889;',label:'Quick Hub'}]},
-  crm:{label:'CRM',pages:[{id:'crmdash',icon:'&#128200;',label:'Dashboard'},{id:'masterlist',icon:'&#128209;',label:'Master List'},{id:'prospects',icon:'&#128203;',label:'Prospect List'},{id:'clidash',icon:'&#129309;',label:'Clients Dashboard'},{id:'clients',icon:'&#128101;',label:'Client List'},{id:'clinvoices',icon:'&#128206;',label:'Invoices'},{id:'sms',icon:'&#128172;',label:'Comms'}]},
+  crm:{label:'CRM',pages:[{id:'crmdash',icon:'&#128200;',label:'Dashboard'},{id:'masterlist',icon:'&#128209;',label:'Master List'},{id:'prospects',icon:'&#128203;',label:'Prospect List'},{id:'clidash',icon:'&#129309;',label:'Clients Dashboard'},{id:'clients',icon:'&#128101;',label:'Client List'},{id:'clinvoices',icon:'&#128206;',label:'Invoices'}]},
   referrers:{label:'Referrers',pages:[{id:'referrals',icon:'&#128200;',label:'Dashboard'},{id:'refpayments',icon:'&#128176;',label:'Payments'}]},
   pulses:{label:'Pulses',pages:[{id:'pulsesdash',icon:'&#128200;',label:'Dashboard'},{id:'clipulse',icon:'&#128147;',label:'SAFE Pulse'},{id:'clibrainpulse',icon:'&#129504;',label:'Brain Pulse'},{id:'cliconnection',icon:'&#128151;',label:'Connection Pulse'}]},
   hubs:{label:'Hubs',pages:[{id:'modulesdash',icon:'&#128200;',label:'Dashboard'},{id:'couplesdash',icon:'&#128149;',label:'Couples Hub'},{id:'thqdash',icon:'&#128170;',label:'ThriveHQ Hub'},{id:'ndisdash',icon:'&#127758;',label:'NDIS Hub'},{id:'strdash',icon:'&#127919;',label:'Strengths Hub'}]},
