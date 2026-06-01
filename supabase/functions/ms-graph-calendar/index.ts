@@ -112,6 +112,19 @@ function mapEvent(source: string, ev: any) {
 }
 
 // ── Actions ─────────────────────────────────────────────────────────────────
+// Re-read an event in UTC after a write. POST/PATCH responses don't reliably
+// honour the Prefer:outlook.timezone header (they can return the event's local
+// time), which would make mapEvent label local time as UTC and shift the saved
+// snapshot by the offset. A fresh GET with Prefer UTC always returns true UTC.
+async function getEventUTC(token: string, mailbox: string, id: string) {
+  return await graph(
+    token, 'GET',
+    `/users/${encodeURIComponent(mailbox)}/events/${encodeURIComponent(id)}?$select=id,iCalUId,subject,start,end,isAllDay,location,attendees,organizer,bodyPreview,webLink,showAs,isCancelled`,
+    undefined,
+    { Prefer: 'outlook.timezone="UTC"' },
+  )
+}
+
 async function doSync(token: string, db: any, opts: { sources?: string[] }) {
   const sources = (opts.sources && opts.sources.length ? opts.sources : Object.keys(SOURCE_MAILBOX))
     .filter((s) => SOURCE_MAILBOX[s])
@@ -197,7 +210,7 @@ async function doBook(token: string, db: any, p: any) {
     allowNewTimeProposals: false,
   }, { Prefer: 'outlook.timezone="UTC"' })
 
-  const row: any = mapEvent(source, event)
+  const row: any = mapEvent(source, await getEventUTC(token, mailbox, event.id))
   row.contact_id = p.contact_id || null
   row.client_id = p.client_id || null
   const { error } = await db.from('calendar_events').upsert([row], { onConflict: 'source,graph_event_id' })
@@ -383,11 +396,11 @@ async function doReschedule(token: string, db: any, p: any) {
   const mailbox = SOURCE_MAILBOX[p.source]
   if (!mailbox) throw new Error(`Unknown source '${p.source}'`)
   if (!p.graph_event_id || !p.start || !p.end) throw new Error('reschedule requires source, graph_event_id, start, end')
-  const event = await graph(token, 'PATCH', `/users/${encodeURIComponent(mailbox)}/events/${p.graph_event_id}`, {
+  await graph(token, 'PATCH', `/users/${encodeURIComponent(mailbox)}/events/${p.graph_event_id}`, {
     start: { dateTime: p.start, timeZone: p.timeZone || SYDNEY_TZ },
     end:   { dateTime: p.end,   timeZone: p.timeZone || SYDNEY_TZ },
-  })
-  const row: any = mapEvent(p.source, event)
+  }, { Prefer: 'outlook.timezone="UTC"' })
+  const row: any = mapEvent(p.source, await getEventUTC(token, mailbox, p.graph_event_id))
   await db.from('calendar_events').upsert([row], { onConflict: 'source,graph_event_id' })
   return { event: row }
 }
@@ -416,8 +429,8 @@ async function doUpdate(token: string, db: any, p: any) {
     }
     if (p.location !== undefined) patch.location = { displayName: p.location || '' }
     if (p.body !== undefined) patch.body = { contentType: 'HTML', content: p.body || '' }
-    const event = await graph(token, 'PATCH', `/users/${encodeURIComponent(oldMailbox)}/events/${p.graph_event_id}`, patch, { Prefer: 'outlook.timezone="UTC"' })
-    const row: any = mapEvent(oldSource, event)
+    await graph(token, 'PATCH', `/users/${encodeURIComponent(oldMailbox)}/events/${p.graph_event_id}`, patch, { Prefer: 'outlook.timezone="UTC"' })
+    const row: any = mapEvent(oldSource, await getEventUTC(token, oldMailbox, p.graph_event_id))
     row.contact_id = keepContact; row.client_id = keepClient
     await db.from('calendar_events').upsert([row], { onConflict: 'source,graph_event_id' })
     return { event: row }
@@ -439,7 +452,7 @@ async function doUpdate(token: string, db: any, p: any) {
   }, { Prefer: 'outlook.timezone="UTC"' })
   try { await graph(token, 'DELETE', `/users/${encodeURIComponent(oldMailbox)}/events/${p.graph_event_id}`) } catch (_e) { /* original may be Bookings-owned */ }
   await db.from('calendar_events').delete().eq('source', oldSource).eq('graph_event_id', p.graph_event_id)
-  const row: any = mapEvent(newSource, created)
+  const row: any = mapEvent(newSource, await getEventUTC(token, newMailbox, created.id))
   row.contact_id = keepContact; row.client_id = keepClient
   await db.from('calendar_events').upsert([row], { onConflict: 'source,graph_event_id' })
   return { event: row, moved: true }
