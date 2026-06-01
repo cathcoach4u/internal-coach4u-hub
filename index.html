@@ -117,9 +117,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
 .cal-day-body{padding:7px;display:flex;flex-direction:column;gap:5px;}
 .cal-ev{border-left:3px solid #64748b;background:#f8fafc;border-radius:7px;padding:6px 8px;cursor:default;}
 .cal-ev.allday,.cal-ag-ev.allday{border-left-style:dashed;opacity:.78;}
-.cal-upcoming{background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden;}
-.cal-up-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 15px;font-size:13px;font-weight:700;color:#1e3a5f;user-select:none;background:#f8fafc;border-bottom:1px solid #eef2f6;}
-.cal-up-modes{display:inline-flex;gap:0;flex-shrink:0;border:1px solid #cbd5e1;border-radius:7px;overflow:hidden;}
+.cal-up-modes{display:inline-flex;flex-shrink:0;border:1px solid #cbd5e1;border-radius:7px;overflow:hidden;}
 .cal-up-modes button{font-size:11px;font-weight:700;padding:4px 10px;background:#fff;color:#64748b;border:none;cursor:pointer;}
 .cal-up-modes button.on{background:#2563eb;color:#fff;}
 .cal-up-group{border-bottom:1px solid #eef2f6;}
@@ -127,10 +125,6 @@ td .actions button{padding:8px 14px;font-size:12px;}
 .cal-up-gname{font-size:13px;font-weight:800;color:#1e3a5f;padding:8px 15px 4px;background:#fbfcfe;}
 .cal-up-gn{background:#e0e7ff;color:#3730a3;font-size:10px;font-weight:800;padding:1px 7px;border-radius:99px;margin-left:4px;}
 .cal-up-group .cal-up-row{padding-left:24px;}
-.cal-up-count{background:#2563eb;color:#fff;font-size:11px;font-weight:800;padding:1px 8px;border-radius:99px;margin-left:6px;}
-.cal-up-chev{color:#94a3b8;font-size:11px;}
-.cal-up-empty{padding:14px 15px;font-size:13px;color:#94a3b8;}
-.cal-up-body{max-height:300px;overflow-y:auto;}
 .cal-up-row{display:flex;align-items:center;gap:11px;padding:9px 15px;border-bottom:1px solid #f4f6f9;}
 .cal-up-row:last-child{border-bottom:none;}
 .cal-up-row[onclick]:hover{background:#f8fafc;}
@@ -353,7 +347,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.70</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.71</span>
     </div>
   </div>
   <div class="area-tabs-wrap" id="areaTabsWrap">
@@ -523,6 +517,10 @@ if('serviceWorker' in navigator){
     <div class="screen" id="screen-resourcesdash">
       <div id="resourcesDashContent"></div>
     </div>
+    <div class="screen" id="screen-connectdash">
+      <div id="connectDashContent"></div>
+    </div>
+
     <div class="screen" id="screen-calweek">
       <div id="calWeekContent"></div>
     </div>
@@ -2373,7 +2371,7 @@ window.navTo = function(tab,btn){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+tab).classList.add('active');
   window.scrollTo(0,0);
-  const titles={dashboard:'Dashboard',calweek:'Calendar',quickhub:'Quick Hub',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ Hub',thqintake:'Intake Forms',strdash:'Strengths Hub',opsdash:'Ops',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',sms:'Comms',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Profiles',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Active Tasks',playbook:'Work Log',procedures:'Daily Procedures',quicklinks:'Quick Links',itprojects:'IT Projects',agents:'Agents',writingpartner:'Writing Partner',findash:'Finance',finpayments:'Payment Platforms',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fininsurance:'Insurance',fintxns:'Transactions',finstripe:'Stripe Payments',findev:'Development Business',thqbrainpulse:'Brain Pulse',thqactivities:'Activities',clibrainpulse:'Brain Pulse',cliconnection:'Connection Pulse',thqpulse:'SAFE Pulse',clipulse:'SAFE Pulse',pulsesdash:'Pulses',couplesintake:'Couples Intake',couplesdash:'Couples Hub',couplesclientlinks:'Client Links',ndisdash:'NDIS Hub',ndisclients:'NDIS Clients',couplesforms:'Intake Forms',thqforms:'Intake Forms',ndisforms:'Intake Forms',couplestimelines:'Therapy Timelines',couplesbetrayal:'Betrayal First Aid',itdash:'IT',resourcesdash:'Resources',agentsai:'AI Strategy',prompts:'Prompts',strreports:'Strengths Reports',strdomains:'Domain Balance',strupload:'Upload Report',strcodes:'Gallup Code Tracker',strsop:'Gallup Workflow SOP',strclientlinks:'Client Links'};
+  const titles={dashboard:'Dashboard',connectdash:'Connect',calweek:'Calendar',quickhub:'Quick Hub',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ Hub',thqintake:'Intake Forms',strdash:'Strengths Hub',opsdash:'Ops',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',sms:'Comms',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Profiles',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Active Tasks',playbook:'Work Log',procedures:'Daily Procedures',quicklinks:'Quick Links',itprojects:'IT Projects',agents:'Agents',writingpartner:'Writing Partner',findash:'Finance',finpayments:'Payment Platforms',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fininsurance:'Insurance',fintxns:'Transactions',finstripe:'Stripe Payments',findev:'Development Business',thqbrainpulse:'Brain Pulse',thqactivities:'Activities',clibrainpulse:'Brain Pulse',cliconnection:'Connection Pulse',thqpulse:'SAFE Pulse',clipulse:'SAFE Pulse',pulsesdash:'Pulses',couplesintake:'Couples Intake',couplesdash:'Couples Hub',couplesclientlinks:'Client Links',ndisdash:'NDIS Hub',ndisclients:'NDIS Clients',couplesforms:'Intake Forms',thqforms:'Intake Forms',ndisforms:'Intake Forms',couplestimelines:'Therapy Timelines',couplesbetrayal:'Betrayal First Aid',itdash:'IT',resourcesdash:'Resources',agentsai:'AI Strategy',prompts:'Prompts',strreports:'Strengths Reports',strdomains:'Domain Balance',strupload:'Upload Report',strcodes:'Gallup Code Tracker',strsop:'Gallup Workflow SOP',strclientlinks:'Client Links'};
   document.getElementById('pageTitle').textContent=titles[tab]||'Coach4U';
   // Sync area tab
   const area=pageToArea[tab]||'home';
@@ -2391,6 +2389,7 @@ window.navTo = function(tab,btn){
   if(btn) btn.classList.add('active');
   else document.querySelectorAll('.nav-item').forEach(n=>{if(n.dataset.page===tab) n.classList.add('active');});
   if(tab==='dashboard') renderDashboard();
+  if(tab==='connectdash') renderConnectDash();
   if(tab==='calweek'){ window.renderCalWeek&&window.renderCalWeek(); }
   if(tab==='quickhub') renderQuickHub();
   if(tab==='pulsesdash') renderPulsesDash();
@@ -2485,7 +2484,7 @@ window.goToClient=function(clientId){
 // ── AREA TABS & SIDEBAR ──
 const areaConfig={
   home:{label:'Home',pages:[{id:'dashboard',icon:'&#9776;',label:'Dashboard'}]},
-  calendar:{label:'Connect',pages:[{id:'calweek',icon:'&#128197;',label:'Calendar'},{id:'sms',icon:'&#128172;',label:'Comms'}]},
+  calendar:{label:'Connect',pages:[{id:'connectdash',icon:'&#128200;',label:'Dashboard'},{id:'calweek',icon:'&#128197;',label:'Calendar'},{id:'sms',icon:'&#128172;',label:'Comms'}]},
   quick:{label:'Quick',pages:[{id:'quickhub',icon:'&#9889;',label:'Quick Hub'}]},
   crm:{label:'CRM',pages:[{id:'crmdash',icon:'&#128200;',label:'Dashboard'},{id:'masterlist',icon:'&#128209;',label:'Master List'},{id:'prospects',icon:'&#128203;',label:'Prospect List'},{id:'clidash',icon:'&#129309;',label:'Clients Dashboard'},{id:'clients',icon:'&#128101;',label:'Client List'},{id:'clinvoices',icon:'&#128206;',label:'Invoices'}]},
   referrers:{label:'Referrers',pages:[{id:'referrals',icon:'&#128200;',label:'Dashboard'},{id:'refpayments',icon:'&#128176;',label:'Payments'}]},
@@ -2751,6 +2750,63 @@ function renderThqTermCalendar(){
       <div style="margin-top:8px;padding-top:8px;border-top:1px solid #f1f5f9;">${otherRows}</div>
     </details>
   </div>`;
+}
+
+// Connect Dashboard — landing page for the Connect tab. Nav cards to Calendar &
+// Comms, plus upcoming client appointments (Bookings-calendar sessions) with a
+// By date / By client toggle. This is where the upcoming list lives now (off the
+// calendar page itself, which was too busy).
+let connectUpMode=localStorage.getItem('connect_up_mode')||'date';   // 'date' | 'client'
+window.connectSetUpMode=function(m){ connectUpMode=m; try{localStorage.setItem('connect_up_mode',m);}catch(e){} renderConnectDash(); };
+function renderConnectDash(){
+  const el=document.getElementById('connectDashContent'); if(!el) return;
+  const esc=s=>(''+(s||'')).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  const appts=(window.calUpcomingAppointments?window.calUpcomingAppointments():[]);
+  // nav cards
+  const navCard=(border,icon,title,sub,onclick)=>
+    `<div onclick="${onclick}" style="background:#fff;border:1px solid #e2e8f0;border-left:4px solid ${border};border-radius:11px;padding:14px 16px;cursor:pointer;transition:box-shadow .15s;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">`
+    +`<div style="font-size:24px;margin-bottom:6px;">${icon}</div>`
+    +`<div style="font-weight:700;font-size:14px;color:#1e3a5f;">${title}</div>`
+    +`<div style="font-size:11px;color:#64748b;margin-top:2px;">${sub}</div></div>`;
+  let h='<div style="max-width:820px;margin:0 auto;">';
+  h+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:18px;">';
+  h+=navCard('#2563eb','&#128197;','Calendar','Week view — book &amp; manage sessions',"navTo('calweek')");
+  h+=navCard('#0f766e','&#128172;','Comms','Text, WhatsApp &amp; email threads',"navTo('sms')");
+  h+='</div>';
+
+  // upcoming client appointments
+  h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:10px;">'
+    +'<div style="font-size:11px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#64748b;">Upcoming client appointments'+(appts.length?' ('+appts.length+')':'')+'</div>';
+  if(appts.length){
+    h+='<span class="cal-up-modes">'
+      +`<button class="${connectUpMode==='date'?'on':''}" onclick="connectSetUpMode('date')">By date</button>`
+      +`<button class="${connectUpMode==='client'?'on':''}" onclick="connectSetUpMode('client')">By client</button>`
+    +'</span>';
+  }
+  h+='</div>';
+  const apRow=(a)=>{
+    const edit=a.graph_event_id?`onclick="openCalEdit('${a.source}','${a.graph_event_id}')" style="cursor:pointer;"`:'';
+    return `<div class="cal-up-row" ${edit}>`
+      +`<span class="cal-up-dot" style="background:${a.color}"></span>`
+      +`<div class="cal-up-when"><div class="cal-up-date">${esc(a.date)}</div><div class="cal-up-time">${esc(a.time)}</div></div>`
+      +`<div class="cal-up-main"><div class="cal-up-name">${esc(a.name)}</div>`
+      +(a.subject?`<div class="cal-up-subj">${esc(a.subject)}</div>`:'')+'</div></div>';
+  };
+  if(!appts.length){
+    h+='<div style="background:#fff;border:1px solid #e2e8f0;border-radius:11px;padding:16px;font-size:13px;color:#94a3b8;">No upcoming appointments. Book one from the <span style="color:#2563eb;cursor:pointer;font-weight:600;" onclick="navTo(\'calweek\')">Calendar &#8594;</span></div>';
+  } else if(connectUpMode==='client'){
+    const groups={};
+    appts.forEach(a=>{ const k=a.name||'Client'; (groups[k]=groups[k]||[]).push(a); });
+    const names=Object.keys(groups).sort((x,y)=>x.localeCompare(y));
+    h+='<div style="background:#fff;border:1px solid #e2e8f0;border-radius:11px;overflow:hidden;">';
+    h+=names.map(nm=>'<div class="cal-up-group"><div class="cal-up-gname">'+esc(nm)+' <span class="cal-up-gn">'+groups[nm].length+'</span></div>'
+      +groups[nm].map(apRow).join('')+'</div>').join('');
+    h+='</div>';
+  } else {
+    h+='<div style="background:#fff;border:1px solid #e2e8f0;border-radius:11px;overflow:hidden;">'+appts.map(apRow).join('')+'</div>';
+  }
+  h+='</div>';
+  el.innerHTML=h;
 }
 
 // Quick Hub — mobile-first launchpad: Book / Message / Email at the top, then a
