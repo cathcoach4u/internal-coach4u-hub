@@ -346,4 +346,46 @@ window.emailDelete=async function(i){
   }catch(e){ toast('Delete failed: '+e.message,'error'); }
 };
 
+// Contact modal Links & Status block — read-only summary of every link a contact has
+function getProspects(){ return (CB.getProspects?CB.getProspects():[])||[]; }
+function getReferrals(){ return (CB.getReferrals?CB.getReferrals():[])||[]; }
+window.renderContactLinksSection=function(c){
+  var el=document.getElementById('cLinksSection'); if(!el) return;
+  if(!c){ el.style.display='none'; el.innerHTML=''; return; }
+  var prosp=getProspects().find(function(p){return p.contact_id===c.id;});
+  var lcs=getClients().filter(function(cl){return (cl.members||[]).indexOf(c.id)>-1;});
+  var thq=lcs.find(function(cl){return cl.role==='Community';});
+  var refs=getReferrals();
+  var refId=null, refSrc=null;
+  if(prosp&&prosp.referrer_id){ refId=prosp.referrer_id; refSrc='prospect'; }
+  if(!refId){ var x=lcs.find(function(y){return y.referred_by;}); if(x){ refId=x.referred_by; refSrc='client'; } }
+  if(!refId){ var rm=refs.find(function(r){return (r.members||[]).indexOf(c.id)>-1;}); if(rm){ refId=rm.id; refSrc='direct link'; } }
+  var refRow=refId?refs.find(function(r){return r.id===refId;}):null;
+  function pill(bg,fg,txt,oc){ return '<span '+(oc?'onclick="event.stopPropagation();'+oc+'" ':'')+'class="cl-pill" style="background:'+bg+';color:'+fg+';'+(oc?'cursor:pointer':'')+'">'+txt+'</span>'; }
+  function mk(t,b){ return '<div class="cl-row"><span class="cl-lbl">'+t+'</span><div class="cl-fx">'+b+'</div></div>'; }
+  var rows=[];
+  if(prosp) rows.push(mk('Prospect', pill('#fef3c7','#92400e',prosp.name,"closeModal('contactModal');navTo('prospects');setTimeout(function(){openProspectModal('"+prosp.id+"')},100)")+pill('#f1f5f9','#475569',prosp.status||'New')));
+  if(lcs.length){
+    var cp=lcs.map(function(cl){
+      var mr=cl.memberRoles&&cl.memberRoles[c.id]||'';
+      var lbl=cl.relationship_name+' <span style="opacity:.7;font-weight:500;">('+cl.role+(mr&&mr!=='Client'?' · '+mr:'')+')</span>';
+      var bg=cl.status==='Active'?'#dcfce7':cl.status==='On Hold'?'#fef3c7':'#f1f5f9';
+      var fg=cl.status==='Active'?'#15803d':cl.status==='On Hold'?'#92400e':'#475569';
+      return pill(bg,fg,lbl,"closeModal('contactModal');setTimeout(function(){openClientProfile('"+cl.id+"')},100)");
+    }).join(' ');
+    rows.push(mk('Linked Clients',cp));
+  }
+  if(thq){
+    var s=c.membership_start_date?' since '+c.membership_start_date:'';
+    var r=c.renewal_date?', renewal '+c.renewal_date:'';
+    var od=c.renewal_date&&new Date(c.renewal_date)<new Date();
+    rows.push('<div class="cl-row"><span class="cl-lbl">ThriveHQ Member</span><div style="font-size:12px;color:#1e3a5f;">&#127793; ThriveHQ member'+s+r+(od?' <span style="color:#dc2626;font-weight:600;">(OVERDUE)</span>':'')+'</div></div>');
+  }
+  if(refRow) rows.push(mk('Referred By', pill('#dbeafe','#1d4ed8',refRow.name,"closeModal('contactModal');navTo('referrals');setTimeout(function(){openReferralModal('"+refRow.id+"')},100)")+'<span style="font-size:10px;color:#94a3b8;">via '+refSrc+'</span>'));
+  else if(c.referrer) rows.push('<div class="cl-row"><span class="cl-lbl">Referred By (legacy)</span><div style="font-size:12px;color:#64748b;">'+c.referrer+' <span style="font-size:10px;color:#94a3b8;">— not yet linked to a referrer record</span></div></div>');
+  if(!rows.length){ el.style.display='none'; el.innerHTML=''; return; }
+  el.style.display='block';
+  el.innerHTML='<div style="font-size:11px;font-weight:700;color:#1e3a5f;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;">Links &amp; Status</div>'+rows.join('')+'<div style="font-size:10px;color:#94a3b8;margin-top:4px;">Edit links from the Prospect, Client, or Referrer record.</div>';
+};
+
 })();
