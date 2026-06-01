@@ -60,6 +60,41 @@ window.calSyncNow=async function(){
   }
 };
 
+// ── Auto-sync ───────────────────────────────────────────────────────────────
+// Silent background pull from Outlook: on opening the calendar (if the snapshot
+// is stale) and on a gentle interval while it's open. No toast / no spinner —
+// errors just log. The manual "Sync" button still gives feedback.
+let _calAutoSyncing=false, _calAutoTimer=null;
+const CAL_STALE_MS=2*60*1000;     // consider a snapshot stale after 2 min
+const CAL_AUTO_EVERY=5*60*1000;   // re-sync every 5 min while viewing
+async function calAutoSync(){
+  if(_calAutoSyncing) return;
+  _calAutoSyncing=true;
+  try{
+    const {data:{session}}=await supabase.auth.getSession();
+    if(!session) return;
+    const res=await fetch(`${SUPABASE_EDGE_URL}/ms-graph-calendar`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},body:JSON.stringify({action:'sync'})});
+    if(!res.ok) return;
+    await loadCalendarEvents();
+    // only re-render if the calendar screen is still showing
+    const scr=document.getElementById('screen-calweek');
+    if(scr && scr.classList.contains('active')) renderCalWeek();
+  }catch(e){ console.warn('calAutoSync',e); }
+  finally{ _calAutoSyncing=false; }
+}
+// Called from navTo('calweek'). Syncs now if stale, then keeps a 5-min timer
+// running while the calendar is open.
+window.calStartAutoSync=function(){
+  const stale=!calLastSynced || (Date.now()-new Date(calLastSynced).getTime())>CAL_STALE_MS;
+  if(stale) calAutoSync();
+  if(_calAutoTimer) clearInterval(_calAutoTimer);
+  _calAutoTimer=setInterval(()=>{
+    const scr=document.getElementById('screen-calweek');
+    if(scr && scr.classList.contains('active')) calAutoSync();
+    else { clearInterval(_calAutoTimer); _calAutoTimer=null; }   // left the calendar → stop
+  }, CAL_AUTO_EVERY);
+};
+
 // Booking modal — separate searchable Client and Contact pickers
 let calBookSel={type:null,id:null};
 window.openCalBook=function(presetDate){
@@ -710,7 +745,7 @@ function renderCalWeek(){
   } else if(calendarEvents.length===0){
     html+='<div class="cal-banner warn"><span>&#9888;</span><span><strong>No events synced yet.</strong> Ask your VA (in a chat session) to sync your Outlook calendars and they\'ll appear here.</span></div>';
   } else {
-    html+='<div class="cal-banner"><span>&#128257;</span><span><strong>Snapshot view.</strong> Last synced '+(calRelLastSynced()||'recently')+'. This is a saved copy — new Outlook changes appear after a sync. Live auto-sync is coming in a later phase.</span></div>';
+    html+='<div class="cal-banner"><span>&#128257;</span><span><strong>Auto-syncing.</strong> Last synced '+(calRelLastSynced()||'recently')+'. Outlook changes pull in automatically while this is open (every few minutes); use <strong>Sync</strong> for an instant refresh.</span></div>';
   }
 
   // (summary count strip removed — not needed)

@@ -429,8 +429,8 @@ NDIS-Related Services (when applicable)
 
 ### Versioning
 
-- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.65.73**, line ~256)
-- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v717**)
+- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.65.74**, line ~256)
+- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v718**)
 - **Both must be bumped on every release**
 
 ### Code patterns
@@ -551,6 +551,7 @@ print(r.status_code, r.text[:200])
 - **Structure**: outer modal uses `display:flex;flex-direction:column` so the teal header stays pinned and the white body scrolls. The `#clientProfileContent` wrapper **must** have `display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden` — without these the flex chain breaks and the body won't scroll on mobile.
 - **Content div** (injected into `#clientProfileContent`): teal header div + body div with `flex:1;overflow-y:auto;min-height:0`
 - **Sections**: Members → Reports & Documents → Pulse Check-ins (Couple/Individual only) → Couple Dynamics AI (Couple only, 2+ members with strengths) → Notes
+- **Member role label** (the coloured eyebrow on each member card, `memberCard()` ~line 5955): derived from the client role, NOT the raw `client_members.role` value (which is often inconsistent — "Client"/"Member"/blank). For a **Couple**, every member shows **Partner** (purple) unless explicitly "Carer". For **NDIS**, a blank/"Client" member shows **Participant**. Otherwise the stored role is used; a plain "Client" shows no label. This means couples display consistently without hand-editing member roles in the DB.
 - **Height**: `calc(100vh - safe-area-insets)` applied inline on `#clientProfileModal` so it respects the iPhone notch/home indicator
 
 ## Auth / Sign-in
@@ -671,6 +672,10 @@ Toolbar pills (`calSetCat(cat)`): tap a pill to show ONLY that category; tap aga
 ### All-day events shown as Free
 
 All-day events get a muted dashed-border style (`.cal-ev.allday` / `.cal-ag-ev.allday`) and a grey **Free** badge, so reminders (e.g. a birthday) read as non-blocking and don't look like booked time. They still sort to the top of the day.
+
+### Auto-sync (v3.65.74)
+
+The calendar pulls from Outlook automatically — no need to press **Sync** every time. `window.calStartAutoSync()` (called from `navTo('calweek')`): syncs immediately if the snapshot is stale (>2 min, `CAL_STALE_MS`), then re-syncs every 5 min (`CAL_AUTO_EVERY`) **while the calendar screen is open**. The silent worker `calAutoSync()` reuses the `ms-graph-calendar` `sync` action — no toast, no button spinner, errors only `console.warn`. The interval self-clears when you navigate away (checks `#screen-calweek.active`); `_calAutoSyncing` guards against overlap. The manual **Sync** button (`calSyncNow`) still shows feedback for an instant refresh. App→Outlook writes (book/edit/delete) remain immediate and don't depend on this.
 
 ### Click-to-book on a date
 
