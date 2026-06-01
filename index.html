@@ -129,7 +129,7 @@ td .actions button{padding:8px 14px;font-size:12px;}
 .cal-up-row:last-child{border-bottom:none;}
 .cal-up-row[onclick]:hover{background:#f8fafc;}
 .cal-up-dot{width:9px;height:9px;border-radius:99px;flex-shrink:0;}
-.cal-up-when{flex-shrink:0;width:74px;line-height:1.2;}
+.cal-up-when{flex-shrink:0;width:108px;line-height:1.2;}
 .cal-up-date{font-size:12px;font-weight:700;color:#334155;}
 .cal-up-time{font-size:11px;color:#94a3b8;font-weight:600;}
 .cal-up-main{min-width:0;flex:1;}
@@ -347,7 +347,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.71</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.72</span>
     </div>
   </div>
   <div class="area-tabs-wrap" id="areaTabsWrap">
@@ -1207,6 +1207,10 @@ if('serviceWorker' in navigator){
     <div class="form-group">
       <label>Title</label>
       <input id="calEditSubject" type="text" style="width:100%;padding:9px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;">
+    </div>
+    <div class="form-group" style="display:flex;align-items:center;gap:8px;">
+      <input id="calEditAllDay" type="checkbox" onchange="calEditAllDayToggle()" style="width:16px;height:16px;cursor:pointer;">
+      <label for="calEditAllDay" style="margin:0;cursor:pointer;font-weight:600;">All-day event <span style="color:#94a3b8;font-weight:400;">(no set time — shows as Free)</span></label>
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;">
       <div class="form-group">
