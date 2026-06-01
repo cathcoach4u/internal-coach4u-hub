@@ -170,6 +170,38 @@ window.openCalEdit=function(source, graphId){
   document.getElementById('calEditNotes').value=calEditOrigNotes;
   document.getElementById('calEditModal').classList.add('open');
 };
+// Duplicate an event → opens the Book modal pre-filled with everything so you
+// just change the date (and time if needed) and save as a NEW event. Re-selects
+// the client/contact so attendees + confirmation carry over.
+window.calDuplicateEvent=function(source, graphId){
+  const ev=getCalEvents().find(e=>e.source===source && e.graph_event_id===graphId);
+  if(!ev){ toast('Could not find that event','error'); return; }
+  openCalBook();                                   // resets the modal to defaults
+  document.getElementById('calBookSubject').value=ev.subject||'';
+  document.getElementById('calBookSource').value=ev.source||'bookings';
+  // duration from the original
+  let dur=90;
+  if(ev.start_ts&&ev.end_ts){ dur=Math.max(15,Math.round((new Date(ev.end_ts)-new Date(ev.start_ts))/60000)); }
+  const durSel=document.getElementById('calBookDuration');
+  if(!Array.prototype.some.call(durSel.options,o=>o.value===(''+dur))){ const o=document.createElement('option'); o.value=dur; o.textContent=dur+' min'; durSel.appendChild(o); }
+  durSel.value=''+dur;
+  // keep the SAME start time, default the date to today (clearly needs changing)
+  document.getElementById('calBookTime').value=new Intl.DateTimeFormat('en-GB',{timeZone:'Australia/Sydney',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(ev.start_ts));
+  document.getElementById('calBookDate').value=getAUDateStr();
+  document.getElementById('calBookLocation').value=ev.location||'';
+  // re-pick the matched client/contact so attendees + the recipient line populate
+  const c=calMatchContact(ev);
+  if(c){
+    const cl=getClients().find(x=>(x.members||[]).indexOf(c.id)>-1 && clientAttendees(x).length);
+    if(cl){ window.calBookPick&&window.calBookPick('client',cl.id); }
+    else { window.calBookPick&&window.calBookPick('contact',c.id); }
+  }
+  // preserve the meeting link if the original used Cath's Room / ThriveHQ
+  const loc=(ev.location||'').toLowerCase();
+  if(loc.indexOf("cath's room")>-1||loc.indexOf('cath')>-1) document.getElementById('calBookMeetingLink').value='cath';
+  else if(loc.indexOf('thrivehq')>-1||loc.indexOf('thrive')>-1) document.getElementById('calBookMeetingLink').value='thrivehq';
+  toast('Duplicated — pick the new date, then Create','info');
+};
 window.submitCalEdit=async function(){
   const source=document.getElementById('calEditSource').value;
   const origSource=document.getElementById('calEditOrigSource').value;
@@ -494,8 +526,9 @@ function calVisibleEvents(){
   const vis=calCatFilter?calendarEvents.filter(e=>calEventCategory(e)===calCatFilter):calendarEvents.slice();
   // De-duplicate the same appointment that exists in more than one calendar
   // (e.g. a Bookings session that also lands on the Work calendar) — keep one,
-  // preferring Work so client sessions read as Work rather than being doubled.
-  const rank=function(s){ return s==='work'?0:(s==='personal'?1:2); };
+  // preferring Bookings so a client appointment reads as a blue Appointment (not
+  // its green Work duplicate). Personal next, Work last.
+  const rank=function(s){ return s==='bookings'?0:(s==='personal'?1:2); };
   const byUid={}, singles=[];
   vis.forEach(e=>{
     if(!e.ical_uid){ singles.push(e); return; }
@@ -526,6 +559,7 @@ function calEventHTML_grid(ev){
   const subj=(ev.subject||'(no title)').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   let h='<div class="cal-ev'+(ev.is_all_day?' allday':'')+'" style="border-left-color:'+col+';background:'+col+'16;position:relative;">';
   if(ev.graph_event_id){
+    h+='<button onclick="calDuplicateEvent(\''+ev.source+'\',\''+ev.graph_event_id+'\')" title="Duplicate to a new date" style="position:absolute;top:2px;right:42px;background:rgba(255,255,255,.9);border:1px solid #cbd5e1;color:#475569;border-radius:4px;font-size:11px;line-height:1;padding:1px 5px;cursor:pointer;">&#10697;</button>';
     h+='<button onclick="openCalEdit(\''+ev.source+'\',\''+ev.graph_event_id+'\')" title="Edit this event" style="position:absolute;top:2px;right:22px;background:rgba(255,255,255,.9);border:1px solid #cbd5e1;color:#475569;border-radius:4px;font-size:11px;line-height:1;padding:1px 5px;cursor:pointer;">&#9998;</button>';
     h+='<button onclick="calDeleteEvent(\''+ev.source+'\',\''+ev.graph_event_id+'\')" title="Delete this event" style="position:absolute;top:2px;right:2px;background:rgba(255,255,255,.9);border:1px solid #fecaca;color:#dc2626;border-radius:4px;font-size:12px;line-height:1;padding:1px 5px;cursor:pointer;">&times;</button>';
   }
@@ -550,7 +584,8 @@ function calEventHTML_agenda(ev){
   if(ev.location){ h+='<div class="agmeta" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+calLocLabel(ev.location)+'</div>'; }
   h+='</div>';
   if(ev.graph_event_id){
-    h+='<button onclick="openCalEdit(\''+ev.source+'\',\''+ev.graph_event_id+'\')" title="Edit this event" style="margin-left:auto;align-self:center;background:#fff;border:1px solid #cbd5e1;color:#475569;border-radius:6px;padding:4px 9px;font-size:11px;font-weight:600;cursor:pointer;flex-shrink:0;">Edit</button>';
+    h+='<button onclick="calDuplicateEvent(\''+ev.source+'\',\''+ev.graph_event_id+'\')" title="Duplicate to a new date" style="margin-left:auto;align-self:center;background:#fff;border:1px solid #cbd5e1;color:#475569;border-radius:6px;padding:4px 9px;font-size:11px;font-weight:600;cursor:pointer;flex-shrink:0;">Duplicate</button>';
+    h+='<button onclick="openCalEdit(\''+ev.source+'\',\''+ev.graph_event_id+'\')" title="Edit this event" style="margin-left:6px;align-self:center;background:#fff;border:1px solid #cbd5e1;color:#475569;border-radius:6px;padding:4px 9px;font-size:11px;font-weight:600;cursor:pointer;flex-shrink:0;">Edit</button>';
     h+='<button onclick="calDeleteEvent(\''+ev.source+'\',\''+ev.graph_event_id+'\')" title="Delete this event" style="margin-left:6px;align-self:center;background:#fff;border:1px solid #fecaca;color:#dc2626;border-radius:6px;padding:4px 9px;font-size:11px;font-weight:600;cursor:pointer;flex-shrink:0;">Delete</button>';
   }
   h+='</div>';
@@ -566,8 +601,8 @@ window.calToggleUpcoming=function(){ calUpcomingOpen=!calUpcomingOpen; try{local
 window.calUpcomingSetMode=function(m){ calUpcomingMode=m; try{localStorage.setItem('cal_upcoming_mode',m);}catch(e){} renderCalWeek(); };
 function calUpcomingByClient(){
   const todayKey=getAUDateStr();
-  // future, non-all-day, matched to a contact; de-dup by ical_uid (prefer Work)
-  const rank=function(s){ return s==='work'?0:(s==='personal'?1:2); };
+  // future, non-all-day, matched to a contact; de-dup by ical_uid (prefer Bookings)
+  const rank=function(s){ return s==='bookings'?0:(s==='personal'?1:2); };
   const byUid={}, singles=[];
   calendarEvents.forEach(ev=>{
     if(ev.is_all_day) return;

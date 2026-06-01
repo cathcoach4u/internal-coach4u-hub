@@ -428,8 +428,8 @@ NDIS-Related Services (when applicable)
 
 ### Versioning
 
-- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.65.68**, line ~256)
-- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v712**)
+- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.65.69**, line ~256)
+- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v713**)
 - **Both must be bumped on every release**
 
 ### Code patterns
@@ -664,6 +664,8 @@ Every event resolves to **exactly one** of five mutually-exclusive categories, i
 
 Toolbar pills (`calSetCat(cat)`): tap a pill to show ONLY that category; tap again or the **All** pill to reset. State in `calCatFilter` (localStorage `cal_cat`). `calVisibleEvents()` applies the filter before de-duplication.
 
+**De-dup preference (important):** a client session booked on the Bookings calendar often *also* lands on the Work calendar (same `ical_uid`, two copies). De-dup keeps **Bookings over Personal over Work** (`rank` in both `calVisibleEvents` and `calUpcomingByClient`) so the surviving copy is `source==='bookings'` → categorised as a blue **Appointment**, not its green Work duplicate. (This preference was originally Work-wins, which made bookings appointments show as green Work — flipped in v3.65.69.)
+
 ### All-day events shown as Free
 
 All-day events get a muted dashed-border style (`.cal-ev.allday` / `.cal-ag-ev.allday`) and a grey **Free** badge, so reminders (e.g. a birthday) read as non-blocking and don't look like booked time. They still sort to the top of the day.
@@ -679,6 +681,10 @@ Each day is clickable to start a booking pre-filled with that date — no scroll
 - **By client** — grouped per client (alphabetical), each client's appointments listed together with a count pill, so you can see one client's upcoming sessions at a glance
 
 Collapse state in `calUpcomingOpen` (localStorage `cal_upcoming`); handler `window.calToggleUpcoming`. Helper `calUpcomingByClient()` returns the date-sorted list; `window.calUpcomingForHub(limit)` returns it as plain data for the Quick Hub feed.
+
+### Duplicate an event
+
+`calDuplicateEvent(source, graphId)` — each event has a **Duplicate** button (agenda) / ⧉ icon (grid) that opens the Book modal pre-filled from the original (title, calendar, duration, location, same start time, matched client/contact re-selected, Cath's Room / ThriveHQ link preserved) with the **date defaulted to today** so it clearly needs changing. Saving creates a brand-new event — the original is untouched. Use it to repeat a session on a new date without re-entering everything.
 
 ### Quick templates
 
