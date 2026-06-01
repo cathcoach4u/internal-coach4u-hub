@@ -107,7 +107,7 @@ CSS design system: Inter/Quicksand, navy gradient header, `.section` / `.section
 Areas and their pages (defined at line ~2039):
 
 - **Home**: Dashboard
-- **Connect**: Calendar (Week View), Comms (Text/SMS/WhatsApp/Email) — the `areaConfig` key is still `calendar`; only the label is "Connect". Comms (`sms`) moved here from CRM so all client scheduling + messaging live in one tab.
+- **Connect**: Dashboard (`connectdash`), Calendar (Week View), Comms (Text/SMS/WhatsApp/Email) — the `areaConfig` key is still `calendar`; only the label is "Connect". Comms (`sms`) moved here from CRM so all client scheduling + messaging live in one tab. The **Connect Dashboard** is the landing page: nav cards to Calendar + Comms, plus the upcoming-client-appointments list (`renderConnectDash`).
 - **Quick**: Quick Hub (mobile launchpad — Book/Message/Email + upcoming appointments & recent conversations)
 - **CRM**: Dashboard, Master List, Prospect List, Clients Dashboard, Client List, Intake Forms, Invoices
 - **Referrers**: Dashboard (Referral Hub), Payments
@@ -428,8 +428,8 @@ NDIS-Related Services (when applicable)
 
 ### Versioning
 
-- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.65.70**, line ~256)
-- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v714**)
+- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.65.71**, line ~256)
+- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v715**)
 - **Both must be bumped on every release**
 
 ### Code patterns
@@ -525,6 +525,7 @@ print(r.status_code, r.text[:200])
 
 - Use `push_files` (plain text content) — **not** `create_or_update_file` (base64, ~1.2MB, exceeds MCP server limit)
 - **Hard limit: the JSON request body must stay under 1 MiB (1,048,576 bytes).** `index.html` is ~1.0 MB and right at this ceiling — push it **alone** in its own call (bundling other files pushes the payload over and fails with `400 malformed payload: unexpected EOF`). If `index.html` itself exceeds the limit, move JS out into a separate `*.js` file loaded via `<script src>` (see `ms-graph-ui.js`) rather than trying to trim it.
+- **As of v3.65.71 the push payload headroom is ~1.3 KB — effectively full.** The next feature of any size MUST be preceded by extracting JS out of `index.html` into a `*.js` file. The prime candidate is the **comms/SMS layer** (~57 KB, threads/groups/templates/realtime) → a new `comms-ui.js` (its own file, NOT `ms-graph-ui.js`, since comms is Supabase/Twilio-backed, not MS-Graph). See the dependency map: comms needs a bridge for `toast`, `navTo`, `copyText`, `getContacts()`/`getClients()` (both are `let`, reassigned on load — must not capture), `supabase`, `SUPABASE_EDGE_URL`; and exposes back `loadSmsMessages`/`loadCommsLists`/`loadGroupTemplates`/`processStopReplies`/`startCommsRealtime`/`renderSms`/`updateCommsBadge`.
 - **Push `index.html` by itself; push smaller files (`sw.js`, `CLAUDE.md`, `*.js`, Edge Functions) in a second call.** Only `git reset --hard origin/main` AFTER confirming each push returned `HTTP 200` — resetting after a failed push silently discards your edits.
 - **Never have two Claude Code sessions open on this repo at the same time** — concurrent sessions will overwrite each other's pushes
 
@@ -674,13 +675,15 @@ All-day events get a muted dashed-border style (`.cal-ev.allday` / `.cal-ag-ev.a
 
 Each day is clickable to start a booking pre-filled with that date — no scrolling the date picker for a session months out. `openCalBook(presetDate)` accepts an optional `YYYY-MM-DD`; called with the day's Sydney date key from the **+ Add** button on each agenda date row / grid day header, and from the empty-day placeholders ("Nothing scheduled — tap to book" / "+ Add"). Called with no arg (toolbar **+ Book** / **+ Focus**) it defaults to today.
 
-### Upcoming client appointments panel
+### Upcoming client appointments (Connect Dashboard)
 
-`renderCalUpcoming()` — collapsible panel above the week grid (after the filter pills). Lists every **future** event matched to a contact (`calMatchContact`), across all weeks. Excludes all-day and past events; de-dupes by `ical_uid` (Work wins). Each row is click-to-edit. Two view modes (`calUpcomingMode`, localStorage `cal_upcoming_mode`, handler `window.calUpcomingSetMode`):
-- **By date** — flat list, soonest-first, client name on each row
-- **By client** — grouped per client (alphabetical), each client's appointments listed together with a count pill, so you can see one client's upcoming sessions at a glance
+Lives on the **Connect Dashboard** (`renderConnectDash` in index.html), NOT on the calendar page (it was too busy there). Data comes from `window.calUpcomingAppointments()` in `ms-graph-ui.js`.
 
-Collapse state in `calUpcomingOpen` (localStorage `cal_upcoming`); handler `window.calToggleUpcoming`. Helper `calUpcomingByClient()` returns the date-sorted list; `window.calUpcomingForHub(limit)` returns it as plain data for the Quick Hub feed.
+**Definition of a client appointment** = a future, non-all-day event whose category is `appointment` (i.e. on the **Bookings calendar**). This is the reliable signal — the earlier version matched by attendee email → contact lookup, which both **missed** title-only sessions (e.g. "Session with Steven Sullivan" with no matching contact email) and **wrongly included** non-client contacts (e.g. a "Coffee with Sarah" where Sarah is a contact but not a client). De-dupes by `ical_uid`.
+
+**Client name** (`calApptClientName`): a matched contact wins; otherwise parsed from the title — text after `" - "` (e.g. "… with Cath - Deb and Chris Walton" → "Deb and Chris Walton"), else text after "with " (excluding "Cath").
+
+Returns plain data `{start_ts,date,time,name,subject,color,source,graph_event_id}`. The dashboard renders it with a **By date / By client** toggle (`connectUpMode`, localStorage `connect_up_mode`); rows are click-to-edit via `openCalEdit`. `window.calUpcomingForHub(limit)` delegates to the same function for the Quick Hub feed.
 
 ### Duplicate an event
 

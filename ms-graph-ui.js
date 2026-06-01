@@ -595,77 +595,41 @@ function calEventHTML_agenda(ev){
 // Upcoming client appointments — flat list across all future weeks, sorted by
 // soonest, showing the client name prominently. Lets Cath see who's coming up
 // without paging week-by-week. Collapsible; state remembered.
-let calUpcomingOpen=localStorage.getItem('cal_upcoming')!=='0';
-let calUpcomingMode=localStorage.getItem('cal_upcoming_mode')||'date';  // 'date' | 'client'
-window.calToggleUpcoming=function(){ calUpcomingOpen=!calUpcomingOpen; try{localStorage.setItem('cal_upcoming',calUpcomingOpen?'1':'0');}catch(e){} renderCalWeek(); };
-window.calUpcomingSetMode=function(m){ calUpcomingMode=m; try{localStorage.setItem('cal_upcoming_mode',m);}catch(e){} renderCalWeek(); };
-function calUpcomingByClient(){
-  const todayKey=getAUDateStr();
-  // future, non-all-day, matched to a contact; de-dup by ical_uid (prefer Bookings)
-  const rank=function(s){ return s==='bookings'?0:(s==='personal'?1:2); };
-  const byUid={}, singles=[];
-  calendarEvents.forEach(ev=>{
-    if(ev.is_all_day) return;
-    if(!ev.start_ts) return;
-    if(calSydneyDateKey(ev.start_ts)<todayKey) return;          // today or later
-    if(!calMatchContact(ev)) return;                             // only client-linked
-    if(!ev.ical_uid){ singles.push(ev); return; }
-    const cur=byUid[ev.ical_uid];
-    if(!cur||rank(ev.source)<rank(cur.source)) byUid[ev.ical_uid]=ev;
-  });
-  return singles.concat(Object.keys(byUid).map(k=>byUid[k]))
-    .sort((a,b)=>(a.start_ts||'').localeCompare(b.start_ts||''));
-}
 function calDayLabel(iso){
   try{ return new Intl.DateTimeFormat('en-AU',{timeZone:'Australia/Sydney',weekday:'short',day:'numeric',month:'short'}).format(new Date(iso)); }
   catch(e){ return ''; }
 }
-// one appointment row (used by both views); showName=false in client view (grouped under the name)
-function calUpRow(ev,showName){
+// Best client name for an appointment: a matched contact wins; otherwise parse
+// the title ("… with Cath - Deb and Chris Walton" / "Session with Steven Sullivan").
+function calApptClientName(ev){
   const c=calMatchContact(ev);
-  const name=c?calContactName(c).replace(/</g,'&lt;'):'Client';
-  const col=calEventColor(ev);
-  const subj=(ev.subject||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  const editable=ev.graph_event_id?'onclick="openCalEdit(\''+ev.source+'\',\''+ev.graph_event_id+'\')" style="cursor:pointer;"':'';
-  return '<div class="cal-up-row" '+editable+'>'
-    +'<span class="cal-up-dot" style="background:'+col+'"></span>'
-    +'<div class="cal-up-when"><div class="cal-up-date">'+calDayLabel(ev.start_ts)+'</div><div class="cal-up-time">'+calFmtTime(ev.start_ts)+'</div></div>'
-    +'<div class="cal-up-main">'+(showName?'<div class="cal-up-name">'+name+'</div>':'')
-    +(subj?'<div class="cal-up-subj">'+subj+'</div>':(showName?'':'<div class="cal-up-subj">Session</div>'))+'</div></div>';
+  if(c) return calContactName(c);
+  let t=(ev.subject||'').trim();
+  if(t.indexOf(' - ')>-1){ const a=t.split(' - ').pop().trim(); if(a) return a; }
+  const m=t.match(/\bwith\s+(.+)$/i);
+  if(m){ let n=m[1].trim(); if(n && !/^cath\b/i.test(n)) return n; }
+  return t||'Client';
 }
-function renderCalUpcoming(){
-  const list=calUpcomingByClient();
-  let h='<div class="cal-upcoming">';
-  h+='<div class="cal-up-head">'
-    +'<span onclick="calToggleUpcoming()" style="cursor:pointer;flex:1;">&#128197; Upcoming client appointments'+(list.length?' <span class="cal-up-count">'+list.length+'</span>':'')+'</span>';
-  if(calUpcomingOpen && list.length){
-    h+='<span class="cal-up-modes">'
-      +'<button class="'+(calUpcomingMode==='date'?'on':'')+'" onclick="event.stopPropagation();calUpcomingSetMode(\'date\')">By date</button>'
-      +'<button class="'+(calUpcomingMode==='client'?'on':'')+'" onclick="event.stopPropagation();calUpcomingSetMode(\'client\')">By client</button>'
-    +'</span>';
-  }
-  h+='<span class="cal-up-chev" onclick="calToggleUpcoming()" style="cursor:pointer;">'+(calUpcomingOpen?'&#9652;':'&#9662;')+'</span></div>';
-  if(calUpcomingOpen){
-    if(!list.length){
-      h+='<div class="cal-up-empty">No upcoming client appointments. Use <strong>+ Client</strong> to book one.</div>';
-    } else if(calUpcomingMode==='client'){
-      // group by client, alphabetical; each client's appointments soonest-first (list already sorted by date)
-      const groups={};
-      list.forEach(ev=>{ const c=calMatchContact(ev); const id=c?c.id:'_'; const nm=c?calContactName(c):'Client';
-        if(!groups[id]) groups[id]={name:nm,evs:[]}; groups[id].evs.push(ev); });
-      const ordered=Object.keys(groups).map(k=>groups[k]).sort((a,b)=>a.name.localeCompare(b.name));
-      h+='<div class="cal-up-body">';
-      h+=ordered.map(g=>'<div class="cal-up-group">'
-        +'<div class="cal-up-gname">'+g.name.replace(/</g,'&lt;')+' <span class="cal-up-gn">'+g.evs.length+'</span></div>'
-        +g.evs.map(ev=>calUpRow(ev,false)).join('')+'</div>').join('');
-      h+='</div>';
-    } else {
-      h+='<div class="cal-up-body">'+list.slice(0,40).map(ev=>calUpRow(ev,true)).join('')+'</div>';
-    }
-  }
-  h+='</div>';
-  return h;
-}
+// Upcoming client appointments = future, non-all-day events on the Bookings
+// calendar (the blue "Appointment" category). This is the reliable signal —
+// not attendee-email matching, which both missed title-only sessions and let
+// non-client contacts through. De-dup by ical_uid (Bookings already preferred).
+window.calUpcomingAppointments=function(){
+  const todayKey=getAUDateStr();
+  const byUid={}, singles=[];
+  calendarEvents.forEach(ev=>{
+    if(ev.is_all_day || !ev.start_ts) return;
+    if(calSydneyDateKey(ev.start_ts)<todayKey) return;
+    if(calEventCategory(ev)!=='appointment') return;            // Bookings calendar only
+    if(!ev.ical_uid){ singles.push(ev); return; }
+    if(!byUid[ev.ical_uid]) byUid[ev.ical_uid]=ev;
+  });
+  return singles.concat(Object.keys(byUid).map(k=>byUid[k]))
+    .sort((a,b)=>(a.start_ts||'').localeCompare(b.start_ts||''))
+    .map(ev=>({start_ts:ev.start_ts,date:calDayLabel(ev.start_ts),time:calFmtTime(ev.start_ts),
+      name:calApptClientName(ev),subject:ev.subject||'',color:calEventColor(ev),
+      source:ev.source,graph_event_id:ev.graph_event_id||''}));
+};
 
 function renderCalWeek(){
   const el=document.getElementById('calWeekContent');
@@ -719,9 +683,6 @@ function renderCalWeek(){
   html+='<div class="cal-filters" style="margin-bottom:12px;">'+allPill
     +catPill('appointment')+catPill('focus')+catPill('thrive')+catPill('work')+catPill('personal')+'</div>';
 
-  // upcoming client appointments (across all future weeks)
-  html+=renderCalUpcoming();
-
   // snapshot banner
   if(calTableMissing){
     html+='<div class="cal-banner warn"><span>&#9888;</span><span><strong>Calendar sync not set up yet.</strong> The <code>calendar_events</code> table doesn\'t exist in Supabase yet.</span></div>';
@@ -772,14 +733,7 @@ function renderCalWeek(){
 // ── expose calendar entry points to the inline app (CB bridge reversed) ──
 window.loadCalendarEvents=loadCalendarEvents;
 window.renderCalWeek=renderCalWeek;
-// Quick Hub feed: upcoming client appointments as plain data {when,date,time,name,subject,source,graph_event_id}
-window.calUpcomingForHub=function(limit){
-  return calUpcomingByClient().slice(0,limit||8).map(ev=>{
-    const c=calMatchContact(ev);
-    return {start_ts:ev.start_ts,date:calDayLabel(ev.start_ts),time:calFmtTime(ev.start_ts),
-      name:c?calContactName(c):'Client',subject:ev.subject||'',color:calEventColor(ev),
-      source:ev.source,graph_event_id:ev.graph_event_id||''};
-  });
-};
+// Quick Hub feed: upcoming client appointments (delegates to calUpcomingAppointments)
+window.calUpcomingForHub=function(limit){ return window.calUpcomingAppointments().slice(0,limit||8); };
 
 })();
