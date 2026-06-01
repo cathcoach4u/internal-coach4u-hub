@@ -419,13 +419,23 @@ async function doUpdate(token: string, db: any, p: any) {
   const keepContact = (p.contact_id !== undefined ? p.contact_id : (existing ? existing.contact_id : null)) || null
   const keepClient  = (p.client_id  !== undefined ? p.client_id  : (existing ? existing.client_id  : null)) || null
 
+  const wantAllDay = p.is_all_day === true
+
   // Same calendar → edit in place
   if (newSource === oldSource) {
     const patch: any = {}
     if (p.subject !== undefined) patch.subject = p.subject
     if (p.start && p.end) {
-      patch.start = { dateTime: p.start, timeZone: p.timeZone || SYDNEY_TZ }
-      patch.end =   { dateTime: p.end,   timeZone: p.timeZone || SYDNEY_TZ }
+      if (wantAllDay) {
+        // all-day events use date-only start/end (end = next day) and isAllDay
+        patch.isAllDay = true
+        patch.start = { dateTime: p.start.slice(0,10) + 'T00:00:00', timeZone: p.timeZone || SYDNEY_TZ }
+        patch.end =   { dateTime: p.end.slice(0,10)   + 'T00:00:00', timeZone: p.timeZone || SYDNEY_TZ }
+      } else {
+        patch.isAllDay = false
+        patch.start = { dateTime: p.start, timeZone: p.timeZone || SYDNEY_TZ }
+        patch.end =   { dateTime: p.end,   timeZone: p.timeZone || SYDNEY_TZ }
+      }
     }
     if (p.location !== undefined) patch.location = { displayName: p.location || '' }
     if (p.body !== undefined) patch.body = { contentType: 'HTML', content: p.body || '' }
@@ -445,8 +455,9 @@ async function doUpdate(token: string, db: any, p: any) {
   const created = await graph(token, 'POST', `/users/${encodeURIComponent(newMailbox)}/events`, {
     subject: p.subject,
     body: { contentType: 'HTML', content: bodyContent || '' },
-    start: { dateTime: p.start, timeZone: p.timeZone || SYDNEY_TZ },
-    end:   { dateTime: p.end,   timeZone: p.timeZone || SYDNEY_TZ },
+    isAllDay: wantAllDay,
+    start: { dateTime: (wantAllDay ? p.start.slice(0,10)+'T00:00:00' : p.start), timeZone: p.timeZone || SYDNEY_TZ },
+    end:   { dateTime: (wantAllDay ? p.end.slice(0,10)+'T00:00:00'   : p.end),   timeZone: p.timeZone || SYDNEY_TZ },
     location: p.location ? { displayName: p.location } : undefined,
     allowNewTimeProposals: false,
   }, { Prefer: 'outlook.timezone="UTC"' })
@@ -462,7 +473,14 @@ async function doCancel(token: string, db: any, p: any) {
   const mailbox = SOURCE_MAILBOX[p.source]
   if (!mailbox) throw new Error(`Unknown source '${p.source}'`)
   if (!p.graph_event_id) throw new Error('cancel requires source, graph_event_id')
-  await graph(token, 'DELETE', `/users/${encodeURIComponent(mailbox)}/events/${p.graph_event_id}`)
+  try {
+    await graph(token, 'DELETE', `/users/${encodeURIComponent(mailbox)}/events/${p.graph_event_id}`)
+  } catch (e) {
+    // Already gone from Outlook (stale snapshot, or deleted directly in Outlook):
+    // treat "not found" as success and just clean up our saved copy below.
+    const msg = String((e && (e as any).message) || e)
+    if (!/not found in the store|ErrorItemNotFound|\b404\b/i.test(msg)) throw e
+  }
   await db.from('calendar_events').delete().eq('source', p.source).eq('graph_event_id', p.graph_event_id)
   return { cancelled: true }
 }

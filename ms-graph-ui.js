@@ -168,7 +168,16 @@ window.openCalEdit=function(source, graphId){
   document.getElementById('calEditLocation').value=ev.location||'';
   calEditOrigNotes=ev.body_preview||'';
   document.getElementById('calEditNotes').value=calEditOrigNotes;
+  const adEl=document.getElementById('calEditAllDay'); if(adEl){ adEl.checked=!!ev.is_all_day; }
+  calEditAllDayToggle();
   document.getElementById('calEditModal').classList.add('open');
+};
+// All-day toggle: grey out time + duration when it's an all-day event
+window.calEditAllDayToggle=function(){
+  const on=document.getElementById('calEditAllDay').checked;
+  const t=document.getElementById('calEditTime'), d=document.getElementById('calEditDuration');
+  if(t){ t.disabled=on; t.style.opacity=on?'.45':'1'; }
+  if(d){ d.disabled=on; d.style.opacity=on?'.45':'1'; }
 };
 // Duplicate an event → opens the Book modal pre-filled with everything so you
 // just change the date (and time if needed) and save as a NEW event. Re-selects
@@ -212,12 +221,22 @@ window.submitCalEdit=async function(){
   const dur=parseInt(document.getElementById('calEditDuration').value,10);
   const location=document.getElementById('calEditLocation').value.trim();
   const notes=document.getElementById('calEditNotes').value;
+  const allDay=!!document.getElementById('calEditAllDay').checked;
   if(!subject){ toast('Add a title','error'); return; }
-  if(!date||!time){ toast('Pick a date and start time','error'); return; }
-  const start=date+'T'+time+':00';
-  const endD=new Date(date+'T'+time+':00Z'); endD.setUTCMinutes(endD.getUTCMinutes()+dur);
-  const end=endD.toISOString().slice(0,19);
-  const payload={action:'update',source:source,orig_source:origSource,graph_event_id:graphId,subject:subject,start:start,end:end,timeZone:'Australia/Sydney',location:location};
+  if(!date){ toast('Pick a date','error'); return; }
+  if(!allDay && !time){ toast('Pick a start time','error'); return; }
+  let start,end;
+  if(allDay){
+    // Graph all-day: midnight-to-midnight date-only, end is the NEXT day
+    start=date;
+    const nd=new Date(date+'T00:00:00Z'); nd.setUTCDate(nd.getUTCDate()+1);
+    end=nd.toISOString().slice(0,10);
+  } else {
+    start=date+'T'+time+':00';
+    const endD=new Date(date+'T'+time+':00Z'); endD.setUTCMinutes(endD.getUTCMinutes()+dur);
+    end=endD.toISOString().slice(0,19);
+  }
+  const payload={action:'update',source:source,orig_source:origSource,graph_event_id:graphId,subject:subject,start:start,end:end,timeZone:'Australia/Sydney',location:location,is_all_day:allDay};
   // only send body if the notes actually changed — avoids clobbering the full body with the truncated preview
   if(notes!==calEditOrigNotes){ payload.body=notes?emEsc(notes).replace(/\n/g,'<br>'):''; }
   const btn=document.getElementById('calEditSubmitBtn'); btn.disabled=true; btn.textContent='Saving…';
@@ -566,7 +585,8 @@ function calEventHTML_grid(ev){
   h+='<div class="evtime">'+calFmtDuration(ev)+(ev.is_all_day?' · <span style="color:#64748b;">Free</span>':'')+'</div>';
   h+='<div class="evt">'+subj+'</div>';
   if(ev.location){ h+='<div class="evm" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+calLocLabel(ev.location)+'</div>'; }
-  if(c){ h+='<div class="evpill">'+calContactName(c).replace(/</g,'&lt;')+'</div>'; }
+  const gnm=calApptClientName(ev);
+  if(gnm && gnm!==(ev.subject||'')){ h+='<div class="evpill">'+gnm.replace(/</g,'&lt;')+'</div>'; }
   h+='</div>';
   return h;
 }
@@ -580,7 +600,7 @@ function calEventHTML_agenda(ev){
   h+='<div class="agmain"><div class="agtitle">'+subj
     +'<span class="agtag" style="background:'+meta.color+'22;color:'+meta.color+'">'+meta.label+'</span>'
     +(ev.is_all_day?'<span class="agtag" style="background:#f1f5f9;color:#64748b;">Free</span>':'')
-    +(c?'<span class="agpill">'+calContactName(c).replace(/</g,'&lt;')+'</span>':'')+'</div>';
+    +((()=>{const n=calApptClientName(ev);return (n&&n!==(ev.subject||''))?'<span class="agpill">'+n.replace(/</g,'&lt;')+'</span>':'';})())+'</div>';
   if(ev.location){ h+='<div class="agmeta" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+calLocLabel(ev.location)+'</div>'; }
   h+='</div>';
   if(ev.graph_event_id){
@@ -626,7 +646,8 @@ window.calUpcomingAppointments=function(){
   });
   return singles.concat(Object.keys(byUid).map(k=>byUid[k]))
     .sort((a,b)=>(a.start_ts||'').localeCompare(b.start_ts||''))
-    .map(ev=>({start_ts:ev.start_ts,date:calDayLabel(ev.start_ts),time:calFmtTime(ev.start_ts),
+    .map(ev=>({start_ts:ev.start_ts,date:calDayLabel(ev.start_ts),
+      time:ev.end_ts?(calFmtTime(ev.start_ts)+' – '+calFmtTime(ev.end_ts)):calFmtTime(ev.start_ts),
       name:calApptClientName(ev),subject:ev.subject||'',color:calEventColor(ev),
       source:ev.source,graph_event_id:ev.graph_event_id||''}));
 };
