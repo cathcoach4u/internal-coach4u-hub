@@ -347,7 +347,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.73</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.74</span>
     </div>
   </div>
   <div class="area-tabs-wrap" id="areaTabsWrap">
@@ -2385,7 +2385,7 @@ window.navTo = function(tab,btn){
   else document.querySelectorAll('.nav-item').forEach(n=>{if(n.dataset.page===tab) n.classList.add('active');});
   if(tab==='dashboard') renderDashboard();
   if(tab==='connectdash') renderConnectDash();
-  if(tab==='calweek'){ window.renderCalWeek&&window.renderCalWeek(); }
+  if(tab==='calweek'){ window.renderCalWeek&&window.renderCalWeek(); window.calStartAutoSync&&window.calStartAutoSync(); }
   if(tab==='quickhub') renderQuickHub();
   if(tab==='pulsesdash') renderPulsesDash();
   if(tab==='couplesdash') renderCouplesDash();
@@ -6140,13 +6140,16 @@ window._cpRefreshFn=null;
 
     // Members
     const isNdis=c.role==='NDIS Individual';
+    const isCouple=c.role==='Couple';
     const roleColorMap={Carer:'#f59e0b',Partner:'#8b5cf6',Client:'#0891b2',Participant:'#2563eb'};
     if(memberContacts.length){
       html+=sectionHead(isNdis?'Participant &amp; Carer':'Members');
       html+=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;">`;
       memberContacts.forEach(mc=>{
         const role=(c.memberRoles||{})[mc.id];
-        const displayRole=isNdis&&(!role||role==='Client')?'Participant':role;
+        // Couples: every member is a Partner (consistent label regardless of stored role).
+        // NDIS: a Client/blank member is the Participant. Otherwise use the stored role.
+        const displayRole=isCouple?(role==='Carer'?'Carer':'Partner'):(isNdis&&(!role||role==='Client')?'Participant':role);
         const roleColor=roleColorMap[displayRole]||'';
         const showLabel=displayRole&&displayRole!=='Client';
         html+=memberCard(mc,showLabel?displayRole:'',showLabel?roleColor:'');
