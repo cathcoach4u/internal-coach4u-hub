@@ -107,6 +107,8 @@ CSS design system: Inter/Quicksand, navy gradient header, `.section` / `.section
 Areas and their pages (defined at line ~2039):
 
 - **Home**: Dashboard
+- **Calendar**: Week View
+- **Quick**: Quick Hub (mobile launchpad — Book/Message/Email + upcoming appointments & recent conversations)
 - **CRM**: Dashboard, Master List, Prospect List, Clients Dashboard, Client List, Intake Forms, Invoices
 - **Referrers**: Dashboard (Referral Hub), Payments
 - **Pulses**: Dashboard, SAFE Pulse, Brain Pulse (client selector for per-client mini-portal view)
@@ -426,8 +428,8 @@ NDIS-Related Services (when applicable)
 
 ### Versioning
 
-- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.65.67**, line ~256)
-- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v711**)
+- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.65.68**, line ~256)
+- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v712**)
 - **Both must be bumped on every release**
 
 ### Code patterns
@@ -672,13 +674,28 @@ Each day is clickable to start a booking pre-filled with that date — no scroll
 
 ### Upcoming client appointments panel
 
-`renderCalUpcoming()` — collapsible panel above the week grid (after the filter pills). Lists every **future** event matched to a contact (`calMatchContact`), across all weeks, sorted soonest-first, showing the **client name** prominently. Excludes all-day and past events; de-dupes by `ical_uid` (Work wins). Each row is click-to-edit. Toggle state in `calUpcomingOpen` (localStorage `cal_upcoming`); handler `window.calToggleUpcoming`. Helper `calUpcomingByClient()` returns the sorted list.
+`renderCalUpcoming()` — collapsible panel above the week grid (after the filter pills). Lists every **future** event matched to a contact (`calMatchContact`), across all weeks. Excludes all-day and past events; de-dupes by `ical_uid` (Work wins). Each row is click-to-edit. Two view modes (`calUpcomingMode`, localStorage `cal_upcoming_mode`, handler `window.calUpcomingSetMode`):
+- **By date** — flat list, soonest-first, client name on each row
+- **By client** — grouped per client (alphabetical), each client's appointments listed together with a count pill, so you can see one client's upcoming sessions at a glance
+
+Collapse state in `calUpcomingOpen` (localStorage `cal_upcoming`); handler `window.calToggleUpcoming`. Helper `calUpcomingByClient()` returns the date-sorted list; `window.calUpcomingForHub(limit)` returns it as plain data for the Quick Hub feed.
 
 ### Quick templates
 
 - **+ Book** (`openCalBook`) — full booking modal (neutral outline)
-- **+ Client** (`calBookClient`) — one-tap 1:1 client session: client-facing (bookings) calendar, 60 min, Cath's Room (`cath`) meeting link, confirmation on — just set date/time and pick the client (title auto-fills "Session with …" on selection)
+- **+ Client** (`calBookClient`) — one-tap 1:1 client session: client-facing (bookings) calendar, 90 min, Cath's Room (`cath`) meeting link (also pre-fills the visible Location as "Microsoft Teams (Cath's Room)" so the link reads as attached), confirmation on — just set date/time and pick the client (title auto-fills "Session with …" on selection)
 - **+ Focus** (`calBookFocus`) — one-tap: opens the modal pre-filled as a 60 min Focus Session on the Work calendar, no meeting link, confirmation off (internal block, no client attendee)
+
+## Quick Hub (top-level **Quick** tab — screen `quickhub`)
+
+Mobile-first launchpad so booking/messaging/email are one tap away instead of several screens deep. Its own top-level area (`areaConfig.quick`, second after Calendar; the `#areaTabs` button order must keep `quick` second to stay aligned with `switchArea`'s index lookup). Render fn `renderQuickHub()` → `#quickHubContent`, dispatched from `navTo('quickhub')`. Also surfaced as an amber gradient card on the Home dashboard (above Comms).
+
+Layout (max-width 760, gradient-card convention):
+1. **Three action cards** — 📅 Book (`navTo('calweek')`), 💬 Message (`navTo('sms')`), 📧 Client emails (switches Comms to contacts view then `navTo('sms')`)
+2. **Upcoming appointments** — reads `window.calUpcomingForHub(6)` (plain data from the calendar layer in `ms-graph-ui.js`); each row click-to-edit via `openCalEdit`
+3. **Recent conversations** — most-recent message per contact from `smsMessages` (inline state), newest first, channel badge (SMS/WA/Email); row opens the thread via `openCommsForContact(id, channel)`
+
+No new backend — it's a read-only aggregator over existing calendar + comms state. Comms JS stays inline (not extracted); the Hub just calls existing handlers.
 
 ## Stripe Payments (Finance > Stripe Payments)
 
