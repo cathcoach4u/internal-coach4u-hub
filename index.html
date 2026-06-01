@@ -347,7 +347,7 @@ if('serviceWorker' in navigator){
     <div class="header-right">
       <span id="headerDate" style="font-size:13px;font-weight:700;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;"></span>
       <button onclick="hardRefresh()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;margin-left:8px;" onmouseover="this.style.background='rgba(255,255,255,.15)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.7)'" title="Hard refresh (bypass cache)">&#128260;</button>
-      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.75</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);margin-left:8px;">v3.65.76</span>
     </div>
   </div>
   <div class="area-tabs-wrap" id="areaTabsWrap">
@@ -2363,10 +2363,13 @@ document.getElementById('headerDate').textContent = new Date().toLocaleDateStrin
 
 // ── NAVIGATION ──
 window.navTo = function(tab,btn){
+  _currentPageId=tab;
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.getElementById('screen-'+tab).classList.add('active');
+  // SMS / WhatsApp / Email are three pages that share the one comms screen (#screen-sms)
+  const screenId=(tab==='whatsapp'||tab==='email')?'sms':tab;
+  document.getElementById('screen-'+screenId).classList.add('active');
   window.scrollTo(0,0);
-  const titles={dashboard:'Dashboard',connectdash:'Connect',calweek:'Calendar',quickhub:'Quick Hub',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ Hub',thqintake:'Intake Forms',strdash:'Strengths Hub',opsdash:'Ops',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',sms:'Comms',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Profiles',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Active Tasks',playbook:'Work Log',procedures:'Daily Procedures',quicklinks:'Quick Links',itprojects:'IT Projects',agents:'Agents',writingpartner:'Writing Partner',findash:'Finance',finpayments:'Payment Platforms',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fininsurance:'Insurance',fintxns:'Transactions',finstripe:'Stripe Payments',findev:'Development Business',thqbrainpulse:'Brain Pulse',thqactivities:'Activities',clibrainpulse:'Brain Pulse',cliconnection:'Connection Pulse',thqpulse:'SAFE Pulse',clipulse:'SAFE Pulse',pulsesdash:'Pulses',couplesintake:'Couples Intake',couplesdash:'Couples Hub',couplesclientlinks:'Client Links',ndisdash:'NDIS Hub',ndisclients:'NDIS Clients',couplesforms:'Intake Forms',thqforms:'Intake Forms',ndisforms:'Intake Forms',couplestimelines:'Therapy Timelines',couplesbetrayal:'Betrayal First Aid',itdash:'IT',resourcesdash:'Resources',agentsai:'AI Strategy',prompts:'Prompts',strreports:'Strengths Reports',strdomains:'Domain Balance',strupload:'Upload Report',strcodes:'Gallup Code Tracker',strsop:'Gallup Workflow SOP',strclientlinks:'Client Links'};
+  const titles={dashboard:'Dashboard',connectdash:'Connect',calweek:'Calendar',quickhub:'Quick Hub',crmdash:'CRM',prospdash:'Prospects',clidash:'Clients',thqdash:'ThriveHQ Hub',thqintake:'Intake Forms',strdash:'Strengths Hub',opsdash:'Ops',masterlist:'Master List',clients:'Client List',clinvoices:'Invoices',sms:'SMS',whatsapp:'WhatsApp',email:'Email',referrals:'Referral Hub',refpayments:'Referrer Payments',prospects:'Prospect List',thrivehq:'Members',strengths:'Profiles',thqrenewals:'Renewals',thqcalls:'Coaching Calls',thqtrials:'Trials',tasks:'Active Tasks',playbook:'Work Log',procedures:'Daily Procedures',quicklinks:'Quick Links',itprojects:'IT Projects',agents:'Agents',writingpartner:'Writing Partner',findash:'Finance',finpayments:'Payment Platforms',finincome:'Income',finspend:'Where Money Goes',finbills:'Bills',fininsurance:'Insurance',fintxns:'Transactions',finstripe:'Stripe Payments',findev:'Development Business',thqbrainpulse:'Brain Pulse',thqactivities:'Activities',clibrainpulse:'Brain Pulse',cliconnection:'Connection Pulse',thqpulse:'SAFE Pulse',clipulse:'SAFE Pulse',pulsesdash:'Pulses',couplesintake:'Couples Intake',couplesdash:'Couples Hub',couplesclientlinks:'Client Links',ndisdash:'NDIS Hub',ndisclients:'NDIS Clients',couplesforms:'Intake Forms',thqforms:'Intake Forms',ndisforms:'Intake Forms',couplestimelines:'Therapy Timelines',couplesbetrayal:'Betrayal First Aid',itdash:'IT',resourcesdash:'Resources',agentsai:'AI Strategy',prompts:'Prompts',strreports:'Strengths Reports',strdomains:'Domain Balance',strupload:'Upload Report',strcodes:'Gallup Code Tracker',strsop:'Gallup Workflow SOP',strclientlinks:'Client Links'};
   document.getElementById('pageTitle').textContent=titles[tab]||'Coach4U';
   // Sync area tab
   const area=pageToArea[tab]||'home';
@@ -2415,10 +2418,11 @@ window.navTo = function(tab,btn){
   if(tab==='masterlist') renderMasterList();
   if(tab==='clients') renderClients();
   if(tab==='clinvoices') renderInvoices();
-  if(tab==='sms'){ if(window.renderSms)window.renderSms(); if(window.resetCommsUnread)window.resetCommsUnread(); }
-  // Hide bot FAB on Comms page (it overlaps the Send button on mobile)
+  if(tab==='sms'||tab==='whatsapp'||tab==='email'){ if(window.openCommsChannel)window.openCommsChannel(tab); if(window.resetCommsUnread)window.resetCommsUnread(); }
+  // Hide bot FAB on the comms pages (it overlaps the Send button on mobile)
   const _fab=document.getElementById('aiChatBtn');
-  if(_fab) _fab.style.display=tab==='sms'?'none':'flex';
+  const _isComms=(tab==='sms'||tab==='whatsapp'||tab==='email');
+  if(_fab) _fab.style.display=_isComms?'none':'flex';
   if(tab==='prospects') renderProspects();
   if(tab==='referrals') renderReferrals();
   if(tab==='thqtrials') renderThqTrials();
@@ -2479,7 +2483,7 @@ window.goToClient=function(clientId){
 // ── AREA TABS & SIDEBAR ──
 const areaConfig={
   home:{label:'Home',pages:[{id:'dashboard',icon:'&#9776;',label:'Dashboard'}]},
-  calendar:{label:'Connect',pages:[{id:'connectdash',icon:'&#128200;',label:'Dashboard'},{id:'calweek',icon:'&#128197;',label:'Calendar'},{id:'sms',icon:'&#128172;',label:'Comms'}]},
+  calendar:{label:'Connect',pages:[{id:'connectdash',icon:'&#128200;',label:'Dashboard'},{id:'calweek',icon:'&#128197;',label:'Calendar'},{id:'sms',icon:'&#128241;',label:'SMS'},{id:'whatsapp',icon:'&#128172;',label:'WhatsApp'},{id:'email',icon:'&#9993;',label:'Email'}]},
   quick:{label:'Quick',pages:[{id:'quickhub',icon:'&#9889;',label:'Quick Hub'}]},
   crm:{label:'CRM',pages:[{id:'crmdash',icon:'&#128200;',label:'Dashboard'},{id:'masterlist',icon:'&#128209;',label:'Master List'},{id:'prospects',icon:'&#128203;',label:'Prospect List'},{id:'clidash',icon:'&#129309;',label:'Clients Dashboard'},{id:'clients',icon:'&#128101;',label:'Client List'},{id:'clinvoices',icon:'&#128206;',label:'Invoices'}]},
   referrers:{label:'Referrers',pages:[{id:'referrals',icon:'&#128200;',label:'Dashboard'},{id:'refpayments',icon:'&#128176;',label:'Payments'}]},
@@ -2532,7 +2536,11 @@ window.mobileAreaSwitch=function(area){
   renderSidebarNav(area);
 };
 
+let _currentPageId=null;
 function getCurrentPage(){
+  // _currentPageId distinguishes pages that share a screen (sms/whatsapp/email all
+  // use #screen-sms); fall back to the active screen id.
+  if(_currentPageId) return _currentPageId;
   const active=document.querySelector('.screen.active');
   return active?active.id.replace('screen-',''):'dashboard';
 }
@@ -2766,7 +2774,9 @@ function renderConnectDash(){
   let h='<div style="max-width:820px;margin:0 auto;">';
   h+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:18px;">';
   h+=navCard('#2563eb','&#128197;','Calendar','Week view — book &amp; manage sessions',"navTo('calweek')");
-  h+=navCard('#0f766e','&#128172;','Comms','Text, WhatsApp &amp; email threads',"navTo('sms')");
+  h+=navCard('#1d4ed8','&#128241;','SMS','Text message threads',"navTo('sms')");
+  h+=navCard('#15803d','&#128172;','WhatsApp','WhatsApp threads',"navTo('whatsapp')");
+  h+=navCard('#c2410c','&#9993;','Email','Email threads &amp; AI replies',"navTo('email')");
   h+='</div>';
 
   // upcoming client appointments
@@ -2819,7 +2829,7 @@ function renderQuickHub(){
   let h='<div style="max-width:760px;margin:0 auto;">';
   h+=card('#2563eb,#1e40af','rgba(37,99,235,.25)','&#128197;','Book an appointment','Open the calendar — tap a day or use + Client',"navTo('calweek')");
   h+=card('#0f766e,#0891b2','rgba(15,118,110,.25)','&#128172;','Message a client','SMS, WhatsApp or email — Comms',"navTo('sms')");
-  h+=card('#7c3aed,#6d28d9','rgba(124,58,237,.25)','&#128231;','Client emails','Read &amp; AI-draft replies in Comms',"window._switchCommsView&&window._switchCommsView('contacts');navTo('sms')");
+  h+=card('#7c3aed,#6d28d9','rgba(124,58,237,.25)','&#128231;','Client emails','Read &amp; AI-draft replies',"navTo('email')");
 
   // --- upcoming client appointments (from the calendar layer) ---
   const appts=(window.calUpcomingForHub?window.calUpcomingForHub(6):[]);
