@@ -429,8 +429,8 @@ NDIS-Related Services (when applicable)
 
 ### Versioning
 
-- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.65.74**, line ~256)
-- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v718**)
+- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.65.75**, line ~256)
+- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v719**)
 - **Both must be bumped on every release**
 
 ### Code patterns
@@ -527,6 +527,7 @@ print(r.status_code, r.text[:200])
 - Use `push_files` (plain text content) — **not** `create_or_update_file` (base64, ~1.2MB, exceeds MCP server limit)
 - **Hard limit: the JSON request body must stay under 1 MiB (1,048,576 bytes).** `index.html` is ~1.0 MB and right at this ceiling — push it **alone** in its own call (bundling other files pushes the payload over and fails with `400 malformed payload: unexpected EOF`). If `index.html` itself exceeds the limit, move JS out into a separate `*.js` file loaded via `<script src>` (see `ms-graph-ui.js`) rather than trying to trim it.
 - **As of v3.65.73 the comms/SMS layer was extracted to `comms-ui.js` (~57 KB), restoring ~58 KB of headroom in `index.html`.** Both `ms-graph-ui.js` and `comms-ui.js` are now external. If headroom runs low again, the next extraction candidates are large self-contained screens (e.g. the Agents UI, or the Strengths Reports AI layer) — same pattern: IIFE + `window.CB` bridge + reverse-bridge for boot wiring.
+- **Extraction gotcha (cost a bug in v3.65.74):** when rewriting `contacts`/`clients` references to the `getContacts()`/`getClients()` getters, a regex for `contacts.method` will MISS the **spread form `[...contacts]`** and bare uses. After any extraction, grep the new file for every bare `contacts`/`clients` (excluding strings, `.from('contacts')`, and `getContacts()`), and run a Node smoke-test that `eval`s the IIFE with mock globals and calls the key render fns — a missed `[...contacts]` throws `undefined is not iterable` and silently kills that render (symptom: "no messages/contacts show").
 - **Push `index.html` by itself; push smaller files (`sw.js`, `CLAUDE.md`, `*.js`, Edge Functions) in a second call.** Only `git reset --hard origin/main` AFTER confirming each push returned `HTTP 200` — resetting after a failed push silently discards your edits.
 - **Never have two Claude Code sessions open on this repo at the same time** — concurrent sessions will overwrite each other's pushes
 

@@ -265,7 +265,7 @@ window.renderSmsContactList=function(){
   const search=(document.getElementById('smsContactSearch')?.value||'').toLowerCase();
   const listEl=document.getElementById('smsContactList');
   if(!listEl) return;
-  const allC=[...contacts].filter(c=>c.first_name||c.last_name).sort((a,b)=>(a.first_name+' '+a.last_name).localeCompare(b.first_name+' '+b.last_name));
+  const allC=[...getContacts()].filter(c=>c.first_name||c.last_name).sort((a,b)=>(a.first_name+' '+a.last_name).localeCompare(b.first_name+' '+b.last_name));
   const commsIds=[...new Set(smsMessages.map(m=>m.contact_id).filter(Boolean))];
   const withHist=allC.filter(c=>commsIds.includes(c.id)&&(!search||(c.first_name+' '+c.last_name).toLowerCase().includes(search)));
   const withoutHist=allC.filter(c=>!commsIds.includes(c.id)&&search&&(c.first_name+' '+c.last_name).toLowerCase().includes(search));
@@ -479,7 +479,7 @@ function renderGroupDetailPanel(isMob){
   const backBtn=isMob?`<button type="button" ontouchend="event.preventDefault();window._commsBackToList();" onclick="window._commsBackToList();" style="background:none;border:none;font-size:24px;cursor:pointer;padding:8px 12px 8px 4px;color:#1e3a5f;-webkit-tap-highlight-color:rgba(0,0,0,.1);min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;">&#8592;</button>`:'';
 
   if(commsActiveListId==='new'){
-    const allC=[...contacts].filter(c=>c.first_name||c.last_name).sort((a,b)=>(a.first_name||'').localeCompare(b.first_name||''));
+    const allC=[...getContacts()].filter(c=>c.first_name||c.last_name).sort((a,b)=>(a.first_name||'').localeCompare(b.first_name||''));
     const rows=allC.map(c=>{
       const name=`${c.first_name||''} ${c.last_name||''}`.trim();
       const dis=c.sms_opted_out||!c.phone;
