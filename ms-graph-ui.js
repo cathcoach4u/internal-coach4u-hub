@@ -79,6 +79,15 @@ window.openCalBook=function(){
   const rb=document.getElementById('calBookRecipients'); if(rb) rb.innerHTML='';
   document.getElementById('calBookModal').classList.add('open');
 };
+// One-tap Focus Session: 60 min on the Work calendar, no link, no attendee.
+window.calBookFocus=function(){
+  openCalBook();
+  document.getElementById('calBookSubject').value='Focus Session';
+  document.getElementById('calBookSource').value='work';
+  document.getElementById('calBookDuration').value='60';
+  document.getElementById('calBookMeetingLink').value='';
+  const sc=document.getElementById('calBookSendConfirm'); if(sc) sc.checked=false;
+};
 function clientSearchList(){
   return getClients().filter(cl=>clientAttendees(cl).length)
     .map(cl=>({id:cl.id,name:clientDisplayName(cl),n:clientAttendees(cl).length}))
@@ -394,22 +403,28 @@ let calTableMissing=false;
 let calWeekOffset=0;
 let calView=(localStorage.getItem('cal_view')||'agenda');           // 'agenda' | 'grid'
 let calLastSynced=null;
-let calSourceOn={work:true,bookings:true,personal:true};
-try{ const s=JSON.parse(localStorage.getItem('cal_sources')||'null'); if(s) calSourceOn=Object.assign(calSourceOn,s); }catch(e){}
+let calCatFilter=localStorage.getItem('cal_cat')||'';   // '' = show all; else isolate one category
 const CAL_SELF_EMAILS=['cath@coach4u.com.au','cath@coachingwithcath.com.au','coach4u@netorgft4053847.onmicrosoft.com'];
-const CAL_SOURCE_META={
-  work:{color:'#0d9488',label:'Work'},
-  bookings:{color:'#2563eb',label:'Bookings'},
-  personal:{color:'#7c3aed',label:'Personal'}
+// Five mutually-exclusive categories — every event resolves to exactly one.
+// Focus & ThriveHQ are detected by title (both are Work-calendar functions);
+// Appointments = booked via the client link; Personal = personal calendar; Work = the rest.
+const CAL_CATS={
+  appointment:{color:'#2563eb',label:'Appointments'},
+  focus:{color:'#ea580c',label:'Focus Sessions'},
+  thrive:{color:'#ea580c',label:'ThriveHQ'},
+  personal:{color:'#7c3aed',label:'Personal'},
+  work:{color:'#0d9488',label:'Work'}
 };
-// Special session types get their own colour (by title) so they stand out.
-const CAL_TYPE_COLORS={focus:'#ea580c',thrive:'#ea580c'};
-function calEventColor(ev){
+function calEventCategory(ev){
   const s=(ev.subject||'').toLowerCase();
-  if(s.indexOf('focushq')>-1||s.indexOf('focus hq')>-1||s.indexOf('focus session')>-1) return CAL_TYPE_COLORS.focus;
-  if(s.indexOf('thrivehq')>-1||s.indexOf('thrive hq')>-1) return CAL_TYPE_COLORS.thrive;
-  return (CAL_SOURCE_META[ev.source]||CAL_SOURCE_META.work).color;
+  if(s.indexOf('focushq')>-1||s.indexOf('focus hq')>-1||s.indexOf('focus session')>-1) return 'focus';
+  if(s.indexOf('thrivehq')>-1||s.indexOf('thrive hq')>-1) return 'thrive';
+  if(ev.source==='bookings') return 'appointment';
+  if(ev.source==='personal') return 'personal';
+  return 'work';
 }
+function calCatMeta(ev){ return CAL_CATS[calEventCategory(ev)]||CAL_CATS.work; }
+function calEventColor(ev){ return calCatMeta(ev).color; }
 function calLocLabel(loc){ if(!loc) return ''; return /teams\.microsoft\.com/i.test(loc)?'Microsoft Teams':(''+loc).replace(/</g,'&lt;').slice(0,60); }
 async function loadCalendarEvents(){
   calTableMissing=false;
@@ -465,7 +480,7 @@ function calMonday(offsetWeeks){
   return d;
 }
 function calVisibleEvents(){
-  const vis=calendarEvents.filter(e=>calSourceOn[e.source]!==false);
+  const vis=calCatFilter?calendarEvents.filter(e=>calEventCategory(e)===calCatFilter):calendarEvents.slice();
   // De-duplicate the same appointment that exists in more than one calendar
   // (e.g. a Bookings session that also lands on the Work calendar) — keep one,
   // preferring Work so client sessions read as Work rather than being doubled.
@@ -481,7 +496,7 @@ function calVisibleEvents(){
 window.calNav=function(delta){ calWeekOffset+=delta; renderCalWeek(); };
 window.calToday=function(){ calWeekOffset=0; renderCalWeek(); };
 window.calSetView=function(v){ calView=v; try{localStorage.setItem('cal_view',v);}catch(e){} renderCalWeek(); };
-window.calToggleSource=function(s){ calSourceOn[s]=!calSourceOn[s]; try{localStorage.setItem('cal_sources',JSON.stringify(calSourceOn));}catch(e){} renderCalWeek(); };
+window.calSetCat=function(cat){ calCatFilter=(calCatFilter===cat)?'':cat; try{localStorage.setItem('cal_cat',calCatFilter);}catch(e){} renderCalWeek(); };
 window.calRefresh=async function(){ toast('Refreshing calendar…','info'); await loadCalendarEvents(); renderCalWeek(); toast('Calendar refreshed','success'); };
 // Calendar + client-email MS-Graph UI moved to ms-graph-ui.js (file-size limit)
 
@@ -498,12 +513,12 @@ function calEventHTML_grid(ev){
   const col=calEventColor(ev);
   const c=calMatchContact(ev);
   const subj=(ev.subject||'(no title)').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  let h='<div class="cal-ev" style="border-left-color:'+col+';background:'+col+'16;position:relative;">';
+  let h='<div class="cal-ev'+(ev.is_all_day?' allday':'')+'" style="border-left-color:'+col+';background:'+col+'16;position:relative;">';
   if(ev.graph_event_id){
     h+='<button onclick="openCalEdit(\''+ev.source+'\',\''+ev.graph_event_id+'\')" title="Edit this event" style="position:absolute;top:2px;right:22px;background:rgba(255,255,255,.9);border:1px solid #cbd5e1;color:#475569;border-radius:4px;font-size:11px;line-height:1;padding:1px 5px;cursor:pointer;">&#9998;</button>';
     h+='<button onclick="calDeleteEvent(\''+ev.source+'\',\''+ev.graph_event_id+'\')" title="Delete this event" style="position:absolute;top:2px;right:2px;background:rgba(255,255,255,.9);border:1px solid #fecaca;color:#dc2626;border-radius:4px;font-size:12px;line-height:1;padding:1px 5px;cursor:pointer;">&times;</button>';
   }
-  h+='<div class="evtime">'+calFmtDuration(ev)+'</div>';
+  h+='<div class="evtime">'+calFmtDuration(ev)+(ev.is_all_day?' · <span style="color:#64748b;">Free</span>':'')+'</div>';
   h+='<div class="evt">'+subj+'</div>';
   if(ev.location){ h+='<div class="evm" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+calLocLabel(ev.location)+'</div>'; }
   if(c){ h+='<div class="evpill">'+calContactName(c).replace(/</g,'&lt;')+'</div>'; }
@@ -512,13 +527,14 @@ function calEventHTML_grid(ev){
 }
 function calEventHTML_agenda(ev){
   const col=calEventColor(ev);
-  const meta=CAL_SOURCE_META[ev.source]||CAL_SOURCE_META.work;
+  const meta=calCatMeta(ev);
   const c=calMatchContact(ev);
   const subj=(ev.subject||'(no title)').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  let h='<div class="cal-ag-ev" style="border-left-color:'+col+';background:'+col+'12">';
+  let h='<div class="cal-ag-ev'+(ev.is_all_day?' allday':'')+'" style="border-left-color:'+col+';background:'+col+'12">';
   h+='<div class="agtime">'+calFmtDuration(ev)+'</div>';
   h+='<div class="agmain"><div class="agtitle">'+subj
     +'<span class="agtag" style="background:'+meta.color+'22;color:'+meta.color+'">'+meta.label+'</span>'
+    +(ev.is_all_day?'<span class="agtag" style="background:#f1f5f9;color:#64748b;">Free</span>':'')
     +(c?'<span class="agpill">'+calContactName(c).replace(/</g,'&lt;')+'</span>':'')+'</div>';
   if(ev.location){ h+='<div class="agmeta" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+calLocLabel(ev.location)+'</div>'; }
   h+='</div>';
@@ -553,40 +569,33 @@ function renderCalWeek(){
     });
   });
 
-  // counts for summary (within this week, respecting filters)
-  let cBook=0,cWork=0,cPers=0;
-  days.forEach(d=>{ (byDay[calSydneyDateKey(d.toISOString())]||[]).forEach(ev=>{
-    if(ev.source==='bookings')cBook++; else if(ev.source==='personal')cPers++; else cWork++;
-  });});
-  const total=cBook+cWork+cPers;
-
   const dayNames=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-  const dayFull=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
   let html='';
 
-  // toolbar
-  const calChip=function(s,primary){
-    const off=calSourceOn[s]===false?' off':'';
-    const dot=primary?'width:11px;height:11px;':'';
-    const txt=primary?'font-weight:700;font-size:12px;':'font-size:10px;opacity:.55;';
-    return '<span class="cal-chip'+off+'" onclick="calToggleSource(\''+s+'\')" style="'+txt+'"><span class="cal-dot" style="background:'+CAL_SOURCE_META[s].color+';'+dot+'"></span>'+CAL_SOURCE_META[s].label+'</span>';
+  // toolbar — tap a category pill to isolate it; tap again or "All" to reset
+  const catPill=function(cat){
+    const m=CAL_CATS[cat];
+    const active=calCatFilter===cat;
+    const dim=calCatFilter&&!active?'opacity:.4;':'';
+    const sty=active?'background:'+m.color+';color:#fff;border-color:'+m.color+';font-weight:700;':'border-color:'+m.color+'55;'+dim;
+    return '<span class="cal-chip" onclick="calSetCat(\''+cat+'\')" style="font-size:11px;'+sty+'"><span class="cal-dot" style="background:'+(active?'#fff':m.color)+'"></span>'+m.label+'</span>';
   };
+  const allPill='<span class="cal-chip" onclick="calSetCat(\'\')" style="font-size:11px;'+(calCatFilter?'':'background:#1e3a5f;color:#fff;border-color:#1e3a5f;font-weight:700;')+'">All</span>';
   html+='<div class="cal-toolbar">'
     +'<button class="cal-nav-btn" onclick="calNav(-1)">&#8249;</button>'
     +'<button class="cal-nav-btn cal-today-btn" onclick="calToday()">Today</button>'
     +'<button class="cal-nav-btn" onclick="calNav(1)">&#8250;</button>'
     +'<button class="cal-nav-btn" onclick="openCalBook()" style="background:#2563eb;color:#fff;border-color:#2563eb;">+ Book</button>'
+    +'<button class="cal-nav-btn" onclick="calBookFocus()" style="background:#ea580c;color:#fff;border-color:#ea580c;" title="Quick-book a 60 min Focus Session">+ Focus</button>'
     +'<span class="cal-week-range">'+rangeLabel+(calWeekOffset===0?' · This week':'')+'</span>'
     +'<span class="cal-viewtoggle" style="margin-left:auto;">'
       +'<button class="'+(calView==='agenda'?'active':'')+'" onclick="calSetView(\'agenda\')">Agenda</button>'
       +'<button class="'+(calView==='grid'?'active':'')+'" onclick="calSetView(\'grid\')">Grid</button>'
     +'</span>'
-    +'<span class="cal-filters">'+calChip('work',true)+calChip('personal',true)
-      +'<span class="cal-chip" style="cursor:default;font-size:10px;"><span class="cal-dot" style="background:'+CAL_TYPE_COLORS.focus+'"></span>Focus Sessions</span>'
-      +'<span class="cal-chip" style="cursor:default;font-size:10px;"><span class="cal-dot" style="background:'+CAL_TYPE_COLORS.thrive+'"></span>ThriveHQ</span>'
-    +'</span>'
     +'<button class="cal-nav-btn" id="calSyncBtn" onclick="calSyncNow()" title="Pull the latest from Outlook" style="font-size:11px;padding:4px 9px;color:#64748b;">&#8635; Sync</button>'
   +'</div>';
+  html+='<div class="cal-filters" style="margin-bottom:12px;">'+allPill
+    +catPill('appointment')+catPill('focus')+catPill('thrive')+catPill('work')+catPill('personal')+'</div>';
 
   // snapshot banner
   if(calTableMissing){

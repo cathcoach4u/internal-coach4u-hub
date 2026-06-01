@@ -9,7 +9,7 @@ Single-page CRM app hosted on GitHub Pages with a Supabase backend. All CRM func
 | File | Purpose |
 |------|---------|
 | `index.html` | Main CRM app (all screens, most JS) |
-| `ms-graph-ui.js` | Calendar (full render layer + Sync/Book/Edit) + client-email UI handlers (client emails, AI draft reply). Split out of `index.html` to keep it under the 1 MiB push ceiling. Loaded as a classic script AFTER the inline IIFE. **Owns the entire calendar render layer** — `calendarEvents` state, `CAL_*` consts, `calEventColor`/`calMatchContact`/`calVisibleEvents`/`calEventHTML_*`/`renderCalWeek` and the `window.calNav/calToday/calSetView/calToggleSource/calRefresh` handlers all live here. The inline app is IIFE-wrapped so its internals aren't global — `index.html` exposes what this file needs on **`window.CB`** (the bridge: `sb`, `EDGE`, `toast`, `getAUDateStr`, `closeModal`, `getAnthropicKey`, `voice`, `getContacts()`, `getClients()`, `getProspects()`, `getReferrals()`), set just before `})();`. **The bridge is two-way**: this file exposes `window.loadCalendarEvents` / `window.renderCalWeek` back to the inline app (called from `loadAll()` and `navTo('calweek')`). A syntax error here can't break the main app. |
+| `ms-graph-ui.js` | Calendar (full render layer + Sync/Book/Edit) + client-email UI handlers (client emails, AI draft reply). Split out of `index.html` to keep it under the 1 MiB push ceiling. Loaded as a classic script AFTER the inline IIFE. **Owns the entire calendar render layer** — `calendarEvents` state, `CAL_CATS` (category model), `calEventCategory`/`calEventColor`/`calMatchContact`/`calVisibleEvents`/`calEventHTML_*`/`renderCalWeek` and the `window.calNav/calToday/calSetView/calSetCat/calBookFocus/calRefresh` handlers all live here. The inline app is IIFE-wrapped so its internals aren't global — `index.html` exposes what this file needs on **`window.CB`** (the bridge: `sb`, `EDGE`, `toast`, `getAUDateStr`, `closeModal`, `getAnthropicKey`, `voice`, `getContacts()`, `getClients()`, `getProspects()`, `getReferrals()`), set just before `})();`. **The bridge is two-way**: this file exposes `window.loadCalendarEvents` / `window.renderCalWeek` back to the inline app (called from `loadAll()` and `navTo('calweek')`). A syntax error here can't break the main app. |
 | `portal/index.html` | Client-facing SAFE Pulse portal (check-in, results) |
 | `brain-pulse/index.html` | Client-facing Brain Pulse portal |
 | `gallup-request/index.html` | Public Gallup CliftonStrengths code request form for corporate clients (per-org URL: `?org=<client.id>`). Validates the org, collects name/email/phone/notes, creates contact + member link + `gallup_code_requests` row with status `New`. |
@@ -426,8 +426,8 @@ NDIS-Related Services (when applicable)
 
 ### Versioning
 
-- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.65.64**, line ~256)
-- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v708**)
+- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.65.65**, line ~256)
+- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v709**)
 - **Both must be bumped on every release**
 
 ### Code patterns
@@ -641,6 +641,35 @@ print(r.status_code, r.text[:200])
 - **All other blocks**: collapsed under a `<details>` "View all term & break dates" toggle — past blocks dimmed to 40% opacity
 - Tuesday banner in the group compose area has been removed — these dashboard cards are the sole reminder
 - Note: group messages are outbound-only. Replies arrive in individual contact threads, not a group inbox.
+
+## Week Calendar (CRM > Calendar — screen `calweek`)
+
+Full render layer lives in `ms-graph-ui.js` (see Key files). Reads the `calendar_events` Supabase snapshot (synced from Outlook via the `ms-graph-calendar` Edge Function). Agenda + Grid views, week nav, Book/Edit/Delete, Sync.
+
+### Category model (`CAL_CATS` / `calEventCategory`)
+
+Every event resolves to **exactly one** of five mutually-exclusive categories, in priority order:
+
+1. **Focus Sessions** (`#ea580c`) — title contains `focushq`/`focus hq`/`focus session`
+2. **ThriveHQ** (`#ea580c`) — title contains `thrivehq`/`thrive hq`
+3. **Appointments** (`#2563eb`) — `source==='bookings'` (booked via the client link)
+4. **Personal** (`#7c3aed`) — `source==='personal'`
+5. **Work** (`#0d9488`) — catch-all (the coach4u/Work calendar)
+
+**Title wins over calendar**: Focus & ThriveHQ are Work-calendar functions but are detected by title, so they isolate correctly even though `source==='work'`. `calEventColor(ev)` returns the category colour; `calCatMeta(ev)` returns `{color,label}`.
+
+### Filter pills (tap-to-isolate)
+
+Toolbar pills (`calSetCat(cat)`): tap a pill to show ONLY that category; tap again or the **All** pill to reset. State in `calCatFilter` (localStorage `cal_cat`). `calVisibleEvents()` applies the filter before de-duplication.
+
+### All-day events shown as Free
+
+All-day events get a muted dashed-border style (`.cal-ev.allday` / `.cal-ag-ev.allday`) and a grey **Free** badge, so reminders (e.g. a birthday) read as non-blocking and don't look like booked time. They still sort to the top of the day.
+
+### Quick templates
+
+- **+ Book** (`openCalBook`) — full booking modal
+- **+ Focus** (`calBookFocus`) — one-tap: opens the modal pre-filled as a 60 min Focus Session on the Work calendar, no meeting link, confirmation off (internal block, no client attendee)
 
 ## Stripe Payments (Finance > Stripe Payments)
 
