@@ -107,7 +107,7 @@ CSS design system: Inter/Quicksand, navy gradient header, `.section` / `.section
 Areas and their pages (defined at line ~2039):
 
 - **Home**: Dashboard
-- **Calendar**: Week View
+- **Connect**: Calendar (Week View), Comms (Text/SMS/WhatsApp/Email) — the `areaConfig` key is still `calendar`; only the label is "Connect". Comms (`sms`) moved here from CRM so all client scheduling + messaging live in one tab.
 - **Quick**: Quick Hub (mobile launchpad — Book/Message/Email + upcoming appointments & recent conversations)
 - **CRM**: Dashboard, Master List, Prospect List, Clients Dashboard, Client List, Intake Forms, Invoices
 - **Referrers**: Dashboard (Referral Hub), Payments
@@ -428,8 +428,8 @@ NDIS-Related Services (when applicable)
 
 ### Versioning
 
-- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.65.69**, line ~256)
-- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v713**)
+- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.65.70**, line ~256)
+- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v714**)
 - **Both must be bumped on every release**
 
 ### Code patterns
@@ -579,7 +579,7 @@ print(r.status_code, r.text[:200])
 
 ## Comms (SMS / WhatsApp / Email)
 
-- **Screen**: `screen-sms`, nav area `Comms`
+- **Screen**: `screen-sms`, page id `sms`, label "Comms" — lives under the **Connect** tab (`areaConfig.calendar`, alongside the Calendar). Moved out of CRM in v3.65.70.
 - **Tables**: `sms_messages` (all threads), `comms_lists` (custom groups), `comms_list_members`
 - **Channels**: SMS (Text), WhatsApp, Email — filter buttons: All / SMS / WA / Email
 - **Realtime**: `startCommsRealtime()` subscribes to new `sms_messages` inserts; unread count badge on nav
