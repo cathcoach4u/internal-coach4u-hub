@@ -9,7 +9,7 @@ Single-page CRM app hosted on GitHub Pages with a Supabase backend. All CRM func
 | File | Purpose |
 |------|---------|
 | `index.html` | Main CRM app (all screens, most JS) |
-| `ms-graph-ui.js` | Calendar + client-email UI handlers (Sync/Book, client emails, AI draft reply). Split out of `index.html` to keep it under the 1 MiB push ceiling. Loaded as a classic script AFTER the inline IIFE. The inline app is IIFE-wrapped so its internals aren't global — `index.html` exposes what this file needs on **`window.CB`** (the bridge: `sb`, `EDGE`, `toast`, `getAUDateStr`, `calContactName`, `loadCalendarEvents`, `renderCalWeek`, `closeModal`, `getAnthropicKey`, `voice`, `getContacts()`), set just before `})();`. A syntax error here can't break the main app. |
+| `ms-graph-ui.js` | Calendar (full render layer + Sync/Book/Edit) + client-email UI handlers (client emails, AI draft reply). Split out of `index.html` to keep it under the 1 MiB push ceiling. Loaded as a classic script AFTER the inline IIFE. **Owns the entire calendar render layer** — `calendarEvents` state, `CAL_*` consts, `calEventColor`/`calMatchContact`/`calVisibleEvents`/`calEventHTML_*`/`renderCalWeek` and the `window.calNav/calToday/calSetView/calToggleSource/calRefresh` handlers all live here. The inline app is IIFE-wrapped so its internals aren't global — `index.html` exposes what this file needs on **`window.CB`** (the bridge: `sb`, `EDGE`, `toast`, `getAUDateStr`, `closeModal`, `getAnthropicKey`, `voice`, `getContacts()`, `getClients()`, `getProspects()`, `getReferrals()`), set just before `})();`. **The bridge is two-way**: this file exposes `window.loadCalendarEvents` / `window.renderCalWeek` back to the inline app (called from `loadAll()` and `navTo('calweek')`). A syntax error here can't break the main app. |
 | `portal/index.html` | Client-facing SAFE Pulse portal (check-in, results) |
 | `brain-pulse/index.html` | Client-facing Brain Pulse portal |
 | `gallup-request/index.html` | Public Gallup CliftonStrengths code request form for corporate clients (per-org URL: `?org=<client.id>`). Validates the org, collects name/email/phone/notes, creates contact + member link + `gallup_code_requests` row with status `New`. |
@@ -426,8 +426,8 @@ NDIS-Related Services (when applicable)
 
 ### Versioning
 
-- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.65.63**, line ~256)
-- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v707**)
+- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.65.64**, line ~256)
+- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v708**)
 - **Both must be bumped on every release**
 
 ### Code patterns

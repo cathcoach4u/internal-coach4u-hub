@@ -9,9 +9,7 @@
 'use strict';
 var CB=window.CB||{};
 var supabase=CB.sb, SUPABASE_EDGE_URL=CB.EDGE, toast=CB.toast, getAUDateStr=CB.getAUDateStr,
-    calContactName=CB.calContactName, loadCalendarEvents=CB.loadCalendarEvents,
-    renderCalWeek=CB.renderCalWeek, closeModal=CB.closeModal,
-    getAnthropicKey=CB.getAnthropicKey, CATH_VOICE_REFERENCE=CB.voice;
+    closeModal=CB.closeModal, getAnthropicKey=CB.getAnthropicKey, CATH_VOICE_REFERENCE=CB.voice;
 function getContacts(){ return (CB.getContacts?CB.getContacts():[])||[]; }
 function getClients(){ return (CB.getClients?CB.getClients():[])||[]; }
 function clientDisplayName(cl){
@@ -130,7 +128,7 @@ function calBookApplySelection(){
   const box=document.getElementById('calBookRecipients');
   if(box) box.innerHTML=emails.length?'&#9993; Confirmation will be sent to: '+emails.map(e=>'<strong>'+emEsc(e)+'</strong>').join(', '):'';
 }
-function getCalEvents(){ return (CB.getCalendarEvents?CB.getCalendarEvents():[])||[]; }
+function getCalEvents(){ return calendarEvents; }
 let calEditOrigNotes='';
 window.openCalEdit=function(source, graphId){
   const ev=getCalEvents().find(e=>e.source===source && e.graph_event_id===graphId);
@@ -387,5 +385,256 @@ window.renderContactLinksSection=function(c){
   el.style.display='block';
   el.innerHTML='<div style="font-size:11px;font-weight:700;color:#1e3a5f;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;">Links &amp; Status</div>'+rows.join('')+'<div style="font-size:10px;color:#94a3b8;margin-top:4px;">Edit links from the Prospect, Client, or Referrer record.</div>';
 };
+
+// ════════════════════════════════════════════════════════════════════════
+// Calendar render layer — moved here from index.html (file-size headroom)
+// ════════════════════════════════════════════════════════════════════════
+let calendarEvents=[];
+let calTableMissing=false;
+let calWeekOffset=0;
+let calView=(localStorage.getItem('cal_view')||'agenda');           // 'agenda' | 'grid'
+let calLastSynced=null;
+let calSourceOn={work:true,bookings:true,personal:true};
+try{ const s=JSON.parse(localStorage.getItem('cal_sources')||'null'); if(s) calSourceOn=Object.assign(calSourceOn,s); }catch(e){}
+const CAL_SELF_EMAILS=['cath@coach4u.com.au','cath@coachingwithcath.com.au','coach4u@netorgft4053847.onmicrosoft.com'];
+const CAL_SOURCE_META={
+  work:{color:'#0d9488',label:'Work'},
+  bookings:{color:'#2563eb',label:'Bookings'},
+  personal:{color:'#7c3aed',label:'Personal'}
+};
+// Special session types get their own colour (by title) so they stand out.
+const CAL_TYPE_COLORS={focus:'#ea580c',thrive:'#ea580c'};
+function calEventColor(ev){
+  const s=(ev.subject||'').toLowerCase();
+  if(s.indexOf('focushq')>-1||s.indexOf('focus hq')>-1||s.indexOf('focus session')>-1) return CAL_TYPE_COLORS.focus;
+  if(s.indexOf('thrivehq')>-1||s.indexOf('thrive hq')>-1) return CAL_TYPE_COLORS.thrive;
+  return (CAL_SOURCE_META[ev.source]||CAL_SOURCE_META.work).color;
+}
+function calLocLabel(loc){ if(!loc) return ''; return /teams\.microsoft\.com/i.test(loc)?'Microsoft Teams':(''+loc).replace(/</g,'&lt;').slice(0,60); }
+async function loadCalendarEvents(){
+  calTableMissing=false;
+  try{
+    const {data,error}=await supabase.from('calendar_events').select('*').order('start_ts');
+    if(error){
+      if(error.code==='42P01'){ calTableMissing=true; }
+      else { console.warn('Load calendar_events error:',error); }
+      calendarEvents=[];
+      return;
+    }
+    calendarEvents=data||[];
+    // newest last_synced across rows = snapshot freshness
+    calLastSynced=calendarEvents.reduce((m,e)=>{const t=e.last_synced||e.created_at;return t&&(!m||t>m)?t:m;},null);
+  }catch(e){ console.warn('loadCalendarEvents failed:',e); calendarEvents=[]; }
+}
+function calSydneyDateKey(iso){
+  try{ return new Intl.DateTimeFormat('en-CA',{timeZone:'Australia/Sydney'}).format(new Date(iso)); }
+  catch(e){ return ''; }
+}
+function calFmtTime(iso){
+  try{ return new Intl.DateTimeFormat('en-AU',{timeZone:'Australia/Sydney',hour:'numeric',minute:'2-digit',hour12:true}).format(new Date(iso)).replace(/\s/g,'').toLowerCase(); }
+  catch(e){ return ''; }
+}
+function calFmtDuration(ev){
+  if(ev.is_all_day) return 'All day';
+  if(!ev.end_ts) return calFmtTime(ev.start_ts);
+  return calFmtTime(ev.start_ts)+' – '+calFmtTime(ev.end_ts);
+}
+function calContactName(c){
+  return ((c.first_name||'')+' '+(c.last_name||'')).trim()||c.email||'Contact';
+}
+function calMatchContact(ev){
+  if(ev.contact_id){ const c=getContacts().find(x=>x.id===ev.contact_id); if(c) return c; }
+  let a=ev.attendees, emails=[];
+  if(typeof a==='string'){ try{ a=JSON.parse(a); }catch(e){ a=[a]; } }
+  if(Array.isArray(a)){
+    a.forEach(x=>{
+      if(typeof x==='string') emails.push(x);
+      else if(x&&x.email) emails.push(x.email);
+      else if(x&&x.emailAddress&&x.emailAddress.address) emails.push(x.emailAddress.address);
+    });
+  }
+  emails=emails.map(e=>(''+e).toLowerCase().trim()).filter(e=>e&&!CAL_SELF_EMAILS.includes(e));
+  if(!emails.length) return null;
+  return getContacts().find(c=>c.email&&emails.includes(c.email.toLowerCase().trim()))||null;
+}
+function calMonday(offsetWeeks){
+  const todayStr=getAUDateStr();
+  const d=new Date(todayStr+'T12:00:00');
+  const dow=(d.getDay()+6)%7;
+  d.setDate(d.getDate()-dow+(offsetWeeks||0)*7);
+  return d;
+}
+function calVisibleEvents(){
+  const vis=calendarEvents.filter(e=>calSourceOn[e.source]!==false);
+  // De-duplicate the same appointment that exists in more than one calendar
+  // (e.g. a Bookings session that also lands on the Work calendar) — keep one,
+  // preferring Work so client sessions read as Work rather than being doubled.
+  const rank=function(s){ return s==='work'?0:(s==='personal'?1:2); };
+  const byUid={}, singles=[];
+  vis.forEach(e=>{
+    if(!e.ical_uid){ singles.push(e); return; }
+    const cur=byUid[e.ical_uid];
+    if(!cur||rank(e.source)<rank(cur.source)) byUid[e.ical_uid]=e;
+  });
+  return singles.concat(Object.keys(byUid).map(k=>byUid[k]));
+}
+window.calNav=function(delta){ calWeekOffset+=delta; renderCalWeek(); };
+window.calToday=function(){ calWeekOffset=0; renderCalWeek(); };
+window.calSetView=function(v){ calView=v; try{localStorage.setItem('cal_view',v);}catch(e){} renderCalWeek(); };
+window.calToggleSource=function(s){ calSourceOn[s]=!calSourceOn[s]; try{localStorage.setItem('cal_sources',JSON.stringify(calSourceOn));}catch(e){} renderCalWeek(); };
+window.calRefresh=async function(){ toast('Refreshing calendar…','info'); await loadCalendarEvents(); renderCalWeek(); toast('Calendar refreshed','success'); };
+// Calendar + client-email MS-Graph UI moved to ms-graph-ui.js (file-size limit)
+
+function calRelLastSynced(){
+  if(!calLastSynced) return '';
+  const diff=Date.now()-new Date(calLastSynced).getTime();
+  const mins=Math.round(diff/60000), hrs=Math.round(mins/60), days=Math.round(hrs/24);
+  if(mins<60) return mins<=1?'just now':mins+' min ago';
+  if(hrs<24) return hrs+(hrs===1?' hour ago':' hours ago');
+  return days+(days===1?' day ago':' days ago');
+}
+
+function calEventHTML_grid(ev){
+  const col=calEventColor(ev);
+  const c=calMatchContact(ev);
+  const subj=(ev.subject||'(no title)').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  let h='<div class="cal-ev" style="border-left-color:'+col+';background:'+col+'16;position:relative;">';
+  if(ev.graph_event_id){
+    h+='<button onclick="openCalEdit(\''+ev.source+'\',\''+ev.graph_event_id+'\')" title="Edit this event" style="position:absolute;top:2px;right:22px;background:rgba(255,255,255,.9);border:1px solid #cbd5e1;color:#475569;border-radius:4px;font-size:11px;line-height:1;padding:1px 5px;cursor:pointer;">&#9998;</button>';
+    h+='<button onclick="calDeleteEvent(\''+ev.source+'\',\''+ev.graph_event_id+'\')" title="Delete this event" style="position:absolute;top:2px;right:2px;background:rgba(255,255,255,.9);border:1px solid #fecaca;color:#dc2626;border-radius:4px;font-size:12px;line-height:1;padding:1px 5px;cursor:pointer;">&times;</button>';
+  }
+  h+='<div class="evtime">'+calFmtDuration(ev)+'</div>';
+  h+='<div class="evt">'+subj+'</div>';
+  if(ev.location){ h+='<div class="evm" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+calLocLabel(ev.location)+'</div>'; }
+  if(c){ h+='<div class="evpill">'+calContactName(c).replace(/</g,'&lt;')+'</div>'; }
+  h+='</div>';
+  return h;
+}
+function calEventHTML_agenda(ev){
+  const col=calEventColor(ev);
+  const meta=CAL_SOURCE_META[ev.source]||CAL_SOURCE_META.work;
+  const c=calMatchContact(ev);
+  const subj=(ev.subject||'(no title)').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  let h='<div class="cal-ag-ev" style="border-left-color:'+col+';background:'+col+'12">';
+  h+='<div class="agtime">'+calFmtDuration(ev)+'</div>';
+  h+='<div class="agmain"><div class="agtitle">'+subj
+    +'<span class="agtag" style="background:'+meta.color+'22;color:'+meta.color+'">'+meta.label+'</span>'
+    +(c?'<span class="agpill">'+calContactName(c).replace(/</g,'&lt;')+'</span>':'')+'</div>';
+  if(ev.location){ h+='<div class="agmeta" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+calLocLabel(ev.location)+'</div>'; }
+  h+='</div>';
+  if(ev.graph_event_id){
+    h+='<button onclick="openCalEdit(\''+ev.source+'\',\''+ev.graph_event_id+'\')" title="Edit this event" style="margin-left:auto;align-self:center;background:#fff;border:1px solid #cbd5e1;color:#475569;border-radius:6px;padding:4px 9px;font-size:11px;font-weight:600;cursor:pointer;flex-shrink:0;">Edit</button>';
+    h+='<button onclick="calDeleteEvent(\''+ev.source+'\',\''+ev.graph_event_id+'\')" title="Delete this event" style="margin-left:6px;align-self:center;background:#fff;border:1px solid #fecaca;color:#dc2626;border-radius:6px;padding:4px 9px;font-size:11px;font-weight:600;cursor:pointer;flex-shrink:0;">Delete</button>';
+  }
+  h+='</div>';
+  return h;
+}
+
+function renderCalWeek(){
+  const el=document.getElementById('calWeekContent');
+  if(!el) return;
+  const monday=calMonday(calWeekOffset);
+  const days=[];
+  for(let i=0;i<7;i++){ const dd=new Date(monday); dd.setDate(monday.getDate()+i); days.push(dd); }
+  const todayKey=getAUDateStr();
+  const fmtRange=(d)=>new Intl.DateTimeFormat('en-AU',{day:'numeric',month:'short'}).format(d);
+  const yr=days[6].getFullYear();
+  const rangeLabel=fmtRange(days[0])+' – '+fmtRange(days[6])+' '+yr;
+
+  const vis=calVisibleEvents();
+  const byDay={};
+  days.forEach(d=>{ byDay[calSydneyDateKey(d.toISOString())]=[]; });
+  vis.forEach(ev=>{ const k=calSydneyDateKey(ev.start_ts); if(byDay[k]) byDay[k].push(ev); });
+  Object.keys(byDay).forEach(k=>{
+    byDay[k].sort((a,b)=>{
+      if(a.is_all_day&&!b.is_all_day) return -1;
+      if(!a.is_all_day&&b.is_all_day) return 1;
+      return (a.start_ts||'').localeCompare(b.start_ts||'');
+    });
+  });
+
+  // counts for summary (within this week, respecting filters)
+  let cBook=0,cWork=0,cPers=0;
+  days.forEach(d=>{ (byDay[calSydneyDateKey(d.toISOString())]||[]).forEach(ev=>{
+    if(ev.source==='bookings')cBook++; else if(ev.source==='personal')cPers++; else cWork++;
+  });});
+  const total=cBook+cWork+cPers;
+
+  const dayNames=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const dayFull=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+  let html='';
+
+  // toolbar
+  const calChip=function(s,primary){
+    const off=calSourceOn[s]===false?' off':'';
+    const dot=primary?'width:11px;height:11px;':'';
+    const txt=primary?'font-weight:700;font-size:12px;':'font-size:10px;opacity:.55;';
+    return '<span class="cal-chip'+off+'" onclick="calToggleSource(\''+s+'\')" style="'+txt+'"><span class="cal-dot" style="background:'+CAL_SOURCE_META[s].color+';'+dot+'"></span>'+CAL_SOURCE_META[s].label+'</span>';
+  };
+  html+='<div class="cal-toolbar">'
+    +'<button class="cal-nav-btn" onclick="calNav(-1)">&#8249;</button>'
+    +'<button class="cal-nav-btn cal-today-btn" onclick="calToday()">Today</button>'
+    +'<button class="cal-nav-btn" onclick="calNav(1)">&#8250;</button>'
+    +'<button class="cal-nav-btn" onclick="openCalBook()" style="background:#2563eb;color:#fff;border-color:#2563eb;">+ Book</button>'
+    +'<span class="cal-week-range">'+rangeLabel+(calWeekOffset===0?' · This week':'')+'</span>'
+    +'<span class="cal-viewtoggle" style="margin-left:auto;">'
+      +'<button class="'+(calView==='agenda'?'active':'')+'" onclick="calSetView(\'agenda\')">Agenda</button>'
+      +'<button class="'+(calView==='grid'?'active':'')+'" onclick="calSetView(\'grid\')">Grid</button>'
+    +'</span>'
+    +'<span class="cal-filters">'+calChip('work',true)+calChip('personal',true)
+      +'<span class="cal-chip" style="cursor:default;font-size:10px;"><span class="cal-dot" style="background:'+CAL_TYPE_COLORS.focus+'"></span>Focus Sessions</span>'
+      +'<span class="cal-chip" style="cursor:default;font-size:10px;"><span class="cal-dot" style="background:'+CAL_TYPE_COLORS.thrive+'"></span>ThriveHQ</span>'
+    +'</span>'
+    +'<button class="cal-nav-btn" id="calSyncBtn" onclick="calSyncNow()" title="Pull the latest from Outlook" style="font-size:11px;padding:4px 9px;color:#64748b;">&#8635; Sync</button>'
+  +'</div>';
+
+  // snapshot banner
+  if(calTableMissing){
+    html+='<div class="cal-banner warn"><span>&#9888;</span><span><strong>Calendar sync not set up yet.</strong> The <code>calendar_events</code> table doesn\'t exist in Supabase yet.</span></div>';
+  } else if(calendarEvents.length===0){
+    html+='<div class="cal-banner warn"><span>&#9888;</span><span><strong>No events synced yet.</strong> Ask your VA (in a chat session) to sync your Outlook calendars and they\'ll appear here.</span></div>';
+  } else {
+    html+='<div class="cal-banner"><span>&#128257;</span><span><strong>Snapshot view.</strong> Last synced '+(calRelLastSynced()||'recently')+'. This is a saved copy — new Outlook changes appear after a sync. Live auto-sync is coming in a later phase.</span></div>';
+  }
+
+  // (summary count strip removed — not needed)
+
+  if(calView==='agenda'){
+    html+='<div class="cal-agenda">';
+    days.forEach((d,i)=>{
+      const k=calSydneyDateKey(d.toISOString());
+      const isToday=k===todayKey;
+      const evs=byDay[k]||[];
+      html+='<div class="cal-ag-day'+(isToday?' today':'')+(evs.length?'':' empty')+'">';
+      html+='<div class="cal-ag-date"><span class="dow">'+dayNames[i]+'</span><span class="dbig">'+d.getDate()+'</span> '
+        +new Intl.DateTimeFormat('en-AU',{month:'short'}).format(d)+(isToday?' · Today':'')+'</div>';
+      html+='<div class="cal-ag-events">';
+      if(!evs.length){ html+='<div class="cal-ag-none">Nothing scheduled</div>'; }
+      else { evs.forEach(ev=>{ html+=calEventHTML_agenda(ev); }); }
+      html+='</div></div>';
+    });
+    html+='</div>';
+  } else {
+    html+='<div class="cal-week-grid">';
+    days.forEach((d,i)=>{
+      const k=calSydneyDateKey(d.toISOString());
+      const isToday=k===todayKey;
+      const isWeekend=i>=5;
+      const evs=byDay[k]||[];
+      html+='<div class="cal-day'+(isToday?' today':'')+(isWeekend?' weekend':'')+'">';
+      html+='<div class="cal-day-head"><span>'+dayNames[i]+'</span><span class="dnum">'+d.getDate()+'</span></div>';
+      html+='<div class="cal-day-body">';
+      if(!evs.length){ html+='<div class="cal-empty">&mdash;</div>'; }
+      else { evs.forEach(ev=>{ html+=calEventHTML_grid(ev); }); }
+      html+='</div></div>';
+    });
+    html+='</div>';
+  }
+  el.innerHTML=html;
+}
+
+// ── expose calendar entry points to the inline app (CB bridge reversed) ──
+window.loadCalendarEvents=loadCalendarEvents;
+window.renderCalWeek=renderCalWeek;
 
 })();
