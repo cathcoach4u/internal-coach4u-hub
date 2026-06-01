@@ -62,14 +62,14 @@ window.calSyncNow=async function(){
 
 // Booking modal — separate searchable Client and Contact pickers
 let calBookSel={type:null,id:null};
-window.openCalBook=function(){
+window.openCalBook=function(presetDate){
   calBookSel={type:null,id:null};
   ['calBookClientSearch','calBookContactSearch'].forEach(id=>{const el=document.getElementById(id); if(el) el.value='';});
   ['calBookClientResults','calBookContactResults'].forEach(id=>{const el=document.getElementById(id); if(el){el.style.display='none'; el.innerHTML='';}});
   document.getElementById('calBookSubject').value='';
   document.getElementById('calBookSource').value='bookings';
   document.getElementById('calBookDuration').value='90';
-  document.getElementById('calBookDate').value=getAUDateStr();
+  document.getElementById('calBookDate').value=(typeof presetDate==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(presetDate))?presetDate:getAUDateStr();
   document.getElementById('calBookTime').value='10:00';
   document.getElementById('calBookLocation').value='';
   document.getElementById('calBookNotes').value='';
@@ -616,9 +616,10 @@ function renderCalWeek(){
       const evs=byDay[k]||[];
       html+='<div class="cal-ag-day'+(isToday?' today':'')+(evs.length?'':' empty')+'">';
       html+='<div class="cal-ag-date"><span class="dow">'+dayNames[i]+'</span><span class="dbig">'+d.getDate()+'</span> '
-        +new Intl.DateTimeFormat('en-AU',{month:'short'}).format(d)+(isToday?' · Today':'')+'</div>';
+        +new Intl.DateTimeFormat('en-AU',{month:'short'}).format(d)+(isToday?' · Today':'')
+        +'<button class="cal-addbtn" onclick="openCalBook(\''+k+'\')" title="Book on this day">+ Add</button></div>';
       html+='<div class="cal-ag-events">';
-      if(!evs.length){ html+='<div class="cal-ag-none">Nothing scheduled</div>'; }
+      if(!evs.length){ html+='<div class="cal-ag-none" onclick="openCalBook(\''+k+'\')" style="cursor:pointer;">Nothing scheduled — tap to book</div>'; }
       else { evs.forEach(ev=>{ html+=calEventHTML_agenda(ev); }); }
       html+='</div></div>';
     });
@@ -631,9 +632,10 @@ function renderCalWeek(){
       const isWeekend=i>=5;
       const evs=byDay[k]||[];
       html+='<div class="cal-day'+(isToday?' today':'')+(isWeekend?' weekend':'')+'">';
-      html+='<div class="cal-day-head"><span>'+dayNames[i]+'</span><span class="dnum">'+d.getDate()+'</span></div>';
+      html+='<div class="cal-day-head"><span>'+dayNames[i]+'</span><span class="dnum">'+d.getDate()
+        +'<button class="cal-addbtn mini" onclick="openCalBook(\''+k+'\')" title="Book on this day">+</button></span></div>';
       html+='<div class="cal-day-body">';
-      if(!evs.length){ html+='<div class="cal-empty">&mdash;</div>'; }
+      if(!evs.length){ html+='<div class="cal-empty" onclick="openCalBook(\''+k+'\')" style="cursor:pointer;" title="Book on this day">+ Add</div>'; }
       else { evs.forEach(ev=>{ html+=calEventHTML_grid(ev); }); }
       html+='</div></div>';
     });

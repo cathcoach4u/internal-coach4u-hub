@@ -426,8 +426,8 @@ NDIS-Related Services (when applicable)
 
 ### Versioning
 
-- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.65.65**, line ~256)
-- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v709**)
+- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.65.66**, line ~256)
+- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v710**)
 - **Both must be bumped on every release**
 
 ### Code patterns
@@ -665,6 +665,10 @@ Toolbar pills (`calSetCat(cat)`): tap a pill to show ONLY that category; tap aga
 ### All-day events shown as Free
 
 All-day events get a muted dashed-border style (`.cal-ev.allday` / `.cal-ag-ev.allday`) and a grey **Free** badge, so reminders (e.g. a birthday) read as non-blocking and don't look like booked time. They still sort to the top of the day.
+
+### Click-to-book on a date
+
+Each day is clickable to start a booking pre-filled with that date — no scrolling the date picker for a session months out. `openCalBook(presetDate)` accepts an optional `YYYY-MM-DD`; called with the day's Sydney date key from the **+ Add** button on each agenda date row / grid day header, and from the empty-day placeholders ("Nothing scheduled — tap to book" / "+ Add"). Called with no arg (toolbar **+ Book** / **+ Focus**) it defaults to today.
 
 ### Quick templates
 
