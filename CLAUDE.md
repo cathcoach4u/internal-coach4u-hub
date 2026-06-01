@@ -108,7 +108,7 @@ CSS design system: Inter/Quicksand, navy gradient header, `.section` / `.section
 Areas and their pages (defined at line ~2039):
 
 - **Home**: Dashboard
-- **Connect**: Dashboard (`connectdash`), Calendar (Week View), Comms (Text/SMS/WhatsApp/Email) — the `areaConfig` key is still `calendar`; only the label is "Connect". Comms (`sms`) moved here from CRM so all client scheduling + messaging live in one tab. The **Connect Dashboard** is the landing page: nav cards to Calendar + Comms, plus the upcoming-client-appointments list (`renderConnectDash`).
+- **Connect**: Dashboard (`connectdash`), Calendar (`calweek`), SMS (`sms`), WhatsApp (`whatsapp`), Email (`email`) — the `areaConfig` key is still `calendar`; only the label is "Connect". The three comms channels are **separate pages** that share the one `#screen-sms` comms engine: `navTo('whatsapp'|'email')` aliases the screen to `#screen-sms` and calls `window.openCommsChannel(channel)`, which locks `commsLockedChannel` (hides the channel-filter bar and fixes compose + group-send + thread channel to that one). `_currentPageId` (set in `navTo`) distinguishes them for sidebar highlighting since they share a screen. The **Connect Dashboard** (`renderConnectDash`) is the landing page: nav cards to Calendar + each channel, plus the upcoming-client-appointments list.
 - **Quick**: Quick Hub (mobile launchpad — Book/Message/Email + upcoming appointments & recent conversations)
 - **CRM**: Dashboard, Master List, Prospect List, Clients Dashboard, Client List, Intake Forms, Invoices
 - **Referrers**: Dashboard (Referral Hub), Payments
@@ -429,8 +429,8 @@ NDIS-Related Services (when applicable)
 
 ### Versioning
 
-- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.65.75**, line ~256)
-- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v719**)
+- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.65.76**, line ~256)
+- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v720**)
 - **Both must be bumped on every release**
 
 ### Code patterns
@@ -583,7 +583,7 @@ print(r.status_code, r.text[:200])
 
 ## Comms (SMS / WhatsApp / Email)
 
-- **Screen**: `screen-sms`, page id `sms`, label "Comms" — lives under the **Connect** tab (`areaConfig.calendar`, alongside the Calendar). Moved out of CRM in v3.65.70.
+- **Screen**: `screen-sms` — the single comms engine, shared by three pages: **SMS** (`sms`), **WhatsApp** (`whatsapp`), **Email** (`email`), all under the **Connect** tab. v3.65.76 split the old single "Comms" page (channel filter pills) into three per-channel pages via `window.openCommsChannel(channel)` → sets `commsLockedChannel`. When locked: the channel-filter bar is hidden and `smsChannelFilter` / `window._commsChannel` / `groupSendChannel` are all pinned to that channel, so Contacts/Groups/Templates within the page are per-channel automatically. `navTo` aliases `whatsapp`/`email` screens to `#screen-sms`. Comms moved out of CRM in v3.65.70, extracted to `comms-ui.js` in v3.65.73.
 - **Tables**: `sms_messages` (all threads), `comms_lists` (custom groups), `comms_list_members`
 - **Channels**: SMS (Text), WhatsApp, Email — filter buttons: All / SMS / WA / Email
 - **Realtime**: `startCommsRealtime()` subscribes to new `sms_messages` inserts; unread count badge on nav

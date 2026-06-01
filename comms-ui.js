@@ -17,8 +17,20 @@ function getClients(){ return (CB.getClients?CB.getClients():[])||[]; }
 // ── comms state (was module-level in index.html) ──
 let smsMessages = [];
 let smsSelectedContactId = null;
-let smsChannelFilter = 'all'; // 'all' | 'sms' | 'whatsapp'
+let smsChannelFilter = 'all'; // 'all' | 'sms' | 'whatsapp' | 'email'
+let commsLockedChannel = null; // when set ('sms'|'whatsapp'|'email'), the screen is locked to one channel (per-channel pages)
 window.setSmsChannelFilter=function(ch){smsChannelFilter=ch;renderSms();};
+// Per-channel page entry: lock the whole screen to one channel and render.
+// Called from navTo('sms'|'whatsapp'|'email'). channel=null → legacy all-channels view.
+window.openCommsChannel=function(channel){
+  commsLockedChannel=(channel==='sms'||channel==='whatsapp'||channel==='email')?channel:null;
+  if(commsLockedChannel){
+    smsChannelFilter=commsLockedChannel;
+    window._commsChannel=commsLockedChannel;
+    groupSendChannel=commsLockedChannel;
+  }
+  renderSms();
+};
 let commsLists = [];
 let commsListMembers = [];
 let commsView = 'contacts'; // 'contacts' | 'groups'
@@ -208,7 +220,9 @@ function renderSms(){
     <button onclick="window._switchCommsView('templates')" style="padding:8px 22px;border-radius:99px;border:2px solid ${commsView==='templates'?'#7c3aed':'#e2e8f0'};font-size:13px;font-weight:700;cursor:pointer;background:${commsView==='templates'?'#7c3aed':'#fff'};color:${commsView==='templates'?'#fff':'#64748b'};transition:all .15s;">Templates</button>
   </div>`;
 
-  const filterBar=`<div style="padding:8px 12px;border-bottom:1px solid #e2e8f0;display:flex;gap:5px;flex-shrink:0;">
+  // Channel filter bar — only shown in the legacy "all channels" view. When the
+  // screen is locked to one channel (per-channel pages), the channel is fixed.
+  const filterBar=commsLockedChannel?'':`<div style="padding:8px 12px;border-bottom:1px solid #e2e8f0;display:flex;gap:5px;flex-shrink:0;">
     <button onclick="setSmsChannelFilter('all')" style="flex:1;padding:5px;border-radius:6px;border:1px solid #e2e8f0;font-size:11px;font-weight:700;cursor:pointer;background:${smsChannelFilter==='all'?'#1e3a5f':'#f8fafc'};color:${smsChannelFilter==='all'?'#fff':'#64748b'};">All</button>
     <button onclick="setSmsChannelFilter('sms')" style="flex:1;padding:5px;border-radius:6px;border:1px solid #e2e8f0;font-size:11px;font-weight:700;cursor:pointer;background:${smsChannelFilter==='sms'?'#1d4ed8':'#f8fafc'};color:${smsChannelFilter==='sms'?'#fff':'#64748b'};">SMS</button>
     <button onclick="setSmsChannelFilter('whatsapp')" style="flex:1;padding:5px;border-radius:6px;border:1px solid #e2e8f0;font-size:11px;font-weight:700;cursor:pointer;background:${smsChannelFilter==='whatsapp'?'#15803d':'#f8fafc'};color:${smsChannelFilter==='whatsapp'?'#fff':'#64748b'};">WA</button>
@@ -290,17 +304,23 @@ window._switchCommsView=function(v){
   commsView=v;
   if(v==='groups'){smsSelectedContactId=null;commsMobileView='list';}
   else if(v==='templates'){smsSelectedContactId=null;commsActiveListId=null;}
-  else{commsActiveListId=null;groupSendChannel='sms';}
+  else{commsActiveListId=null;groupSendChannel=commsLockedChannel||'sms';}
+  if(commsLockedChannel) groupSendChannel=commsLockedChannel;
   renderSms();
 };
 
 window.selectSmsContact=function(id){
   smsSelectedContactId=id;
   commsMobileView='thread';
-  // Default to channel of last message with this contact; fall back to sms
-  const msgs=(smsMessages||[]).filter(m=>m.contact_id===id);
-  const lastCh=msgs.length?msgs[msgs.length-1].channel:null;
-  window._commsChannel=(lastCh&&['sms','whatsapp','email'].includes(lastCh))?lastCh:'sms';
+  // On a locked per-channel page the compose channel stays fixed; otherwise
+  // default to the channel of the last message with this contact.
+  if(commsLockedChannel){
+    window._commsChannel=commsLockedChannel;
+  } else {
+    const msgs=(smsMessages||[]).filter(m=>m.contact_id===id);
+    const lastCh=msgs.length?msgs[msgs.length-1].channel:null;
+    window._commsChannel=(lastCh&&['sms','whatsapp','email'].includes(lastCh))?lastCh:'sms';
+  }
   renderSms();
 };
 
