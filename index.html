@@ -105,6 +105,10 @@ td .actions button{padding:8px 14px;font-size:12px;}
 .cal-chip.off{opacity:.4;background:#f8fafc;}
 .cal-chip.off .cal-dot{background:#cbd5e1!important;}
 /* summary strip */
+.cal-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px;}
+.cal-sumcard{background:#fff;border:1px solid #e2e8f0;border-left:4px solid #64748b;border-radius:11px;padding:13px 15px;}
+.cal-sumcard .n{font-size:24px;font-weight:800;color:#1e3a5f;line-height:1;}
+.cal-sumcard .l{font-size:11px;color:#64748b;font-weight:600;margin-top:5px;text-transform:uppercase;letter-spacing:.4px;}
 /* week grid */
 .cal-week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;}
 .cal-day{background:#fff;border:1px solid #e2e8f0;border-radius:11px;padding:0;min-height:120px;display:flex;flex-direction:column;overflow:hidden;}
@@ -237,6 +241,10 @@ td .actions button{padding:8px 14px;font-size:12px;}
   .report-page,.pulse-card{page-break-inside:avoid;break-inside:avoid}
   a{color:inherit;text-decoration:none}
 }
+.cl-row{margin-bottom:8px}
+.cl-lbl{font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px}
+.cl-fx{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.cl-pill{font-size:11px;padding:3px 9px;border-radius:99px;font-weight:600;display:inline-block}
 </style>
 </head>
 <body>
@@ -1588,12 +1596,7 @@ if('serviceWorker' in navigator){
     <div class="form-group"><label>Type</label>
       <select id="cType"><option>Individual</option><option>Organisation</option><option>Referrer</option></select>
     </div>
-    <div class="form-group"><label>Referrer</label>
-      <select id="cReferrerSelect" onchange="onContactReferrerChange()" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;background:#fff;">
-        <option value="">— No referrer —</option>
-      </select>
-      <input id="cReferrer" placeholder="Type referrer name" style="margin-top:6px;display:none;">
-    </div>
+    <div id="cLinksSection" style="display:none;margin-bottom:14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;"></div>
     <div class="form-group"><label>Notes</label><textarea id="cNotes"></textarea></div>
     <div class="modal-actions">
       <button class="btn btn-gray" onclick="closeModal('contactModal')">Cancel</button>
@@ -5229,13 +5232,14 @@ window.convertProspectToClient=async function(){
   const p=prospects.find(x=>x.id===id);
   if(!p){toast('No prospect selected','error');return;}
   if(!confirm('Convert "'+p.name+'" to a client?')) return;
-  // Create client
+  // Create client (carry referrer attribution forward from prospect)
   const clientData={
     relationship_name:p.name,
     role:document.getElementById('prospRole').value||'Individual',
     status:'Active',
     practitioner:'Cath Baker',
-    notes:p.notes||''
+    notes:p.notes||'',
+    referred_by:p.referrer_id||null
   };
   const {data:inserted,error}=await supabase.from('clients').insert(clientData).select();
   if(error){toast('Error creating client: '+error.message,'error');return;}
@@ -5338,14 +5342,8 @@ window.openContactModal=function(id){
   document.getElementById('cEmail').value=c?c.email:'';
   document.getElementById('cPhone').value=c?c.phone:'';
   document.getElementById('cType').value=c?c.contact_type:'Individual';
-  const refVal=c&&c.referrer?c.referrer:'';
-  const refSel=document.getElementById('cReferrerSelect');
-  const refMatch=refVal&&referrals.find(r=>r.name===refVal);
-  refSel.innerHTML='<option value="">— No referrer —</option>'+referrals.map(r=>`<option value="${r.name.replace(/"/g,'&quot;')}"${refMatch&&refMatch.name===r.name?' selected':''}>${r.name}</option>`).join('')+`<option value="__other__"${refVal&&!refMatch?' selected':''}>Other (custom)…</option>`;
-  const refInput=document.getElementById('cReferrer');
-  refInput.value=refVal&&!refMatch?refVal:'';
-  refInput.style.display=refVal&&!refMatch?'block':'none';
   document.getElementById('cNotes').value=c?c.notes:'';
+  if(window.renderContactLinksSection) window.renderContactLinksSection(c);
   document.getElementById('contactModal').classList.add('open');
 };
 
@@ -5357,11 +5355,6 @@ window.saveContact=async function(){
     email:document.getElementById('cEmail').value.trim(),
     phone:document.getElementById('cPhone').value.trim(),
     contact_type:document.getElementById('cType').value,
-    referrer:(function(){
-      const sel=document.getElementById('cReferrerSelect').value;
-      if(sel==='__other__') return document.getElementById('cReferrer').value.trim()||null;
-      return sel||null;
-    })(),
     notes:document.getElementById('cNotes').value.trim()
   };
   if(!data.first_name||!data.last_name){toast('First and last name required','error');return;}
@@ -5378,13 +5371,6 @@ window.saveContact=async function(){
   await loadContacts();
   renderMasterList();
   renderDashboard();
-};
-
-window.onContactReferrerChange=function(){
-  const sel=document.getElementById('cReferrerSelect').value;
-  const input=document.getElementById('cReferrer');
-  if(sel==='__other__'){input.style.display='block';input.focus();}
-  else{input.style.display='none';input.value='';}
 };
 
 // ── CONTACT REPORTS (PDF uploads) ──
@@ -10762,15 +10748,6 @@ const CAL_SOURCE_META={
   bookings:{color:'#2563eb',label:'Bookings'},
   personal:{color:'#7c3aed',label:'Personal'}
 };
-// Special session types get their own colour (by title) so they stand out,
-// regardless of which calendar they're on.
-const CAL_TYPE_COLORS={focus:'#ea580c',thrive:'#db2777'};
-function calEventColor(ev){
-  const s=(ev.subject||'').toLowerCase();
-  if(s.indexOf('focushq')>-1||s.indexOf('focus hq')>-1||s.indexOf('focus session')>-1) return CAL_TYPE_COLORS.focus;
-  if(s.indexOf('thrivehq')>-1||s.indexOf('thrive hq')>-1) return CAL_TYPE_COLORS.thrive;
-  return (CAL_SOURCE_META[ev.source]||CAL_SOURCE_META.work).color;
-}
 async function loadCalendarEvents(){
   calTableMissing=false;
   try{
@@ -10855,10 +10832,10 @@ function calRelLastSynced(){
 }
 
 function calEventHTML_grid(ev){
-  const col=calEventColor(ev);
+  const meta=CAL_SOURCE_META[ev.source]||CAL_SOURCE_META.work;
   const c=calMatchContact(ev);
   const subj=(ev.subject||'(no title)').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  let h='<div class="cal-ev" style="border-left-color:'+col+';background:'+col+'16;position:relative;">';
+  let h='<div class="cal-ev" style="border-left-color:'+meta.color+';background:'+meta.color+'16;position:relative;">';
   if(ev.graph_event_id){
     h+='<button onclick="openCalEdit(\''+ev.source+'\',\''+ev.graph_event_id+'\')" title="Edit this event" style="position:absolute;top:2px;right:22px;background:rgba(255,255,255,.9);border:1px solid #cbd5e1;color:#475569;border-radius:4px;font-size:11px;line-height:1;padding:1px 5px;cursor:pointer;">&#9998;</button>';
     h+='<button onclick="calDeleteEvent(\''+ev.source+'\',\''+ev.graph_event_id+'\')" title="Delete this event" style="position:absolute;top:2px;right:2px;background:rgba(255,255,255,.9);border:1px solid #fecaca;color:#dc2626;border-radius:4px;font-size:12px;line-height:1;padding:1px 5px;cursor:pointer;">&times;</button>';
@@ -10871,11 +10848,10 @@ function calEventHTML_grid(ev){
   return h;
 }
 function calEventHTML_agenda(ev){
-  const col=calEventColor(ev);
   const meta=CAL_SOURCE_META[ev.source]||CAL_SOURCE_META.work;
   const c=calMatchContact(ev);
   const subj=(ev.subject||'(no title)').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  let h='<div class="cal-ag-ev" style="border-left-color:'+col+';background:'+col+'12">';
+  let h='<div class="cal-ag-ev" style="border-left-color:'+meta.color+';background:'+meta.color+'12">';
   h+='<div class="agtime">'+calFmtDuration(ev)+'</div>';
   h+='<div class="agmain"><div class="agtitle">'+subj
     +'<span class="agtag" style="background:'+meta.color+'22;color:'+meta.color+'">'+meta.label+'</span>'
@@ -10941,10 +10917,7 @@ function renderCalWeek(){
       +'<button class="'+(calView==='agenda'?'active':'')+'" onclick="calSetView(\'agenda\')">Agenda</button>'
       +'<button class="'+(calView==='grid'?'active':'')+'" onclick="calSetView(\'grid\')">Grid</button>'
     +'</span>'
-    +'<span class="cal-filters">'+calChip('work',true)+calChip('personal',true)
-      +'<span class="cal-chip" style="cursor:default;font-size:10px;"><span class="cal-dot" style="background:'+CAL_TYPE_COLORS.focus+'"></span>FocusHQ</span>'
-      +'<span class="cal-chip" style="cursor:default;font-size:10px;"><span class="cal-dot" style="background:'+CAL_TYPE_COLORS.thrive+'"></span>ThriveHQ</span>'
-    +'</span>'
+    +'<span class="cal-filters">'+calChip('work',true)+calChip('personal',true)+calChip('bookings',false)+'</span>'
     +'<button class="cal-nav-btn" id="calSyncBtn" onclick="calSyncNow()" title="Pull the latest from Outlook" style="font-size:11px;padding:4px 9px;color:#64748b;">&#8635; Sync</button>'
   +'</div>';
 
@@ -10957,7 +10930,14 @@ function renderCalWeek(){
     html+='<div class="cal-banner"><span>&#128257;</span><span><strong>Snapshot view.</strong> Last synced '+(calRelLastSynced()||'recently')+'. This is a saved copy — new Outlook changes appear after a sync. Live auto-sync is coming in a later phase.</span></div>';
   }
 
-  // (summary count strip removed — not needed)
+  // summary strip — week + today counts (per-source split removed; the chips cover that)
+  const todayCount=(byDay[todayKey]||[]).length;
+  if(total>0){
+    html+='<div class="cal-summary">'
+      +'<div class="cal-sumcard" style="border-left-color:#1e3a5f"><div class="n">'+total+'</div><div class="l">This week</div></div>'
+      +'<div class="cal-sumcard" style="border-left-color:#0d9488"><div class="n">'+todayCount+'</div><div class="l">Today</div></div>'
+    +'</div>';
+  }
 
   if(calView==='agenda'){
     html+='<div class="cal-agenda">';
@@ -14885,7 +14865,8 @@ async function handleToolCall(name,input){
       role:input.role||p.role||'Individual',
       status:'Active',
       practitioner:'Cath Baker',
-      notes:p.notes||''
+      notes:p.notes||'',
+      referred_by:p.referrer_id||null
     };
     const {data:inserted,error}=await supabase.from('clients').insert(clientData).select();
     if(error) return {error:'Failed to create client: '+error.message,result:null};
@@ -15250,7 +15231,7 @@ function formatAiMsg(text){
 let cliConnectionSelectedId=null,cliConnectionDetailResultId=null,connectionPulseSubmissions=[];
 const CONNECTION_STAGE_COLORS={disconnected:'#dc2626',reactive:'#ea580c',intentional:'#d97706',collaboration:'#16a34a',connected:'#2563eb'};function getConnectionUrl(clientId){const baseUrl=window.location.origin+'/internal-coach4u-hub/connection-pulse/';const couple=clients.find(c=>c.id===clientId);if(!couple||couple.role!=='Couple') return baseUrl;const members=clientMembers.filter(cm=>cm.client_id===clientId);if(members.length<2) return baseUrl;const url1=`${baseUrl}?p=${members[0].contact_id}&c=${generateAnonymisedCode(contacts.find(c=>c.id===members[0].contact_id))}`;return url1;}function generateAnonymisedCode(contact){if(!contact) return '';const first=(contact.first_name||'').substring(0,2).toUpperCase();const last=(contact.last_name||'').substring(0,3).toUpperCase();return first+last;}window.setCliConnectionClient=function(clientId){cliConnectionSelectedId=clientId;};window.copyPublicConnectionLink=function(){if(!cliConnectionSelectedId) return toast('Select a couple first','error');const url=getConnectionUrl(cliConnectionSelectedId);navigator.clipboard.writeText(url).then(()=>toast('Connection Pulse link copied!','success')).catch(()=>toast('Failed to copy','error'));};window.openConnectionLink=function(clientId){const url=getConnectionUrl(clientId);window.open(url,'_blank');};window.viewConnectionResult=function(resultId){cliConnectionDetailResultId=resultId;renderConnectionPulse();};window.backToConnectionList=function(){cliConnectionDetailResultId=null;renderConnectionPulse();};function renderConnectionPulse(){const contentEl=document.getElementById('cliConnectionContent');if(!contentEl) return;const q=(document.getElementById('cliConnectionSearch')?.value||'').toLowerCase();const allSubs=[...connectionPulseSubmissions];const weekStart=new Date();const dayOfWeek=(weekStart.getDay()+6)%7;weekStart.setDate(weekStart.getDate()-dayOfWeek);weekStart.setHours(0,0,0,0);let filtered=allSubs;if(q) filtered=filtered.filter(r=>{const partner=contacts.find(x=>x.id===r.partner_id);if(!partner) return false;return (partner.first_name+' '+partner.last_name+' '+(r.partner_code||'')+' '+(r.stage||'')).toLowerCase().includes(q);});const weekCount=allSubs.filter(r=>new Date(r.created_at)>=weekStart).length;const uniqueCouples=new Set(allSubs.map(r=>r.client_id)).size;let html=`<div class="dash-cards" style="margin-bottom:16px;"><div class="dash-card" style="cursor:pointer;${weekCount?'box-shadow:0 0 0 2px #dc2626;':''}" onclick="document.getElementById('cliConnectionSearch').value='';renderConnectionPulse();"><div class="dc-icon" style="background:#fef2f2;color:#dc2626;">&#128197;</div><div class="dc-info"><h4>${weekCount}</h4><p>This Week</p></div></div><div class="dash-card" style="cursor:pointer;"><div class="dc-icon" style="background:#f0fdf4;color:#16a34a;">&#128101;</div><div class="dc-info"><h4>${uniqueCouples}</h4><p>Couples</p></div></div><div class="dash-card" style="cursor:pointer;"><div class="dc-icon" style="background:#f5f5f5;color:#64748b;">&#128151;</div><div class="dc-info"><h4>${allSubs.length}</h4><p>Total</p></div></div></div>`;const connSelectedCouple=cliConnectionSelectedId?clients.find(c=>c.id===cliConnectionSelectedId):null;const connAllCouples=[...clients].filter(c=>c.role==='Couple').sort((a,b)=>(a.client_name||'').localeCompare(b.client_name||''));html+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;margin-bottom:16px;"><div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:10px;">Generate Connection Pulse Link</div><select onchange="setCliConnectionClient(this.value)" style="width:100%;padding:10px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;background:#f8fafc;color:#1e3a5f;margin-bottom:${connSelectedCouple?'10':'0'}px;"><option value="">— Select a couple —</option>${connAllCouples.map(c=>`<option value="${c.id}" ${c.id===cliConnectionSelectedId?'selected':''}>${c.client_name}</option>`).join('')}</select>`;if(connSelectedCouple){const url=getConnectionUrl(connSelectedCouple.id);html+=`<div style="display:flex;gap:6px;align-items:center;margin-top:6px;flex-wrap:wrap;"><input readonly value="${url}" style="flex:1;min-width:200px;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;background:#f8fafc;color:#64748b;font-size:11px;"><button onclick="copyPublicConnectionLink()" style="background:#704214;color:#fff;border:none;padding:8px 14px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">Copy</button><button onclick="openConnectionLink('${connSelectedCouple.id}')" style="background:#f0f4f8;color:#704214;border:1px solid #e2e8f0;padding:8px 14px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">Open</button></div>`;}html+=`</div>`;if(!filtered.length){html+='<div style="padding:30px;text-align:center;color:#94a3b8;font-size:13px;background:#fff;border:1px dashed #cbd5e1;border-radius:12px;">No submissions found.</div>';}else{filtered.forEach(r=>{const partner=contacts.find(x=>x.id===r.partner_id);if(!partner) return;const d=new Date(r.created_at);const dateStr=d.toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short',year:'numeric'});const stageColor=CONNECTION_STAGE_COLORS[r.stage]||'#704214';html+=`<div onclick="viewConnectionResult('${r.id}')" style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 16px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;"><div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:14px;color:#1e3a5f;">${partner.first_name} ${partner.last_name}</div><div style="display:flex;gap:8px;align-items:center;margin-top:3px;"><span style="font-size:10px;letter-spacing:1px;text-transform:uppercase;background:#fef2f2;color:#704214;padding:1px 6px;border-radius:4px;font-weight:700;">CONNECTION</span><span style="font-size:11px;color:#94a3b8;">${dateStr}</span></div></div><div style="display:flex;align-items:center;gap:10px;flex-shrink:0;"><span style="font-size:12px;font-weight:700;color:${stageColor};">${r.stage||'—'}</span><span style="font-size:20px;font-weight:800;color:${stageColor};">${r.total_score}<span style="font-size:12px;color:#94a3b8;font-weight:400;">/160</span></span></div></div>`;});html+='<div style="height:80px;"></div>';}contentEl.innerHTML=html;if(cliConnectionDetailResultId){const r=connectionPulseSubmissions.find(x=>x.id===cliConnectionDetailResultId);if(r){const partner=contacts.find(x=>x.id===r.partner_id);if(partner){const stageColor=CONNECTION_STAGE_COLORS[r.stage]||'#704214';const stageDesc={disconnected:'The relationship feels emotionally shut down or distant.',reactive:'Stress and disconnection show up in repeated cycles or emotional volatility.',intentional:'You\'re starting to slow down and notice what\'s happening beneath the surface.',collaboration:'You\'re working as a team. Relational tools are being used more consistently.',connected:'There\'s emotional openness, trust, and a steady rhythm of connection.'}[r.stage]||'';let detailHtml=`<div style="position:relative;margin-bottom:20px;"><button onclick="backToConnectionList()" style="position:absolute;top:0;left:0;padding:8px 14px;border:1px solid #e2e8f0;background:#f8fafc;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;color:#704214;">← Back</button></div>`;detailHtml+=`<div style="background:#f8f8f8;border-left:6px solid ${stageColor};padding:16px;border-radius:8px;margin-bottom:16px;"><div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#704214;font-weight:700;margin-bottom:4px;">${partner.first_name} ${partner.last_name}</div><div style="font-size:20px;font-weight:700;color:${stageColor};margin-bottom:8px;">${r.total_score}<span style="font-size:14px;color:#999;">/160</span></div><div style="font-weight:700;color:${stageColor};margin-bottom:8px;">${r.stage}</div><div style="font-size:13px;line-height:1.6;color:#2d2d2d;">${stageDesc}</div></div>`;if(r.module_scores){detailHtml+=`<div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#704214;font-weight:700;margin-bottom:10px;">Module Scores</div>`;const MODULES=['safety','trust','comms','strengths','vision','intimacy','play','boundaries'];const MODULE_NAMES={safety:'Emotional Safety',trust:'Trust & Bonding',comms:'Communication',strengths:'Strengths Awareness',vision:'Shared Vision',intimacy:'Intimacy & Affection',play:'Play & Joy',boundaries:'Boundaries'};MODULES.forEach(mid=>{const score=r.module_scores[mid]||0;const maxScore=20;const pct=Math.round(score/maxScore*100);detailHtml+=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:10px;margin-bottom:8px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><div style="font-size:13px;font-weight:600;color:#2d2d2d;">${MODULE_NAMES[mid]}</div><div style="font-size:13px;font-weight:700;color:${stageColor};">${score}/${maxScore}</div></div><div style="background:#e2e8f0;border-radius:4px;height:4px;overflow:hidden;"><div style="background:${stageColor};height:100%;width:${pct}%;">&nbsp;</div></div></div>`;});detailHtml+=`</div>`;}detailHtml+=`<button onclick="window.print()" style="width:100%;margin-top:16px;padding:10px 20px;background:#704214;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">🖨️ Print Report</button>`;contentEl.innerHTML=detailHtml;}}}}
 // Bridge for ms-graph-ui.js — the external file can't see IIFE-private vars, so expose what it needs
-window.CB={sb:supabase,EDGE:SUPABASE_EDGE_URL,toast:toast,getAUDateStr:getAUDateStr,calContactName:calContactName,loadCalendarEvents:loadCalendarEvents,renderCalWeek:renderCalWeek,closeModal:closeModal,getAnthropicKey:getAnthropicKey,voice:CATH_VOICE_REFERENCE,getContacts:function(){return contacts;},getClients:function(){return clients;},getCalendarEvents:function(){return calendarEvents;}};
+window.CB={sb:supabase,EDGE:SUPABASE_EDGE_URL,toast:toast,getAUDateStr:getAUDateStr,calContactName:calContactName,loadCalendarEvents:loadCalendarEvents,renderCalWeek:renderCalWeek,closeModal:closeModal,getAnthropicKey:getAnthropicKey,voice:CATH_VOICE_REFERENCE,getContacts:function(){return contacts;},getClients:function(){return clients;},getCalendarEvents:function(){return calendarEvents;},getProspects:function(){return prospects;},getReferrals:function(){return referrals;}};
 
 })();
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js');}
