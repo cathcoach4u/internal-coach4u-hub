@@ -10,6 +10,7 @@ Single-page CRM app hosted on GitHub Pages with a Supabase backend. All CRM func
 |------|---------|
 | `index.html` | Main CRM app (all screens, most JS) |
 | `ms-graph-ui.js` | Calendar (full render layer + Sync/Book/Edit) + client-email UI handlers (client emails, AI draft reply). Split out of `index.html` to keep it under the 1 MiB push ceiling. Loaded as a classic script AFTER the inline IIFE. **Owns the entire calendar render layer** — `calendarEvents` state, `CAL_CATS` (category model), `calEventCategory`/`calEventColor`/`calMatchContact`/`calVisibleEvents`/`calEventHTML_*`/`renderCalWeek` and the `window.calNav/calToday/calSetView/calSetCat/calBookFocus/calRefresh` handlers all live here. The inline app is IIFE-wrapped so its internals aren't global — `index.html` exposes what this file needs on **`window.CB`** (the bridge: `sb`, `EDGE`, `toast`, `getAUDateStr`, `closeModal`, `getAnthropicKey`, `voice`, `getContacts()`, `getClients()`, `getProspects()`, `getReferrals()`), set just before `})();`. **The bridge is two-way**: this file exposes `window.loadCalendarEvents` / `window.renderCalWeek` back to the inline app (called from `loadAll()` and `navTo('calweek')`). A syntax error here can't break the main app. |
+| `comms-ui.js` | **Comms (SMS / WhatsApp / Email) UI + data layer.** Extracted from `index.html` in v3.65.73 to free headroom under the 1 MiB push ceiling. Supabase/Twilio-backed (NOT MS-Graph). Loaded as a classic script AFTER the inline IIFE. Owns all comms state (`smsMessages`, `commsLists`, `commsView`, `groupSendChannel`, `groupTemplatesCache`, etc.) and every `loadSmsMessages`/`renderSms`/`startCommsRealtime`/`sendCommsMessage`/`sendGroupMessage`/template handler. Uses **`window.CB`** for `sb`, `EDGE`, `toast`, `copyText`, `getContacts()`, `getClients()` (both getters — never capture the arrays, they're reassigned on load) and `window.navTo`. **Two-way bridge**: exposes back `window.loadSmsMessages` / `loadCommsLists` / `loadGroupTemplates` / `processStopReplies` / `startCommsRealtime` / `renderSms` / `updateCommsBadge` / `getSmsMessages` / `resetCommsUnread` (called from `loadAll()`, boot, `navTo('sms')`, and the Quick Hub feed). The `#screen-sms` / `#smsContent` markup + comms CSS stay in `index.html`. A syntax error here can't break the main app. |
 | `portal/index.html` | Client-facing SAFE Pulse portal (check-in, results) |
 | `brain-pulse/index.html` | Client-facing Brain Pulse portal |
 | `gallup-request/index.html` | Public Gallup CliftonStrengths code request form for corporate clients (per-org URL: `?org=<client.id>`). Validates the org, collects name/email/phone/notes, creates contact + member link + `gallup_code_requests` row with status `New`. |
@@ -428,8 +429,8 @@ NDIS-Related Services (when applicable)
 
 ### Versioning
 
-- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.65.72**, line ~256)
-- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v716**)
+- CRM version displayed in sidebar: `v{major}.{minor}.{patch}` (currently **v3.65.73**, line ~256)
+- Service worker cache: `coach4u-crm-v{N}` in `sw.js` (currently **v717**)
 - **Both must be bumped on every release**
 
 ### Code patterns
@@ -525,7 +526,7 @@ print(r.status_code, r.text[:200])
 
 - Use `push_files` (plain text content) — **not** `create_or_update_file` (base64, ~1.2MB, exceeds MCP server limit)
 - **Hard limit: the JSON request body must stay under 1 MiB (1,048,576 bytes).** `index.html` is ~1.0 MB and right at this ceiling — push it **alone** in its own call (bundling other files pushes the payload over and fails with `400 malformed payload: unexpected EOF`). If `index.html` itself exceeds the limit, move JS out into a separate `*.js` file loaded via `<script src>` (see `ms-graph-ui.js`) rather than trying to trim it.
-- **As of v3.65.71 the push payload headroom is ~1.3 KB — effectively full.** The next feature of any size MUST be preceded by extracting JS out of `index.html` into a `*.js` file. The prime candidate is the **comms/SMS layer** (~57 KB, threads/groups/templates/realtime) → a new `comms-ui.js` (its own file, NOT `ms-graph-ui.js`, since comms is Supabase/Twilio-backed, not MS-Graph). See the dependency map: comms needs a bridge for `toast`, `navTo`, `copyText`, `getContacts()`/`getClients()` (both are `let`, reassigned on load — must not capture), `supabase`, `SUPABASE_EDGE_URL`; and exposes back `loadSmsMessages`/`loadCommsLists`/`loadGroupTemplates`/`processStopReplies`/`startCommsRealtime`/`renderSms`/`updateCommsBadge`.
+- **As of v3.65.73 the comms/SMS layer was extracted to `comms-ui.js` (~57 KB), restoring ~58 KB of headroom in `index.html`.** Both `ms-graph-ui.js` and `comms-ui.js` are now external. If headroom runs low again, the next extraction candidates are large self-contained screens (e.g. the Agents UI, or the Strengths Reports AI layer) — same pattern: IIFE + `window.CB` bridge + reverse-bridge for boot wiring.
 - **Push `index.html` by itself; push smaller files (`sw.js`, `CLAUDE.md`, `*.js`, Edge Functions) in a second call.** Only `git reset --hard origin/main` AFTER confirming each push returned `HTTP 200` — resetting after a failed push silently discards your edits.
 - **Never have two Claude Code sessions open on this repo at the same time** — concurrent sessions will overwrite each other's pushes
 
